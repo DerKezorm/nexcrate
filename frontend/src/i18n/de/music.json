@@ -1,0 +1,282 @@
+{
+  "add": {
+    "album": "Album hinzufügen",
+    "artist": "Künstler hinzufügen",
+    "menuLabel": "Hinzufügen: Künstler oder Album",
+    "open": "Musik hinzufügen"
+  },
+  "addAlbum": {
+    "alreadyThere": "Dieses Album steht schon in der Bibliothek.",
+    "confirmHint": "Legt genau dieses Album mit einer überwachten Fassung an. Gehört es einem Künstler, der noch nicht in der Bibliothek steht, legt nexcrate ihn mit an, ohne ihn zu überwachen.",
+    "idle": "Gib den Titel eines Albums ein. nexcrate sucht ihn bei MusicBrainz.",
+    "inLibrary": "In der Bibliothek",
+    "kind": {
+      "album": "Album",
+      "all": "Alle",
+      "compilation": "Sampler",
+      "single": "Single"
+    },
+    "kindLabel": "Art",
+    "noResults": "Keine Treffer. Versuch es mit einem anderen Wort oder einer anderen Art.",
+    "openAlbum": "Album öffnen",
+    "search": "Album suchen",
+    "searching": "Sucht bei MusicBrainz …",
+    "submit": "Hinzufügen",
+    "title": "Album hinzufügen",
+    "titleFor": "Album von {{name}} hinzufügen"
+  },
+  "addArtist": {
+    "alreadyThere": "Dieser Künstler steht schon in der Bibliothek.",
+    "groupCounts": "Alben je Gruppe",
+    "idle": "Gib den Namen eines Künstlers ein. nexcrate sucht ihn bei MusicBrainz.",
+    "inLibrary": "In der Bibliothek",
+    "loadingPreview": "Lädt die Alben von MusicBrainz …",
+    "monitor": {
+      "future": {
+        "title": "Nur künftige",
+        "hint": "Nur was ab heute bei MusicBrainz erscheint."
+      },
+      "none": {
+        "title": "Keine",
+        "hint": "Nichts überwachen, nur den Künstler anlegen."
+      },
+      "studio": {
+        "title": "Alle Studioalben und EPs",
+        "hint": "Studioalben und EPs, auch künftige."
+      },
+      "missing": {
+        "title": "Alben ohne Dateien",
+        "hint": "Alles, wovon nexcrate noch keine Datei hat, auch künftige."
+      },
+      "existing": {
+        "title": "Alben mit Dateien",
+        "hint": "Nur was schon da ist; neue Alben nicht."
+      },
+      "first": {
+        "title": "Erstes Album",
+        "hint": "Das älteste erschienene Album, dazu künftige."
+      },
+      "latest": {
+        "title": "Neuestes Album",
+        "hint": "Das jüngste erschienene Album, dazu künftige."
+      }
+    },
+    "monitorLegend": "Was überwacht werden soll",
+    "noResults": "Keine Treffer. Versuch es mit einem anderen Wort.",
+    "openArtist": "Zum Künstler",
+    "search": "Künstler suchen",
+    "searching": "Sucht bei MusicBrainz …",
+    "submit": "Hinzufügen",
+    "title": "Künstler hinzufügen",
+    "wouldWatch_one": "{{value}} Album würde überwacht.",
+    "wouldWatch_other": "{{value}} Alben würden überwacht.",
+    "more": "Mehr Möglichkeiten, wie in Lidarr",
+    "types": "Welche Arten zählen",
+    "typesHint": "Wie das Metadatenprofil in Lidarr: nur Alben dieser Arten werden überwacht, jetzt und künftig."
+  },
+  "artist": {
+    "actions": {
+      "remove": "Künstler entfernen"
+    },
+    "card": {
+      "title": "Überwachung"
+    },
+    "counts_one": "{{value}} Album, {{complete}} vollständig",
+    "counts_other": "{{value}} Alben, {{complete}} vollständig",
+    "missing_one": "{{value}} fehlt",
+    "missing_other": "{{value}} fehlen",
+    "upgradable_one": "{{value}} besser möglich",
+    "upgradable_other": "{{value}} besser möglich",
+    "gone": "Bei MusicBrainz nicht mehr gefunden.",
+    "loading": "Lädt …",
+    "loadingCount": "Lädt, {{done}} von {{total}}",
+    "loadingFailed": "Fehlgeschlagen",
+    "loadingGroups": "Lädt die Alben von MusicBrainz: Seite {{done}} von {{total}}",
+    "loadingQueued": "Wartet",
+    "loadingReleases": "Lädt Ausgaben: {{done}} von {{total}} Alben",
+    "monitorNew": {
+      "label": "Neue Alben überwachen: Studioalben und EPs",
+      "hint": "Erscheint ein neues Studioalbum oder eine EP bei MusicBrainz, nimmt nexcrate es von selbst auf."
+    },
+    "notFound": "Diesen Künstler kennt nexcrate nicht, oder nicht mehr.",
+    "notFoundTitle": "Künstler nicht gefunden",
+    "refreshNow": "Jetzt bei MusicBrainz aktualisieren",
+    "refreshed": "Wird bei MusicBrainz aktualisiert.",
+    "remove": {
+      "albums_one": "Entfernt {{count}} Album aus der Bibliothek, Dateien bleiben.",
+      "albums_other": "Entfernt {{count}} Alben aus der Bibliothek, Dateien bleiben.",
+      "confirm": "Ja, entfernen",
+      "done": "{{name}} ist entfernt.",
+      "noAlbums": "Noch kein Album mit Fassung. Es geht nichts verloren.",
+      "text": "Der Künstler {{name}} verschwindet aus nexcrate.",
+      "title": "{{name}} entfernen?"
+    },
+    "trackCount_one": "{{value}} Titel",
+    "trackCount_other": "{{value}} Titel",
+    "years": {
+      "range": "{{from}} bis {{to}}",
+      "since": "seit {{year}}"
+    },
+    "watchAlbum": "Überwachen: {{title}}",
+    "monitored": {
+      "label": "Künstler überwachen",
+      "hint": "Ausgeschaltet sucht nexcrate nichts mehr von diesem Künstler; die Häkchen der Alben bleiben.",
+      "frozen": "Eingefroren: von diesem Künstler wird nichts gesucht. Einschalten holt genau die überwachten Alben zurück."
+    }
+  },
+  "group": {
+    "compilation": "Compilations",
+    "ep": "EPs",
+    "live": "Live",
+    "other": "Sonstige",
+    "remix": "Remixe",
+    "single": "Singles",
+    "soundtrack": "Soundtracks",
+    "spoken": "Hörbücher und Hörspiele",
+    "studio": "Studioalben"
+  },
+  "lidarr": {
+    "add": "Verbindung hinzufügen",
+    "apiKeyHint": "Steht in Lidarr unter Settings, General.",
+    "dialogAdd": "Lidarr verbinden",
+    "empty": "Noch keine Verbindung zu Lidarr.",
+    "intro": "Nutzt du schon Lidarr, liest nexcrate deine Künstler und Alben von dort. Gesucht und geladen wird dabei nichts, nexcrate liest nur.",
+    "nameHint": "Frei wählbar, etwa Lidarr.",
+    "readOnly": "nexcrate liest nur. In Lidarr wird nichts geändert, nichts gelöscht und nichts neu gesucht.",
+    "result": {
+      "counts": "{{artists}} Künstler, {{albums}} Alben, {{releases}} Ausgaben. Zu diesen Alben gehören {{tracks}} Titel, als Datei liegen {{files}} vor.",
+      "unchanged_one": "Davon war {{value}} Künstler in Lidarr unverändert und wurde nicht neu gelesen.",
+      "unchanged_other": "Davon waren {{value}} Künstler in Lidarr unverändert und wurden nicht neu gelesen.",
+      "unmapped_one": "{{value}} nicht zugeordnete Datei",
+      "unmapped_other": "{{value}} nicht zugeordnete Dateien"
+    },
+    "schedule": "Lidarr wird jede Stunde von selbst eingelesen: nur Künstler, bei denen sich in Lidarr etwas getan hat, und einmal am Tag alles. Der Knopf zum Importieren liest immer alles.",
+    "testOk": "Verbindung ok: Lidarr {{version}}.",
+    "title": "Lidarr",
+    "urlHint": "Die Adresse, unter der du Lidarr im Browser öffnest, mit Port.",
+    "takenOver": "Übernommen am {{date}}. nexcrate liest die Alben dieses Lidarr nicht mehr ein.",
+    "takenOverInfo": "Die Alben aus diesem Lidarr gehören jetzt nexcrate, samt ihrer Dateien. Den Eintrag brauchst du noch, um die Übernahme rückgängig zu machen oder Indexer und Download-Programme von dort zu holen. Entfernst du ihn, bleiben Alben, Fassung und Dateien.",
+    "fetchTitle": "Aus diesem Lidarr holen"
+  },
+  "loadingBar": {
+    "current": "Lädt {{name}}, {{step}} {{done}} von {{total}}",
+    "failed_one": "{{value}} fehlgeschlagen",
+    "failed_other": "{{value}} fehlgeschlagen",
+    "queued_one": "{{value}} wartet",
+    "queued_other": "{{value}} warten",
+    "stepGroups": "Alben",
+    "stepOther": "Laden",
+    "stepReleases": "Ausgaben"
+  },
+  "privacy": {
+    "covers": {
+      "switch": "Cover Art Archive",
+      "hint": "Ohne Cover Art Archive bleiben Musik-Cover leer; Titel und Zustand bleiben sichtbar."
+    },
+    "lastError": "Letzter Fehler: {{text}}",
+    "lastOk": "Zuletzt geantwortet {{time}}.",
+    "musicbrainz": {
+      "switch": "MusicBrainz",
+      "hint": "Ohne MusicBrainz findet nexcrate keine neuen Künstler, Alben oder Ausgaben."
+    },
+    "never": "Noch nie geantwortet.",
+    "title": "Musik",
+    "acoustid": {
+      "title": "Fingerabdrücke (AcoustID)",
+      "switch": "Fingerabdrücke nachschlagen",
+      "hint": "Für Dateien, die weder Tags noch Nummer noch Name einem Titel zuordnen: nexcrate berechnet einen Fingerabdruck, schickt ihn an acoustid.org und bekommt die Aufnahme zurück. Nie die Datei selbst. Aus: Solche Dateien ordnest du im Download von Hand zu.",
+      "noTool": "Das Werkzeug fpcalc fehlt im Abbild; ohne es gibt es keine Fingerabdrücke.",
+      "keySet": "Dein eigener Schlüssel ist hinterlegt und gilt statt des mitgelieferten.",
+      "noKey": "Kein Schlüssel hinterlegt. Ohne ihn fragt nexcrate AcoustID nicht; offene Dateien ordnest du von Hand zu.",
+      "keyLabel": "Eigener Anwendungsschlüssel",
+      "keyHint": "Den API key deiner Anwendung bei acoustid.org, nicht den deines Kontos. nexcrate prüft ihn beim Speichern, speichert ihn verschlüsselt und zeigt ihn nie wieder an.",
+      "remove": "Eigenen Schlüssel entfernen",
+      "error": {
+        "acoustid_key_invalid": "AcoustID kennt den Schlüssel nicht.",
+        "acoustid_unreachable": "acoustid.org war zuletzt nicht erreichbar.",
+        "acoustid_error": "AcoustID hat zuletzt mit einem Fehler geantwortet."
+      },
+      "keyShipped": "nexcrate bringt einen eigenen Schlüssel mit und nimmt ihn, solange du keinen einträgst. Du musst nichts tun.",
+      "saved": "AcoustID kennt den Schlüssel, er ist gespeichert.",
+      "valid": "Gültig, zuletzt bestätigt {{time}}.",
+      "unchecked": "Noch nicht geprüft.",
+      "check": "Jetzt prüfen",
+      "replaceNote": "Du kannst ihn jederzeit gegen einen eigenen tauschen, etwa wenn viele Installationen den mitgelieferten teilen. Ein eigener ist kostenlos:",
+      "ownNote": "Entfernst du deinen Schlüssel, gilt wieder der mitgelieferte. Einen eigenen bekommst du kostenlos:",
+      "getKey": "Anwendung bei acoustid.org anlegen"
+    }
+  },
+  "sort": {
+    "name": "Name"
+  },
+  "versions": {
+    "defaultLabel": "Musik",
+    "empty": "Noch keine Fassung für Musik. Sie entsteht von selbst, sobald du den ersten Künstler, das erste Album oder eine Lidarr-Verbindung hinzufügst.",
+    "intro": "Musik hat genau eine Fassung, sie entsteht von selbst. Umbenennen und Entfernen gibt es hier nicht.",
+    "countriesLabel": "Länder für den Gleichstand",
+    "countriesHint": "Haben zwei Ausgaben gleich viele Titel, gewinnt das Land, das hier weiter vorn steht. Kennungen wie DE, GB, US; XE heißt Europa, XW weltweit. Zurzeit: {{list}}.",
+    "countriesNone": "keine",
+    "countriesSave": "Speichern",
+    "countriesDefault": "Zurück auf die Vorgabe ({{list}})",
+    "countriesSaved": "Gespeichert. Die Regel läuft für die Alben ohne Datei noch einmal.",
+    "writeTags": "Tags schreiben",
+    "writeTagsHint": "Schreibt Titel, Künstler, Nummern, MusicBrainz-Kennungen und das Cover in abgelegte Musik. Fremde Felder wie ReplayGain bleiben. Ein Torrent wird dafür kopiert statt verlinkt, damit er unverändert weiter teilt. Ohne Tags kennt kein Player die Reihenfolge bei mehreren Medien."
+  },
+  "view": {
+    "albums": "Alben",
+    "artists": "Künstler",
+    "label": "Künstler oder Alben"
+  },
+  "artistCount_one": "{{value}} Künstler",
+  "artistCount_other": "{{value}} Künstler",
+  "steps": {
+    "lossless_24": "Verlustfrei 24 Bit",
+    "lossless": "Verlustfrei",
+    "lossy_high": "MP3 hoch (320, V0)",
+    "lossy_mid": "MP3 mittel",
+    "lossy_low": "MP3 niedrig",
+    "unknown": "Qualität unbekannt"
+  },
+  "profile": {
+    "title": "Profil",
+    "intro": "Sagt, welche Releases nexcrate für Musik nimmt. Vier Fragen, keine Punktetabellen.",
+    "none": "Noch kein Profil. Ohne Profil bewertet nexcrate kein Musik-Release, und kein Album gilt als verbesserbar.",
+    "setUp": "Profil einrichten",
+    "change": "Profil ändern",
+    "dialogTitle": "Profil für Musik",
+    "dialogIntro": "Die Zusammenfassung unten ändert sich mit jeder Antwort.",
+    "save": "Speichern",
+    "remove": "Profil entfernen",
+    "removeConfirm": "Wirklich entfernen",
+    "saved": "Gespeichert. Die Alben der Bibliothek folgen dem neuen Profil.",
+    "ladderLabel": "Was das Profil mit jeder Stufe tut",
+    "role": {
+      "target": "Ziel",
+      "for_now": "vorerst",
+      "waits": "nein",
+      "never": "nein"
+    },
+    "chip": "{{step}} · {{role}}",
+    "sentence": {
+      "lossless": "Ziel ist verlustfrei.",
+      "either": "Verlustfrei und MP3 hoch sind beide recht.",
+      "lossy": "Ziel ist MP3 hoch.",
+      "takeNowLossless": "MP3 hoch wird vorerst genommen und später ersetzt.",
+      "takeNowLossy": "Verlustfrei wird vorerst genommen, wenn es kein MP3 hoch gibt.",
+      "waits": "Alles außer dem Ziel wird abgelehnt.",
+      "hiresPrefer": "24 Bit geht vor.",
+      "hiresAvoid": "24 Bit kommt zuletzt.",
+      "avoidVinyl": "Vinyl-Rips kommen zuletzt.",
+      "preferCd": "CD geht vor WEB, Vinyl kommt zuletzt.",
+      "never": "MP3 mittel und niedrig werden nie genommen."
+    },
+    "fixedLabel": "Fest, ohne Frage",
+    "fixed": {
+      "cue": "Ein Album als eine einzige Datei mit CUE wird abgelehnt.",
+      "tracks": "Mehr Titel in schlechterer Qualität ersetzen nichts, was schon da ist.",
+      "several": "Mehrere Alben in einem Release (Diskografie, Sammlung) werden abgelehnt.",
+      "audiobooks": "Hörbücher und Hörspiele sind nicht vorgesehen."
+    },
+    "library": "In der Bibliothek steht ein Album auf Bernstein „Verbesserung möglich“, wenn seine schlechteste Datei unter dem Ziel des Profils liegt. Gesucht wird deshalb noch nichts."
+  }
+}

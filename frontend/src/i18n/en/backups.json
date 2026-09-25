@@ -1,0 +1,66 @@
+{
+  "title": "Backups",
+  "intro": "nexcrate makes copies of its database: on a schedule, before every change to the structure of the database and when you say so. They lie on the same disk as the database. A copy only becomes a real backup once you download it and keep it somewhere else.",
+  "scheduleLabel": "Back up automatically",
+  "schedule": {
+    "off": "Never",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly"
+  },
+  "keepLabel": "Keep",
+  "keepHint": "This many automatic copies stay, older ones are removed. Copies made by hand stay until you delete them. Automatic copies are made at night between 3 and 6.",
+  "saved": "Saved.",
+  "listTitle": "Copies",
+  "createNow": "Back up now",
+  "empty": "No copy yet.",
+  "columns": {
+    "when": "When",
+    "kind": "Kind",
+    "note": "Note",
+    "version": "Version",
+    "size": "Size",
+    "actions": "Actions"
+  },
+  "kind": {
+    "manual": "By hand",
+    "scheduled": "Scheduled",
+    "update": "Before change"
+  },
+  "tooNew": "newer than this version",
+  "unknownVersion": "version unknown",
+  "download": "Download",
+  "folderHint": "The copies lie in the folder {{folder}}.",
+  "create": {
+    "title": "New backup",
+    "sub": "A copy of the database with the TRaSH state. Cached TMDB answers stay out, they come back by themselves. With a large database this takes a few minutes on a NAS.",
+    "note": "Note",
+    "noteHint": "How you will recognise it later, such as \"before reworking the profiles\". Also part of the file name.",
+    "done": "Backup made."
+  },
+  "downloadDialog": {
+    "title": "Download backup",
+    "what": "You get an encrypted ZIP with the database, the key for the stored credentials and the TRaSH state. 7-Zip and WinRAR open it, the Windows Explorer cannot.",
+    "warning": "Without the password the backup is worthless. There is no second key, and nexcrate cannot open the archive either.",
+    "password": "Password",
+    "repeat": "Repeat password",
+    "tooShort": "At least {{count}} characters.",
+    "mismatch": "The two passwords differ."
+  },
+  "delete": {
+    "action": "Delete",
+    "title": "Delete backup?",
+    "text": "The copy from {{when}} (note: {{note}}) is removed.",
+    "warning": "This cannot be undone. If you have not downloaded it, this state is gone afterwards.",
+    "done": "Backup deleted."
+  },
+  "restoreCopy": {
+    "action": "Restore",
+    "title": "Restore this copy?",
+    "text": "The copy from {{when}} (note: {{note}}) replaces the current database. The key for the stored credentials stays this installation's own."
+  },
+  "autoNote": {
+    "beforeRestore": "Before a restore",
+    "beforeSchemaChange": "Before a change of the database"
+  }
+}

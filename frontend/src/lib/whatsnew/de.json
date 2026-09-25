@@ -1,0 +1,40 @@
+{
+  "entries": {
+    "0.2.0": {
+      "lead": "Ab dieser Version steht nach jedem Update hier, was sich geändert hat. Diesmal: Sicherungen zum Herunterladen, eine Bremse für Verbesserungen und eine deutlich kleinere Datenbank.",
+      "sections": [
+        {
+          "title": "Sicherungen",
+          "body": "nexcrate sichert sich jetzt wöchentlich nachts von selbst, auf Wunsch auch täglich oder monatlich. Jede Kopie lässt sich als verschlüsseltes Archiv herunterladen und später wieder einspielen, samt Schlüssel für die gespeicherten Zugänge.",
+          "where": "Einstellungen › System › Sicherungen"
+        },
+        {
+          "title": "Verbesserungen bremsen",
+          "body": "Fehlende Filme und Folgen laden jetzt vor Verbesserungen, in SABnzbd wie in qBittorrent. Dazu gibt es eine Pause für alles, was beim Einschalten schon da ist, und eine Obergrenze pro Tag.",
+          "where": "Einstellungen › Automatik › Verbesserungen bremsen"
+        },
+        {
+          "title": "Vorhandenes nicht verbessern",
+          "body": "Beim Übernehmen aus Radarr oder Sonarr und beim Einlesen von der Platte lässt sich ankreuzen, dass die mitgebrachten Dateien bleiben, wie sie sind. Fehlendes wird weiter gesucht.",
+          "where": "Einstellungen › Import und Ordner einlesen"
+        },
+        {
+          "title": "Mehrere Titel entfernen",
+          "body": "In der Bibliothek lassen sich mehrere Titel auswählen und auf einmal entfernen, wahlweise mit den Dateien im Papierkorb.",
+          "where": "Bibliothek › Auswählen › Entfernen"
+        },
+        {
+          "title": "Anime nach Szene-Nummern",
+          "body": "Releases, die Folgen durchzählen, werden jetzt wie bei Sonarr über die Szene-Nummern von TheXEM zugeordnet und gesucht. Je Serie lässt sich das abschalten, und an jeder Folge lässt sich die Nummer von Hand setzen.",
+          "where": "Serie › Nummerierung"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Datenbank ist deutlich kleiner: nexcrate hebt von TMDB nur noch auf, was es liest, und gibt leeren Platz beim Start zurück. Der erste Start nach dem Update dauert deshalb einige Minuten länger.",
+        "TheXEM wird nur noch nach Serien gefragt, die es kennt, und nach einem Fehler sechs Stunden gar nicht.",
+        "Eine beim Import übernommene Datei zählt im Protokoll jetzt als abgelegt."
+      ]
+    }
+  }
+}

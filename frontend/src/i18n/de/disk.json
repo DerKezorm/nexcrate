@@ -1,0 +1,365 @@
+{
+  "title": "Ordner einlesen",
+  "sub": "Filme, die schon auf der Platte liegen, holst du hier in die Bibliothek. nexcrate verschiebt und löscht dabei nichts.",
+  "backToLibrary": "Zur Bibliothek",
+  "noTmdb": "Für Vorschläge braucht nexcrate den TMDB-Schlüssel.",
+  "noTmdbLink": "Zu TMDB",
+  "kindLabel": "Filme oder Serien",
+  "roots": {
+    "title": "Ordner",
+    "intro": "Die Standardordner deiner Fassungen, die Ordner deiner Filme und die Ordner, die du dazugenommen hast. nexcrate liest nur, wenn du es sagst.",
+    "empty": "Noch kein Ordner zum Einlesen. Wähl unter Ordner und Benennung einen Standardordner für eine Fassung, oder nimm hier einen Ordner dazu.",
+    "versions_one": "Fassung {{labels}}",
+    "versions_other": "Fassungen {{labels}}",
+    "noVersion": "Gehört zu keiner Fassung. Beim Wiederherstellen entscheidet die release.nex, beim Zuordnen wählst du.",
+    "ownRoot": "Von dir hinzugefügt",
+    "lastScan": "Zuletzt eingelesen {{when}}.",
+    "neverScanned": "Noch nie eingelesen.",
+    "counts": "Zuletzt gezählt",
+    "missingFiles_one": "Ein Film von nexcrate fehlt in diesem Ordner. nexcrate ändert daran nichts.",
+    "missingFiles_other": "{{count}} Filme von nexcrate fehlen in diesem Ordner. nexcrate ändert daran nichts.",
+    "radarrUnmapped": "Für {{names}} konnte nexcrate den Stammordner hier nicht zuordnen. Diese Filmordner bleiben unbekannt, bis die Zuordnung steht.",
+    "notVisible": "Diesen Ordner sieht nexcrate gerade nicht. Er wird beim Einlesen übersprungen.",
+    "scan": "Einlesen",
+    "scanLabel": "Einlesen: {{path}}",
+    "scanAll": "Alle einlesen",
+    "add": "Weiteren Ordner hinzufügen",
+    "pickerTitle": "Ordner zum Einlesen",
+    "pickerHint": "nexcrate liest die Unterordner dieses Ordners als Filmordner. Verschoben oder gelöscht wird nichts.",
+    "added": "{{path}} wird jetzt mit eingelesen.",
+    "remove": "Aus der Liste nehmen",
+    "removeLabel": "Aus der Liste nehmen: {{path}}",
+    "removed": "{{path}} wird nicht mehr eingelesen."
+  },
+  "job": {
+    "scan": "nexcrate liest ein",
+    "restore": "nexcrate holt Filme zurück",
+    "assign": "nexcrate ordnet zu",
+    "progress": "{{done}} von {{total}} Ordnern angesehen",
+    "progressLabel": "Angesehene Ordner",
+    "hint": "Du kannst die Seite verlassen, nexcrate liest weiter.",
+    "phase": {
+      "listing": "nexcrate listet die Ordner …",
+      "folders": "nexcrate sieht in die Ordner …",
+      "radarr": "nexcrate gleicht mit Radarr ab …",
+      "matching": "nexcrate ordnet zu …",
+      "tmdb": "nexcrate holt Vorschläge von TMDB …",
+      "other": "Läuft …"
+    },
+    "done": {
+      "scan": "Einlesen fertig.",
+      "restore": "Wiederherstellen fertig.",
+      "assign": "Zuordnen fertig."
+    },
+    "failed": {
+      "scan": "Das Einlesen ist fehlgeschlagen.",
+      "restore": "Das Wiederherstellen ist fehlgeschlagen.",
+      "assign": "Das Zuordnen ist fehlgeschlagen."
+    },
+    "lost": "Der letzte Lauf ist nicht mehr da, etwa weil nexcrate neu gestartet ist. Was er eingelesen hat, steht unten.",
+    "outcome": {
+      "restored": "Wiederhergestellt",
+      "assigned": "Zugeordnet",
+      "skipped": "Übersprungen",
+      "conflict": "Konflikte",
+      "failed": "Fehlgeschlagen",
+      "folders": "Ordner",
+      "roots": "Ordner eingelesen"
+    },
+    "conflictsHint": "Was nicht ging, steht unter Konflikte.",
+    "dismiss": "Ausblenden"
+  },
+  "tabs": {
+    "label": "Ordner nach Zustand",
+    "restorable": "Wiederherstellen",
+    "proposal": "Vorschläge",
+    "unknown": "Unbekannt",
+    "conflict": "Konflikte",
+    "radarr": "In Radarr",
+    "library": "In der Bibliothek",
+    "ignored": "Ignoriert"
+  },
+  "filter": {
+    "search": "Ordner suchen",
+    "root": "Ordner",
+    "allRoots": "Alle Ordner"
+  },
+  "list": {
+    "empty": "Hier liegt nichts.",
+    "emptySearch": "Nichts gefunden. Prüf die Suche.",
+    "count_one": "{{value}} Ordner",
+    "count_other": "{{value}} Ordner",
+    "more": "Mehr laden",
+    "shown": "{{shown}} von {{total}}",
+    "group": {
+      "moved": "Verschoben",
+      "restorable": "Mit release.nex",
+      "unknown": "Unbekannte Ordner",
+      "file": "Dateien ohne Ordner",
+      "disc": "Disc-Ordner",
+      "no_video": "Ordner ohne Video",
+      "unreadable": "Nicht lesbar"
+    }
+  },
+  "state": {
+    "restorable": "Hat eine release.nex. nexcrate holt den Film ohne Raten zurück.",
+    "proposal": "nexcrate hat einen Vorschlag. Prüf ihn und ordne zu.",
+    "unknown": "nexcrate weiß nicht, welcher Film das ist.",
+    "conflict": "Die release.nex passt nicht zu dem, was nexcrate kennt.",
+    "radarr": "Gehört zu einem Film aus {{name}}. nexcrate lässt den Ordner in Ruhe.",
+    "radarrUnnamed": "Gehört zu einem Film aus Radarr. nexcrate lässt den Ordner in Ruhe.",
+    "moved": "Der Film liegt jetzt hier. nexcrate kennt noch den alten Ordner.",
+    "file": "nexcrate nimmt nur Filme in einem eigenen Ordner.",
+    "disc": "Disc-Ordner kann nexcrate noch nicht einlesen.",
+    "no_video": "In diesem Ordner liegt kein Video.",
+    "unreadable": "Diesen Ordner konnte nexcrate nicht lesen.",
+    "library": "Gehört zu einem Film in der Bibliothek.",
+    "ignored": "Du hast diesen Ordner ignoriert. nexcrate schlägt ihn nicht mehr vor."
+  },
+  "row": {
+    "noVideo": "Kein Video im Ordner.",
+    "moreVideos_one": "und ein weiteres Video",
+    "moreVideos_other": "und {{count}} weitere Videos",
+    "nameQuality": "Aus dem Namen: {{quality}}",
+    "noNameQuality": "Aus dem Namen: keine Qualität",
+    "companionMovie": "release.nex: {{title}}",
+    "companionVersion_one": "Fassung {{labels}}",
+    "companionVersion_other": "Fassungen {{labels}}",
+    "proposal": "Vorschlag",
+    "proposalsLabel": "Vorschläge für {{name}}",
+    "from": {
+      "companion": "aus der release.nex",
+      "name_number": "Nummer im Ordnernamen",
+      "nfo_number": "Nummer aus der .nfo",
+      "title_year": "Titel und Jahr",
+      "library": "aus der Bibliothek",
+      "other": "gefunden"
+    },
+    "unambiguous": "Eindeutig",
+    "inLibrary": "In der Bibliothek",
+    "openTitle": "Zum Titel",
+    "assign": "Zuordnen …",
+    "assignLabel": "Zuordnen: {{name}}",
+    "restore": "Wiederherstellen",
+    "restoreLabel": "Wiederherstellen: {{name}}",
+    "takePath": "Neuen Ordner übernehmen",
+    "takePathLabel": "Neuen Ordner übernehmen: {{name}}",
+    "pathTaken": "{{name}} liegt für nexcrate jetzt im neuen Ordner.",
+    "ignore": "Ignorieren",
+    "ignoreLabel": "Ignorieren: {{name}}",
+    "ignored": "{{name}} wird jetzt ignoriert.",
+    "unignore": "Nicht mehr ignorieren",
+    "unignoreLabel": "Nicht mehr ignorieren: {{name}}",
+    "unignored": "{{name}} wird nicht mehr ignoriert."
+  },
+  "bulk": {
+    "restoreAll": "Alle wiederherstellen",
+    "assignAll": "Alle eindeutigen zuordnen",
+    "restore": {
+      "title": "Wiederherstellen",
+      "text_one": "nexcrate holt einen Film aus seiner release.nex zurück in die Bibliothek. Auf der Platte schreibt nexcrate nur die release.nex neu.",
+      "text_other": "nexcrate holt {{count}} Filme aus ihren release.nex zurück in die Bibliothek. Auf der Platte schreibt nexcrate nur die release.nex neu.",
+      "versions_one": "Die Filme kommen in die Fassung {{labels}}.",
+      "versions_other": "Die Filme kommen in die Fassungen {{labels}}.",
+      "missing": "Die Fassung {{label}} gibt es nicht.",
+      "missingHint": "Ohne die Fassung bleiben diese Filme als Konflikt liegen.",
+      "create": "Fassung {{label}} anlegen",
+      "created": "Die Fassung {{label}} ist angelegt.",
+      "submit": "Wiederherstellen",
+      "started": "nexcrate holt die Filme zurück."
+    },
+    "assign": {
+      "title": "Alle eindeutigen zuordnen",
+      "text_one": "nexcrate ordnet einen Film zu, dessen Vorschlag eindeutig ist: eine Nummer im Namen oder in der .nfo, oder genau ein Treffer mit Titel und Jahr.",
+      "text_other": "nexcrate ordnet {{count}} Filme zu, deren Vorschlag eindeutig ist: eine Nummer im Namen oder in der .nfo, oder genau ein Treffer mit Titel und Jahr.",
+      "versions_one": "Die Filme kommen in die Fassung {{labels}}.",
+      "versions_other": "Die Filme kommen in die Fassungen ihres Ordners: {{labels}}.",
+      "none": "Unter den geladenen Vorschlägen ist keiner eindeutig. Ordne sie einzeln zu.",
+      "notLoaded_one": "Ein Vorschlag ist noch nicht geladen. nexcrate prüft ihn mit und ordnet ihn zu, wenn er eindeutig ist.",
+      "notLoaded_other": "{{count}} Vorschläge sind noch nicht geladen. nexcrate prüft sie mit und ordnet zu, was eindeutig ist.",
+      "companion": "Danach legt nexcrate in jeden Ordner eine release.nex.",
+      "submit": "Zuordnen",
+      "started": "nexcrate ordnet die Filme zu."
+    }
+  },
+  "assign": {
+    "title": "{{name}} zuordnen",
+    "file": "Welche Datei ist der Film?",
+    "fileOne": "Die Datei",
+    "reading": "nexcrate liest die Datei …",
+    "media": "Aus der Datei: {{summary}}",
+    "quality": "Qualität: {{quality}}",
+    "fromMedia": "Auflösung aus der Datei, Quelle aus dem Namen",
+    "fromName": "Qualität aus dem Namen",
+    "languages": "Sprachen: {{languages}}",
+    "unreadable": "Die Datei ließ sich nicht lesen. nexcrate nimmt die Qualität aus dem Namen.",
+    "movie": "Welcher Film ist das?",
+    "search": "Film suchen",
+    "year": "Jahr",
+    "proposals": "Vorschläge",
+    "results": "Treffer bei TMDB",
+    "searching": "Sucht bei TMDB …",
+    "idle": "Gib den Titel ein, dann sucht nexcrate bei TMDB.",
+    "noResults": "Keine Treffer bei TMDB. Versuch es mit einem anderen Wort oder ohne Jahr.",
+    "chosen": "Gewählt",
+    "version": "Welche Fassung?",
+    "versionFixed": "Fassung: {{label}}",
+    "versionFixedHint": "Der Ordner gehört zu dieser Fassung.",
+    "hasFile": "Hat schon eine Datei",
+    "fromSource": "Kommt aus Radarr",
+    "noVersions": "Es gibt noch keine Fassung für Filme. Leg zuerst eine an, etwa Full-HD.",
+    "noVersionsAction": "Zu den Fassungen",
+    "companion": "Danach legt nexcrate eine release.nex in den Ordner.",
+    "submit": "Zuordnen",
+    "done": "{{name}} ist jetzt in der Bibliothek.",
+    "openTitle": "Titel öffnen",
+    "missingChoice": "Wähl einen Film und eine Fassung.",
+    "loadFailed": "Diesen Ordner findet nexcrate nicht mehr. Lies die Ordner neu ein.",
+    "truncated": "Die Datei ist abgeschnitten, sie ist kürzer, als ihr Inhalt angibt. nexcrate nimmt die Qualität aus dem Namen."
+  },
+  "series": {
+    "sub": "Serien, die schon auf der Platte liegen, holst du hier in die Bibliothek. nexcrate verschiebt und löscht dabei nichts.",
+    "tabs": {
+      "sonarr": "In Sonarr"
+    },
+    "roots": {
+      "intro": "Die Ordner deiner Serienfassungen und die Ordner, die du dazugenommen hast. Jeder Unterordner darin ist eine Serie. nexcrate liest nur, wenn du es sagst.",
+      "empty": "Noch kein Ordner mit Serien. Wähl unter Ordner und Benennung einen Standardordner für eine Serienfassung, oder nimm hier einen Ordner dazu.",
+      "pickerTitle": "Ordner mit Serien",
+      "pickerHint": "nexcrate liest die Unterordner dieses Ordners als Serienordner. Verschoben oder gelöscht wird nichts."
+    },
+    "state": {
+      "library": "Gehört zu einer Serie in der Bibliothek.",
+      "sonarr": "Gehört zu einer Serie aus {{name}}. nexcrate lässt den Ordner in Ruhe; nach der Übernahme gehört er hierher.",
+      "sonarrUnnamed": "Gehört zu einer Serie aus Sonarr. nexcrate lässt den Ordner in Ruhe; nach der Übernahme gehört er hierher.",
+      "restorable": "Hat eine release.nex. nexcrate holt die Serie ohne Raten zurück.",
+      "proposal": "nexcrate hat einen Vorschlag. Prüf ihn und ordne zu.",
+      "unknown": "nexcrate weiß nicht, welche Serie das ist.",
+      "conflict": "Die release.nex passt nicht zu dem, was nexcrate kennt.",
+      "no_video": "In diesem Ordner liegt kein Video.",
+      "ignored": "Du hast diesen Ordner ignoriert. nexcrate schlägt ihn nicht mehr vor."
+    },
+    "row": {
+      "videos_one": "Beim Einlesen wird ein Video angesehen",
+      "videos_other": "Beim Einlesen werden {{value}} Videos angesehen",
+      "seasons": "Staffelordner: {{names}}",
+      "moreSeasons_one": "und ein weiterer",
+      "moreSeasons_other": "und {{count}} weitere",
+      "noSeasons": "Keine Staffelordner, die Videos liegen direkt im Serienordner.",
+      "openTitle": "Zur Serie"
+    },
+    "assign": {
+      "folder": "Der Ordner",
+      "series": "Welche Serie ist das?",
+      "search": "Serie suchen",
+      "idle": "Gib den Titel ein, dann sucht nexcrate bei TMDB.",
+      "version": "Welche Fassung?",
+      "versionFixedHint": "Der Ordner gehört zu dieser Fassung.",
+      "hasFolder": "Hat schon einen Serienordner",
+      "fromSonarr": "Kommt aus Sonarr",
+      "folderOf": "Der Ordner dieser Fassung: {{location}}",
+      "noVersions": "Es gibt noch keine Fassung für Serien. Leg zuerst eine an, etwa Full-HD.",
+      "rule": "Was soll die Fassung überwachen?",
+      "fromSeason": "Ab Staffel",
+      "reading": "Danach liest nexcrate den Ordner ein und ordnet die Dateien den Folgen zu. Gesucht wird erst danach, damit nexcrate nichts lädt, was schon da ist.",
+      "missingChoice": "Wähl eine Serie und eine Fassung.",
+      "done": "{{name}} ist jetzt in der Bibliothek. nexcrate liest den Ordner ein."
+    },
+    "bulk": {
+      "restoreText_one": "nexcrate holt eine Serie aus ihrer release.nex zurück in die Bibliothek. Auf der Platte schreibt nexcrate nur die release.nex neu.",
+      "restoreText_other": "nexcrate holt {{count}} Serien aus ihren release.nex zurück in die Bibliothek. Auf der Platte schreibt nexcrate nur die release.nex neu.",
+      "restoreVersions_one": "Die Serien kommen in die Fassung {{labels}}.",
+      "restoreVersions_other": "Die Serien kommen in die Fassungen {{labels}}.",
+      "restoreNoVersion": "Es gibt noch keine Fassung für Serien. Ohne Fassung bleiben diese Ordner liegen.",
+      "restoreStarted": "nexcrate holt die Serien zurück.",
+      "assignText_one": "nexcrate ordnet eine Serie zu, deren Vorschlag eindeutig ist: eine Nummer im Ordnernamen oder in der tvshow.nfo, oder genau ein Treffer mit Titel und Jahr. Jede Fassung überwacht alle Folgen.",
+      "assignText_other": "nexcrate ordnet {{count}} Serien zu, deren Vorschlag eindeutig ist: eine Nummer im Ordnernamen oder in der tvshow.nfo, oder genau ein Treffer mit Titel und Jahr. Jede Fassung überwacht alle Folgen.",
+      "assignVersions_one": "Die Serien kommen in die Fassung {{labels}}.",
+      "assignVersions_other": "Die Serien kommen in die Fassungen ihres Ordners: {{labels}}.",
+      "assignCompanion": "Danach liest nexcrate jeden Ordner ein und legt in jeden Staffelordner eine release.nex.",
+      "assignStarted": "nexcrate ordnet die Serien zu."
+    },
+    "job": {
+      "restore": "nexcrate holt Serien zurück",
+      "assign": "nexcrate ordnet Serien zu",
+      "doneRestore": "Wiederherstellen fertig.",
+      "doneAssign": "Zuordnen fertig.",
+      "failedRestore": "Das Wiederherstellen ist fehlgeschlagen.",
+      "failedAssign": "Das Zuordnen ist fehlgeschlagen.",
+      "noDefinition": "Ohne Fassung"
+    }
+  },
+  "album": {
+    "sub": "Musik, die schon auf der Platte liegt, holst du hier in die Bibliothek. nexcrate verschiebt, benennt und löscht dabei nichts.",
+    "tabs": {
+      "lidarr": "In Lidarr"
+    },
+    "roots": {
+      "intro": "Der Ordner deiner Musikfassung und die Ordner, die du dazugenommen hast. Darin sucht nexcrate Künstler- und Albumordner. nexcrate liest nur, wenn du es sagst.",
+      "empty": "Noch kein Ordner mit Musik. Wähl unter Ordner und Benennung einen Standardordner für die Musikfassung, oder nimm hier einen Ordner dazu.",
+      "pickerTitle": "Ordner mit Musik",
+      "pickerHint": "nexcrate sucht darin Künstler- und Albumordner. Verschoben oder gelöscht wird nichts."
+    },
+    "state": {
+      "library": "Gehört zu einem Album in der Bibliothek.",
+      "lidarr": "Gehört zu einem Album aus {{name}}. nexcrate lässt den Ordner in Ruhe; nach der Übernahme gehört er hierher.",
+      "lidarrUnnamed": "Gehört zu einem Album aus Lidarr. nexcrate lässt den Ordner in Ruhe; nach der Übernahme gehört er hierher.",
+      "restorable": "Hat eine release.nex. nexcrate holt das Album ohne Raten zurück.",
+      "proposal": "nexcrate hat einen Vorschlag. Prüf ihn und ordne zu.",
+      "unknown": "nexcrate weiß nicht, welches Album das ist.",
+      "conflict": "Die release.nex nennt ein Album, das schon einen Ordner mit Dateien hat.",
+      "ignored": "Du hast diesen Ordner ignoriert. nexcrate schlägt ihn nicht mehr vor."
+    },
+    "row": {
+      "audio_one": "Eine Audiodatei",
+      "audio_other": "{{value}} Audiodateien",
+      "says": "Laut {{source}}: {{artist}}, {{album}}",
+      "saysNoArtist": "Laut {{source}}: {{album}}",
+      "sourceTags": "Tags",
+      "sourceCompanion": "release.nex",
+      "sourceFolder": "Ordnername",
+      "openTitle": "Zum Album",
+      "notInLibrary": "Noch nicht in der Bibliothek"
+    },
+    "from": {
+      "companion": "aus der release.nex",
+      "tags": "aus den Tags",
+      "library": "aus Künstler und Album"
+    },
+    "assign": {
+      "title": "Albumordner zuordnen",
+      "folder": "Der Ordner",
+      "proposals": "Vorschläge",
+      "search": "Album suchen",
+      "searchHint": "Titel und Künstler, dann sucht nexcrate bei MusicBrainz.",
+      "searchEmpty": "MusicBrainz kennt dazu kein Album.",
+      "submit": "Zuordnen",
+      "reading": "Danach liest nexcrate den Ordner ein und ordnet die Dateien den Titeln zu, über Tags und Namen. Was nicht eindeutig ist, steht auf der Albumseite unter „Albumordner“. Verschoben und umbenannt wird nichts.",
+      "adds": "Das Album ist noch nicht in der Bibliothek; nexcrate fügt es hinzu.",
+      "missingChoice": "Wähl ein Album.",
+      "done": "{{name}} gehört jetzt zur Bibliothek. nexcrate hat den Ordner eingelesen."
+    },
+    "bulk": {
+      "restoreText_one": "nexcrate holt ein Album aus seiner release.nex zurück in die Bibliothek. Auf der Platte schreibt nexcrate nur die release.nex neu.",
+      "restoreText_other": "nexcrate holt {{count}} Alben aus ihren release.nex zurück in die Bibliothek. Auf der Platte schreibt nexcrate nur die release.nex neu.",
+      "restoreNotInLibrary": "Ein Album, das noch nicht in der Bibliothek steht, fügst du zuerst über „Zuordnen“ hinzu; der Lauf lässt es liegen.",
+      "restoreStarted": "nexcrate holt die Alben zurück.",
+      "assignText_one": "nexcrate ordnet ein Album zu, dessen Vorschlag eindeutig ist: eine Kennung in den Tags, oder genau ein Album des Künstlers mit diesem Namen.",
+      "assignText_other": "nexcrate ordnet {{count}} Alben zu, deren Vorschlag eindeutig ist: eine Kennung in den Tags, oder genau ein Album des Künstlers mit diesem Namen.",
+      "assignStarted": "nexcrate ordnet die Alben zu."
+    },
+    "job": {
+      "restore": "Alben wiederherstellen",
+      "assign": "Alben zuordnen",
+      "doneRestore": "Alben wiederhergestellt",
+      "doneAssign": "Alben zugeordnet",
+      "failedRestore": "Wiederherstellen abgebrochen",
+      "failedAssign": "Zuordnen abgebrochen",
+      "notInLibrary": "Album nicht in der Bibliothek"
+    }
+  },
+  "keep": {
+    "label": "Vorhandenes nicht verbessern",
+    "hint": "Was hier eingelesen wird, bleibt, wie es ist: Titel mit Datei stehen auf „in Ruhe lassen“, Folgen mit Datei sind aus. Was fehlt, sucht nexcrate weiter, und was später dazukommt, wird ganz normal verbessert."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "title": "Rules from the TRaSH Guides",
+  "text": "The rules in your profiles come from the TRaSH Guides. They are published under the MIT licence.",
+  "link": "TRaSH Guides",
+  "licenseShow": "Show licence text",
+  "state": "State {{commit}} from {{date}}",
+  "bundled": "bundled",
+  "fetched": "downloaded",
+  "checkedAt": "Last checked: {{time}}",
+  "neverChecked": "Not checked yet.",
+  "updateAvailable": "New state available: {{commit}}",
+  "adopt": "Adopt",
+  "adoptHint": "Your profiles keep their rules until you save them again. Until then they show as outdated.",
+  "adopted": "New state adopted. Save your profiles again to use it for them.",
+  "breaks": "The new state does not work with the profiles of {{versions}}. nexcrate stays with the current state.",
+  "breaksPlain": "The new state does not work with one of your profiles. nexcrate stays with the current state.",
+  "unreachable": "GitHub cannot be reached right now. Try again later.",
+  "daily": "Check for a new state every day",
+  "dailyHint": "nexcrate asks GitHub once a day. Nothing is adopted unless you say so."
+}

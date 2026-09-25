@@ -1,0 +1,622 @@
+{
+  "roles": {
+    "required": "required",
+    "preferred": "preferred"
+  },
+  "roleButtons": {
+    "required": "Required",
+    "preferred": "Preferred"
+  },
+  "languageNames": {
+    "de": "German",
+    "en": "English",
+    "fr": "French",
+    "es": "Spanish",
+    "it": "Italian",
+    "tr": "Turkish",
+    "original": "Original language"
+  },
+  "line": {
+    "label": "Profile set up",
+    "none": "No profile yet",
+    "outdated": "Outdated",
+    "outdatedHint": "There is a newer state of the TRaSH Guides. Open the profile and save it to use it.",
+    "resolution2160p": "4K",
+    "resolution1080p": "1080p",
+    "sourceRemux": "Remux",
+    "sourceWeb": "WEB",
+    "withSource": "{{resolution}} {{source}}",
+    "languages": "{{languages}} {{role}}",
+    "hdrSafety": "HDR preferred",
+    "hdrFree": "HDR and Dolby Vision preferred",
+    "limit": "up to {{value}} GB per hour",
+    "noLimit": "no size limit"
+  },
+  "expert": {
+    "open": "By hand",
+    "openLabel": "Set the profile by hand: {{label}}",
+    "title": "Profile by hand: {{label}}",
+    "loading": "Loading the profile",
+    "cancel": "Cancel",
+    "save": "Save the profile",
+    "fromWizard": "This profile comes from the assistant. What you save here counts from then on; the assistant overwrites it again only when you save there.",
+    "qualitiesTitle": "Qualities",
+    "qualitiesHint": "The best one on top; sort by dragging or with the arrows. The tick says whether it is taken; qualities worth the same stand together in a group.",
+    "allowed": "Take {{quality}}",
+    "up": "Move {{quality}} up",
+    "down": "Move {{quality}} down",
+    "drag": "Drag to sort",
+    "merge": "Make {{quality}} worth the same as the one below",
+    "mergeShort": "Same worth",
+    "split": "Split the group {{quality}}",
+    "splitShort": "Split",
+    "sameWorth": "Same worth",
+    "missing": "Not in the list: {{qualities}}.",
+    "addMissing": "Add at the bottom",
+    "cutoff": "Good enough from",
+    "cutoffHint": "Once this quality is there, upgrading stops, as long as the score is high enough.",
+    "minScore": "Minimum score",
+    "minScoreHint": "Below this score a release is not taken.",
+    "upgradeUntil": "Upgrade until",
+    "upgradeUntilHint": "From this score on it is enough; nothing above it is swapped any more.",
+    "step": "Smallest step",
+    "stepHint": "This many points a swap has to bring at least.",
+    "upgradesAllowed": "Allow upgrades",
+    "formatsTitle": "Custom formats ({{count}} with a score)",
+    "formatsHint": "The score per format. Zero means it does not count.",
+    "toFormats": "Edit the formats",
+    "ownFormat": "Your own",
+    "scoreOf": "Score for {{name}}",
+    "filter": "Search the formats",
+    "sizesHint": "What a quality may weigh stands in one place for every profile.",
+    "toSizes": "Look at the sizes",
+    "saved": "The profile is saved.",
+    "needsQuality": "Tick at least one quality first.",
+    "language": "Language",
+    "languageAny": "Any",
+    "languageSeveral": "Several: {{languages}}",
+    "languageHint": "A release has to carry this language, like the language of a profile in Radarr. Scores for languages come from the custom formats.",
+    "anime": {
+      "title": "Anime rules",
+      "forSeries": "Ordinary series",
+      "forAnime": "Anime",
+      "add": "Add anime rules",
+      "remove": "Remove anime rules",
+      "none": "Anime series of this version are judged by the profile above. With anime rules of their own you can set other qualities, formats and scores for them, the way Sonarr asks for a whole profile of its own.",
+      "exists": "This version has anime rules of its own. You are editing the rules for ordinary series.",
+      "editing": "You are editing the anime rules. Everything below counts for series of the type anime only.",
+      "fromTrash": "Fill from TRaSH",
+      "trashChoice": "TRaSH anime profile",
+      "trashAuto": "Matching the languages",
+      "fromTrashHint": "Fills the anime rules the way TRaSH's anime profile has them, scores included. Formats that are missing are created for it. Nothing is kept until you save.",
+      "filled": "Anime rules filled from {{profile}}. Save to keep them.",
+      "filledCreated_one": "Anime rules filled from {{profile}}, {{count}} format created. Save to keep them.",
+      "filledCreated_other": "Anime rules filled from {{profile}}, {{count}} formats created. Save to keep them."
+    }
+  },
+  "tile": {
+    "setUp": "Set up profile",
+    "change": "Change profile",
+    "export": "Export",
+    "import": "Import",
+    "setUpLabel": "Set up profile: {{label}}",
+    "changeLabel": "Change profile: {{label}}",
+    "exportLabel": "Export: {{label}}",
+    "importLabel": "Import: {{label}}",
+    "choose": "Choose a profile",
+    "chooseLabel": "Choose a profile: {{label}}",
+    "open": "Open the profile",
+    "openLabel": "Open the profile: {{label}}",
+    "chooseFirst": "Choose a profile"
+  },
+  "wizard": {
+    "titleNew": "Set up profile for {{label}}",
+    "titleEdit": "Change profile for {{label}}",
+    "progress": "Steps",
+    "pages": {
+      "mode": "Scope",
+      "target": "Target",
+      "source": "Source",
+      "languages": "Languages",
+      "details": "Details",
+      "audio": "Audio",
+      "video": "Video",
+      "cuts_services": "Cuts and services",
+      "anime": "Anime",
+      "more": "More questions",
+      "summary": "Overview"
+    },
+    "moreIntro": "These questions are new. The interface has no texts of its own for them yet, the default is already chosen.",
+    "unsupported": "The interface cannot show this question yet. The default applies.",
+    "back": "Back",
+    "next": "Next",
+    "save": "Save profile",
+    "remove": "Remove profile",
+    "removeTitle": "Remove profile of {{label}}?",
+    "removeText": "The version {{label}} will have no profile any more, and your answers are gone. Export the profile first if you still need it.",
+    "removeConfirm": "Yes, remove",
+    "building": "nexcrate is building the profile …",
+    "byHandWarning": "This profile is kept by hand. If you save here, the assistant builds it again, and your scores, groups and ticks are gone."
+  },
+  "questions": {
+    "mode": {
+      "title": "How much do you want to decide yourself?",
+      "short": "Scope",
+      "hint": "Both ways build a complete profile.",
+      "options": {
+        "simple": {
+          "title": "Simple",
+          "hint": "A few questions about resolution, source, language and size. Everything else follows what the TRaSH Guides recommend."
+        },
+        "detailed": {
+          "title": "Detailed",
+          "hint": "Adds questions about audio, video, special cuts and streaming services, for cases where the recommendation is not enough."
+        }
+      }
+    },
+    "resolution": {
+      "title": "Which resolution should you end up with?",
+      "short": "Resolution",
+      "hint": "This is the goal, not the minimum.",
+      "options": {
+        "2160p": {
+          "title": "4K (2160p)",
+          "hint": "Blu-ray and streaming in 2160p. Large files."
+        },
+        "1080p": {
+          "title": "1080p",
+          "hint": "Much smaller files, hardly a difference on most TVs."
+        }
+      }
+    },
+    "take_now": {
+      "title": "And if it does not exist yet?",
+      "short": "Take what is there first",
+      "hint": "Dubbed versions often appear in high resolution only weeks later.",
+      "options": {
+        "true": {
+          "title": "Take what is there first",
+          "hint": "A lower resolution now, and later nexcrate swaps it for the target. That means a second download."
+        },
+        "false": {
+          "title": "Wait until it exists",
+          "hint": "The version stays empty until a release in the target resolution appears."
+        }
+      }
+    },
+    "source": {
+      "title": "How good should the source be?",
+      "short": "Source",
+      "hint": "The biggest lever on disk space.",
+      "options": {
+        "encodes": {
+          "title": "Good encodes",
+          "hint": "Re-encoded Blu-ray and WEB releases from good groups. Nearly untouched picture, much smaller."
+        },
+        "remux": {
+          "title": "Remux",
+          "hint": "The untouched track from the Blu-ray. The best there is, and very large files."
+        },
+        "web": {
+          "title": "Streaming only (WEB)",
+          "hint": "Versions from streaming services. The most economical."
+        }
+      }
+    },
+    "languages": {
+      "title": "Which audio tracks do you need?",
+      "short": "Languages",
+      "hint": "Several are fine. This is about the audio of the releases, not the language of nexcrate.",
+      "explain": "Required means: without this language nexcrate takes no release. Preferred only gives extra points, and if it is missing you still get something."
+    },
+    "required_languages": {
+      "title": "Several languages are required. How should that work?",
+      "short": "Several required languages",
+      "hint": "Only matters when more than one language is required.",
+      "options": {
+        "all": {
+          "title": "All in the same release",
+          "hint": "Only releases that have every required language at once. There are far fewer of those."
+        },
+        "any": {
+          "title": "One of them is enough",
+          "hint": "A release with any one of the required languages will do."
+        }
+      }
+    },
+    "hdr": {
+      "title": "Should HDR versions be preferred?",
+      "short": "HDR",
+      "hint": "HDR only exists in 4K.",
+      "options": {
+        "safety": {
+          "title": "Yes, with a safety net",
+          "hint": "HDR is preferred. Dolby Vision without an HDR fallback is avoided, it looks discoloured on many devices."
+        },
+        "free": {
+          "title": "Yes, without restriction",
+          "hint": "Only sensible if every player in your home can do Dolby Vision."
+        },
+        "any": {
+          "title": "No, does not matter",
+          "hint": "HDR plays no part in the choice."
+        }
+      }
+    },
+    "good_enough": {
+      "title": "When is a movie good enough?",
+      "short": "Good enough",
+      "hint": "Every improvement is a new download.",
+      "options": {
+        "best": {
+          "title": "As recommended",
+          "hint": "nexcrate replaces the file as soon as a release with more points appears."
+        },
+        "first": {
+          "title": "Happy early",
+          "hint": "As soon as a file in the target resolution fits, that is it. Fewer new downloads."
+        }
+      }
+    },
+    "max_gb_per_hour": {
+      "title": "How large may a file be at most?",
+      "short": "Size limit",
+      "hint": "Counted per hour of runtime, so long movies may be larger than short ones.",
+      "none": "No limit",
+      "label": "At most (GB per hour)",
+      "example": "{{value}} GB per hour means up to {{double}} GB for a two hour movie.",
+      "exampleDefault": "For example: 20 GB per hour means up to 40 GB for a two hour movie.",
+      "noneText": "Without a limit nexcrate takes any size. The minimum sizes of the TRaSH Guides always apply."
+    },
+    "audio": {
+      "title": "How much does audio matter to you?",
+      "short": "Audio",
+      "hint": "Audio formats like Dolby Atmos and DTS-HD.",
+      "options": {
+        "any": {
+          "title": "Audio does not matter",
+          "hint": "The audio format plays no part."
+        },
+        "prefer": {
+          "title": "Prefer good audio",
+          "hint": "TrueHD Atmos and DTS:X first, then TrueHD and DTS-HD MA. Plain audio is not ruled out, only ranked lower."
+        }
+      }
+    },
+    "accessibility": {
+      "title": "Versions with audio description or sign language",
+      "short": "Audio description and sign language",
+      "hint": "They carry extra audio tracks or overlaid sign language.",
+      "options": {
+        "any": {
+          "title": "Allow",
+          "hint": "They count like any other version. Right if someone in your home needs them."
+        },
+        "avoid": {
+          "title": "Avoid",
+          "hint": "These versions practically stop being an option."
+        }
+      }
+    },
+    "x265_hd": {
+      "title": "x265 below 4K",
+      "short": "x265 below 4K",
+      "hint": "An encoding that rarely helps at 720p and 1080p.",
+      "options": {
+        "any": {
+          "title": "Allow",
+          "hint": "x265 counts like any other encoding. Sensible if all your devices handle it."
+        },
+        "avoid": {
+          "title": "Avoid",
+          "hint": "What the TRaSH Guides recommend: below 4K, x265 causes playback trouble on some devices."
+        }
+      }
+    },
+    "sdr": {
+      "title": "4K without HDR",
+      "short": "4K without HDR",
+      "hint": "Only asked for 4K.",
+      "options": {
+        "any": {
+          "title": "Allow",
+          "hint": "4K without HDR is still better than no version at all."
+        },
+        "avoid": {
+          "title": "Avoid",
+          "hint": "Only versions with HDR. Some movies will then not come at all."
+        }
+      }
+    },
+    "special_cuts": {
+      "title": "Special cuts",
+      "short": "Special cuts",
+      "hint": "For example director's cut, extended or IMAX.",
+      "options": {
+        "any": {
+          "title": "No preference",
+          "hint": "Theatrical or special cut, whatever fits first is taken."
+        },
+        "prefer": {
+          "title": "Prefer",
+          "hint": "Special cuts win over the theatrical version."
+        }
+      }
+    },
+    "asian_services": {
+      "title": "Asian streaming services",
+      "short": "Asian streaming services",
+      "hint": "Services like iQIYI or Coupang Play.",
+      "options": {
+        "any": {
+          "title": "Not needed",
+          "hint": "The usual services are enough."
+        },
+        "include": {
+          "title": "Include",
+          "hint": "Releases from these services count too. Useful if you download Asian movies."
+        }
+      }
+    },
+    "anime": {
+      "title": "Anime in this version",
+      "short": "Anime",
+      "hint": "Weekly anime releases often name no source, and good groups show in the name. TRaSH has a profile of its own for them, always at 1080p.",
+      "options": {
+        "trash": {
+          "title": "By TRaSH's anime profile",
+          "hint": "nexcrate judges this version's anime series by TRaSH's anime profile that fits the version's languages. The other series stay as they are."
+        },
+        "same": {
+          "title": "Like any series",
+          "hint": "Anime series count by the same rules as all the others. Releases without a source then often fail."
+        }
+      }
+    }
+  },
+  "languagesField": {
+    "roleLabel": "Role for {{language}}",
+    "atLeastOne": "Choose at least one language.",
+    "noneRequired": "No language is required. Audio then only decides the order, and if in doubt a release without your languages comes too."
+  },
+  "numberField": {
+    "none": "No limit",
+    "invalid": "Enter a number from {{min}} to {{max}}, for example 20 or 12.5."
+  },
+  "summary": {
+    "takenTitle": "What nexcrate takes",
+    "taken": "These qualities, from lowest to highest:",
+    "same": "equal",
+    "languagesTitle": "Languages",
+    "languagesNone": "No language is required. Audio only decides the order.",
+    "languagesOne": "Without {{language}} nexcrate takes no release.",
+    "languagesAll": "Only releases that have all of these languages at once: {{languages}}.",
+    "languagesAny": "At least one of these languages must be there: {{languages}}.",
+    "languagesPreferred": "Nice to have: {{languages}}.",
+    "preferredTitle": "What is preferred",
+    "avoidedTitle": "What is avoided",
+    "nothing": "Nothing in particular.",
+    "sizeTitle": "Size",
+    "sizeLimit": "At most {{value}} GB per hour of runtime.",
+    "sizeNoLimit": "No limit of your own.",
+    "sizeMinimums": "The minimum sizes of the TRaSH Guides always apply.",
+    "sizeTable": "Sizes per quality in GB per hour",
+    "sizeQuality": "Quality",
+    "sizeMin": "At least",
+    "sizeMax": "At most",
+    "sizeNone": "no limit",
+    "stopTitle": "When improving stops",
+    "minScore": "nexcrate takes no release below {{score}} points.",
+    "minScoreLow": "A release needs at least {{score}} points.",
+    "cutoff": "The target quality is {{cutoff}}. Once a file has it, nexcrate no longer downloads again for a better quality.",
+    "upgradeUntil": "When a release with more points appears, nexcrate downloads it and replaces the file, as long as better releases keep appearing.",
+    "upgradeAtMinimum": "Once a file has the minimum score, nexcrate no longer downloads again for more points.",
+    "formatsTotal_one": "The profile holds {{value}} rule from the TRaSH Guides.",
+    "formatsTotal_other": "The profile holds {{value}} rules from the TRaSH Guides.",
+    "warningsTitle": "Please note"
+  },
+  "warnings": {
+    "size_limit_below_minimum": "Your size limit is below the TRaSH Guides minimum for {{qualities}}. Such releases will then never fit.",
+    "answer_without_effect": "These answers change nothing in this profile, because the TRaSH Guides have nothing for them: {{questions}}.",
+    "unknown": "Notice with the code {{code}}."
+  },
+  "invalid": {
+    "fields": "nexcrate does not accept these answers like this: {{fields}}. Go back and check them.",
+    "plain": "nexcrate does not accept these answers like this. Go back and check them."
+  },
+  "import": {
+    "title": "Import profile for {{label}}",
+    "intro": "A profile file from nexcrate, for example from someone sharing their profile. It only holds answers, no rules.",
+    "file": "Choose file",
+    "fileHint": "A file ending in .yaml or .yml, at most 64 KB.",
+    "fileChosen": "Chosen: {{name}}",
+    "paste": "Or paste its content here",
+    "check": "Check file",
+    "empty": "Choose a file or paste its content.",
+    "tooLarge": "This is larger than 64 KB. No profile file is that large, so nexcrate does not send it.",
+    "wrongType": "Choose a file ending in .yaml or .yml.",
+    "unreadable": "The file cannot be read.",
+    "from": "From the version {{name}}",
+    "commitDiffers": "The file comes from a different state of the TRaSH Guides ({{commit}}). nexcrate builds the profile with its own state, so single scores may differ.",
+    "previewIntro": "This is how the profile for {{label}} would look. Nothing is saved yet.",
+    "save": "Use this profile",
+    "otherFile": "Other file",
+    "replaceTitle": "Replace profile of {{label}}?",
+    "replaceText": "{{label}} already has a profile. It will be replaced by the imported one. Export the current one first if you want to keep it.",
+    "replaceConfirm": "Yes, replace",
+    "invalid": "This is not a valid nexcrate profile file.",
+    "reasons": {
+      "too_large": "The file is larger than 64 KB. No profile file is that large.",
+      "not_yaml": "The file cannot be read as YAML.",
+      "not_a_profile": "This is not a nexcrate profile file. Details are missing, wrong or do not belong in it.",
+      "format_unknown": "The file has a format this nexcrate does not know. It may come from a newer version.",
+      "kind_unsupported": "nexcrate has no profiles for this kind yet.",
+      "kind_mismatch": "The profile belongs to another kind than this version.",
+      "answers_invalid": "These answers in the file do not fit the questions of nexcrate: {{fields}}.",
+      "answers_invalidPlain": "The answers in the file do not fit the questions of nexcrate."
+    }
+  },
+  "seriesQuestions": {
+    "resolution": {
+      "hint": "The target per episode. The TRaSH Guides aim at 1080p for series.",
+      "options": {
+        "1080p": {
+          "hint": "The usual way for series. Much smaller files than 4K."
+        },
+        "2160p": {
+          "hint": "Only worth it when the series exists in 4K and the space is there."
+        }
+      }
+    },
+    "take_now": {
+      "hint": "Dubbed episodes often appear later than the original.",
+      "options": {
+        "true": {
+          "hint": "A lower resolution now, later nexcrate swaps it for the target resolution."
+        },
+        "false": {
+          "hint": "The episode stays empty until a release in the target resolution turns up."
+        }
+      }
+    },
+    "source": {
+      "hint": "For series the biggest lever on the space needed.",
+      "options": {
+        "web": {
+          "title": "WEB",
+          "hint": "From streaming services. Where TRaSH has no pure WEB profile, it adds Blu-ray."
+        },
+        "remux": {
+          "title": "Remux",
+          "hint": "The untouched Blu-ray, very large. TRaSH rather advises WEB for series."
+        }
+      }
+    },
+    "good_enough": {
+      "title": "When is an episode good enough?"
+    },
+    "max_gb_per_hour": {
+      "hint": "Counted per hour of runtime, so long episodes may be larger.",
+      "example": "{{value}} GB an hour means up to {{episode}} GB for an episode of 45 minutes.",
+      "exampleDefault": "For example: 4 GB an hour means up to 3 GB for an episode of 45 minutes."
+    },
+    "audio": {
+      "hint": "Audio formats like Dolby Atmos and DTS-HD. For series only where TRaSH scores them."
+    },
+    "mode": {
+      "options": {
+        "detailed": {
+          "hint": "Plus questions on audio, video and streaming services, for cases where the recommendation is not enough."
+        }
+      }
+    }
+  },
+  "musicQuestions": {
+    "quality": {
+      "title": "Which quality should it be?",
+      "short": "Quality",
+      "hint": "Lossless means FLAC, ALAC, WAV and their relatives. “High” means MP3 at 320 kbit/s or V0 (about 245 kbit/s, the same to the ear) and AAC from 256.",
+      "options": {
+        "lossless": {
+          "title": "Lossless preferred",
+          "hint": "High MP3 only as a fallback, while “Take what is there first” is on."
+        },
+        "either": {
+          "title": "Lossless or high, both fine",
+          "hint": "The first that fits stays."
+        },
+        "lossy": {
+          "title": "Lossy is enough",
+          "hint": "High MP3 is the target. Lossless is only taken when nothing else is there."
+        }
+      }
+    },
+    "take_now": {
+      "title": "Take what is there first?",
+      "short": "Take what is there first",
+      "hint": "As with movies: a step other than the target counts as “for now” and is replaced later.",
+      "options": {
+        "true": {
+          "title": "Yes",
+          "hint": "Rather listen today and improve later."
+        },
+        "false": {
+          "title": "No",
+          "hint": "Only take what meets the target."
+        }
+      }
+    },
+    "hires": {
+      "title": "24 bit?",
+      "short": "24 bit",
+      "hint": "Only orders releases, never shuts one out. An album in 24 bit and 96 kHz is about three times the size.",
+      "options": {
+        "any": {
+          "title": "No preference"
+        },
+        "prefer": {
+          "title": "Prefer"
+        },
+        "avoid": {
+          "title": "Avoid",
+          "hint": "16 bit first, 24 bit only when there is nothing else."
+        }
+      }
+    },
+    "source": {
+      "title": "Source?",
+      "short": "Source",
+      "hint": "Read from the name (WEB, CD, VINYL). Only orders releases, shuts none out.",
+      "options": {
+        "avoid_vinyl": {
+          "title": "Avoid vinyl rips",
+          "hint": "Vinyl, tape and radio recordings come last. Crackle and rumble belong to the record, not into the archive."
+        },
+        "any": {
+          "title": "Does not matter"
+        },
+        "prefer_cd": {
+          "title": "Prefer CD",
+          "hint": "CD before WEB, vinyl last."
+        }
+      }
+    }
+  },
+  "chooser": {
+    "title": "Profile of the version {{label}}",
+    "intro": "A version has exactly one profile. The same profile may hang on several versions; that is rarely useful.",
+    "loading": "Loading the profiles",
+    "cancel": "Cancel",
+    "save": "Take this profile",
+    "take": "Take {{name}}",
+    "byHand": "By hand",
+    "usedBy": "also on: {{versions}}",
+    "rename": "Rename",
+    "renameLabel": "Rename {{name}}",
+    "copy": "Copy",
+    "copyLabel": "Copy {{name}}",
+    "removeLabel": "Remove {{name}}",
+    "inUse": "These still use this profile: {{versions}}.",
+    "none": "No profile. Without one nexcrate judges nothing for this version.",
+    "newName": "New name",
+    "saveName": "Save the name",
+    "addName": "Name of the new profile",
+    "add": "Add an empty profile",
+    "addCopy": "Add as a copy of {{name}}",
+    "addEmpty": "Add an empty one instead"
+  },
+  "dialog": {
+    "title": "Profile {{name}}",
+    "name": "Name",
+    "saveName": "Save the name",
+    "renamed": "It is called {{name}} now.",
+    "usedBy": "Used by: {{versions}}",
+    "how": "How is this profile built?",
+    "wizard": "Assistant",
+    "expert": "By hand",
+    "wizardIntro": "The assistant asks a few questions and builds the whole profile from them: qualities, scores and sizes.",
+    "wizardOpen": "Open the questions",
+    "wizardStart": "Start with the questions",
+    "expertHint": "Everything by hand, as in Radarr. What a quality may weigh and which custom formats there are stand in the tabs next to this one and count for every profile of this type."
+  }
+}

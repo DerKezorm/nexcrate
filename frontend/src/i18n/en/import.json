@@ -1,0 +1,516 @@
+{
+  "title": "Import from Radarr",
+  "intro": "If you already use Radarr, nexcrate fetches your movies from there into the library.",
+  "readOnly": "nexcrate only reads. Nothing is changed, deleted or searched again in Radarr.",
+  "scheduleLabel": "Importing",
+  "schedule": "is for the transition and the test phase: Radarr stays in charge, nexcrate reads it again every 15 minutes and shows your library. nexcrate loads nothing for these movies.",
+  "takeoverLabel": "Taking over",
+  "takeoverNote": "is the switch: the movies become nexcrate's own, nexcrate stops reading this Radarr and loads and upgrades them itself from then on. You can switch Radarr off afterwards.",
+  "count": {
+    "movies_one": "{{value}} movie",
+    "movies_other": "{{value}} movies",
+    "files_one": "{{value}} file",
+    "files_other": "{{value}} files",
+    "episodeFiles_one": "{{value}} episode file",
+    "episodeFiles_other": "{{value}} episode files",
+    "albums_one": "one album",
+    "albums_other": "{{value}} albums"
+  },
+  "sources": {
+    "add": "Connect Radarr",
+    "empty": "No Radarr connection yet.",
+    "name": "Name",
+    "nameHint": "Anything you like, for example Radarr 4K.",
+    "url": "Address",
+    "urlHint": "The address you open Radarr with in the browser, including the port.",
+    "apiKey": "API key",
+    "apiKeyHint": "You find it in Radarr under Settings, General.",
+    "keySaved": "A key is saved. Leave the field empty to keep it.",
+    "keyNone": "No key saved yet.",
+    "badgeKey": "Key saved",
+    "badgeNoKey": "No key",
+    "version": "Version",
+    "versionHint": "Every movie from this Radarr becomes this version in nexcrate.",
+    "newVersion": "Create a new version",
+    "newVersionName": "Name of the new version",
+    "newVersionHint": "For example Full HD or 4K.",
+    "versionTaken": "{{label}} (already taken)",
+    "versionOf": "Version {{label}}",
+    "dialogAdd": "Connect Radarr",
+    "dialogEdit": "Edit {{name}}",
+    "checking": "Testing connection …",
+    "checkOk": "{{app}} {{version}} · {{amount}}",
+    "testNeedsUrl": "Enter the address first.",
+    "testNeedsKey": "Enter the API key, then the connection can be tested.",
+    "missingName": "Please enter a name.",
+    "missingUrl": "Please enter the address.",
+    "missingKey": "Please enter the API key.",
+    "missingVersionName": "Please give the new version a name.",
+    "testLabel": "Test connection: {{name}}",
+    "editLabel": "Edit: {{name}}",
+    "removeLabel": "Remove: {{name}}",
+    "fetchTitle": "Fetch from this Radarr",
+    "takenOverBadge": "Taken over",
+    "takenOver": "Taken over on {{date}}. nexcrate no longer imports the movies of this Radarr.",
+    "takenOverInfo": "The movies from this Radarr now belong to nexcrate, together with their files. You still need this record to undo the takeover or to fetch indexers and download clients from there. If you remove it, movies, versions and files stay.",
+    "removeRecord": "Remove record",
+    "removeRecordLabel": "Remove record: {{name}}",
+    "removeRecordHint": "Removes only this record. Movies, versions and files stay.",
+    "removeRecordTitle": "Remove record?",
+    "removeRecordText": "The record {{name}} disappears from nexcrate. Movies, versions and files stay.",
+    "remove": {
+      "title": "Remove connection?",
+      "text": "The connection {{name}} disappears from nexcrate, together with everything that came into the library through it. Nothing changes in Radarr.",
+      "confirm": "Yes, remove"
+    },
+    "series": {
+      "fetchTitle": "Fetch from this Sonarr",
+      "takeoverNote": "is the switch: the series become nexcrate's own, nexcrate stops reading this Sonarr and loads and upgrades them itself from then on. You can switch Sonarr off afterwards.",
+      "takenOver": "Taken over on {{date}}. nexcrate no longer imports the series of this Sonarr.",
+      "takenOverInfo": "The series from this Sonarr now belong to nexcrate, together with their files. You still need this record to undo the takeover or to fetch indexers and download clients from there. If you remove it, series, versions and files stay.",
+      "removeRecordHint": "Removes only this record. Series, versions and files stay.",
+      "removeRecordText": "The record {{name}} disappears from nexcrate. Series, versions and files stay."
+    }
+  },
+  "run": {
+    "start": "Import now",
+    "startLabel": "Import now: {{name}}",
+    "never": "Not imported yet.",
+    "running": "Import running …",
+    "doneAt": "Last imported: {{time}}",
+    "counts": "{{new}} new, {{updated}} changed, {{versions}} versions, {{removed}} removed",
+    "failedCode": "The import failed (code {{code}}).",
+    "failedUnknown": "The import failed."
+  },
+  "history": {
+    "title": "Recent imports",
+    "intro": "Newest first, including the ones nexcrate starts on its own.",
+    "empty": "No import yet.",
+    "removedSource": "Removed connection",
+    "running": "Running",
+    "done": "Done",
+    "failed": "Failed",
+    "refresh": "Reload"
+  },
+  "indexers": {
+    "open": "Fetch indexers",
+    "openLabel": "Fetch indexers: {{name}}",
+    "dialogTitle": "Indexers from {{name}}",
+    "empty": "There is no indexer in this Radarr.",
+    "alreadyAdded": "Already in nexcrate",
+    "unusedInRadarr": "Not used in Radarr",
+    "categories": "Categories: {{list}}",
+    "noCategories": "No categories",
+    "pick": "Take over",
+    "pickLabel": "Take over: {{name}}",
+    "keyTitle": "Take over {{name}}",
+    "keyIntro": "Radarr does not give out the API key. Enter it here.",
+    "apiKey": "API key",
+    "apiKeyHint": "You find it in your account at the indexer. If Prowlarr added the indexer to Radarr, it is Prowlarr's API key.",
+    "missingKey": "Please enter the API key.",
+    "checking": "Testing connection …",
+    "submit": "Add",
+    "back": "Choose another",
+    "added": "{{name}} is now added as an indexer.",
+    "series": {
+      "empty": "There is no indexer in this Sonarr.",
+      "keyIntro": "Sonarr does not give out the API key. Enter it here.",
+      "apiKeyHint": "You find it in your account at the indexer. If Prowlarr added the indexer to Sonarr, it is Prowlarr's API key.",
+      "unused": "Not used in Sonarr",
+      "categories": "Series categories: {{list}}",
+      "addCategories": "Add series categories",
+      "addCategoriesLabel": "Add series categories: {{name}}",
+      "addCategoriesHint": "nexcrate has this indexer already. Sonarr's categories are added to its series categories.",
+      "categoriesAdded": "{{name}} now has the series categories from Sonarr."
+    },
+    "music": {
+      "empty": "There is no indexer in this Lidarr.",
+      "keyIntro": "Lidarr does not give out the API key. Enter it here.",
+      "apiKeyHint": "You find it in your account at the indexer. If Prowlarr added the indexer to Lidarr, it is Prowlarr's API key.",
+      "unused": "Not used in Lidarr",
+      "categories": "Music categories: {{list}}",
+      "addCategories": "Add music categories",
+      "addCategoriesLabel": "Add music categories: {{name}}",
+      "addCategoriesHint": "nexcrate has this indexer already. Lidarr's categories are added to its music categories.",
+      "categoriesAdded": "{{name}} now has the music categories from Lidarr."
+    }
+  },
+  "clients": {
+    "open": "Fetch download clients",
+    "openLabel": "Fetch download clients: {{name}}"
+  },
+  "naming": {
+    "open": "Take naming",
+    "openLabel": "Take naming: {{name}}"
+  },
+  "sonarrNaming": {
+    "title": "Sonarr's naming for {{label}}",
+    "intro": "This is how Sonarr names series folders, season folders and episode files. Taken over it counts for version {{label}} from the next filing on. Existing files keep their names.",
+    "take": "Take over",
+    "taken": "Sonarr's naming now counts for {{label}}.",
+    "cannotTake": "nexcrate cannot take this naming as it is. What does not fit is shown next to the pattern. {{label}} keeps its naming.",
+    "empty": "empty",
+    "style": "Several episodes in one file",
+    "styleUnknown": "Sonarr named no style.",
+    "styles": {
+      "extend": "S01E01-02-03",
+      "duplicate": "S01E01.S01E02",
+      "repeat": "S01E01E02E03",
+      "scene": "S01E01-E02-E03",
+      "range": "S01E01-03",
+      "prefixed_range": "S01E01-E03"
+    },
+    "notes": {
+      "sonarr_no_rename": "Sonarr does not rename files, they keep the release name. nexcrate takes that as {Original Title}.",
+      "slash_in_pattern": "Sonarr creates subfolders with /. nexcrate writes a + there.",
+      "colon_format": "Sonarr replaces colons differently. nexcrate replaces them like Sonarr's Smart setting.",
+      "illegal_characters_kept": "Sonarr keeps illegal characters. nexcrate replaces them.",
+      "style_differs": "Sonarr joins several episodes in one file differently. nexcrate keeps the style from Folders and naming."
+    }
+  },
+  "takeover": {
+    "open": "Take over …",
+    "openLabel": "Take over: {{name}}",
+    "openHint": "Makes the movies from this Radarr nexcrate's own and ends the connection.",
+    "title": "Take over {{name}}",
+    "intro": {
+      "versions": "Every version from {{name}} becomes nexcrate's own, together with its files.",
+      "noRead": "nexcrate no longer reads this Radarr afterwards. Nothing is deleted.",
+      "loads": "From then on nexcrate downloads and upgrades for these movies too.",
+      "check": "First nexcrate checks what would happen. The check changes nothing.",
+      "companion": "Afterwards nexcrate puts a release.nex into every movie folder. Folders without write permission are reported, the takeover still counts."
+    },
+    "warning": "Switch Radarr off afterwards or remove the movies there. Otherwise both programs replace each other's files.",
+    "lost": "The last job is gone, for example because nexcrate restarted. It changed nothing. Please check again.",
+    "check": "Check",
+    "recheck": "Check again",
+    "submit": "Take over and end the connection",
+    "phase": {
+      "starting": "Starting …",
+      "reading": "nexcrate is reading Radarr …",
+      "mapping": "nexcrate is matching the folders …",
+      "files": "nexcrate is looking for the files …",
+      "saving": "nexcrate is taking over the versions …",
+      "companions": "nexcrate is writing the companion files …"
+    },
+    "running": {
+      "check": "Check running",
+      "takeover": "Takeover running",
+      "progress": "{{done}} of {{total}} files looked at",
+      "progressLabel": "Files looked at",
+      "hint": "You can close the window, nexcrate keeps working. When you open it again, it shows where things stand."
+    },
+    "failed": {
+      "check": "The check failed. Nothing was changed.",
+      "takeover": "The takeover failed. Nothing was changed."
+    },
+    "dataFresh": "Read from Radarr just now, on {{time}}.",
+    "dataStored": "Radarr does not answer right now. The check uses the last import from {{time}}.",
+    "roots": {
+      "title": "Folders",
+      "intro": "Radarr and nexcrate often see the same movies under different paths. nexcrate matches them through sample files of the same size.",
+      "radarrSees": "In Radarr",
+      "nexcrateSees": "In nexcrate",
+      "unmapped": "No folder yet",
+      "counts": "{{movies}}, {{files}}",
+      "same_path": "Radarr and nexcrate see the same path.",
+      "found": "nexcrate found {{matched}} of {{samples}} sample files there.",
+      "chosen": "Chosen by you. {{matched}} of {{samples}} sample files are there.",
+      "none": "nexcrate found no matching folder. Choose the folder under which nexcrate sees these movies.",
+      "noFiles": "Radarr has only movies without a file here. A folder is optional.",
+      "derived": "nexcrate derived the folder from another root folder.",
+      "noneNoFiles": "Without a folder nexcrate files these movies into the default folder later.",
+      "chosenNoFiles": "Chosen by you.",
+      "choose": "Choose folder",
+      "chooseLabel": "Choose folder for {{remote}}",
+      "change": "Choose another folder",
+      "changeLabel": "Choose another folder for {{remote}}",
+      "pickerTitle": "Folder in nexcrate for {{remote}}",
+      "picked": "Chosen: {{local}}. Check again, then nexcrate looks for the sample files there.",
+      "pickedNoFiles": "Chosen: {{local}}. Check again, then nexcrate tests the folder."
+    },
+    "counts": {
+      "title": "Movies and files",
+      "movies": "Movies",
+      "withFile": "With file",
+      "found": "Found",
+      "missing": "Missing",
+      "otherSize_one": "One of them has a different size than in Radarr. nexcrate takes the size on disk.",
+      "otherSize_other": "{{value}} of them have a different size than in Radarr. nexcrate takes the size on disk.",
+      "missingTitle": "nexcrate does not find these files",
+      "missingMore_one": "And one more.",
+      "missingMore_other": "And {{value}} more."
+    },
+    "queue": {
+      "title": "Downloads in Radarr",
+      "none": "Radarr is not downloading anything for these movies right now.",
+      "active_one": "Radarr is downloading one movie of this connection right now. Best wait until Radarr has filed it away, then check again.",
+      "active_other": "Radarr is downloading {{value}} movies of this connection right now. Best wait until Radarr has filed them away, then check again."
+    },
+    "version": {
+      "title": "Version {{label}}",
+      "folder": "Default folder:",
+      "ready": "The version has a profile and a default folder. nexcrate can download for it.",
+      "noProfile": "This version has no profile yet. nexcrate only downloads for it once it has one.",
+      "noFolder": "This version has no default folder yet. Without one nexcrate downloads nothing for it. Choose one under Folders and naming.",
+      "useProposal": "Take {{folder}} as the default folder",
+      "useProposalHint": "Most movies from this Radarr are there. nexcrate then files new movies there. Existing movies stay in their folder."
+    },
+    "naming": {
+      "title": "Naming",
+      "unavailable": "Radarr did not answer, so its naming is missing. You can take it later under Folders and naming.",
+      "take": "Take Radarr's naming for {{label}}",
+      "takeHint": "nexcrate then names new files of this version like Radarr. Existing files keep their names.",
+      "cannotTake": "nexcrate cannot take this naming as it is. {{label}} keeps its naming."
+    },
+    "notes": {
+      "title": "What changes compared to Radarr",
+      "radarr_recycle_bin_one": "Radarr kept replaced files for one day. nexcrate keeps them as long as set under Folders and naming.",
+      "radarr_recycle_bin_other": "Radarr kept replaced files for {{value}} days. nexcrate keeps them as long as set under Folders and naming.",
+      "radarrRecycleBinNoDays": "Radarr kept replaced files in a recycle bin. nexcrate keeps them as long as set under Folders and naming.",
+      "radarr_extra_files": "Radarr filed subtitles and other extra files along with the movie. nexcrate files subtitles too when that is switched on under folders and naming, but no other extra files.",
+      "radarr_hardlinks_off": "Radarr copied torrents instead of linking them. nexcrate links where it can.",
+      "radarr_file_date": "Radarr set the file date to the release date. nexcrate leaves the date as it is.",
+      "radarr_permissions": "Radarr changed file permissions after filing. nexcrate writes with the permissions of its container."
+    },
+    "confirm": {
+      "title": "Confirm",
+      "missing": "Take over without the missing files",
+      "missingHint_one": "One version has no file afterwards, as in Radarr.",
+      "missingHint_other": "{{value}} versions have no file afterwards, as in Radarr.",
+      "queue": "Take over without Radarr's running downloads",
+      "queueHint": "nexcrate does not know what Radarr files away after that."
+    },
+    "blocked": {
+      "root_unmapped": "First choose a folder in nexcrate for every folder from Radarr that holds files, then check again.",
+      "pending": "Check again, then nexcrate tests the chosen folder.",
+      "confirm": "First tick what is listed under Confirm.",
+      "unknown": "The check reports {{code}}. This interface does not know that yet."
+    },
+    "taken": {
+      "done": "{{name}} is taken over. nexcrate no longer reads this Radarr.",
+      "versions": "Versions taken over",
+      "withFile": "With file",
+      "missing": "Without file",
+      "titles": "Titles for TMDB",
+      "tmdb": "nexcrate fetches TMDB's data for these titles bit by bit. Until then they keep Radarr's.",
+      "companions": "Companion files"
+    },
+    "undo": {
+      "open": "Undo takeover",
+      "openLabel": "Undo takeover: {{name}}",
+      "title": "Undo takeover",
+      "reads": "nexcrate then reads {{name}} again every 15 minutes. Its versions come from Radarr again.",
+      "loaded": "Radarr does not know what nexcrate has downloaded for these movies since the takeover. nexcrate then shows Radarr's state again, the files stay where they are.",
+      "naming": "Version {{label}} keeps its naming.",
+      "keyDeleted": "nexcrate deleted the key during the takeover. Enter it once more.",
+      "submit": "Undo takeover",
+      "companion": "nexcrate takes away the release.nex it wrote for these movies. Files changed by hand stay."
+    },
+    "series": {
+      "openHint": "Makes the series from this Sonarr nexcrate's own and ends the connection.",
+      "intro": {
+        "noRead": "nexcrate no longer reads this Sonarr afterwards. Nothing is deleted.",
+        "loads": "From then on nexcrate downloads and upgrades for these series too.",
+        "companion": "Afterwards nexcrate reads the series folders for files Sonarr did not know and puts a release.nex into every season folder."
+      },
+      "warning": "Switch Sonarr off afterwards or remove the series there. Otherwise both programs replace each other's files.",
+      "phase": {
+        "reading": "nexcrate is reading Sonarr …",
+        "readingFolders": "nexcrate is reading the series folders …"
+      },
+      "running": {
+        "folders": "Series folders being read: {{done}} of {{total}}",
+        "foldersLabel": "Series folders read"
+      },
+      "dataFresh": "Read from Sonarr just now, on {{time}}.",
+      "dataStored": "Sonarr does not answer right now. The check uses the last import from {{time}}.",
+      "roots": {
+        "intro": "Sonarr and nexcrate often see the same series under different paths. nexcrate matches them through sample files of the same size.",
+        "sourceSees": "In Sonarr",
+        "same_path": "Sonarr and nexcrate see the same path.",
+        "none": "nexcrate found no matching folder. Choose the folder under which nexcrate sees these series.",
+        "noFiles": "Sonarr has only series without a file here. A folder is optional.",
+        "noneNoFiles": "Without a folder nexcrate files these series into the default folder later."
+      },
+      "counts": {
+        "title": "Series and episode files",
+        "intro": "{{series}}, {{episodeFiles}}",
+        "series": "Series",
+        "otherSize_one": "One of them has a different size than in Sonarr. nexcrate takes the size on disk.",
+        "otherSize_other": "{{value}} of them have a different size than in Sonarr. nexcrate takes the size on disk.",
+        "unclear_one": "One file fits no episode; you assign it on the series page afterwards.",
+        "unclear_other": "{{value}} files fit no episode; you assign them on the series page afterwards.",
+        "wouldUpgrade_one": "nexcrate would upgrade one file afterwards.",
+        "wouldUpgrade_other": "nexcrate would upgrade {{value}} files afterwards."
+      },
+      "queue": {
+        "title": "Downloads in Sonarr",
+        "none": "Sonarr is not downloading anything for these series right now.",
+        "active_one": "Sonarr is downloading one episode of this connection right now. Best wait until Sonarr has filed it away, then check again.",
+        "active_other": "Sonarr is downloading {{value}} episodes of this connection right now. Best wait until Sonarr has filed them away, then check again."
+      },
+      "version": {
+        "folderHint": "nexcrate files new series of this version here. Existing series stay in their folder.",
+        "useProposalHint": "Most series from this Sonarr are there. nexcrate then files new series there. Existing series stay in their folder."
+      },
+      "naming": {
+        "unavailable": "Sonarr did not answer, so its naming is missing. You can take it later under Folders and naming.",
+        "take": "Take Sonarr's naming for {{label}}",
+        "takeHint": "nexcrate then names new files of this version like Sonarr. Existing files keep their names.",
+        "cannotTake": "nexcrate cannot take this naming as it is. {{label}} keeps its naming."
+      },
+      "notes": {
+        "title": "What changes compared to Sonarr",
+        "sonarr_recycle_bin_one": "Sonarr kept replaced files for one day. nexcrate keeps them as long as set under Folders and naming.",
+        "sonarr_recycle_bin_other": "Sonarr kept replaced files for {{value}} days. nexcrate keeps them as long as set under Folders and naming.",
+        "recycleBinNoDays": "Sonarr kept replaced files in a recycle bin. nexcrate keeps them as long as set under Folders and naming.",
+        "sonarr_extra_files": "Sonarr filed subtitles and other extra files along with the episode. nexcrate files subtitles too when that is switched on under folders and naming, but no other extra files.",
+        "sonarr_hardlinks_off": "Sonarr copied torrents instead of linking them. nexcrate links where it can.",
+        "sonarr_file_date": "Sonarr set the file date to the air date. nexcrate leaves the date as it is.",
+        "sonarr_permissions": "Sonarr changed file permissions after filing. nexcrate writes with the permissions of its container."
+      },
+      "confirm": {
+        "missingHint_one": "One episode has no file afterwards, as in Sonarr.",
+        "missingHint_other": "{{value}} episodes have no file afterwards, as in Sonarr.",
+        "queue": "Take over without Sonarr's running downloads",
+        "queueHint": "nexcrate does not know what Sonarr files away after that."
+      },
+      "blocked": {
+        "root_unmapped": "First choose a folder in nexcrate for every folder from Sonarr that holds files, then check again."
+      },
+      "undo": {
+        "reads": "nexcrate then reads {{name}} again every 15 minutes. Its versions come from Sonarr again.",
+        "loaded": "Sonarr does not know what nexcrate has downloaded for these series since the takeover. nexcrate then shows Sonarr's state again, the files stay where they are.",
+        "companion": "nexcrate takes away the release.nex it wrote for these series. Files changed by hand stay."
+      },
+      "taken": {
+        "done": "{{name}} is taken over. nexcrate no longer reads this Sonarr.",
+        "folders": "nexcrate is now reading the series folders for files Sonarr did not know and writing the release.nex. Until that is done nexcrate searches nothing for these series."
+      }
+    },
+    "music": {
+      "warning": "Afterwards switch off monitoring in Lidarr or remove the artists there. Otherwise both apps load and replace music.",
+      "dataStored": "Lidarr does not answer right now. The check uses the last import of {{time}}.",
+      "dataFresh": "Just read from Lidarr, at {{time}}.",
+      "phase": {
+        "reading": "nexcrate reads Lidarr …",
+        "readingFolders": "nexcrate reads the album folders …"
+      },
+      "blocked": {
+        "root_unmapped": "First choose a folder in nexcrate for every folder of Lidarr with files, then check again."
+      },
+      "roots": {
+        "intro": "Lidarr and nexcrate often see the same music under different paths. nexcrate maps them by one sample file per album of the same size.",
+        "sourceSees": "In Lidarr",
+        "same_path": "Lidarr and nexcrate see the same path.",
+        "none": "nexcrate found no matching folder. Choose the folder under which nexcrate sees this music.",
+        "noneNoFiles": "Without a folder nexcrate files these albums in the default folder later.",
+        "counts": "{{albums}}, {{files}}"
+      },
+      "intro": {
+        "noRead": "nexcrate no longer reads this Lidarr afterwards. Nothing is deleted; files stay where they are, with their names and tags.",
+        "loads": "From then on nexcrate loads, completes and upgrades these albums too. The automatic for music searches missing albums by plan once you switch it on.",
+        "companion": "Then nexcrate reads the album folders for files Lidarr did not know and puts a release.nex in every album folder."
+      },
+      "counts": {
+        "title": "Albums and files",
+        "albums": "Albums",
+        "files": "Files",
+        "wanted_one": "One watched album has no file yet. nexcrate searches it by plan once the automatic for music is on.",
+        "wanted_other": "{{value}} watched albums have no file yet. nexcrate searches them by plan once the automatic for music is on.",
+        "wouldUpgrade_one": "One album is below the target of your music profile.",
+        "wouldUpgrade_other": "{{value}} albums are below the target of your music profile.",
+        "incomplete_one": "One album lacks tracks of its target release.",
+        "incomplete_other": "{{value}} albums lack tracks of their target release.",
+        "unmapped_one": "Lidarr could not map one file to a track. If it lies in an album folder, nexcrate reads it afterwards.",
+        "unmapped_other": "Lidarr could not map {{value}} files to a track. If they lie in an album folder, nexcrate reads them afterwards.",
+        "otherSize_one": "One file has another size than in Lidarr. nexcrate takes the size on disk.",
+        "otherSize_other": "{{value}} files have another size than in Lidarr. nexcrate takes the size on disk.",
+        "outside_one": "One file lies outside its album folder. nexcrate leaves it there; its track counts as missing until you move it into the album folder and read that again.",
+        "outside_other": "{{value}} files lie outside their album folder. nexcrate leaves them there; their tracks count as missing until you move them into the album folder and read that again."
+      },
+      "queue": {
+        "title": "Downloads in Lidarr",
+        "none": "Lidarr is not loading anything for these albums right now.",
+        "active_one": "Lidarr is loading one album of this connection. Best wait until Lidarr filed it, then check again.",
+        "active_other": "Lidarr is loading {{value}} albums of this connection. Best wait until Lidarr filed them, then check again."
+      },
+      "confirm": {
+        "missingHint_one": "One file is missing; its track counts as missing afterwards.",
+        "missingHint_other": "{{value}} files are missing; their tracks count as missing afterwards.",
+        "queue": "Take over without Lidarr's running downloads",
+        "queueHint": "What Lidarr files afterwards nexcrate only knows after “Read the folder again”."
+      },
+      "version": {
+        "folderHint": "nexcrate files new albums here. Taken-over albums stay in their folders.",
+        "useProposalHint": "nexcrate then files new albums in this folder."
+      },
+      "taken": {
+        "done": "{{name}} is taken over. nexcrate no longer reads this Lidarr.",
+        "folders": "nexcrate now reads the album folders for files Lidarr did not know and writes the release.nex. Albums with unclear files nexcrate searches only once you settled them.",
+        "versions": "Albums taken over",
+        "withFile": "Files kept",
+        "missing": "Files outside"
+      },
+      "openHint": "Reads Lidarr, maps the folders and shows what changes. Nothing changes until you take over.",
+      "undo": {
+        "reads": "nexcrate reads {{name}} every hour again afterwards. The albums of it come from Lidarr again.",
+        "loaded": "What nexcrate loaded for these albums since the takeover Lidarr does not know. nexcrate shows Lidarr's state again; the files stay.",
+        "companion": "nexcrate removes the release.nex it wrote into the album folders. Ones changed by hand stay."
+      },
+      "running": {
+        "folders": "Reading album folders: {{done}} of {{total}}",
+        "foldersLabel": "Album folders read"
+      }
+    },
+    "keep": {
+      "title": "After the takeover",
+      "label": "Do not upgrade what is there",
+      "hint": "What the connection brings stays as it is: titles with a file are left alone, episodes with a file are switched off. nexcrate still searches what is missing, and what arrives later is upgraded as usual."
+    }
+  },
+  "quality": {
+    "title": "Take the quality and the profiles over",
+    "intro": "The quality profiles, the custom formats and the sizes per quality from {{name}}. Only read; nexcrate never writes into the other app.",
+    "loading": "Reading the settings",
+    "found": "{{profiles}} profiles, {{formats}} new custom formats, {{sizes}} sizes.",
+    "take": "Take {{name}}",
+    "alreadyHere": "Already here",
+    "qualitiesUnknown": "Qualities missing",
+    "nothingAllowed": "Takes nothing",
+    "languageUnknown": "Language left out",
+    "line": "{{qualities}} qualities, good enough from {{cutoff}}, {{formats}} formats with a score",
+    "unknownQualities": "nexcrate does not know these qualities and leaves them out: {{qualities}}.",
+    "lostConditions": "These formats have conditions nexcrate has no type for; they come without them: {{formats}}.",
+    "take_all": "Take {{count}} profiles",
+    "taken": "Taken over: {{profiles}} profiles, {{formats}} formats, {{sizes}} sizes.",
+    "open": "Fetch the quality and the profiles",
+    "openLabel": "Fetch the quality and the profiles: {{name}}",
+    "close": "Close",
+    "repackUnscored": "No repack format",
+    "repack": {
+      "whyThere": "At least one profile scores neither a repack nor a proper. The other app takes such fixes as an upgrade by itself; nexcrate has no step of its own for them and takes them only through a format with a score.",
+      "whyOff": "At least one profile scores neither a repack nor a proper. The other app is set not to prefer such fixes, so nothing changes if you leave it like that.",
+      "add": "Give these profiles the repack formats of the TRaSH Guides ({{formats}})"
+    },
+    "release": {
+      "title": "Release profiles",
+      "intro": "There are no release profiles here. \"Must not contain\" and \"must contain\" become custom formats, and every profile that comes over scores them minus 10000.",
+      "line": "Becomes: {{formats}}",
+      "bound": "Bound",
+      "boundLine": "Bound to an indexer or to tags there, which cannot be rebuilt here. The formats come without a score; give them one by hand where they fit: {{formats}}",
+      "off": "Switched off",
+      "offLine": "Switched off there, left out.",
+      "empty": "Holds no term that can be read, left out.",
+      "unreadable": "These terms are no pattern that can be read and are left out: {{terms}}"
+    },
+    "differs": {
+      "title": "What works differently here",
+      "notAllowed": "When a file is already there in a quality the profile does not allow, nexcrate leaves it alone, even if it is better than allowed. {{app}} would replace it.",
+      "delay": "Delay profiles (waiting time, Usenet before torrent) live at the version here, under \"Protocol and waiting time\". The profile without a tag is read; profiles bound to tags do not come over.",
+      "tags": "There are no tags. What a tag binds there, the version binds here: it picks its profile."
+    },
+    "whereTo": "Profiles that came over stand under Settings → Quality → Profiles. A version picks its profile on its own tile."
+  }
+}

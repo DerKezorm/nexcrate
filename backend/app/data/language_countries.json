@@ -1,0 +1,8 @@
+{
+  "de": ["DE", "AT", "CH", "LI", "LU"],
+  "en": ["US", "GB", "IE", "CA", "AU", "NZ", "ZA"],
+  "es": ["ES", "MX", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU", "BO", "DO", "HN", "PY", "SV", "NI", "CR", "PA", "UY", "PR"],
+  "fr": ["FR", "BE", "CH", "LU", "MC", "CA"],
+  "it": ["IT", "CH", "SM", "VA"],
+  "tr": ["TR", "CY"]
+}

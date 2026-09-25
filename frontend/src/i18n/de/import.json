@@ -1,0 +1,516 @@
+{
+  "title": "Aus Radarr importieren",
+  "intro": "Nutzt du schon Radarr, holt nexcrate deine Filme von dort in die Bibliothek.",
+  "readOnly": "nexcrate liest nur. In Radarr wird nichts geändert, nichts gelöscht und nichts neu gesucht.",
+  "scheduleLabel": "Importieren",
+  "schedule": "ist für den Übergang und die Testphase: Radarr bleibt zuständig, nexcrate liest alle 15 Minuten nach und zeigt deine Bibliothek. Für diese Filme lädt nexcrate nichts.",
+  "takeoverLabel": "Übernehmen",
+  "takeoverNote": "ist der Umstieg: Die Filme werden nexcrates eigene, nexcrate liest dieses Radarr nicht mehr ein und lädt und verbessert ab dann selbst. Danach kannst du Radarr abschalten.",
+  "count": {
+    "movies_one": "{{value}} Film",
+    "movies_other": "{{value}} Filme",
+    "files_one": "{{value}} Datei",
+    "files_other": "{{value}} Dateien",
+    "episodeFiles_one": "{{value}} Folgendatei",
+    "episodeFiles_other": "{{value}} Folgendateien",
+    "albums_one": "ein Album",
+    "albums_other": "{{value}} Alben"
+  },
+  "sources": {
+    "add": "Radarr verbinden",
+    "empty": "Noch keine Verbindung zu Radarr.",
+    "name": "Name",
+    "nameHint": "Frei wählbar, etwa Radarr 4K.",
+    "url": "Adresse",
+    "urlHint": "Die Adresse, unter der du Radarr im Browser öffnest, mit Port.",
+    "apiKey": "API-Schlüssel",
+    "apiKeyHint": "Steht in Radarr unter Settings, General.",
+    "keySaved": "Ein Schlüssel ist gespeichert. Lass das Feld leer, dann bleibt er.",
+    "keyNone": "Noch kein Schlüssel gespeichert.",
+    "badgeKey": "Schlüssel gespeichert",
+    "badgeNoKey": "Kein Schlüssel",
+    "version": "Fassung",
+    "versionHint": "Alle Filme aus diesem Radarr werden in nexcrate zu dieser Fassung.",
+    "newVersion": "Neue Fassung anlegen",
+    "newVersionName": "Name der neuen Fassung",
+    "newVersionHint": "Etwa Full-HD oder 4K.",
+    "versionTaken": "{{label}} (schon vergeben)",
+    "versionOf": "Fassung {{label}}",
+    "dialogAdd": "Radarr verbinden",
+    "dialogEdit": "{{name}} bearbeiten",
+    "checking": "Verbindung wird geprüft …",
+    "checkOk": "{{app}} {{version}} · {{amount}}",
+    "testNeedsUrl": "Gib zuerst die Adresse ein.",
+    "testNeedsKey": "Gib den API-Schlüssel ein, dann lässt sich die Verbindung prüfen.",
+    "missingName": "Bitte gib einen Namen ein.",
+    "missingUrl": "Bitte gib die Adresse ein.",
+    "missingKey": "Bitte gib den API-Schlüssel ein.",
+    "missingVersionName": "Bitte gib der neuen Fassung einen Namen.",
+    "testLabel": "Verbindung prüfen: {{name}}",
+    "editLabel": "Bearbeiten: {{name}}",
+    "removeLabel": "Entfernen: {{name}}",
+    "fetchTitle": "Aus diesem Radarr holen",
+    "takenOverBadge": "Übernommen",
+    "takenOver": "Übernommen am {{date}}. nexcrate liest die Filme dieses Radarr nicht mehr ein.",
+    "takenOverInfo": "Die Filme aus diesem Radarr gehören jetzt nexcrate, samt ihrer Dateien. Den Eintrag brauchst du noch, um die Übernahme rückgängig zu machen oder Indexer und Download-Programme von dort zu holen. Entfernst du ihn, bleiben Filme, Fassungen und Dateien.",
+    "removeRecord": "Eintrag entfernen",
+    "removeRecordLabel": "Eintrag entfernen: {{name}}",
+    "removeRecordHint": "Entfernt nur diesen Eintrag. Filme, Fassungen und Dateien bleiben.",
+    "removeRecordTitle": "Eintrag entfernen?",
+    "removeRecordText": "Der Eintrag {{name}} verschwindet aus nexcrate. Filme, Fassungen und Dateien bleiben.",
+    "remove": {
+      "title": "Verbindung entfernen?",
+      "text": "Die Verbindung {{name}} verschwindet aus nexcrate, mit allem, was über sie in die Bibliothek kam. In Radarr ändert sich nichts.",
+      "confirm": "Ja, entfernen"
+    },
+    "series": {
+      "fetchTitle": "Aus diesem Sonarr holen",
+      "takeoverNote": "ist der Umstieg: Die Serien werden nexcrates eigene, nexcrate liest dieses Sonarr nicht mehr ein und lädt und verbessert ab dann selbst. Danach kannst du Sonarr abschalten.",
+      "takenOver": "Übernommen am {{date}}. nexcrate liest die Serien dieses Sonarr nicht mehr ein.",
+      "takenOverInfo": "Die Serien aus diesem Sonarr gehören jetzt nexcrate, samt ihrer Dateien. Den Eintrag brauchst du noch, um die Übernahme rückgängig zu machen oder Indexer und Download-Programme von dort zu holen. Entfernst du ihn, bleiben Serien, Fassungen und Dateien.",
+      "removeRecordHint": "Entfernt nur diesen Eintrag. Serien, Fassungen und Dateien bleiben.",
+      "removeRecordText": "Der Eintrag {{name}} verschwindet aus nexcrate. Serien, Fassungen und Dateien bleiben."
+    }
+  },
+  "run": {
+    "start": "Jetzt importieren",
+    "startLabel": "Jetzt importieren: {{name}}",
+    "never": "Noch nicht importiert.",
+    "running": "Import läuft …",
+    "doneAt": "Zuletzt importiert: {{time}}",
+    "counts": "{{new}} neu, {{updated}} geändert, {{versions}} Fassungen, {{removed}} entfernt",
+    "failedCode": "Der Import ist fehlgeschlagen (Code {{code}}).",
+    "failedUnknown": "Der Import ist fehlgeschlagen."
+  },
+  "history": {
+    "title": "Letzte Importe",
+    "intro": "Der neueste zuerst, auch die, die nexcrate von selbst startet.",
+    "empty": "Noch kein Import.",
+    "removedSource": "Entfernte Verbindung",
+    "running": "Läuft",
+    "done": "Fertig",
+    "failed": "Fehlgeschlagen",
+    "refresh": "Neu laden"
+  },
+  "indexers": {
+    "open": "Indexer holen",
+    "openLabel": "Indexer holen: {{name}}",
+    "dialogTitle": "Indexer aus {{name}}",
+    "empty": "In diesem Radarr ist kein Indexer eingetragen.",
+    "alreadyAdded": "Schon in nexcrate",
+    "unusedInRadarr": "In Radarr ungenutzt",
+    "categories": "Kategorien: {{list}}",
+    "noCategories": "Keine Kategorien",
+    "pick": "Übernehmen",
+    "pickLabel": "Übernehmen: {{name}}",
+    "keyTitle": "{{name}} übernehmen",
+    "keyIntro": "Radarr gibt den API-Schlüssel nicht heraus. Trag ihn hier ein.",
+    "apiKey": "API-Schlüssel",
+    "apiKeyHint": "Steht in deinem Konto beim Indexer. Hat Prowlarr den Indexer in Radarr eingetragen, ist es der API-Schlüssel von Prowlarr.",
+    "missingKey": "Bitte gib den API-Schlüssel ein.",
+    "checking": "Verbindung wird geprüft …",
+    "submit": "Hinzufügen",
+    "back": "Andere Auswahl",
+    "added": "{{name}} ist jetzt als Indexer eingetragen.",
+    "series": {
+      "empty": "In diesem Sonarr ist kein Indexer eingetragen.",
+      "keyIntro": "Sonarr gibt den API-Schlüssel nicht heraus. Trag ihn hier ein.",
+      "apiKeyHint": "Steht in deinem Konto beim Indexer. Hat Prowlarr den Indexer in Sonarr eingetragen, ist es der API-Schlüssel von Prowlarr.",
+      "unused": "In Sonarr ungenutzt",
+      "categories": "Serienkategorien: {{list}}",
+      "addCategories": "Serienkategorien ergänzen",
+      "addCategoriesLabel": "Serienkategorien ergänzen: {{name}}",
+      "addCategoriesHint": "Diesen Indexer hat nexcrate schon. Die Kategorien aus Sonarr kommen zu seinen Serienkategorien dazu.",
+      "categoriesAdded": "{{name}} hat jetzt die Serienkategorien aus Sonarr."
+    },
+    "music": {
+      "empty": "In diesem Lidarr ist kein Indexer eingetragen.",
+      "keyIntro": "Lidarr gibt den API-Schlüssel nicht heraus. Trag ihn hier ein.",
+      "apiKeyHint": "Steht in deinem Konto beim Indexer. Hat Prowlarr den Indexer in Lidarr eingetragen, ist es der API-Schlüssel von Prowlarr.",
+      "unused": "In Lidarr ungenutzt",
+      "categories": "Musik-Kategorien: {{list}}",
+      "addCategories": "Musik-Kategorien ergänzen",
+      "addCategoriesLabel": "Musik-Kategorien ergänzen: {{name}}",
+      "addCategoriesHint": "Diesen Indexer hat nexcrate schon. Die Kategorien aus Lidarr kommen zu seinen Musik-Kategorien dazu.",
+      "categoriesAdded": "{{name}} hat jetzt die Musik-Kategorien aus Lidarr."
+    }
+  },
+  "clients": {
+    "open": "Download-Programme holen",
+    "openLabel": "Download-Programme holen: {{name}}"
+  },
+  "naming": {
+    "open": "Benennung übernehmen",
+    "openLabel": "Benennung übernehmen: {{name}}"
+  },
+  "sonarrNaming": {
+    "title": "Benennung aus Sonarr für {{label}}",
+    "intro": "So benennt Sonarr Serienordner, Staffelordner und Folgendateien. Übernommen gilt das für die Fassung {{label}} ab dem nächsten Ablegen. Vorhandene Dateien behalten ihren Namen.",
+    "take": "Übernehmen",
+    "taken": "Die Benennung aus Sonarr gilt jetzt für {{label}}.",
+    "cannotTake": "Diese Benennung kann nexcrate so nicht übernehmen. Was nicht passt, steht beim Muster. {{label}} behält ihre Benennung.",
+    "empty": "leer",
+    "style": "Mehrere Folgen in einer Datei",
+    "styleUnknown": "Sonarr hat keinen Stil genannt.",
+    "styles": {
+      "extend": "S01E01-02-03",
+      "duplicate": "S01E01.S01E02",
+      "repeat": "S01E01E02E03",
+      "scene": "S01E01-E02-E03",
+      "range": "S01E01-03",
+      "prefixed_range": "S01E01-E03"
+    },
+    "notes": {
+      "sonarr_no_rename": "Sonarr benennt Dateien nicht um, sie behalten den Release-Namen. nexcrate übernimmt das als {Original Title}.",
+      "slash_in_pattern": "Sonarr legt mit / Unterordner an. nexcrate schreibt dort ein +.",
+      "colon_format": "Sonarr ersetzt Doppelpunkte anders. nexcrate ersetzt sie wie Sonarrs Einstellung Smart.",
+      "illegal_characters_kept": "Sonarr lässt unerlaubte Zeichen stehen. nexcrate ersetzt sie.",
+      "style_differs": "Sonarr fasst mehrere Folgen in einer Datei anders zusammen. nexcrate behält den Stil aus Ordner und Benennung."
+    }
+  },
+  "takeover": {
+    "open": "Übernehmen …",
+    "openLabel": "Übernehmen: {{name}}",
+    "openHint": "Macht die Filme aus diesem Radarr zu nexcrates eigenen und beendet die Verbindung.",
+    "title": "{{name}} übernehmen",
+    "intro": {
+      "versions": "Alle Fassungen aus {{name}} werden nexcrates eigene, samt ihrer Dateien.",
+      "noRead": "nexcrate liest dieses Radarr danach nicht mehr ein. Gelöscht wird nichts.",
+      "loads": "Ab dann lädt und verbessert nexcrate auch für diese Filme.",
+      "check": "Zuerst prüft nexcrate, was dabei passieren würde. Die Prüfung ändert nichts.",
+      "companion": "Danach legt nexcrate in jeden Filmordner eine release.nex. Ordner ohne Schreibrecht meldet nexcrate, die Übernahme gilt trotzdem."
+    },
+    "warning": "Schalte Radarr danach ab oder entferne die Filme dort. Sonst tauschen beide Programme Dateien aus.",
+    "lost": "Der letzte Auftrag ist nicht mehr da, etwa weil nexcrate neu gestartet ist. Geändert hat er nichts. Prüf bitte noch einmal.",
+    "check": "Prüfen",
+    "recheck": "Erneut prüfen",
+    "submit": "Übernehmen und Verbindung beenden",
+    "phase": {
+      "starting": "Startet …",
+      "reading": "nexcrate liest Radarr …",
+      "mapping": "nexcrate ordnet die Ordner zu …",
+      "files": "nexcrate sucht die Dateien …",
+      "saving": "nexcrate übernimmt die Fassungen …",
+      "companions": "nexcrate schreibt die Begleitdateien …"
+    },
+    "running": {
+      "check": "Prüfung läuft",
+      "takeover": "Übernahme läuft",
+      "progress": "{{done}} von {{total}} Dateien angesehen",
+      "progressLabel": "Angesehene Dateien",
+      "hint": "Du kannst das Fenster schließen, nexcrate arbeitet weiter. Öffnest du es wieder, steht der Stand da."
+    },
+    "failed": {
+      "check": "Die Prüfung ist fehlgeschlagen. Geändert wurde nichts.",
+      "takeover": "Die Übernahme ist fehlgeschlagen. Geändert wurde nichts."
+    },
+    "dataFresh": "Gerade aus Radarr gelesen, am {{time}}.",
+    "dataStored": "Radarr antwortet gerade nicht. Die Prüfung nutzt den letzten Import vom {{time}}.",
+    "roots": {
+      "title": "Ordner",
+      "intro": "Radarr und nexcrate sehen dieselben Filme oft unter verschiedenen Pfaden. nexcrate ordnet sie über Beispieldateien mit gleicher Größe zu.",
+      "radarrSees": "In Radarr",
+      "nexcrateSees": "In nexcrate",
+      "unmapped": "Noch kein Ordner",
+      "counts": "{{movies}}, {{files}}",
+      "same_path": "Radarr und nexcrate sehen denselben Pfad.",
+      "found": "nexcrate hat dort {{matched}} von {{samples}} Beispieldateien gefunden.",
+      "chosen": "Von dir gewählt. Dort liegen {{matched}} von {{samples}} Beispieldateien.",
+      "none": "nexcrate hat keinen passenden Ordner gefunden. Wähl den Ordner, unter dem nexcrate diese Filme sieht.",
+      "noFiles": "Hier hat Radarr nur Filme ohne Datei. Ein Ordner ist freiwillig.",
+      "derived": "nexcrate hat den Ordner aus einem anderen Zielordner abgeleitet.",
+      "noneNoFiles": "Ohne Ordner legt nexcrate diese Filme später im Standardordner ab.",
+      "chosenNoFiles": "Von dir gewählt.",
+      "choose": "Ordner wählen",
+      "chooseLabel": "Ordner wählen für {{remote}}",
+      "change": "Anderen Ordner wählen",
+      "changeLabel": "Anderen Ordner wählen für {{remote}}",
+      "pickerTitle": "Ordner in nexcrate für {{remote}}",
+      "picked": "Gewählt: {{local}}. Prüf erneut, dann sucht nexcrate die Beispieldateien dort.",
+      "pickedNoFiles": "Gewählt: {{local}}. Prüf erneut, dann testet nexcrate den Ordner."
+    },
+    "counts": {
+      "title": "Filme und Dateien",
+      "movies": "Filme",
+      "withFile": "Mit Datei",
+      "found": "Gefunden",
+      "missing": "Fehlen",
+      "otherSize_one": "Eine davon hat eine andere Größe als in Radarr. nexcrate nimmt die Größe auf der Platte.",
+      "otherSize_other": "{{value}} davon haben eine andere Größe als in Radarr. nexcrate nimmt die Größe auf der Platte.",
+      "missingTitle": "Diese Dateien findet nexcrate nicht",
+      "missingMore_one": "Und eine weitere.",
+      "missingMore_other": "Und {{value}} weitere."
+    },
+    "queue": {
+      "title": "Downloads in Radarr",
+      "none": "Radarr lädt gerade nichts für diese Filme.",
+      "active_one": "Radarr lädt gerade einen Film dieser Verbindung. Warte am besten, bis Radarr ihn abgelegt hat, und prüf dann erneut.",
+      "active_other": "Radarr lädt gerade {{value}} Filme dieser Verbindung. Warte am besten, bis Radarr sie abgelegt hat, und prüf dann erneut."
+    },
+    "version": {
+      "title": "Fassung {{label}}",
+      "folder": "Standardordner:",
+      "ready": "Die Fassung hat ein Profil und einen Standardordner. nexcrate kann für sie laden.",
+      "noProfile": "Diese Fassung hat noch kein Profil. nexcrate lädt für sie erst, wenn sie eins hat.",
+      "noFolder": "Diese Fassung hat noch keinen Standardordner. Ohne ihn lädt nexcrate für sie nichts. Wähl ihn unter Ordner und Benennung.",
+      "useProposal": "{{folder}} als Standardordner nehmen",
+      "useProposalHint": "Dort liegen die meisten Filme aus diesem Radarr. Neue Filme legt nexcrate dann dort ab. Vorhandene Filme bleiben in ihrem Ordner."
+    },
+    "naming": {
+      "title": "Benennung",
+      "unavailable": "Radarr hat nicht geantwortet, deshalb fehlt seine Benennung. Du kannst sie später unter Ordner und Benennung übernehmen.",
+      "take": "Benennung aus Radarr für {{label}} übernehmen",
+      "takeHint": "Neue Dateien dieser Fassung benennt nexcrate dann wie Radarr. Vorhandene Dateien behalten ihren Namen.",
+      "cannotTake": "Diese Benennung kann nexcrate so nicht übernehmen. {{label}} behält ihre Benennung."
+    },
+    "notes": {
+      "title": "Was sich gegenüber Radarr ändert",
+      "radarr_recycle_bin_one": "Radarr hat ersetzte Dateien einen Tag aufgehoben. nexcrate hebt sie so lange auf, wie unter Ordner und Benennung eingestellt.",
+      "radarr_recycle_bin_other": "Radarr hat ersetzte Dateien {{value}} Tage aufgehoben. nexcrate hebt sie so lange auf, wie unter Ordner und Benennung eingestellt.",
+      "radarrRecycleBinNoDays": "Radarr hat ersetzte Dateien in einem Papierkorb aufgehoben. nexcrate hebt sie so lange auf, wie unter Ordner und Benennung eingestellt.",
+      "radarr_extra_files": "Radarr hat Untertitel und andere Zusatzdateien mit abgelegt. nexcrate legt Untertitel mit ab, wenn das unter Ordner und Benennung eingeschaltet ist, andere Zusatzdateien nicht.",
+      "radarr_hardlinks_off": "Radarr hat Torrents kopiert statt verlinkt. nexcrate verlinkt, wo es geht.",
+      "radarr_file_date": "Radarr hat das Dateidatum auf das Erscheinungsdatum gesetzt. nexcrate lässt das Datum, wie es ist.",
+      "radarr_permissions": "Radarr hat nach dem Ablegen Dateirechte geändert. nexcrate schreibt mit den Rechten seines Containers."
+    },
+    "confirm": {
+      "title": "Bestätigen",
+      "missing": "Ohne die fehlenden Dateien übernehmen",
+      "missingHint_one": "Eine Fassung hat danach keine Datei, wie in Radarr.",
+      "missingHint_other": "{{value}} Fassungen haben danach keine Datei, wie in Radarr.",
+      "queue": "Ohne Radarrs laufende Downloads übernehmen",
+      "queueHint": "Was Radarr danach noch ablegt, kennt nexcrate nicht."
+    },
+    "blocked": {
+      "root_unmapped": "Wähl zuerst für jeden Ordner aus Radarr mit Dateien einen Ordner in nexcrate und prüf dann erneut.",
+      "pending": "Prüf erneut, dann testet nexcrate den gewählten Ordner.",
+      "confirm": "Hak zuerst an, was unter Bestätigen steht.",
+      "unknown": "Die Prüfung meldet {{code}}. Das kennt diese Oberfläche noch nicht."
+    },
+    "taken": {
+      "done": "{{name}} ist übernommen. nexcrate liest dieses Radarr nicht mehr.",
+      "versions": "Fassungen übernommen",
+      "withFile": "Mit Datei",
+      "missing": "Ohne Datei",
+      "titles": "Titel für TMDB",
+      "tmdb": "Die Daten von TMDB holt nexcrate für diese Titel nach und nach. Bis dahin bleiben die aus Radarr.",
+      "companions": "Begleitdateien"
+    },
+    "undo": {
+      "open": "Rückgängig machen",
+      "openLabel": "Rückgängig machen: {{name}}",
+      "title": "Übernahme rückgängig machen",
+      "reads": "nexcrate liest {{name}} danach wieder alle 15 Minuten ein. Die Fassungen daraus kommen dann wieder aus Radarr.",
+      "loaded": "Was nexcrate seit der Übernahme für diese Filme geladen hat, kennt Radarr nicht. nexcrate zeigt danach wieder Radarrs Stand, die Dateien bleiben liegen.",
+      "naming": "Die Benennung der Fassung {{label}} bleibt, wie sie ist.",
+      "keyDeleted": "nexcrate hat den Schlüssel bei der Übernahme gelöscht. Trag ihn einmal neu ein.",
+      "submit": "Rückgängig machen",
+      "companion": "Die release.nex, die nexcrate für diese Filme geschrieben hat, nimmt nexcrate wieder weg. Von Hand geänderte bleiben liegen."
+    },
+    "series": {
+      "openHint": "Macht die Serien aus diesem Sonarr zu nexcrates eigenen und beendet die Verbindung.",
+      "intro": {
+        "noRead": "nexcrate liest dieses Sonarr danach nicht mehr ein. Gelöscht wird nichts.",
+        "loads": "Ab dann lädt und verbessert nexcrate auch für diese Serien.",
+        "companion": "Danach liest nexcrate die Serienordner nach Dateien ein, die Sonarr nicht kannte, und legt in jeden Staffelordner eine release.nex."
+      },
+      "warning": "Schalte Sonarr danach ab oder entferne die Serien dort. Sonst tauschen beide Programme Dateien aus.",
+      "phase": {
+        "reading": "nexcrate liest Sonarr …",
+        "readingFolders": "nexcrate liest die Serienordner ein …"
+      },
+      "running": {
+        "folders": "Serienordner werden eingelesen: {{done}} von {{total}}",
+        "foldersLabel": "Eingelesene Serienordner"
+      },
+      "dataFresh": "Gerade aus Sonarr gelesen, am {{time}}.",
+      "dataStored": "Sonarr antwortet gerade nicht. Die Prüfung nutzt den letzten Import vom {{time}}.",
+      "roots": {
+        "intro": "Sonarr und nexcrate sehen dieselben Serien oft unter verschiedenen Pfaden. nexcrate ordnet sie über Beispieldateien mit gleicher Größe zu.",
+        "sourceSees": "In Sonarr",
+        "same_path": "Sonarr und nexcrate sehen denselben Pfad.",
+        "none": "nexcrate hat keinen passenden Ordner gefunden. Wähl den Ordner, unter dem nexcrate diese Serien sieht.",
+        "noFiles": "Hier hat Sonarr nur Serien ohne Datei. Ein Ordner ist freiwillig.",
+        "noneNoFiles": "Ohne Ordner legt nexcrate diese Serien später im Standardordner ab."
+      },
+      "counts": {
+        "title": "Serien und Folgendateien",
+        "intro": "{{series}}, {{episodeFiles}}",
+        "series": "Serien",
+        "otherSize_one": "Eine davon hat eine andere Größe als in Sonarr. nexcrate nimmt die Größe auf der Platte.",
+        "otherSize_other": "{{value}} davon haben eine andere Größe als in Sonarr. nexcrate nimmt die Größe auf der Platte.",
+        "unclear_one": "Eine Datei passt zu keiner Folge; die ordnest du danach auf der Serienseite zu.",
+        "unclear_other": "{{value}} Dateien passen zu keiner Folge; die ordnest du danach auf der Serienseite zu.",
+        "wouldUpgrade_one": "nexcrate würde danach eine Datei verbessern.",
+        "wouldUpgrade_other": "nexcrate würde danach {{value}} Dateien verbessern."
+      },
+      "queue": {
+        "title": "Downloads in Sonarr",
+        "none": "Sonarr lädt gerade nichts für diese Serien.",
+        "active_one": "Sonarr lädt gerade eine Folge dieser Verbindung. Warte am besten, bis Sonarr sie abgelegt hat, und prüf dann erneut.",
+        "active_other": "Sonarr lädt gerade {{value}} Folgen dieser Verbindung. Warte am besten, bis Sonarr sie abgelegt hat, und prüf dann erneut."
+      },
+      "version": {
+        "folderHint": "Neue Serien dieser Fassung legt nexcrate hier ab. Vorhandene Serien bleiben in ihrem Ordner.",
+        "useProposalHint": "Dort liegen die meisten Serien aus diesem Sonarr. Neue Serien legt nexcrate dann dort ab. Vorhandene Serien bleiben in ihrem Ordner."
+      },
+      "naming": {
+        "unavailable": "Sonarr hat nicht geantwortet, deshalb fehlt seine Benennung. Du kannst sie später unter Ordner und Benennung übernehmen.",
+        "take": "Benennung aus Sonarr für {{label}} übernehmen",
+        "takeHint": "Neue Dateien dieser Fassung benennt nexcrate dann wie Sonarr. Vorhandene Dateien behalten ihren Namen.",
+        "cannotTake": "Diese Benennung kann nexcrate so nicht übernehmen. {{label}} behält ihre Benennung."
+      },
+      "notes": {
+        "title": "Was sich gegenüber Sonarr ändert",
+        "sonarr_recycle_bin_one": "Sonarr hat ersetzte Dateien einen Tag aufgehoben. nexcrate hebt sie so lange auf, wie unter Ordner und Benennung eingestellt.",
+        "sonarr_recycle_bin_other": "Sonarr hat ersetzte Dateien {{value}} Tage aufgehoben. nexcrate hebt sie so lange auf, wie unter Ordner und Benennung eingestellt.",
+        "recycleBinNoDays": "Sonarr hat ersetzte Dateien in einem Papierkorb aufgehoben. nexcrate hebt sie so lange auf, wie unter Ordner und Benennung eingestellt.",
+        "sonarr_extra_files": "Sonarr hat Untertitel und andere Zusatzdateien mit abgelegt. nexcrate legt Untertitel mit ab, wenn das unter Ordner und Benennung eingeschaltet ist, andere Zusatzdateien nicht.",
+        "sonarr_hardlinks_off": "Sonarr hat Torrents kopiert statt verlinkt. nexcrate verlinkt, wo es geht.",
+        "sonarr_file_date": "Sonarr hat das Dateidatum auf das Sendedatum gesetzt. nexcrate lässt das Datum, wie es ist.",
+        "sonarr_permissions": "Sonarr hat nach dem Ablegen Dateirechte geändert. nexcrate schreibt mit den Rechten seines Containers."
+      },
+      "confirm": {
+        "missingHint_one": "Eine Folge hat danach keine Datei, wie in Sonarr.",
+        "missingHint_other": "{{value}} Folgen haben danach keine Datei, wie in Sonarr.",
+        "queue": "Ohne Sonarrs laufende Downloads übernehmen",
+        "queueHint": "Was Sonarr danach noch ablegt, kennt nexcrate nicht."
+      },
+      "blocked": {
+        "root_unmapped": "Wähl zuerst für jeden Ordner aus Sonarr mit Dateien einen Ordner in nexcrate und prüf dann erneut."
+      },
+      "undo": {
+        "reads": "nexcrate liest {{name}} danach wieder alle 15 Minuten ein. Die Fassungen daraus kommen dann wieder aus Sonarr.",
+        "loaded": "Was nexcrate seit der Übernahme für diese Serien geladen hat, kennt Sonarr nicht. nexcrate zeigt danach wieder Sonarrs Stand, die Dateien bleiben liegen.",
+        "companion": "Die release.nex, die nexcrate für diese Serien geschrieben hat, nimmt nexcrate wieder weg. Von Hand geänderte bleiben liegen."
+      },
+      "taken": {
+        "done": "{{name}} ist übernommen. nexcrate liest dieses Sonarr nicht mehr.",
+        "folders": "nexcrate liest jetzt die Serienordner nach Dateien ein, die Sonarr nicht kannte, und legt die release.nex an. Bis das durch ist, sucht nexcrate für diese Serien nichts."
+      }
+    },
+    "music": {
+      "warning": "Schalte in Lidarr danach die Überwachung aus oder entferne die Künstler dort. Sonst laden und ersetzen beide Programme Musik.",
+      "dataStored": "Lidarr antwortet gerade nicht. Die Prüfung nutzt den letzten Import vom {{time}}.",
+      "dataFresh": "Gerade aus Lidarr gelesen, am {{time}}.",
+      "phase": {
+        "reading": "nexcrate liest Lidarr …",
+        "readingFolders": "nexcrate liest die Albumordner ein …"
+      },
+      "blocked": {
+        "root_unmapped": "Wähl zuerst für jeden Ordner aus Lidarr mit Dateien einen Ordner in nexcrate und prüf dann erneut."
+      },
+      "roots": {
+        "intro": "Lidarr und nexcrate sehen dieselbe Musik oft unter verschiedenen Pfaden. nexcrate ordnet sie über eine Beispieldatei je Album mit gleicher Größe zu.",
+        "sourceSees": "In Lidarr",
+        "same_path": "Lidarr und nexcrate sehen denselben Pfad.",
+        "none": "nexcrate hat keinen passenden Ordner gefunden. Wähl den Ordner, unter dem nexcrate diese Musik sieht.",
+        "noneNoFiles": "Ohne Ordner legt nexcrate diese Alben später im Standardordner ab.",
+        "counts": "{{albums}}, {{files}}"
+      },
+      "intro": {
+        "noRead": "nexcrate liest dieses Lidarr danach nicht mehr ein. Gelöscht wird nichts, Dateien bleiben, wo sie liegen, mit ihren Namen und Tags.",
+        "loads": "Ab dann lädt, ergänzt und verbessert nexcrate auch für diese Alben. Die Automatik für Musik sucht fehlende Alben nach Plan, sobald du sie einschaltest.",
+        "companion": "Danach liest nexcrate die Albumordner nach Dateien ein, die Lidarr nicht kannte, und legt in jeden Albumordner eine release.nex."
+      },
+      "counts": {
+        "title": "Alben und Dateien",
+        "albums": "Alben",
+        "files": "Dateien",
+        "wanted_one": "Ein überwachtes Album hat noch keine Datei. nexcrate sucht es nach Plan, sobald die Automatik für Musik an ist.",
+        "wanted_other": "{{value}} überwachte Alben haben noch keine Datei. nexcrate sucht sie nach Plan, sobald die Automatik für Musik an ist.",
+        "wouldUpgrade_one": "Ein Album liegt unter dem Ziel deines Musik-Profils.",
+        "wouldUpgrade_other": "{{value}} Alben liegen unter dem Ziel deines Musik-Profils.",
+        "incomplete_one": "Einem Album fehlen Titel seiner Zielausgabe.",
+        "incomplete_other": "{{value}} Alben fehlen Titel ihrer Zielausgabe.",
+        "unmapped_one": "Eine Datei konnte Lidarr keinem Titel zuordnen. Liegt sie in einem Albumordner, liest nexcrate sie danach ein.",
+        "unmapped_other": "{{value}} Dateien konnte Lidarr keinem Titel zuordnen. Liegen sie in einem Albumordner, liest nexcrate sie danach ein.",
+        "otherSize_one": "Eine Datei hat eine andere Größe als in Lidarr. nexcrate nimmt die Größe auf der Platte.",
+        "otherSize_other": "{{value}} Dateien haben eine andere Größe als in Lidarr. nexcrate nimmt die Größe auf der Platte.",
+        "outside_one": "Eine Datei liegt außerhalb ihres Albumordners. nexcrate lässt sie liegen; ihr Titel zählt als fehlend, bis du sie in den Albumordner verschiebst und ihn neu einliest.",
+        "outside_other": "{{value}} Dateien liegen außerhalb ihres Albumordners. nexcrate lässt sie liegen; ihre Titel zählen als fehlend, bis du sie in den Albumordner verschiebst und ihn neu einliest."
+      },
+      "queue": {
+        "title": "Downloads in Lidarr",
+        "none": "Lidarr lädt gerade nichts für diese Alben.",
+        "active_one": "Lidarr lädt gerade ein Album dieser Verbindung. Warte am besten, bis Lidarr es abgelegt hat, und prüf dann erneut.",
+        "active_other": "Lidarr lädt gerade {{value}} Alben dieser Verbindung. Warte am besten, bis Lidarr sie abgelegt hat, und prüf dann erneut."
+      },
+      "confirm": {
+        "missingHint_one": "Eine Datei fehlt; ihr Titel gilt danach als fehlend.",
+        "missingHint_other": "{{value}} Dateien fehlen; ihre Titel gelten danach als fehlend.",
+        "queue": "Ohne Lidarrs laufende Downloads übernehmen",
+        "queueHint": "Was Lidarr danach noch ablegt, kennt nexcrate erst nach „Ordner neu einlesen“."
+      },
+      "version": {
+        "folderHint": "Neue Alben legt nexcrate hier ab. Übernommene Alben bleiben in ihren Ordnern.",
+        "useProposalHint": "Neue Alben legt nexcrate dann in diesem Ordner ab."
+      },
+      "taken": {
+        "done": "{{name}} ist übernommen. nexcrate liest dieses Lidarr nicht mehr.",
+        "folders": "nexcrate liest jetzt die Albumordner nach Dateien ein, die Lidarr nicht kannte, und legt die release.nex an. Alben mit unklaren Dateien sucht nexcrate erst, wenn du sie geklärt hast.",
+        "versions": "Alben übernommen",
+        "withFile": "Dateien behalten",
+        "missing": "Dateien außerhalb"
+      },
+      "openHint": "Liest Lidarr, ordnet die Ordner zu und zeigt, was sich ändert. Geändert wird erst, wenn du übernimmst.",
+      "undo": {
+        "reads": "nexcrate liest {{name}} danach wieder stündlich ein. Die Alben daraus kommen dann wieder aus Lidarr.",
+        "loaded": "Was nexcrate seit der Übernahme für diese Alben geladen hat, kennt Lidarr nicht. nexcrate zeigt danach wieder Lidarrs Stand, die Dateien bleiben liegen.",
+        "companion": "Die release.nex, die nexcrate in die Albumordner geschrieben hat, nimmt nexcrate wieder weg. Von Hand geänderte bleiben liegen."
+      },
+      "running": {
+        "folders": "Albumordner werden eingelesen: {{done}} von {{total}}",
+        "foldersLabel": "Eingelesene Albumordner"
+      }
+    },
+    "keep": {
+      "title": "Nach der Übernahme",
+      "label": "Vorhandenes nicht verbessern",
+      "hint": "Was die Verbindung mitbringt, bleibt, wie es ist: Titel mit Datei stehen auf „in Ruhe lassen“, Folgen mit Datei sind aus. Was fehlt, sucht nexcrate weiter, und was später dazukommt, wird ganz normal verbessert."
+    }
+  },
+  "quality": {
+    "title": "Qualität und Profile übernehmen",
+    "intro": "Die Qualitätsprofile, die Custom Formats und die Größen je Qualität aus {{name}}. Gelesen wird nur; in die andere App schreibt nexcrate nie.",
+    "loading": "Einstellungen werden gelesen",
+    "found": "{{profiles}} Profile, {{formats}} neue Custom Formats, {{sizes}} Größen.",
+    "take": "{{name}} übernehmen",
+    "alreadyHere": "Schon hier",
+    "qualitiesUnknown": "Qualitäten fehlen",
+    "nothingAllowed": "Nimmt nichts",
+    "languageUnknown": "Sprache bleibt weg",
+    "line": "{{qualities}} Qualitäten, gut genug ab {{cutoff}}, {{formats}} Formate mit Punkten",
+    "unknownQualities": "Diese Qualitäten kennt nexcrate nicht und lässt sie weg: {{qualities}}.",
+    "lostConditions": "Diese Formate haben Bedingungen, für die nexcrate keine Art hat; sie kommen ohne diese Bedingungen: {{formats}}.",
+    "take_all": "{{count}} Profile übernehmen",
+    "taken": "Übernommen: {{profiles}} Profile, {{formats}} Formate, {{sizes}} Größen.",
+    "open": "Qualität und Profile holen",
+    "openLabel": "Qualität und Profile holen: {{name}}",
+    "close": "Schließen",
+    "repackUnscored": "Kein Repack-Format",
+    "repack": {
+      "whyThere": "Mindestens ein Profil bewertet kein Repack und kein Proper. Die andere App nimmt solche Korrekturen von sich aus als Verbesserung; nexcrate hat dafür keine eigene Stufe und nimmt sie nur über ein Format mit Punkten.",
+      "whyOff": "Mindestens ein Profil bewertet kein Repack und kein Proper. In der anderen App ist das Bevorzugen solcher Korrekturen abgestellt, es ändert sich also nichts, wenn du es so lässt.",
+      "add": "Diesen Profilen die Repack-Formate der TRaSH-Leitfäden mitgeben ({{formats}})"
+    },
+    "release": {
+      "title": "Release-Profile",
+      "intro": "Release-Profile gibt es hier nicht. Aus „darf nicht enthalten“ und „muss enthalten“ werden Custom Formats, denen jedes übernommene Profil minus 10000 Punkte gibt.",
+      "line": "Wird zu: {{formats}}",
+      "bound": "Gebunden",
+      "boundLine": "Dort an einen Indexer oder an Tags gebunden; das lässt sich hier nicht abbilden. Die Formate kommen ohne Punkte, vergib sie von Hand, wo sie passen: {{formats}}",
+      "off": "Ausgeschaltet",
+      "offLine": "Dort ausgeschaltet, kommt nicht mit.",
+      "empty": "Enthält keinen lesbaren Begriff, kommt nicht mit.",
+      "unreadable": "Diese Begriffe sind kein lesbares Muster und bleiben weg: {{terms}}"
+    },
+    "differs": {
+      "title": "Was hier anders läuft",
+      "notAllowed": "Liegt schon eine Datei in einer Qualität, die das Profil nicht erlaubt, lässt nexcrate sie liegen, auch wenn sie besser ist als erlaubt. {{app}} würde sie ersetzen.",
+      "delay": "Delay-Profile (Wartezeit, Usenet vor Torrent) stehen hier an der Fassung unter „Protokoll und Wartezeit“. Eingelesen wird das Profil ohne Tag; an Tags gebundene kommen nicht mit.",
+      "tags": "Tags gibt es nicht. Was dort ein Tag bindet, bindet hier die Fassung: sie wählt ihr Profil."
+    },
+    "whereTo": "Übernommene Profile stehen unter Einstellungen → Qualität → Profile. Zugewiesen wird ein Profil bei der Fassung."
+  }
+}

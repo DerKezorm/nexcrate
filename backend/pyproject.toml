@@ -1,0 +1,38 @@
+[project]
+name = "nexcrate-backend"
+version = "0.2.0"
+requires-python = ">=3.14"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["E501", "E402", "S608", "B", "BLE"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "E501", "E402"]
+# Takes the fixtures of the V2 tests by import; pytest finds them by name, ruff sees a redefinition.
+"tests/test_api_v3.py" = ["F811"]
+"tests/test_api_v4.py" = ["F811"]
+"tests/test_api_v5.py" = ["F811"]
+"tests/test_tags.py" = ["F811"]
+"tests/test_tags_t2.py" = ["F811"]
+"tests/test_auto_tags.py" = ["F811", "E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "real_network: talks to a closed local port through the real HTTP stack instead of the blocked network",
+]

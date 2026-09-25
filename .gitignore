@@ -1,0 +1,23 @@
+node_modules/
+dist/
+*.log
+*.tsbuildinfo
+.DS_Store
+
+# Runtime data: database, secret key, logs, cached images. Never part of the repository.
+data/
+data-*/
+# Except the bundled TRaSH Guides snapshot, which is program data (built by backend/tools/trash_snapshot.py).
+!backend/app/data/
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+
+# Local settings with secrets
+.env
+.env.*
+!.env.example

@@ -1,0 +1,66 @@
+{
+  "title": "Sicherungen",
+  "intro": "nexcrate legt Kopien seiner Datenbank an: nach Zeitplan, vor jeder Änderung am Aufbau der Datenbank und wenn du es sagst. Sie liegen auf derselben Platte wie die Datenbank. Zur echten Sicherung wird eine Kopie erst, wenn du sie herunterlädst und woanders aufhebst.",
+  "scheduleLabel": "Automatisch sichern",
+  "schedule": {
+    "off": "Nie",
+    "daily": "Täglich",
+    "weekly": "Wöchentlich",
+    "monthly": "Monatlich"
+  },
+  "keepLabel": "Behalten",
+  "keepHint": "So viele automatische Kopien bleiben liegen, ältere werden entfernt. Von Hand angelegte bleiben, bis du sie löschst. Automatische Kopien entstehen nachts zwischen 3 und 6 Uhr.",
+  "saved": "Gespeichert.",
+  "listTitle": "Vorhandene Kopien",
+  "createNow": "Jetzt sichern",
+  "empty": "Noch keine Kopie da.",
+  "columns": {
+    "when": "Wann",
+    "kind": "Art",
+    "note": "Notiz",
+    "version": "Version",
+    "size": "Größe",
+    "actions": "Aktionen"
+  },
+  "kind": {
+    "manual": "Von Hand",
+    "scheduled": "Nach Plan",
+    "update": "Vor Änderung"
+  },
+  "tooNew": "neuer als diese Version",
+  "unknownVersion": "Version unbekannt",
+  "download": "Herunterladen",
+  "folderHint": "Die Kopien liegen im Ordner {{folder}}.",
+  "create": {
+    "title": "Neue Sicherung",
+    "sub": "Eine Kopie der Datenbank samt TRaSH-Stand. Zwischengespeicherte TMDB-Antworten bleiben draußen, sie kommen von selbst wieder. Bei einer großen Datenbank dauert das auf einem NAS einige Minuten.",
+    "note": "Notiz",
+    "noteHint": "Woran du sie später erkennst, etwa „vor dem Umbau der Profile“. Steht auch im Dateinamen.",
+    "done": "Sicherung angelegt."
+  },
+  "downloadDialog": {
+    "title": "Sicherung herunterladen",
+    "what": "Du bekommst ein verschlüsseltes ZIP mit der Datenbank, dem Schlüssel für die gespeicherten Zugänge und dem TRaSH-Stand. Öffnen lässt es sich mit 7-Zip oder WinRAR, der Windows-Explorer kann es nicht.",
+    "warning": "Ohne das Passwort ist die Sicherung wertlos. Es gibt keinen Zweitschlüssel, auch nexcrate kann das Archiv dann nicht mehr öffnen.",
+    "password": "Passwort",
+    "repeat": "Passwort wiederholen",
+    "tooShort": "Mindestens {{count}} Zeichen.",
+    "mismatch": "Die beiden Passwörter sind verschieden."
+  },
+  "delete": {
+    "action": "Löschen",
+    "title": "Sicherung löschen?",
+    "text": "Die Kopie vom {{when}} (Notiz: {{note}}) wird entfernt.",
+    "warning": "Das lässt sich nicht rückgängig machen. Hast du sie nicht heruntergeladen, ist dieser Stand danach weg.",
+    "done": "Sicherung gelöscht."
+  },
+  "restoreCopy": {
+    "action": "Einspielen",
+    "title": "Diese Kopie einspielen?",
+    "text": "Die Kopie vom {{when}} (Notiz: {{note}}) ersetzt die jetzige Datenbank. Der Schlüssel für die gespeicherten Zugänge bleibt der dieser Installation."
+  },
+  "autoNote": {
+    "beforeRestore": "Vor dem Einspielen",
+    "beforeSchemaChange": "Vor einer Änderung der Datenbank"
+  }
+}

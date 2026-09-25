@@ -1,0 +1,55 @@
+{
+  "title": "Kalender",
+  "sub": "Wann ein Film erscheint, eine Folge läuft und ein Album herauskommt",
+  "subList": "Was als Nächstes kommt, ab heute",
+  "loading": "Der Kalender wird geholt …",
+  "today": "Heute",
+  "tomorrow": "Morgen",
+  "previousMonth": "Ein Monat zurück",
+  "nextMonth": "Ein Monat vor",
+  "listRange": "Die nächsten {{days}} Tage",
+  "emptyList": "In den nächsten Wochen steht nichts an.",
+  "entries_one": "{{count}} Eintrag",
+  "entries_other": "{{count}} Einträge",
+  "more_one": "{{count}} weiterer",
+  "more_other": "{{count}} weitere",
+  "truncated": "Der Zeitraum hat mehr Einträge, als eine Antwort trägt. Sichtbar sind die ersten {{count}}.",
+  "view": {
+    "label": "Ansicht",
+    "month": "Monat",
+    "list": "Liste"
+  },
+  "kind": {
+    "movie": "Filme",
+    "episode": "Folgen",
+    "album": "Alben"
+  },
+  "occasion": {
+    "theatrical": "Kinostart",
+    "digital": "Digital",
+    "physical": "Disc",
+    "air": "Ausstrahlung",
+    "release": "Erscheint"
+  },
+  "filter": {
+    "watched": "Nur beobachtete"
+  },
+  "region": {
+    "label": "Region",
+    "any": "Frühester Termin weltweit",
+    "foreign": "Termin aus {{country}}"
+  },
+  "feed": {
+    "title": "Kalender abonnieren",
+    "intro": "Eine Adresse, die eine Kalender-App ohne Anmeldung liest. Sie trägt einen eigenen Schlüssel, der nur diesen Kalender öffnet und sonst nichts.",
+    "switch": "Abo einschalten",
+    "hint": "Ab Werk aus. Solange es aus ist, antwortet die Adresse niemandem.",
+    "copy": "Adresse kopieren",
+    "copied": "Kopiert",
+    "newKey": "Neuen Schlüssel",
+    "newKeyDone": "Der neue Schlüssel gilt. Jede Kalender-App mit dem alten bekommt nichts mehr.",
+    "turnedOn": "Das Abo ist eingeschaltet.",
+    "turnedOff": "Das Abo ist ausgeschaltet.",
+    "warning": "Wer die Adresse hat, sieht diesen Kalender. Gib sie nur weiter, wenn das so gewollt ist."
+  }
+}

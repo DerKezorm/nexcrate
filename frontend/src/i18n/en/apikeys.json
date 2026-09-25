@@ -1,0 +1,71 @@
+{
+  "title": "API keys",
+  "intro": "Another program signs in to nexcrate with a key, for example Nexview, a dashboard or Home Assistant. Give every program its own key, then one can be revoked without disturbing the others.",
+  "add": "New key",
+  "empty": "No key yet. While there is none, no other program gets into nexcrate.",
+  "usage": "A program sends its key in the header Authorization: Bearer to the addresses under /api/v1, never in the address itself.",
+  "docs": "Open the description of the interface",
+  "hint": "ends in {{hint}}",
+  "created": "made on {{date}}",
+  "lastUsed": "last used {{age}}",
+  "neverUsed": "never used",
+  "scopes": {
+    "read": {
+      "label": "Read",
+      "hint": "Read the library, versions, states, storage, health, the queue, problems, history and events. Every key has it."
+    },
+    "request": {
+      "label": "Request",
+      "hint": "Request titles and more of them, watch or freeze them, have them searched, take them back and move files into the recycle bin."
+    },
+    "operate": {
+      "label": "Operate",
+      "hint": "Try stuck downloads again, remove them or have them searched again, confirm a path and assign files by hand."
+    }
+  },
+  "actions": {
+    "rename": "Rename",
+    "renameLabel": "Rename the key {{name}}",
+    "revoke": "Revoke",
+    "revokeLabel": "Revoke the key {{name}}"
+  },
+  "add_dialog": {
+    "title": "New key",
+    "name": "Name",
+    "nameHint": "What the key is for, such as the name of the program.",
+    "scopes": "What the key may do",
+    "never": "No key reaches indexers, download clients, profiles, the account or stored secrets. There is no address for them under /api/v1.",
+    "confirm": "Make the key"
+  },
+  "created_dialog": {
+    "title": "Key for {{name}}",
+    "once": "Copy the key now. nexcrate keeps only its fingerprint and cannot show it to you a second time.",
+    "copy": "Copy the key",
+    "copied": "Copied",
+    "how": "Enter it in the other program. If it gets lost, revoke it and make a new one.",
+    "done": "Done"
+  },
+  "rename": {
+    "title": "Rename the key",
+    "hint": "The key itself and its scopes stay. For other scopes make a new key.",
+    "done": "The key is now called {{name}}."
+  },
+  "revoke": {
+    "title": "Revoke the key?",
+    "text": "The key {{name}} stops working at once, and that cannot be taken back. The program that uses it needs a new one.",
+    "confirm": "Revoke",
+    "done": "The key {{name}} is revoked."
+  },
+  "pairing": {
+    "region": "Programs that want to connect",
+    "asks": "{{app}} wants to connect to nexcrate. Code:",
+    "look": "Look",
+    "title": "Connect {{app}}?",
+    "explain": "{{app}} asks for a key to nexcrate. If you confirm, only the program gets to see the key; it then stands under API keys and can be revoked there.",
+    "compare": "Does the program show the same code? If not, refuse.",
+    "confirm": "Connect",
+    "deny": "Refuse",
+    "confirmed": "Connected: key “{{name}}” made.",
+    "denied": "{{app}} refused."
+  }
+}

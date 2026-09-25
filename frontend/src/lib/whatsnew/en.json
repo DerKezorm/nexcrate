@@ -1,0 +1,40 @@
+{
+  "entries": {
+    "0.2.0": {
+      "lead": "From this version on, this window says what changed after every update. This time: backups to download, a way to hold back upgrades and a much smaller database.",
+      "sections": [
+        {
+          "title": "Backups",
+          "body": "nexcrate now backs itself up weekly at night, daily or monthly if you like. Every copy can be downloaded as an encrypted archive and restored later, with the key for the stored credentials.",
+          "where": "Settings › System › Backups"
+        },
+        {
+          "title": "Hold back upgrades",
+          "body": "Missing movies and episodes now load before upgrades, in SABnzbd and in qBittorrent. There is also a pause for everything already there when you switch it on, and a limit per day.",
+          "where": "Settings › Automation › Hold back upgrades"
+        },
+        {
+          "title": "Do not upgrade what is there",
+          "body": "When taking over from Radarr or Sonarr and when reading folders from disk, you can tick that the files brought along stay as they are. What is missing is still searched.",
+          "where": "Settings › Import and Read folders"
+        },
+        {
+          "title": "Remove several titles",
+          "body": "In the library you can select several titles and remove them at once, with their files moved to the recycle bin if you like.",
+          "where": "Library › Select › Remove"
+        },
+        {
+          "title": "Anime by scene numbers",
+          "body": "Releases that count episodes through are now matched and searched by TheXEM's scene numbers, as in Sonarr. You can switch this off per series and set the number by hand on every episode.",
+          "where": "Series › Numbering"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The database is much smaller: nexcrate keeps only what it reads from TMDB and gives empty space back at the start. The first start after the update takes a few minutes longer for it.",
+        "TheXEM is only asked about series it knows, and not at all for six hours after a failure.",
+        "A file taken over during an import now counts as filed in the log."
+      ]
+    }
+  }
+}

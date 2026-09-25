@@ -1,0 +1,112 @@
+{
+  "loading": "Lädt …",
+  "noRequestId": "nicht vorhanden",
+  "nav": {
+    "home": "Zur Bibliothek",
+    "main": "Hauptnavigation",
+    "library": "Bibliothek",
+    "calendar": "Kalender",
+    "downloads": "Downloads",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "logoutAs": "Abmelden ({{name}})"
+  },
+  "later": {
+    "title": "Kommt später",
+    "notice": "Das kommt in einem späteren Schritt."
+  },
+  "password": {
+    "show": "Passwort anzeigen"
+  },
+  "footer": {
+    "tagline": "Filme, Serien und Musik an einem Ort",
+    "about": "Über",
+    "update": "Neue Version"
+  },
+  "theme": {
+    "label": "Darstellung",
+    "dark": "Dunkel",
+    "light": "Hell"
+  },
+  "language": {
+    "label": "Sprache"
+  },
+  "actions": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "save": "Speichern",
+    "remove": "Entfernen",
+    "retry": "Erneut versuchen",
+    "edit": "Bearbeiten",
+    "test": "Verbindung prüfen"
+  },
+  "kind": {
+    "movie": "Film",
+    "movies": "Filme",
+    "seriesPlural": "Serien",
+    "musicPlural": "Musik"
+  },
+  "state": {
+    "available": "Vorhanden",
+    "downloading": "Lädt {{percent}} %",
+    "downloadingShort": "Lädt",
+    "percent": "{{percent}} %",
+    "wanted": "Gesucht",
+    "unmonitored": "Nicht überwacht",
+    "problem": "Problem",
+    "upgrade": "Besser möglich",
+    "incomplete": "Titel fehlen"
+  },
+  "languageName": {
+    "german": "Deutsch",
+    "english": "Englisch",
+    "french": "Französisch",
+    "spanish": "Spanisch",
+    "italian": "Italienisch",
+    "japanese": "Japanisch",
+    "korean": "Koreanisch",
+    "chinese": "Chinesisch",
+    "dutch": "Niederländisch",
+    "swedish": "Schwedisch",
+    "danish": "Dänisch",
+    "norwegian": "Norwegisch",
+    "finnish": "Finnisch",
+    "polish": "Polnisch",
+    "russian": "Russisch",
+    "portuguese": "Portugiesisch",
+    "turkish": "Türkisch",
+    "unknown": "Unbekannt"
+  },
+  "genre": {
+    "action": "Action",
+    "animation": "Animation",
+    "drama": "Drama",
+    "family": "Familie",
+    "fantasy": "Fantasy",
+    "history": "Historie",
+    "horror": "Horror",
+    "music": "Musik",
+    "romance": "Liebesfilm",
+    "thriller": "Thriller",
+    "tvMovie": "TV-Film",
+    "war": "Kriegsfilm",
+    "western": "Western",
+    "crime": "Krimi",
+    "scifi": "Science-Fiction",
+    "adventure": "Abenteuer",
+    "comedy": "Komödie",
+    "mystery": "Mystery",
+    "documentary": "Dokumentation"
+  },
+  "when": {
+    "today": "heute um {{time}}",
+    "other": "am {{date}} um {{time}}"
+  },
+  "units": {
+    "kb": "{{value}} KB",
+    "mb": "{{value}} MB",
+    "gb": "{{value}} GB",
+    "tb": "{{value}} TB",
+    "minutes": "{{value}} Min."
+  }
+}

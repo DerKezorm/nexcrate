@@ -1,0 +1,71 @@
+{
+  "title": "API-Schlüssel",
+  "intro": "Mit einem Schlüssel meldet sich ein anderes Programm bei nexcrate an, etwa Nexview, ein Dashboard oder Home Assistant. Jedes Programm bekommt seinen eigenen, dann lässt sich einer widerrufen, ohne die anderen zu stören.",
+  "add": "Neuer Schlüssel",
+  "empty": "Noch kein Schlüssel. Solange es keinen gibt, kommt kein anderes Programm an nexcrate heran.",
+  "usage": "Ein Programm schickt seinen Schlüssel in der Kopfzeile Authorization: Bearer an die Adressen unter /api/v1, nie in der Adresse selbst.",
+  "docs": "Beschreibung der Schnittstelle öffnen",
+  "hint": "endet auf {{hint}}",
+  "created": "angelegt am {{date}}",
+  "lastUsed": "zuletzt benutzt {{age}}",
+  "neverUsed": "noch nie benutzt",
+  "scopes": {
+    "read": {
+      "label": "Lesen",
+      "hint": "Bibliothek, Fassungen, Zustände, Speicher, Gesundheit, Warteschlange, Probleme, Verlauf und Ereignisse lesen. Ist bei jedem Schlüssel dabei."
+    },
+    "request": {
+      "label": "Anfragen",
+      "hint": "Titel anfragen und nachfordern, überwachen oder einfrieren, suchen lassen, zurücknehmen und Dateien in den Papierkorb legen."
+    },
+    "operate": {
+      "label": "Bedienen",
+      "hint": "Hängende Downloads noch einmal versuchen, entfernen oder neu suchen lassen, einen Pfad bestätigen und Dateien von Hand zuordnen."
+    }
+  },
+  "actions": {
+    "rename": "Umbenennen",
+    "renameLabel": "Schlüssel {{name}} umbenennen",
+    "revoke": "Widerrufen",
+    "revokeLabel": "Schlüssel {{name}} widerrufen"
+  },
+  "add_dialog": {
+    "title": "Neuer Schlüssel",
+    "name": "Name",
+    "nameHint": "Wofür der Schlüssel ist, etwa der Name des Programms.",
+    "scopes": "Was der Schlüssel darf",
+    "never": "Kein Schlüssel erreicht Indexer, Download-Programme, Profile, das Konto oder gespeicherte Geheimnisse. Dafür gibt es unter /api/v1 keine Adresse.",
+    "confirm": "Schlüssel anlegen"
+  },
+  "created_dialog": {
+    "title": "Schlüssel für {{name}}",
+    "once": "Kopiere den Schlüssel jetzt. nexcrate speichert nur seinen Fingerabdruck und kann ihn dir kein zweites Mal zeigen.",
+    "copy": "Schlüssel kopieren",
+    "copied": "Kopiert",
+    "how": "Trage ihn im anderen Programm ein. Geht er verloren, widerrufe ihn und lege einen neuen an.",
+    "done": "Fertig"
+  },
+  "rename": {
+    "title": "Schlüssel umbenennen",
+    "hint": "Der Schlüssel selbst und seine Rechte bleiben. Für andere Rechte lege einen neuen Schlüssel an.",
+    "done": "Der Schlüssel heißt jetzt {{name}}."
+  },
+  "revoke": {
+    "title": "Schlüssel widerrufen?",
+    "text": "Der Schlüssel {{name}} gilt danach sofort nicht mehr, und das lässt sich nicht zurücknehmen. Das Programm, das ihn benutzt, braucht einen neuen.",
+    "confirm": "Widerrufen",
+    "done": "Der Schlüssel {{name}} ist widerrufen."
+  },
+  "pairing": {
+    "region": "Programme, die sich verbinden wollen",
+    "asks": "{{app}} möchte sich mit nexcrate verbinden. Code:",
+    "look": "Ansehen",
+    "title": "{{app}} verbinden?",
+    "explain": "{{app}} bittet um einen Schlüssel für nexcrate. Bestätigst du, bekommt nur das Programm den Schlüssel zu sehen; er steht danach unter API-Schlüssel und lässt sich dort widerrufen.",
+    "compare": "Zeigt das Programm denselben Code? Wenn nicht, lehne ab.",
+    "confirm": "Verbinden",
+    "deny": "Ablehnen",
+    "confirmed": "Verbunden: Schlüssel „{{name}}“ angelegt.",
+    "denied": "{{app}} abgelehnt."
+  }
+}

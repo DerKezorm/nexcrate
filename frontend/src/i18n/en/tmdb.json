@@ -1,0 +1,31 @@
+{
+  "title": "TMDB",
+  "intro": "nexcrate finds movies and series through The Movie Database, TMDB for short: title, year, poster, seasons and episodes. You need your own access for it, free for private use.",
+  "needed": "To search, nexcrate needs your own access to TMDB. It is free for personal use.",
+  "missing": "No token stored yet. Without it nexcrate cannot find, add or refresh movies and series.",
+  "configured": "Token saved",
+  "checkedAt": "Last checked: {{time}}",
+  "neverChecked": "Not checked yet.",
+  "guide": {
+    "title": "How to get the token",
+    "login": "Log in at themoviedb.org. An account is free.",
+    "loginLink": "Open the TMDB login",
+    "settings": "Open Settings, API there.",
+    "settingsLink": "Open the API settings at TMDB",
+    "copy": "Copy the “API Read Access Token”, not the “API Key”.",
+    "paste": "Paste it below, then test and save."
+  },
+  "token": "API Read Access Token",
+  "tokenHint": "The long token. It usually starts with eyJ.",
+  "replaceTitle": "Enter a new token",
+  "replaceHint": "A token is saved. Paste a new one here to replace it.",
+  "save": "Test and save",
+  "saved": "The token works and is saved.",
+  "missingToken": "Paste the token first.",
+  "looksLikeKey": "This looks like the API Key. nexcrate needs the longer API Read Access Token.",
+  "remove": "Remove token",
+  "removeTitle": "Remove the TMDB token?",
+  "removeText": "Without a token nexcrate no longer searches for movies, and cached search results are deleted. Your library stays as it is.",
+  "removeConfirm": "Yes, remove",
+  "removed": "The token is removed."
+}

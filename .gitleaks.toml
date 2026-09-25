@@ -1,0 +1,42 @@
+# Second opinion next to a local scanner that runs in the git hooks and is not
+# part of the repository.
+#
+# Everything here is an allowlist. Nothing is switched off: a rule that fires
+# on made-up data on every push is a rule somebody stops reading, and then the
+# one real finding goes past unnoticed.
+#
+# The blocks are [[allowlists]], plural. The singular [allowlist] is deprecated
+# and gitleaks 8.30 refuses to load a config that holds both, so a second block
+# cannot be added next to it.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Placeholders and made-up data that are meant to be read."
+paths = [
+  '''package-lock\.json''',
+  '''\.svg$''',
+  '''\.png$''',
+  '''\.ico$''',
+  '''\.woff2$''',
+]
+regexes = [
+  # The reserved documentation domain.
+  '''example\.(com|org|net)''',
+]
+
+[[allowlists]]
+description = "Made-up release keys in the plan documents."
+#
+# A release key is nexcrate's own short hash of a release name, not a
+# credential, and the plans print made-up ones so a reader can follow the
+# example. gitleaks' generic-api-key rule only sees `key": "` in front of
+# sixteen hex digits and refused every push over it.
+#
+# Matched against the whole match, not against the value alone: a bare hex
+# string stays refused, and so does every other name in front of it.
+regexTarget = "match"
+regexes = [
+  '''release_key": "[0-9a-f]{16}"''',
+]

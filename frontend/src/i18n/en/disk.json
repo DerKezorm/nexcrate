@@ -1,0 +1,365 @@
+{
+  "title": "Read folders",
+  "sub": "Movies that already lie on disk come into the library here. nexcrate moves and deletes nothing while doing so.",
+  "backToLibrary": "Back to the library",
+  "noTmdb": "For proposals nexcrate needs the TMDB token.",
+  "noTmdbLink": "Go to TMDB",
+  "kindLabel": "Movies or series",
+  "roots": {
+    "title": "Folders",
+    "intro": "The default folders of your versions, the folders of your movies and the folders you added. nexcrate reads only when you say so.",
+    "empty": "No folder to read yet. Choose a default folder for a version under Folders and naming, or add a folder here.",
+    "versions_one": "Version {{labels}}",
+    "versions_other": "Versions {{labels}}",
+    "noVersion": "Belongs to no version. When restoring, the release.nex decides; when assigning, you choose.",
+    "ownRoot": "Added by you",
+    "lastScan": "Last read {{when}}.",
+    "neverScanned": "Never read yet.",
+    "counts": "Last count",
+    "missingFiles_one": "One movie of nexcrate is missing in this folder. nexcrate changes nothing about it.",
+    "missingFiles_other": "{{count}} movies of nexcrate are missing in this folder. nexcrate changes nothing about them.",
+    "radarrUnmapped": "nexcrate could not map the root folder of {{names}} here. Those movie folders stay unknown until the mapping is done.",
+    "notVisible": "nexcrate cannot see this folder right now. It is skipped when reading.",
+    "scan": "Read",
+    "scanLabel": "Read: {{path}}",
+    "scanAll": "Read all",
+    "add": "Add another folder",
+    "pickerTitle": "Folder to read",
+    "pickerHint": "nexcrate reads the subfolders of this folder as movie folders. Nothing is moved or deleted.",
+    "added": "{{path}} is now read too.",
+    "remove": "Remove from the list",
+    "removeLabel": "Remove from the list: {{path}}",
+    "removed": "{{path}} is no longer read."
+  },
+  "job": {
+    "scan": "nexcrate is reading",
+    "restore": "nexcrate is restoring movies",
+    "assign": "nexcrate is assigning",
+    "progress": "{{done}} of {{total}} folders looked at",
+    "progressLabel": "Folders looked at",
+    "hint": "You can leave the page, nexcrate keeps reading.",
+    "phase": {
+      "listing": "nexcrate lists the folders …",
+      "folders": "nexcrate looks into the folders …",
+      "radarr": "nexcrate compares with Radarr …",
+      "matching": "nexcrate matches …",
+      "tmdb": "nexcrate fetches proposals from TMDB …",
+      "other": "Running …"
+    },
+    "done": {
+      "scan": "Reading finished.",
+      "restore": "Restoring finished.",
+      "assign": "Assigning finished."
+    },
+    "failed": {
+      "scan": "Reading failed.",
+      "restore": "Restoring failed.",
+      "assign": "Assigning failed."
+    },
+    "lost": "The last run is gone, for example because nexcrate restarted. What it read is listed below.",
+    "outcome": {
+      "restored": "Restored",
+      "assigned": "Assigned",
+      "skipped": "Skipped",
+      "conflict": "Conflicts",
+      "failed": "Failed",
+      "folders": "Folders",
+      "roots": "Folders read"
+    },
+    "conflictsHint": "What did not work is listed under Conflicts.",
+    "dismiss": "Hide"
+  },
+  "tabs": {
+    "label": "Folders by state",
+    "restorable": "Restore",
+    "proposal": "Proposals",
+    "unknown": "Unknown",
+    "conflict": "Conflicts",
+    "radarr": "In Radarr",
+    "library": "In the library",
+    "ignored": "Ignored"
+  },
+  "filter": {
+    "search": "Search folders",
+    "root": "Folder",
+    "allRoots": "All folders"
+  },
+  "list": {
+    "empty": "Nothing here.",
+    "emptySearch": "Nothing found. Check the search.",
+    "count_one": "{{value}} folder",
+    "count_other": "{{value}} folders",
+    "more": "Load more",
+    "shown": "{{shown}} of {{total}}",
+    "group": {
+      "moved": "Moved",
+      "restorable": "With release.nex",
+      "unknown": "Unknown folders",
+      "file": "Files without a folder",
+      "disc": "Disc folders",
+      "no_video": "Folders without a video",
+      "unreadable": "Not readable"
+    }
+  },
+  "state": {
+    "restorable": "Has a release.nex. nexcrate brings the movie back without guessing.",
+    "proposal": "nexcrate has a proposal. Check it and assign.",
+    "unknown": "nexcrate does not know which movie this is.",
+    "conflict": "The release.nex does not match what nexcrate knows.",
+    "radarr": "Belongs to a movie from {{name}}. nexcrate leaves the folder alone.",
+    "radarrUnnamed": "Belongs to a movie from Radarr. nexcrate leaves the folder alone.",
+    "moved": "The movie lies here now. nexcrate still knows the old folder.",
+    "file": "nexcrate only takes movies in a folder of their own.",
+    "disc": "nexcrate cannot read disc folders yet.",
+    "no_video": "There is no video in this folder.",
+    "unreadable": "nexcrate could not read this folder.",
+    "library": "Belongs to a movie in the library.",
+    "ignored": "You ignored this folder. nexcrate no longer proposes it."
+  },
+  "row": {
+    "noVideo": "No video in the folder.",
+    "moreVideos_one": "and one more video",
+    "moreVideos_other": "and {{count}} more videos",
+    "nameQuality": "From the name: {{quality}}",
+    "noNameQuality": "From the name: no quality",
+    "companionMovie": "release.nex: {{title}}",
+    "companionVersion_one": "Version {{labels}}",
+    "companionVersion_other": "Versions {{labels}}",
+    "proposal": "Proposal",
+    "proposalsLabel": "Proposals for {{name}}",
+    "from": {
+      "companion": "from the release.nex",
+      "name_number": "number in the folder name",
+      "nfo_number": "number from the .nfo",
+      "title_year": "title and year",
+      "library": "from the library",
+      "other": "found"
+    },
+    "unambiguous": "Unambiguous",
+    "inLibrary": "In library",
+    "openTitle": "Open title",
+    "assign": "Assign …",
+    "assignLabel": "Assign: {{name}}",
+    "restore": "Restore",
+    "restoreLabel": "Restore: {{name}}",
+    "takePath": "Take the new folder",
+    "takePathLabel": "Take the new folder: {{name}}",
+    "pathTaken": "For nexcrate, {{name}} now lies in the new folder.",
+    "ignore": "Ignore",
+    "ignoreLabel": "Ignore: {{name}}",
+    "ignored": "{{name}} is ignored now.",
+    "unignore": "Stop ignoring",
+    "unignoreLabel": "Stop ignoring: {{name}}",
+    "unignored": "{{name}} is no longer ignored."
+  },
+  "bulk": {
+    "restoreAll": "Restore all",
+    "assignAll": "Assign all unambiguous",
+    "restore": {
+      "title": "Restore",
+      "text_one": "nexcrate brings one movie back into the library from its release.nex. On disk nexcrate only rewrites the release.nex.",
+      "text_other": "nexcrate brings {{count}} movies back into the library from their release.nex. On disk nexcrate only rewrites the release.nex.",
+      "versions_one": "The movies go into the version {{labels}}.",
+      "versions_other": "The movies go into the versions {{labels}}.",
+      "missing": "The version {{label}} does not exist.",
+      "missingHint": "Without the version these movies stay as a conflict.",
+      "create": "Create version {{label}}",
+      "created": "The version {{label}} is created.",
+      "submit": "Restore",
+      "started": "nexcrate is bringing the movies back."
+    },
+    "assign": {
+      "title": "Assign all unambiguous",
+      "text_one": "nexcrate assigns one movie whose proposal is unambiguous: a number in the name or in the .nfo, or exactly one match by title and year.",
+      "text_other": "nexcrate assigns {{count}} movies whose proposal is unambiguous: a number in the name or in the .nfo, or exactly one match by title and year.",
+      "versions_one": "The movies go into the version {{labels}}.",
+      "versions_other": "The movies go into the versions of their folder: {{labels}}.",
+      "none": "None of the loaded proposals is unambiguous. Assign them one by one.",
+      "notLoaded_one": "One proposal is not loaded yet. nexcrate checks it as well and assigns it when it is unambiguous.",
+      "notLoaded_other": "{{count}} proposals are not loaded yet. nexcrate checks them as well and assigns what is unambiguous.",
+      "companion": "Afterwards nexcrate puts a release.nex into every folder.",
+      "submit": "Assign",
+      "started": "nexcrate is assigning the movies."
+    }
+  },
+  "assign": {
+    "title": "Assign {{name}}",
+    "file": "Which file is the movie?",
+    "fileOne": "The file",
+    "reading": "nexcrate is reading the file …",
+    "media": "From the file: {{summary}}",
+    "quality": "Quality: {{quality}}",
+    "fromMedia": "Resolution from the file, source from the name",
+    "fromName": "Quality from the name",
+    "languages": "Languages: {{languages}}",
+    "unreadable": "The file could not be read. nexcrate takes the quality from the name.",
+    "movie": "Which movie is this?",
+    "search": "Search for a movie",
+    "year": "Year",
+    "proposals": "Proposals",
+    "results": "Results on TMDB",
+    "searching": "Searching TMDB …",
+    "idle": "Type the title, then nexcrate looks it up on TMDB.",
+    "noResults": "No results on TMDB. Try another word or leave out the year.",
+    "chosen": "Chosen",
+    "version": "Which version?",
+    "versionFixed": "Version: {{label}}",
+    "versionFixedHint": "The folder belongs to this version.",
+    "hasFile": "Already has a file",
+    "fromSource": "Comes from Radarr",
+    "noVersions": "There is no movie version yet. Create one first, for example Full HD.",
+    "noVersionsAction": "Go to versions",
+    "companion": "Afterwards nexcrate puts a release.nex into the folder.",
+    "submit": "Assign",
+    "done": "{{name}} is in the library now.",
+    "openTitle": "Open title",
+    "missingChoice": "Choose a movie and a version.",
+    "loadFailed": "nexcrate no longer finds this folder. Read the folders again.",
+    "truncated": "The file is cut off, it is shorter than its content says. nexcrate takes the quality from the name."
+  },
+  "series": {
+    "sub": "Series that already lie on disk come into the library here. nexcrate moves and deletes nothing while doing so.",
+    "tabs": {
+      "sonarr": "In Sonarr"
+    },
+    "roots": {
+      "intro": "The folders of your series versions and the folders you added. Every subfolder in them is one series. nexcrate reads only when you say so.",
+      "empty": "No folder with series yet. Choose a default folder for a series version under Folders and naming, or add a folder here.",
+      "pickerTitle": "Folder with series",
+      "pickerHint": "nexcrate reads the subfolders of this folder as series folders. Nothing is moved or deleted."
+    },
+    "state": {
+      "library": "Belongs to a series in the library.",
+      "sonarr": "Belongs to a series from {{name}}. nexcrate leaves the folder alone; after the takeover it belongs here.",
+      "sonarrUnnamed": "Belongs to a series from Sonarr. nexcrate leaves the folder alone; after the takeover it belongs here.",
+      "restorable": "Has a release.nex. nexcrate brings the series back without guessing.",
+      "proposal": "nexcrate has a proposal. Check it and assign.",
+      "unknown": "nexcrate does not know which series this is.",
+      "conflict": "The release.nex does not match what nexcrate knows.",
+      "no_video": "There is no video in this folder.",
+      "ignored": "You ignored this folder. nexcrate no longer proposes it."
+    },
+    "row": {
+      "videos_one": "Reading looks at one video",
+      "videos_other": "Reading looks at {{value}} videos",
+      "seasons": "Season folders: {{names}}",
+      "moreSeasons_one": "and one more",
+      "moreSeasons_other": "and {{count}} more",
+      "noSeasons": "No season folders, the videos lie in the series folder itself.",
+      "openTitle": "Go to the series"
+    },
+    "assign": {
+      "folder": "The folder",
+      "series": "Which series is this?",
+      "search": "Search for a series",
+      "idle": "Type the title, then nexcrate looks it up on TMDB.",
+      "version": "Which version?",
+      "versionFixedHint": "The folder belongs to this version.",
+      "hasFolder": "Already has a series folder",
+      "fromSonarr": "Comes from Sonarr",
+      "folderOf": "The folder of this version: {{location}}",
+      "noVersions": "There is no series version yet. Create one first, for example Full HD.",
+      "rule": "What should the version watch?",
+      "fromSeason": "From season",
+      "reading": "Afterwards nexcrate reads the folder and matches the files to the episodes. It searches only after that, so nexcrate never downloads what is there already.",
+      "missingChoice": "Choose a series and a version.",
+      "done": "{{name}} is in the library now. nexcrate is reading the folder."
+    },
+    "bulk": {
+      "restoreText_one": "nexcrate brings one series back into the library from its release.nex. On disk nexcrate only rewrites the release.nex.",
+      "restoreText_other": "nexcrate brings {{count}} series back into the library from their release.nex. On disk nexcrate only rewrites the release.nex.",
+      "restoreVersions_one": "The series go into the version {{labels}}.",
+      "restoreVersions_other": "The series go into the versions {{labels}}.",
+      "restoreNoVersion": "There is no series version yet. Without a version these folders stay as they are.",
+      "restoreStarted": "nexcrate is bringing the series back.",
+      "assignText_one": "nexcrate assigns one series whose proposal is unambiguous: a number in the folder name or in the tvshow.nfo, or exactly one match by title and year. Every version watches all episodes.",
+      "assignText_other": "nexcrate assigns {{count}} series whose proposal is unambiguous: a number in the folder name or in the tvshow.nfo, or exactly one match by title and year. Every version watches all episodes.",
+      "assignVersions_one": "The series go into the version {{labels}}.",
+      "assignVersions_other": "The series go into the versions of their folder: {{labels}}.",
+      "assignCompanion": "Afterwards nexcrate reads every folder and puts a release.nex into every season folder.",
+      "assignStarted": "nexcrate is assigning the series."
+    },
+    "job": {
+      "restore": "nexcrate is restoring series",
+      "assign": "nexcrate is assigning series",
+      "doneRestore": "Restoring finished.",
+      "doneAssign": "Assigning finished.",
+      "failedRestore": "Restoring failed.",
+      "failedAssign": "Assigning failed.",
+      "noDefinition": "Without a version"
+    }
+  },
+  "album": {
+    "sub": "Bring music that is on disk already into the library. nexcrate moves, renames and deletes nothing here.",
+    "tabs": {
+      "lidarr": "In Lidarr"
+    },
+    "roots": {
+      "intro": "The folder of your music version and the folders you added. nexcrate looks for artist and album folders in them. nexcrate reads only when you say so.",
+      "empty": "No music folder yet. Choose a default folder for the music version under Folders and naming, or add a folder here.",
+      "pickerTitle": "Folder with music",
+      "pickerHint": "nexcrate looks for artist and album folders in it. Nothing is moved or deleted."
+    },
+    "state": {
+      "library": "Belongs to an album in the library.",
+      "lidarr": "Belongs to an album from {{name}}. nexcrate leaves the folder alone; after the takeover it belongs here.",
+      "lidarrUnnamed": "Belongs to an album from Lidarr. nexcrate leaves the folder alone; after the takeover it belongs here.",
+      "restorable": "Has a release.nex. nexcrate brings the album back without guessing.",
+      "proposal": "nexcrate has a proposal. Check it and assign.",
+      "unknown": "nexcrate does not know which album this is.",
+      "conflict": "The release.nex names an album that has a folder with files already.",
+      "ignored": "You ignored this folder. nexcrate does not propose it any more."
+    },
+    "row": {
+      "audio_one": "One audio file",
+      "audio_other": "{{value}} audio files",
+      "says": "By the {{source}}: {{artist}}, {{album}}",
+      "saysNoArtist": "By the {{source}}: {{album}}",
+      "sourceTags": "tags",
+      "sourceCompanion": "release.nex",
+      "sourceFolder": "folder name",
+      "openTitle": "To the album",
+      "notInLibrary": "Not in the library yet"
+    },
+    "from": {
+      "companion": "from the release.nex",
+      "tags": "from the tags",
+      "library": "from artist and album"
+    },
+    "assign": {
+      "title": "Assign an album folder",
+      "folder": "The folder",
+      "proposals": "Proposals",
+      "search": "Search an album",
+      "searchHint": "Title and artist, then nexcrate asks MusicBrainz.",
+      "searchEmpty": "MusicBrainz knows no album for this.",
+      "submit": "Assign",
+      "reading": "Then nexcrate reads the folder and links the files to the tracks, by tags and names. What is not clear shows on the album page under “Album folder”. Nothing is moved or renamed.",
+      "adds": "The album is not in the library yet; nexcrate adds it.",
+      "missingChoice": "Choose an album.",
+      "done": "{{name}} belongs to the library now. nexcrate read the folder."
+    },
+    "bulk": {
+      "restoreText_one": "nexcrate brings one album back into the library from its release.nex. On disk nexcrate only rewrites the release.nex.",
+      "restoreText_other": "nexcrate brings {{count}} albums back into the library from their release.nex. On disk nexcrate only rewrites the release.nex.",
+      "restoreNotInLibrary": "An album that is not in the library yet you add first with “Assign”; the run leaves it.",
+      "restoreStarted": "nexcrate brings the albums back.",
+      "assignText_one": "nexcrate assigns one album whose proposal is unambiguous: an id in the tags, or exactly one album of the artist with this name.",
+      "assignText_other": "nexcrate assigns {{count}} albums whose proposal is unambiguous: an id in the tags, or exactly one album of the artist with this name.",
+      "assignStarted": "nexcrate assigns the albums."
+    },
+    "job": {
+      "restore": "Restoring albums",
+      "assign": "Assigning albums",
+      "doneRestore": "Albums restored",
+      "doneAssign": "Albums assigned",
+      "failedRestore": "Restoring stopped",
+      "failedAssign": "Assigning stopped",
+      "notInLibrary": "Album not in the library"
+    }
+  },
+  "keep": {
+    "label": "Do not upgrade what is there",
+    "hint": "What is read in here stays as it is: titles with a file are left alone, episodes with a file are switched off. nexcrate still searches what is missing, and what arrives later is upgraded as usual."
+  }
+}

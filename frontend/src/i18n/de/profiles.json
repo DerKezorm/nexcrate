@@ -1,0 +1,622 @@
+{
+  "roles": {
+    "required": "Pflicht",
+    "preferred": "bevorzugt"
+  },
+  "roleButtons": {
+    "required": "Pflicht",
+    "preferred": "Bevorzugt"
+  },
+  "languageNames": {
+    "de": "Deutsch",
+    "en": "Englisch",
+    "fr": "Französisch",
+    "es": "Spanisch",
+    "it": "Italienisch",
+    "tr": "Türkisch",
+    "original": "Originalsprache"
+  },
+  "line": {
+    "label": "Profil eingerichtet",
+    "none": "Noch kein Profil",
+    "outdated": "Veraltet",
+    "outdatedHint": "Es gibt einen neueren Stand der TRaSH Guides. Öffne das Profil und speichere es, dann gilt er.",
+    "resolution2160p": "4K",
+    "resolution1080p": "1080p",
+    "sourceRemux": "Remux",
+    "sourceWeb": "WEB",
+    "withSource": "{{resolution}} {{source}}",
+    "languages": "{{languages}} {{role}}",
+    "hdrSafety": "HDR bevorzugt",
+    "hdrFree": "HDR und Dolby Vision bevorzugt",
+    "limit": "bis {{value}} GB je Stunde",
+    "noLimit": "ohne Größengrenze"
+  },
+  "expert": {
+    "open": "Von Hand",
+    "openLabel": "Profil von Hand setzen: {{label}}",
+    "title": "Profil von Hand: {{label}}",
+    "loading": "Profil wird geladen",
+    "cancel": "Abbrechen",
+    "save": "Profil speichern",
+    "fromWizard": "Dieses Profil kommt aus dem Assistenten. Was du hier speicherst, gilt danach; der Assistent überschreibt es erst wieder, wenn du dort speicherst.",
+    "qualitiesTitle": "Qualitäten",
+    "qualitiesHint": "Oben die beste; sortieren durch Ziehen oder mit den Pfeilen. Der Haken sagt, ob sie genommen wird; gleichwertige stehen zusammen in einer Gruppe.",
+    "allowed": "{{quality}} nehmen",
+    "up": "{{quality}} nach oben",
+    "down": "{{quality}} nach unten",
+    "drag": "Ziehen zum Sortieren",
+    "merge": "{{quality}} mit der darunter gleichwertig machen",
+    "mergeShort": "Gleichwertig",
+    "split": "Gruppe {{quality}} auflösen",
+    "splitShort": "Auflösen",
+    "sameWorth": "Gleichwertig",
+    "missing": "Nicht in der Liste: {{qualities}}.",
+    "addMissing": "Unten anfügen",
+    "cutoff": "Gut genug ab",
+    "cutoffHint": "Ist diese Qualität da, hört das Nachbessern auf, solange die Punkte reichen.",
+    "minScore": "Mindestpunkte",
+    "minScoreHint": "Weniger Punkte, und ein Release wird nicht genommen.",
+    "upgradeUntil": "Nachbessern bis",
+    "upgradeUntilHint": "Ab diesen Punkten ist genug; darüber wird nicht mehr getauscht.",
+    "step": "Kleinster Schritt",
+    "stepHint": "So viele Punkte muss ein Tausch mindestens bringen.",
+    "upgradesAllowed": "Nachbessern erlauben",
+    "formatsTitle": "Custom Formats ({{count}} mit Punkten)",
+    "formatsHint": "Punkte je Format. Null heißt: zählt nicht.",
+    "toFormats": "Formate bearbeiten",
+    "ownFormat": "Eigenes",
+    "scoreOf": "Punkte für {{name}}",
+    "filter": "Formate durchsuchen",
+    "sizesHint": "Was eine Qualität wiegen darf, steht für alle Profile an einer Stelle.",
+    "toSizes": "Größen ansehen",
+    "saved": "Das Profil ist gespeichert.",
+    "needsQuality": "Setz zuerst einen Haken bei mindestens einer Qualität.",
+    "language": "Sprache",
+    "languageAny": "Beliebig",
+    "languageSeveral": "Mehrere: {{languages}}",
+    "languageHint": "Ein Release muss diese Sprache tragen, wie die Sprache in Radarrs Profil. Punkte für Sprachen vergeben die Custom Formats.",
+    "anime": {
+      "title": "Anime-Regeln",
+      "forSeries": "Normale Serien",
+      "forAnime": "Anime",
+      "add": "Anime-Regeln anlegen",
+      "remove": "Anime-Regeln entfernen",
+      "none": "Anime-Serien dieser Fassung werden nach dem Profil oben beurteilt. Mit eigenen Anime-Regeln kannst du für sie andere Qualitäten, Formate und Punkte setzen, so wie Sonarr dafür ein eigenes Profil verlangt.",
+      "exists": "Diese Fassung hat eigene Anime-Regeln. Du bearbeitest gerade die Regeln für normale Serien.",
+      "editing": "Du bearbeitest die Anime-Regeln. Alles darunter gilt nur für Serien vom Typ Anime.",
+      "fromTrash": "Aus TRaSH füllen",
+      "trashChoice": "Anime-Profil von TRaSH",
+      "trashAuto": "Passend zu den Sprachen",
+      "fromTrashHint": "Füllt die Anime-Regeln so, wie TRaSHs Anime-Profil sie hat, samt Punkten. Formate, die noch fehlen, legt nexcrate dafür an. Gespeichert wird erst mit „Speichern“.",
+      "filled": "Anime-Regeln aus {{profile}} gefüllt. Zum Übernehmen speichern.",
+      "filledCreated_one": "Anime-Regeln aus {{profile}} gefüllt, {{count}} Format neu angelegt. Zum Übernehmen speichern.",
+      "filledCreated_other": "Anime-Regeln aus {{profile}} gefüllt, {{count}} Formate neu angelegt. Zum Übernehmen speichern."
+    }
+  },
+  "tile": {
+    "setUp": "Profil einrichten",
+    "change": "Profil ändern",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "setUpLabel": "Profil einrichten: {{label}}",
+    "changeLabel": "Profil ändern: {{label}}",
+    "exportLabel": "Exportieren: {{label}}",
+    "importLabel": "Importieren: {{label}}",
+    "choose": "Profil wählen",
+    "chooseLabel": "Profil wählen: {{label}}",
+    "open": "Profil öffnen",
+    "openLabel": "Profil öffnen: {{label}}",
+    "chooseFirst": "Profil wählen"
+  },
+  "wizard": {
+    "titleNew": "Profil für {{label}} einrichten",
+    "titleEdit": "Profil für {{label}} ändern",
+    "progress": "Schritte",
+    "pages": {
+      "mode": "Umfang",
+      "target": "Ziel",
+      "source": "Quelle",
+      "languages": "Sprachen",
+      "details": "Feinheiten",
+      "audio": "Ton",
+      "video": "Bild",
+      "cuts_services": "Schnitt und Dienste",
+      "anime": "Anime",
+      "more": "Weitere Fragen",
+      "summary": "Überblick"
+    },
+    "moreIntro": "Diese Fragen sind neu. Die Oberfläche kennt noch keine eigenen Texte dafür, die Vorgabe ist schon gewählt.",
+    "unsupported": "Diese Frage kann die Oberfläche noch nicht anzeigen. Es gilt die Vorgabe.",
+    "back": "Zurück",
+    "next": "Weiter",
+    "save": "Profil speichern",
+    "remove": "Profil entfernen",
+    "removeTitle": "Profil von {{label}} entfernen?",
+    "removeText": "Die Fassung {{label}} hat danach kein Profil mehr, und deine Antworten sind weg. Exportier das Profil vorher, wenn du es noch brauchst.",
+    "removeConfirm": "Ja, entfernen",
+    "building": "nexcrate baut das Profil …",
+    "byHandWarning": "Dieses Profil ist von Hand gesetzt. Speicherst du hier, baut der Assistent es neu, und deine Punkte, Gruppen und Haken sind weg."
+  },
+  "questions": {
+    "mode": {
+      "title": "Wie ausführlich willst du das entscheiden?",
+      "short": "Umfang",
+      "hint": "Beide Wege bauen ein vollständiges Profil.",
+      "options": {
+        "simple": {
+          "title": "Einfach",
+          "hint": "Ein paar Fragen zu Auflösung, Quelle, Sprache und Größe. Für alles andere gilt, was die TRaSH Guides empfehlen."
+        },
+        "detailed": {
+          "title": "Ausführlich",
+          "hint": "Dazu Fragen zu Ton, Bild, Schnittfassungen und Streamingdiensten, für Fälle, in denen die Empfehlung nicht reicht."
+        }
+      }
+    },
+    "resolution": {
+      "title": "Welche Auflösung soll am Ende da sein?",
+      "short": "Auflösung",
+      "hint": "Gemeint ist das Ziel, nicht das Mindeste.",
+      "options": {
+        "2160p": {
+          "title": "4K (2160p)",
+          "hint": "Blu-ray und Streaming in 2160p. Große Dateien."
+        },
+        "1080p": {
+          "title": "1080p",
+          "hint": "Deutlich kleinere Dateien, auf den meisten Fernsehern kaum ein Unterschied."
+        }
+      }
+    },
+    "take_now": {
+      "title": "Und wenn es die noch nicht gibt?",
+      "short": "Erst nehmen, was da ist",
+      "hint": "Synchronisierte Fassungen erscheinen oft erst Wochen später in hoher Auflösung.",
+      "options": {
+        "true": {
+          "title": "Erst nehmen, was da ist",
+          "hint": "Jetzt eine kleinere Auflösung, später tauscht nexcrate sie gegen das Ziel. Das heißt einen zweiten Download."
+        },
+        "false": {
+          "title": "Warten, bis es sie gibt",
+          "hint": "Die Fassung bleibt leer, bis ein Release in der Zielauflösung erscheint."
+        }
+      }
+    },
+    "source": {
+      "title": "Wie hochwertig soll die Quelle sein?",
+      "short": "Quelle",
+      "hint": "Der größte Hebel für den Platzbedarf.",
+      "options": {
+        "encodes": {
+          "title": "Gute Encodes",
+          "hint": "Neu kodierte Blu-ray- und WEB-Releases guter Gruppen. Fast unangetastetes Bild, deutlich kleiner."
+        },
+        "remux": {
+          "title": "Remux",
+          "hint": "Die unangetastete Spur von der Blu-ray. Das Beste, was es gibt, und sehr große Dateien."
+        },
+        "web": {
+          "title": "Nur Streaming (WEB)",
+          "hint": "Fassungen von Streamingdiensten. Am sparsamsten."
+        }
+      }
+    },
+    "languages": {
+      "title": "Welche Tonspuren brauchst du?",
+      "short": "Sprachen",
+      "hint": "Mehrere gehen. Gemeint ist der Ton der Releases, nicht die Sprache von nexcrate.",
+      "explain": "Pflicht heißt: Ohne diese Sprache nimmt nexcrate kein Release. Bevorzugt gibt nur Pluspunkte, fehlt sie, kommt trotzdem etwas."
+    },
+    "required_languages": {
+      "title": "Mehrere Sprachen sind Pflicht. Wie soll das gelten?",
+      "short": "Mehrere Pflichtsprachen",
+      "hint": "Nur wichtig, wenn mehr als eine Sprache Pflicht ist.",
+      "options": {
+        "all": {
+          "title": "Alle im selben Release",
+          "hint": "Nur Releases, die alle Pflichtsprachen zugleich haben. Davon gibt es deutlich weniger."
+        },
+        "any": {
+          "title": "Eine davon genügt",
+          "hint": "Ein Release mit einer der Pflichtsprachen reicht."
+        }
+      }
+    },
+    "hdr": {
+      "title": "Sollen HDR-Fassungen bevorzugt werden?",
+      "short": "HDR",
+      "hint": "HDR gibt es nur in 4K.",
+      "options": {
+        "safety": {
+          "title": "Ja, mit Sicherheitsnetz",
+          "hint": "HDR wird bevorzugt. Dolby Vision ohne HDR als Rückfall wird gemieden, das sieht auf vielen Geräten verfärbt aus."
+        },
+        "free": {
+          "title": "Ja, ohne Einschränkung",
+          "hint": "Nur sinnvoll, wenn jedes Abspielgerät bei dir Dolby Vision kann."
+        },
+        "any": {
+          "title": "Nein, egal",
+          "hint": "HDR spielt bei der Auswahl keine Rolle."
+        }
+      }
+    },
+    "good_enough": {
+      "title": "Wann ist ein Film gut genug?",
+      "short": "Gut genug",
+      "hint": "Jede Verbesserung ist ein neuer Download.",
+      "options": {
+        "best": {
+          "title": "Nach Empfehlung",
+          "hint": "nexcrate tauscht die Datei, sobald ein Release mit mehr Punkten erscheint."
+        },
+        "first": {
+          "title": "Früh zufrieden",
+          "hint": "Sobald eine Datei in der Zielauflösung passt, ist Schluss. Weniger neue Downloads."
+        }
+      }
+    },
+    "max_gb_per_hour": {
+      "title": "Wie groß darf eine Datei höchstens sein?",
+      "short": "Größengrenze",
+      "hint": "Gerechnet je Stunde Laufzeit, damit lange Filme größer sein dürfen als kurze.",
+      "none": "Keine Grenze",
+      "label": "Höchstens (GB je Stunde)",
+      "example": "{{value}} GB je Stunde heißt bis {{double}} GB für einen Film von zwei Stunden.",
+      "exampleDefault": "Zum Beispiel: 20 GB je Stunde heißt bis 40 GB für einen Film von zwei Stunden.",
+      "noneText": "Ohne Grenze nimmt nexcrate jede Größe. Die Mindestgrößen der TRaSH Guides gelten immer."
+    },
+    "audio": {
+      "title": "Wie wichtig ist dir der Ton?",
+      "short": "Ton",
+      "hint": "Tonformate wie Dolby Atmos und DTS-HD.",
+      "options": {
+        "any": {
+          "title": "Ton ist mir egal",
+          "hint": "Das Tonformat spielt keine Rolle."
+        },
+        "prefer": {
+          "title": "Guten Ton bevorzugen",
+          "hint": "TrueHD Atmos und DTS:X zuerst, dann TrueHD und DTS-HD MA. Einfacher Ton wird nicht ausgeschlossen, nur nach hinten gestellt."
+        }
+      }
+    },
+    "accessibility": {
+      "title": "Fassungen mit Audiodeskription oder Gebärdensprache",
+      "short": "Audiodeskription und Gebärdensprache",
+      "hint": "Sie haben zusätzliche Tonspuren oder eingeblendete Gebärdensprache.",
+      "options": {
+        "any": {
+          "title": "Zulassen",
+          "hint": "Sie zählen wie jede andere Fassung. Richtig, wenn jemand bei dir sie braucht."
+        },
+        "avoid": {
+          "title": "Meiden",
+          "hint": "Diese Fassungen kommen praktisch nicht mehr infrage."
+        }
+      }
+    },
+    "x265_hd": {
+      "title": "x265 unter 4K",
+      "short": "x265 unter 4K",
+      "hint": "Eine Kodierung, die bei 720p und 1080p selten etwas bringt.",
+      "options": {
+        "any": {
+          "title": "Zulassen",
+          "hint": "x265 zählt wie jede andere Kodierung. Sinnvoll, wenn alle deine Geräte damit klarkommen."
+        },
+        "avoid": {
+          "title": "Meiden",
+          "hint": "So empfehlen es die TRaSH Guides: Unter 4K macht x265 auf manchen Geräten Ärger beim Abspielen."
+        }
+      }
+    },
+    "sdr": {
+      "title": "4K ohne HDR",
+      "short": "4K ohne HDR",
+      "hint": "Nur bei 4K gefragt.",
+      "options": {
+        "any": {
+          "title": "Zulassen",
+          "hint": "Auch 4K ohne HDR ist besser als gar keine Fassung."
+        },
+        "avoid": {
+          "title": "Meiden",
+          "hint": "Nur Fassungen mit HDR. Manche Filme kommen dann gar nicht."
+        }
+      }
+    },
+    "special_cuts": {
+      "title": "Besondere Schnittfassungen",
+      "short": "Schnittfassungen",
+      "hint": "Etwa Director's Cut, Extended oder IMAX.",
+      "options": {
+        "any": {
+          "title": "Keine Vorliebe",
+          "hint": "Kinofassung oder Sonderfassung, was zuerst passt, wird genommen."
+        },
+        "prefer": {
+          "title": "Bevorzugen",
+          "hint": "Sonderfassungen bekommen Vorzug vor der Kinofassung."
+        }
+      }
+    },
+    "asian_services": {
+      "title": "Asiatische Streamingdienste",
+      "short": "Asiatische Streamingdienste",
+      "hint": "Dienste wie iQIYI oder Coupang Play.",
+      "options": {
+        "any": {
+          "title": "Nicht nötig",
+          "hint": "Die üblichen Dienste genügen."
+        },
+        "include": {
+          "title": "Mitnehmen",
+          "hint": "Releases dieser Dienste zählen mit. Sinnvoll, wenn du asiatische Filme lädst."
+        }
+      }
+    },
+    "anime": {
+      "title": "Anime in dieser Fassung",
+      "short": "Anime",
+      "hint": "Wöchentliche Anime-Releases nennen oft keine Quelle, und gute Gruppen erkennt man am Namen. TRaSH hat dafür ein eigenes Profil, immer in 1080p.",
+      "options": {
+        "trash": {
+          "title": "Nach TRaSHs Anime-Profil",
+          "hint": "Anime-Serien dieser Fassung bewertet nexcrate nach TRaSHs Anime-Profil, passend zu den Sprachen der Fassung. Die anderen Serien bleiben, wie sie sind."
+        },
+        "same": {
+          "title": "Wie jede Serie",
+          "hint": "Anime-Serien zählen nach denselben Regeln wie alle anderen. Releases ohne Quelle fallen dann oft durch."
+        }
+      }
+    }
+  },
+  "languagesField": {
+    "roleLabel": "Rolle für {{language}}",
+    "atLeastOne": "Wähl mindestens eine Sprache.",
+    "noneRequired": "Keine Sprache ist Pflicht. Dann entscheidet der Ton nur über die Reihenfolge, und im Zweifel kommt auch ein Release ohne deine Sprachen."
+  },
+  "numberField": {
+    "none": "Keine Grenze",
+    "invalid": "Gib eine Zahl von {{min}} bis {{max}} ein, etwa 20 oder 12,5."
+  },
+  "summary": {
+    "takenTitle": "Das nimmt nexcrate",
+    "taken": "Diese Qualitäten, von der niedrigsten zur höchsten:",
+    "same": "gleichwertig",
+    "languagesTitle": "Sprachen",
+    "languagesNone": "Keine Sprache ist Pflicht. Der Ton entscheidet nur über die Reihenfolge.",
+    "languagesOne": "Ohne {{language}} nimmt nexcrate kein Release.",
+    "languagesAll": "Nur Releases, die alle diese Sprachen zugleich haben: {{languages}}.",
+    "languagesAny": "Mindestens eine dieser Sprachen muss dabei sein: {{languages}}.",
+    "languagesPreferred": "Gern dazu: {{languages}}.",
+    "preferredTitle": "Das wird bevorzugt",
+    "avoidedTitle": "Das wird gemieden",
+    "nothing": "Nichts Besonderes.",
+    "sizeTitle": "Größe",
+    "sizeLimit": "Höchstens {{value}} GB je Stunde Laufzeit.",
+    "sizeNoLimit": "Keine eigene Obergrenze.",
+    "sizeMinimums": "Die Mindestgrößen der TRaSH Guides gelten immer.",
+    "sizeTable": "Größen je Qualität in GB je Stunde",
+    "sizeQuality": "Qualität",
+    "sizeMin": "Mindestens",
+    "sizeMax": "Höchstens",
+    "sizeNone": "keine Grenze",
+    "stopTitle": "Wann das Nachbessern aufhört",
+    "minScore": "Unter {{score}} Punkten nimmt nexcrate kein Release.",
+    "minScoreLow": "Ein Release braucht mindestens {{score}} Punkte.",
+    "cutoff": "Die Zielqualität ist {{cutoff}}. Hat eine Datei sie erreicht, lädt nexcrate für eine bessere Qualität nicht mehr neu.",
+    "upgradeUntil": "Kommt ein Release mit mehr Punkten, lädt nexcrate es und ersetzt die Datei. Das geht weiter, solange Besseres erscheint.",
+    "upgradeAtMinimum": "Hat eine Datei die Mindestpunktzahl, lädt nexcrate für mehr Punkte nicht mehr neu.",
+    "formatsTotal_one": "Im Profil steckt {{value}} Regel aus den TRaSH Guides.",
+    "formatsTotal_other": "Im Profil stecken {{value}} Regeln aus den TRaSH Guides.",
+    "warningsTitle": "Bitte beachten"
+  },
+  "warnings": {
+    "size_limit_below_minimum": "Deine Größengrenze liegt unter der Mindestgröße der TRaSH Guides für {{qualities}}. Solche Releases passen dann nie.",
+    "answer_without_effect": "Diese Antworten ändern bei diesem Profil nichts, weil die TRaSH Guides dafür nichts vorsehen: {{questions}}.",
+    "unknown": "Hinweis mit dem Code {{code}}."
+  },
+  "invalid": {
+    "fields": "Diese Antworten nimmt nexcrate so nicht an: {{fields}}. Geh zurück und prüf sie.",
+    "plain": "Diese Antworten nimmt nexcrate so nicht an. Geh zurück und prüf sie."
+  },
+  "import": {
+    "title": "Profil für {{label}} importieren",
+    "intro": "Eine Profildatei von nexcrate, etwa von jemandem, der sein Profil teilt. Sie enthält nur Antworten, keine Regeln.",
+    "file": "Datei wählen",
+    "fileHint": "Eine Datei mit der Endung .yaml oder .yml, höchstens 64 KB.",
+    "fileChosen": "Gewählt: {{name}}",
+    "paste": "Oder den Inhalt hier einfügen",
+    "check": "Datei prüfen",
+    "empty": "Wähl eine Datei oder füg ihren Inhalt ein.",
+    "tooLarge": "Das ist größer als 64 KB. So groß ist keine Profildatei, nexcrate schickt sie nicht los.",
+    "wrongType": "Nimm eine Datei mit der Endung .yaml oder .yml.",
+    "unreadable": "Die Datei lässt sich nicht lesen.",
+    "from": "Aus der Fassung {{name}}",
+    "commitDiffers": "Die Datei stammt von einem anderen Stand der TRaSH Guides ({{commit}}). nexcrate baut das Profil mit seinem eigenen Stand, einzelne Punkte können deshalb abweichen.",
+    "previewIntro": "So sähe das Profil für {{label}} aus. Gespeichert ist noch nichts.",
+    "save": "Profil übernehmen",
+    "otherFile": "Andere Datei",
+    "replaceTitle": "Profil von {{label}} ersetzen?",
+    "replaceText": "{{label}} hat schon ein Profil. Es wird durch das importierte ersetzt. Exportier das bisherige vorher, wenn du es behalten willst.",
+    "replaceConfirm": "Ja, ersetzen",
+    "invalid": "Das ist keine gültige Profildatei von nexcrate.",
+    "reasons": {
+      "too_large": "Die Datei ist größer als 64 KB. So groß ist keine Profildatei.",
+      "not_yaml": "Die Datei lässt sich nicht als YAML lesen.",
+      "not_a_profile": "Das ist keine Profildatei von nexcrate. Angaben fehlen, sind falsch oder gehören nicht hinein.",
+      "format_unknown": "Die Datei hat ein Format, das dieses nexcrate nicht kennt. Vielleicht stammt sie aus einer neueren Version.",
+      "kind_unsupported": "Für diese Art gibt es in nexcrate noch keine Profile.",
+      "kind_mismatch": "Das Profil gehört zu einer anderen Art als diese Fassung.",
+      "answers_invalid": "Diese Antworten in der Datei passen nicht zu den Fragen von nexcrate: {{fields}}.",
+      "answers_invalidPlain": "Die Antworten in der Datei passen nicht zu den Fragen von nexcrate."
+    }
+  },
+  "seriesQuestions": {
+    "resolution": {
+      "hint": "Gemeint ist das Ziel je Folge. Die TRaSH Guides raten bei Serien zu 1080p.",
+      "options": {
+        "1080p": {
+          "hint": "Der übliche Weg bei Serien. Deutlich kleinere Dateien als 4K."
+        },
+        "2160p": {
+          "hint": "Nur sinnvoll, wenn es die Serie in 4K gibt und der Platz da ist."
+        }
+      }
+    },
+    "take_now": {
+      "hint": "Synchronisierte Folgen erscheinen oft später als die Originalfassung.",
+      "options": {
+        "true": {
+          "hint": "Jetzt eine kleinere Auflösung, später tauscht nexcrate sie gegen die Zielauflösung."
+        },
+        "false": {
+          "hint": "Die Folge bleibt leer, bis ein Release in der Zielauflösung kommt."
+        }
+      }
+    },
+    "source": {
+      "hint": "Bei Serien der größte Hebel für den Platzbedarf.",
+      "options": {
+        "web": {
+          "title": "WEB",
+          "hint": "Von Streamingdiensten. Wo TRaSH kein reines WEB-Profil führt, nimmt es Blu-ray dazu."
+        },
+        "remux": {
+          "title": "Remux",
+          "hint": "Unveränderte Blu-ray, sehr groß. TRaSH rät bei Serien eher zu WEB."
+        }
+      }
+    },
+    "good_enough": {
+      "title": "Wann ist eine Folge gut genug?"
+    },
+    "max_gb_per_hour": {
+      "hint": "Gerechnet je Stunde Laufzeit, damit lange Folgen größer sein dürfen.",
+      "example": "{{value}} GB je Stunde heißt bis {{episode}} GB für eine Folge von 45 Minuten.",
+      "exampleDefault": "Zum Beispiel: 4 GB je Stunde heißt bis 3 GB für eine Folge von 45 Minuten."
+    },
+    "audio": {
+      "hint": "Tonformate wie Dolby Atmos und DTS-HD. Bei Serien nur da, wo TRaSH sie bewertet."
+    },
+    "mode": {
+      "options": {
+        "detailed": {
+          "hint": "Dazu Fragen zu Ton, Bild und Streamingdiensten, für Fälle, in denen die Empfehlung nicht reicht."
+        }
+      }
+    }
+  },
+  "musicQuestions": {
+    "quality": {
+      "title": "Welche Qualität soll es sein?",
+      "short": "Qualität",
+      "hint": "Verlustfrei heißt FLAC, ALAC, WAV und Verwandte. „Hoch“ heißt MP3 mit 320 kbit/s oder V0 (rund 245 kbit/s, für das Ohr gleich gut) und AAC ab 256.",
+      "options": {
+        "lossless": {
+          "title": "Verlustfrei bevorzugt",
+          "hint": "MP3 hoch nur als Rückfall, wenn „Erst nehmen, was da ist“ an ist."
+        },
+        "either": {
+          "title": "Verlustfrei oder hoch, beides recht",
+          "hint": "Das Erste, was passt, bleibt."
+        },
+        "lossy": {
+          "title": "Verlustbehaftet reicht",
+          "hint": "MP3 hoch ist das Ziel. Verlustfrei wird nur genommen, wenn sonst nichts da ist."
+        }
+      }
+    },
+    "take_now": {
+      "title": "Erst nehmen, was da ist?",
+      "short": "Erst nehmen, was da ist",
+      "hint": "Wie bei Filmen: Eine andere Stufe als das Ziel gilt als „Vorerst“ und wird später ersetzt.",
+      "options": {
+        "true": {
+          "title": "Ja",
+          "hint": "Lieber heute hören und später verbessern."
+        },
+        "false": {
+          "title": "Nein",
+          "hint": "Nur nehmen, was dem Ziel entspricht."
+        }
+      }
+    },
+    "hires": {
+      "title": "24 Bit?",
+      "short": "24 Bit",
+      "hint": "Ordnet nur die Reihenfolge, schließt nie etwas aus. Ein Album in 24 Bit und 96 kHz ist etwa dreimal so groß.",
+      "options": {
+        "any": {
+          "title": "Keine Vorliebe"
+        },
+        "prefer": {
+          "title": "Bevorzugen"
+        },
+        "avoid": {
+          "title": "Meiden",
+          "hint": "16 Bit zuerst, 24 Bit nur, wenn es nichts anderes gibt."
+        }
+      }
+    },
+    "source": {
+      "title": "Quelle?",
+      "short": "Quelle",
+      "hint": "Aus dem Namen gelesen (WEB, CD, VINYL). Ordnet nur, schließt nichts aus.",
+      "options": {
+        "avoid_vinyl": {
+          "title": "Vinyl-Rips meiden",
+          "hint": "Vinyl, Kassette und Radiomitschnitte kommen zuletzt. Knistern und Rumpeln gehören zur Platte, nicht ins Archiv."
+        },
+        "any": {
+          "title": "Egal"
+        },
+        "prefer_cd": {
+          "title": "CD bevorzugen",
+          "hint": "CD vor WEB, Vinyl zuletzt."
+        }
+      }
+    }
+  },
+  "chooser": {
+    "title": "Profil der Fassung {{label}}",
+    "intro": "Eine Fassung hat genau ein Profil. Dasselbe Profil darf an mehreren Fassungen hängen; sinnvoll ist das selten.",
+    "loading": "Profile werden geladen",
+    "cancel": "Abbrechen",
+    "save": "Profil übernehmen",
+    "take": "{{name}} nehmen",
+    "byHand": "Von Hand",
+    "usedBy": "auch bei: {{versions}}",
+    "rename": "Umbenennen",
+    "renameLabel": "{{name}} umbenennen",
+    "copy": "Kopieren",
+    "copyLabel": "{{name}} kopieren",
+    "removeLabel": "{{name}} entfernen",
+    "inUse": "Dieses Profil nutzen noch: {{versions}}.",
+    "none": "Kein Profil. Ohne Profil urteilt nexcrate für diese Fassung über nichts.",
+    "newName": "Neuer Name",
+    "saveName": "Namen speichern",
+    "addName": "Name des neuen Profils",
+    "add": "Leeres Profil anlegen",
+    "addCopy": "Anlegen als Kopie von {{name}}",
+    "addEmpty": "Doch leer anlegen"
+  },
+  "dialog": {
+    "title": "Profil {{name}}",
+    "name": "Name",
+    "saveName": "Namen speichern",
+    "renamed": "Heißt jetzt {{name}}.",
+    "usedBy": "Genutzt von: {{versions}}",
+    "how": "Wie wird dieses Profil gebaut?",
+    "wizard": "Assistent",
+    "expert": "Von Hand",
+    "wizardIntro": "Der Assistent stellt ein paar Fragen und baut daraus das ganze Profil: Qualitäten, Punkte und Größen.",
+    "wizardOpen": "Fragen öffnen",
+    "wizardStart": "Mit den Fragen anfangen",
+    "expertHint": "Alles von Hand, wie in Radarr. Was eine Qualität wiegen darf und welche Custom Formats es gibt, steht in den Reitern daneben und gilt für alle Profile dieser Art."
+  }
+}

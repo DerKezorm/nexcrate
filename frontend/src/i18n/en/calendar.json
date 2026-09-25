@@ -1,0 +1,55 @@
+{
+  "title": "Calendar",
+  "sub": "When a movie comes out, an episode airs and an album is released",
+  "subList": "What comes next, from today",
+  "loading": "Fetching the calendar …",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "previousMonth": "One month back",
+  "nextMonth": "One month on",
+  "listRange": "The next {{days}} days",
+  "emptyList": "Nothing is coming up in the next weeks.",
+  "entries_one": "{{count}} entry",
+  "entries_other": "{{count}} entries",
+  "more_one": "{{count}} more",
+  "more_other": "{{count}} more",
+  "truncated": "The span holds more entries than one answer carries. The first {{count}} are shown.",
+  "view": {
+    "label": "View",
+    "month": "Month",
+    "list": "List"
+  },
+  "kind": {
+    "movie": "Movies",
+    "episode": "Episodes",
+    "album": "Albums"
+  },
+  "occasion": {
+    "theatrical": "In cinemas",
+    "digital": "Digital",
+    "physical": "Disc",
+    "air": "Airs",
+    "release": "Released"
+  },
+  "filter": {
+    "watched": "Watched only"
+  },
+  "region": {
+    "label": "Region",
+    "any": "Earliest date anywhere",
+    "foreign": "Date of {{country}}"
+  },
+  "feed": {
+    "title": "Subscribe to the calendar",
+    "intro": "An address a calendar app reads without logging in. It carries a key of its own that opens this calendar and nothing else.",
+    "switch": "Turn the subscription on",
+    "hint": "Off by default. While it is off, the address answers nobody.",
+    "copy": "Copy the address",
+    "copied": "Copied",
+    "newKey": "New key",
+    "newKeyDone": "The new key applies. Every calendar app holding the old one gets nothing.",
+    "turnedOn": "The subscription is on.",
+    "turnedOff": "The subscription is off.",
+    "warning": "Whoever has the address sees this calendar. Only pass it on when that is what you want."
+  }
+}

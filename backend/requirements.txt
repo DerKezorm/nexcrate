@@ -1,0 +1,15 @@
+fastapi==0.141.1
+uvicorn==0.52.4
+sqlalchemy==2.0.52
+pydantic==2.13.5
+pydantic-settings==2.15.0
+bcrypt==5.0.0
+httpx==0.28.1
+cryptography==50.0.1
+python-multipart==0.0.32
+defusedxml==0.7.1
+regex==2026.9.10
+PyYAML==6.0.3
+rarfile==4.5
+mutagen==1.48.1
+pyzipper==0.4.0

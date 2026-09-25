@@ -1,0 +1,20 @@
+{
+  "title": "Regeln aus den TRaSH Guides",
+  "text": "Die Regeln in deinen Profilen stammen aus den TRaSH Guides. Sie stehen unter der MIT-Lizenz.",
+  "link": "TRaSH Guides",
+  "licenseShow": "Lizenztext anzeigen",
+  "state": "Stand {{commit}} vom {{date}}",
+  "bundled": "mitgeliefert",
+  "fetched": "heruntergeladen",
+  "checkedAt": "Zuletzt nachgesehen: {{time}}",
+  "neverChecked": "Noch nicht nachgesehen.",
+  "updateAvailable": "Neuer Stand verfügbar: {{commit}}",
+  "adopt": "Übernehmen",
+  "adoptHint": "Deine Profile behalten ihre Regeln, bis du sie neu speicherst. Bis dahin stehen sie als veraltet da.",
+  "adopted": "Neuer Stand übernommen. Speicher deine Profile neu, dann gilt er für sie.",
+  "breaks": "Der neue Stand passt nicht zu den Profilen von {{versions}}. nexcrate bleibt beim bisherigen Stand.",
+  "breaksPlain": "Der neue Stand passt nicht zu einem deiner Profile. nexcrate bleibt beim bisherigen Stand.",
+  "unreachable": "GitHub ist gerade nicht erreichbar. Versuch es später noch einmal.",
+  "daily": "Täglich nach einem neuen Stand sehen",
+  "dailyHint": "nexcrate fragt dafür einmal am Tag bei GitHub nach. Übernommen wird nur, wenn du es sagst."
+}

@@ -1,0 +1,112 @@
+{
+  "loading": "Loading …",
+  "noRequestId": "not available",
+  "nav": {
+    "home": "Go to library",
+    "main": "Main navigation",
+    "library": "Library",
+    "calendar": "Calendar",
+    "downloads": "Downloads",
+    "settings": "Settings",
+    "logout": "Log out",
+    "logoutAs": "Log out ({{name}})"
+  },
+  "later": {
+    "title": "Coming later",
+    "notice": "This comes in a later step."
+  },
+  "password": {
+    "show": "Show password"
+  },
+  "footer": {
+    "tagline": "Movies, shows and music in one place",
+    "about": "About",
+    "update": "New version"
+  },
+  "theme": {
+    "label": "Appearance",
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "remove": "Remove",
+    "retry": "Try again",
+    "edit": "Edit",
+    "test": "Test connection"
+  },
+  "kind": {
+    "movie": "Movie",
+    "movies": "Movies",
+    "seriesPlural": "Shows",
+    "musicPlural": "Music"
+  },
+  "state": {
+    "available": "Available",
+    "downloading": "Downloading {{percent}} %",
+    "downloadingShort": "Downloading",
+    "percent": "{{percent}} %",
+    "wanted": "Wanted",
+    "unmonitored": "Not monitored",
+    "problem": "Problem",
+    "upgrade": "Upgrade possible",
+    "incomplete": "Tracks missing"
+  },
+  "languageName": {
+    "german": "German",
+    "english": "English",
+    "french": "French",
+    "spanish": "Spanish",
+    "italian": "Italian",
+    "japanese": "Japanese",
+    "korean": "Korean",
+    "chinese": "Chinese",
+    "dutch": "Dutch",
+    "swedish": "Swedish",
+    "danish": "Danish",
+    "norwegian": "Norwegian",
+    "finnish": "Finnish",
+    "polish": "Polish",
+    "russian": "Russian",
+    "portuguese": "Portuguese",
+    "turkish": "Turkish",
+    "unknown": "Unknown"
+  },
+  "genre": {
+    "action": "Action",
+    "animation": "Animation",
+    "drama": "Drama",
+    "family": "Family",
+    "fantasy": "Fantasy",
+    "history": "History",
+    "horror": "Horror",
+    "music": "Music",
+    "romance": "Romance",
+    "thriller": "Thriller",
+    "tvMovie": "TV movie",
+    "war": "War",
+    "western": "Western",
+    "crime": "Crime",
+    "scifi": "Science fiction",
+    "adventure": "Adventure",
+    "comedy": "Comedy",
+    "mystery": "Mystery",
+    "documentary": "Documentary"
+  },
+  "when": {
+    "today": "today at {{time}}",
+    "other": "on {{date}} at {{time}}"
+  },
+  "units": {
+    "kb": "{{value}} KB",
+    "mb": "{{value}} MB",
+    "gb": "{{value}} GB",
+    "tb": "{{value}} TB",
+    "minutes": "{{value}} min"
+  }
+}
