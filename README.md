@@ -1,8 +1,8 @@
 # nexcrate
 
-Movies, shows and music in one self-hosted app, with several versions per title: a movie in
-Full HD and 4K, an album in FLAC and MP3. One app instead of Radarr, Sonarr and Lidarr side by
-side.
+Movies, shows and music in one self-hosted app. A movie or a show can have several versions,
+such as Full HD and 4K; music has one version for now. One app instead of Radarr, Sonarr and
+Lidarr side by side.
 
 ![The library: movies with their versions and states](docs/screenshots/library-movies.png)
 
@@ -13,8 +13,8 @@ and made-up releases.
 
 ## What it does
 
-- **Versions:** a title can have several versions, each with its own profile and folder. No
-  second instance for 4K.
+- **Versions:** a movie or a show can have several versions, each with its own profile and
+  folder. No second instance for 4K. Music has one version for now.
 - **Profiles from everyday questions**, with the rules of the
   [TRaSH Guides](https://trash-guides.info) inside: qualities, custom formats, sizes and scores
   as Radarr and Sonarr use them. An expert mode edits every part by hand, and a profile can be

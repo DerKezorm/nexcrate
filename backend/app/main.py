@@ -317,7 +317,7 @@ OPENAPI_TAGS = [
     {
         "name": "v1",
         "description": "The contract for other programs such as Nexview: stable over nexcrate versions, opened by a "
-        "key, errors flat. Stage V1: reading.",
+        "key, errors flat. `GET /api/v1/system` names the stage this nexcrate has reached.",
     },
     {"name": "recycle", "description": "How long old files stay in the recycle folders next to the movies."},
     {

@@ -1,4 +1,5 @@
-"""``/api/v1``: the contract for Nexview, nexbeat and other programs. Stage V1: reading.
+"""``/api/v1``: the contract for Nexview, nexbeat and other programs. This module holds the reading routes of stage
+V1; how far the contract has come, ``GET /api/v1/system`` says (``STAGE`` in ``services/api_v1``).
 
 Apart from the routes of the interface on purpose: those change with the pages, this stays. Six rules hold for every
 address here.
