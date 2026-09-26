@@ -23,8 +23,8 @@ const FIELD_LABELS: readonly [string, string][] = [
 
 /**
  * Die Meldung des Servers zu einer abgelehnten Groesse, mit Zeile (Qualitaet) und Spalte (Feld), wenn er sie
- * mitschickt (#note-6, 25./26.09.2026: bei rund 90 gleich benannten Feldern sagte der Feldname allein nicht,
- * welche der Qualitaeten gemeint war). Ohne diese Angaben bleibt es bei der allgemeinen Meldung.
+ * mitschickt (bei rund 90 gleich benannten Feldern sagte der Feldname allein nicht, welche der Qualitaeten
+ * gemeint war). Ohne diese Angaben bleibt es bei der allgemeinen Meldung.
  */
 function sizesErrorText(t: TFunction, error: unknown): string {
   if (error instanceof ApiError && error.code === 'invalid_input' && typeof error.values.quality === 'string') {

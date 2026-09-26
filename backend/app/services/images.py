@@ -90,9 +90,9 @@ def poster_url(title: Title) -> str | None:
     ⚠️ A series never gets a live ``poster_source_id`` (Sonarr import never sets one, unlike Radarr's movies): its
     only address today is TMDB's, filled in at import from the same call that matches Sonarr to TMDB (S1.2). When
     that call found no poster then, nothing ever asks again (the refresh job skips a title a source feeds, and a
-    series counts as fed the moment it has a version). Found 26.09.2026, alongside #note-51: a series address of
-    its own, ``pending``, so the interface still asks once; ``poster()`` looks TMDB up there and then, and once it
-    finds one, the row's own address takes over on the next listing (``_store_tmdb_poster_path``).
+    series counts as fed the moment it has a version). Found 26.09.2026: a series address of its own, ``pending``,
+    so the interface still asks once; ``poster()`` looks TMDB up there and then, and once it finds one, the row's
+    own address takes over on the next listing (``_store_tmdb_poster_path``).
     """
     if title.kind == "album":
         return cover_url(title)
