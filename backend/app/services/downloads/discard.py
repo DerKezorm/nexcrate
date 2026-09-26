@@ -3,7 +3,8 @@
 SABnzbd takes a completed job out of its history but keeps its folder in ``complete/<category>``: ``del_files`` only
 deletes the folder of a failed job. NZBGet keeps a finished job's folder as well. Radarr deletes that folder itself, and
 so does nexcrate: when the owner removes such a download with its files (``actions.remove``, also ``remove_and_search``
-of ``/api/v1`` and removing a title). A torrent's files are its client's to delete.
+of ``/api/v1`` and removing a title), and when a download fails for a broken archive (below). A torrent's files are
+its client's to delete.
 
 * **The job** (``job_folder``): the path the client reported, through the client's path mappings, and only when the
   client finished the job (``completed_at``). A reported video stands for its folder, as the import reads it. Only a
@@ -13,18 +14,29 @@ of ``/api/v1`` and removing a title). A torrent's files are its client's to dele
   folders, every library folder and every folder of a library rule. Never while an import runs: the caller deletes only
   after it moved the download out of the states an import claims.
 * **Deleting** never follows a link: ``rmtree`` removes a link inside the job, not what it points to.
+* **A broken archive** (``broken_reason``, the owner's decision of 26.09.2026): a finished download whose archive is
+  certainly broken fails as a failure its client reported would, as in Radarr: its volumes are incomplete (the problem
+  ``packed`` with ``incomplete``) or it wants a password (``encrypted``). The release goes on the blocklist, the history
+  says ``failed``, the replacement searches another release, and the job leaves its client with its files, a torrent
+  too. Everything else stays a problem for the owner: ``unsupported`` is an archive only nexcrate's tool cannot unpack;
+  ``broken`` is what a damaged archive looks like, and just as much a tool that crashed, ran out of time or could not
+  write; ``unsafe``, ``nested`` and ``too_large`` are archives nexcrate reads well and refuses by its own rules. A
+  series download that filed episodes already stays a problem too.
 
 Log lines carry ids, never a name or a path.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import shutil
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session as OrmSession
@@ -32,9 +44,19 @@ from sqlalchemy.orm import Session as OrmSession
 from ... import crypto
 from ...models import Download, DownloadClient, Version, VersionDefinition
 from .. import downloaders, folder_rules, folders
+from ..automatic import replacement
 from . import files, store
 
 logger = logging.getLogger("nexcrate.downloads")
+
+#: The problems that mean a finished download is certainly broken, by code and reason, and the failure each becomes.
+BROKEN = {("packed", "incomplete"): "archive_incomplete", ("encrypted", None): "encrypted"}
+
+
+def broken_reason(code: str, values: Mapping[str, Any] | None) -> str | None:
+    """The failure reason of a problem that means the download is certainly broken, else None."""
+    reason = (values or {}).get("reason") if code == "packed" else None
+    return BROKEN.get((code, reason))
 
 
 def job_folder(reported: str | None, mappings: Iterable[Mapping[str, str]], category: str) -> Path | None:
@@ -138,3 +160,33 @@ async def from_client(left: Leftover) -> None:
 def delete_folder(left: Leftover) -> bool:
     """The finished Usenet job's folder, which its client keeps. Only after the download left the import's states."""
     return left.folder is not None and delete(left.download_id, left.folder, left.keep)
+
+
+def fail(db: OrmSession, row: Download, reason: str, moment: datetime) -> Leftover:
+    """A finished download with a certainly broken archive fails as a failure its client reported (``tracking``):
+    the blocklist, ``failed`` in the history, the replacement. Returns what to ``throw_away`` once the caller
+    committed."""
+    left = leftover(db, row)
+    row.state, row.problem_code, row.problem_values = "failed", None, None
+    row.failed_reason, row.failed_detail = reason, None
+    row.updated_at = moment
+    store.block(db, row, reason, moment)
+    store.add_history(db, row, "failed", reason, moment, {"detail": None})
+    # The next fitting release, at most three times a day, as after a failure the client reported.
+    row.failure_handling = replacement.after_failure(db, row, moment)
+    store.follow(db, row, moment)
+    logger.info("Download %d failed: its archive is broken (%s)", row.id, reason)
+    return left
+
+
+def throw_away(left: Leftover) -> None:
+    """After ``fail`` and its commit, in the import's thread: the job leaves its client with its files, and a finished
+    Usenet job's folder goes, also when the client cannot be asked. Never raises."""
+    try:
+        asyncio.run(from_client(left))
+    except (downloaders.ClientError, OSError, RuntimeError) as exc:
+        logger.info("Download %d: its client did not remove the broken job: %s", left.download_id, type(exc).__name__)
+    try:
+        delete_folder(left)
+    except OSError:
+        logger.warning("Download %d: its job folder could not be deleted", left.download_id)

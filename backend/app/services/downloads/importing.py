@@ -8,7 +8,9 @@
 * **The files:** the reported path through the client's mappings, or as reported, but only inside a visible mount
   point. Otherwise a proposal from below the mount points and the problem ``path_not_found``. A folder ``_UNPACK_`` or
   ``_FAILED_`` sends the download back to ``completed``: the next round tries again.
-* **The file:** see ``files``. A dangerous file refuses the download: its release goes on the blocklist.
+* **The file:** see ``files``. A dangerous file refuses the download: its release goes on the blocklist. A certainly
+  broken archive (volumes missing, a password) fails the download as a failure the client reported, and its job goes
+  with its files (``discard``).
 * **The names** (the owner's decision of 26.09.2026): before anything moves, the title read from the release name or
   from the chosen video's name must fit the movie (``search.matching.name_fits``). When neither does, nothing is filed
   and nothing replaced: the problem ``title_mismatch``, with the titles read and, as a hint only, the video's runtime
@@ -76,7 +78,7 @@ from ..search.model import TitleInfo, title_info
 from ..subtitles import placing as subtitle_placing
 from ..subtitles import records as subtitle_records
 from ..subtitles import settings as subtitle_settings
-from . import album_import, files, series_import, store, unpacking
+from . import album_import, discard, files, series_import, store, unpacking
 
 #: ``file_ref`` prefixes of a file nexcrate knows where it lies: filed away by nexcrate, taken over from Radarr, or
 #: found on disk and assigned or restored (the library from disk).
@@ -834,27 +836,35 @@ def _place_subtitles(
 
 def _record_problem(download_id: int, problem: Problem) -> None:
     moment = store.now()
+    broken = discard.broken_reason(problem.code, problem.values)
+    left: discard.Leftover | None = None
     with SessionLocal() as db:
         row = db.get(Download, download_id)
         if row is None or row.state != "importing":
             return
-        row.state, row.problem_code, row.problem_values = "problem", problem.code, dict(problem.values)
-        row.updated_at = moment
-        if problem.code in REFUSED:
-            store.block(db, row, problem.code, moment)
-            store.add_history(db, row, "failed", problem.code, moment)
-            # With automatic loading on: the next fitting release, at most three times a day.
-            replacement.after_failure(db, row, moment)
-        if problem.candidates:
-            db.execute(delete(DownloadFile).where(DownloadFile.download_id == row.id))
-            for path, size in problem.candidates[: series_import.MAX_VIDEOS]:
-                db.add(DownloadFile(download_id=row.id, path=path[:1024], size=size, decision="candidate"))
-        store.follow(db, row, moment)
+        if broken is not None:
+            # A certainly broken archive fails as a failure the client reported, and the job goes with its files.
+            left = discard.fail(db, row, broken, moment)
+        else:
+            row.state, row.problem_code, row.problem_values = "problem", problem.code, dict(problem.values)
+            row.updated_at = moment
+            if problem.code in REFUSED:
+                store.block(db, row, problem.code, moment)
+                store.add_history(db, row, "failed", problem.code, moment)
+                # With automatic loading on: the next fitting release, at most three times a day.
+                replacement.after_failure(db, row, moment)
+            if problem.candidates:
+                db.execute(delete(DownloadFile).where(DownloadFile.download_id == row.id))
+                for path, size in problem.candidates[: series_import.MAX_VIDEOS]:
+                    db.add(DownloadFile(download_id=row.id, path=path[:1024], size=size, decision="candidate"))
+            store.follow(db, row, moment)
         db.commit()
     reason = problem.values.get("reason")
     logger.info(
         "Download %d could not be imported: %s%s", download_id, problem.code, f" ({reason})" if reason else ""
     )
+    if left is not None:
+        discard.throw_away(left)
 
 
 def _back_to_completed(download_id: int) -> None:

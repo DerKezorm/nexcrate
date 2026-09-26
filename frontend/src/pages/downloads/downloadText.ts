@@ -429,6 +429,8 @@ export function failedReasonText(t: TFunction, reason: string | null, client: st
       return t('downloads.history.failed.client_failed', { client })
     case 'encrypted':
       return t('downloads.history.failed.encrypted')
+    case 'archive_incomplete':
+      return t('downloads.history.failed.archive_incomplete', { client })
     case 'not_taken':
       return t('downloads.history.failed.not_taken', { client })
     default:

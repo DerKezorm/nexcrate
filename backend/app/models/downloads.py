@@ -40,7 +40,9 @@ FINISHED_STATES = ("imported", "failed", "removed")
 TRANSFERS = ("hardlink", "copy", "move", "unpacked")
 #: Why a failed download failed: SABnzbd reported Failed, the job was encrypted, or the client did not answer in time
 #: when it was handed the release and never showed it afterwards (``not_taken``, the owner's finding 1 of 22.09.2026).
-FAILED_REASONS = ("client_failed", "encrypted", "not_taken")
+#: ``encrypted`` and ``archive_incomplete`` also when nexcrate found the finished download's archive wanting a password
+#: or missing volumes (``downloads.discard``, the owner's decision of 26.09.2026).
+FAILED_REASONS = ("client_failed", "encrypted", "archive_incomplete", "not_taken")
 #: What SABnzbd said about a failed job, as a code (``downloaders.sabnzbd.fail_code``); its own sentence is never kept.
 FAILED_DETAILS = (
     "repair_failed",

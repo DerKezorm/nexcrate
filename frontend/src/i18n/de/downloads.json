@@ -258,6 +258,7 @@
     "failed": {
       "client_failed": "Der Download ist fehlgeschlagen, das meldet {{client}}. nexcrate hat das Release gesperrt.",
       "encrypted": "Das Release war mit einem Passwort geschützt. nexcrate hat es gesperrt.",
+      "archive_incomplete": "Das Archiv war unvollständig, obwohl {{client}} den Download als fertig gemeldet hat. nexcrate hat das Release gesperrt.",
       "not_taken": "{{client}} hat das Release nicht rechtzeitig angenommen und später nie gezeigt. Das Release ist nicht gesperrt."
     },
     "filed_one": "{{value}} Folge abgelegt",

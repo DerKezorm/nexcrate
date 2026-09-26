@@ -68,11 +68,13 @@ FAILED: dict[str, dict[str, str]] = {
     'de': {
         'client_failed': 'Der Download ist fehlgeschlagen, das meldet das Download-Programm. nexcrate hat das Release gesperrt.',
         'encrypted': 'Das Release war mit einem Passwort geschützt. nexcrate hat es gesperrt.',
+        'archive_incomplete': 'Das Archiv war unvollständig, obwohl das Download-Programm den Download als fertig gemeldet hat. nexcrate hat das Release gesperrt.',
         'not_taken': 'Das Download-Programm hat das Release nicht rechtzeitig angenommen und später nie gezeigt. Das Release ist nicht gesperrt.',
     },
     'en': {
         'client_failed': 'The download failed, as the download client reports. nexcrate blocked the release.',
         'encrypted': 'The release was protected with a password. nexcrate blocked it.',
+        'archive_incomplete': 'The archive was incomplete, although the download client reported the download as finished. nexcrate blocked the release.',
         'not_taken': 'The download client did not take the release in time and never showed it later. The release is not blocked.',
     },
 }

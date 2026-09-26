@@ -353,6 +353,7 @@
     "reason": {
       "client_failed": "The download failed in the download client.",
       "encrypted": "The release was protected with a password.",
+      "archive_incomplete": "The archive of the download was incomplete.",
       "dangerous_file": "The download held a dangerous file.",
       "unknown": "Blocked with the reason {{code}}.",
       "multi_part": "The release was a movie in several parts.",

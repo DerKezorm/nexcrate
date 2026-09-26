@@ -9,6 +9,8 @@ export function blockReasonText(t: TFunction, reason: string): string {
       return t('title.blocklist.reason.client_failed')
     case 'encrypted':
       return t('title.blocklist.reason.encrypted')
+    case 'archive_incomplete':
+      return t('title.blocklist.reason.archive_incomplete')
     case 'dangerous_file':
       return t('title.blocklist.reason.dangerous_file')
     case 'multi_part':
@@ -31,6 +33,8 @@ export function failureReasonText(t: TFunction, code: string): string {
       return t('title.blocklist.reason.client_failed')
     case 'encrypted':
       return t('title.blocklist.reason.encrypted')
+    case 'archive_incomplete':
+      return t('title.blocklist.reason.archive_incomplete')
     case 'dangerous_file':
       return t('title.blocklist.reason.dangerous_file')
     default:

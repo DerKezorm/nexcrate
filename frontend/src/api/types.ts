@@ -1635,8 +1635,11 @@ export type SeriesNamingPreview = { series_folder: string; examples: { key: stri
 export type NamingPreview = { folder: string; file: string }
 
 /** Warum ein Download fehlgeschlagen ist: SABnzbd meldet Failed, oder der Job ist verschluesselt. */
-/** Seit dem 22.09.2026 auch `not_taken`: das Programm hat die Uebergabe nicht rechtzeitig beantwortet und den Auftrag nie gezeigt. */
-export type FailedReason = 'client_failed' | 'encrypted' | 'not_taken'
+/**
+ * Seit dem 22.09.2026 auch `not_taken`: das Programm hat die Uebergabe nicht rechtzeitig beantwortet und den Auftrag nie gezeigt.
+ * Seit dem 26.09.2026 auch `archive_incomplete`: das Programm meldete den Download fertig, dem Archiv fehlten aber Teile.
+ */
+export type FailedReason = 'client_failed' | 'encrypted' | 'archive_incomplete' | 'not_taken'
 
 /** Was SABnzbd zu einem Fehlschlag sagte, als Code. Nie sein Satz. */
 export type FailedDetail = 'repair_failed' | 'incomplete' | 'not_on_server' | 'password' | 'unpack_failed' | 'encrypted' | 'unwanted_extension' | 'duplicate' | 'aborted' | 'other'

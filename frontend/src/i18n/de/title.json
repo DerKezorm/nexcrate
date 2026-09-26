@@ -353,6 +353,7 @@
     "reason": {
       "client_failed": "Der Download ist im Download-Programm fehlgeschlagen.",
       "encrypted": "Das Release war mit einem Passwort geschützt.",
+      "archive_incomplete": "Das Archiv des Downloads war unvollständig.",
       "dangerous_file": "Im Download lag eine gefährliche Datei.",
       "unknown": "Gesperrt mit dem Grund {{code}}.",
       "multi_part": "Das Release war ein Film in mehreren Teilen.",

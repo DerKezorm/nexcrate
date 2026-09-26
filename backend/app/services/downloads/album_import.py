@@ -62,7 +62,7 @@ from ..music import musicbrainz as mb
 from ..music import store as music_store
 from ..profiles import store as profile_store
 from ..releases import music_qualities as mq
-from . import files, store, unpacking
+from . import discard, files, store, unpacking
 
 logger = logging.getLogger("nexcrate.import")
 
@@ -1143,21 +1143,29 @@ def _back_to(download_id: int, state: str) -> None:
 
 def record_problem(download_id: int, problem: Problem) -> None:
     moment = store.now()
+    broken = discard.broken_reason(problem.code, problem.values)
+    left: discard.Leftover | None = None
     with SessionLocal() as db:
         row = db.get(Download, download_id)
         if row is None or row.state != "importing":
             return
-        row.state, row.problem_code, row.problem_values = "problem", problem.code, dict(problem.values)
-        row.updated_at = moment
-        if problem.code in REFUSED:
-            store.block(db, row, problem.code, moment)
-            store.add_history(db, row, "failed", problem.code, moment)
-        store.follow(db, row, moment)
+        if broken is not None and not row.filed_count:
+            # A certainly broken archive fails as a failure the client reported, and the job goes with its files.
+            left = discard.fail(db, row, broken, moment)
+        else:
+            row.state, row.problem_code, row.problem_values = "problem", problem.code, dict(problem.values)
+            row.updated_at = moment
+            if problem.code in REFUSED:
+                store.block(db, row, problem.code, moment)
+                store.add_history(db, row, "failed", problem.code, moment)
+            store.follow(db, row, moment)
         db.commit()
     reason = problem.values.get("reason")
     logger.info(
         "Album download %d could not be filed: %s%s", download_id, problem.code, f" ({reason})" if reason else ""
     )
+    if left is not None:
+        discard.throw_away(left)
 
 
 def _waiting(context: Context) -> None:

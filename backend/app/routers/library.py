@@ -430,7 +430,8 @@ class TitleVersion(BaseModel):
     last_failure: dict[str, Any] | None = Field(
         default=None,
         description="The newest failed download of this version the owner has not taken off: id, at, reason "
-        "(client_failed or encrypted). Its release is on the blocklist. Null when there is none.",
+        "(client_failed, encrypted, archive_incomplete or not_taken). Its release is on the blocklist, but for "
+        "not_taken. Null when there is none.",
     )
     waiting: dict[str, Any] | None = Field(
         default=None,

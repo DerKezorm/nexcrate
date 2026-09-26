@@ -40,7 +40,8 @@ ACTIONS = ("retry", "remove", "remove_and_search", "clear", "search", "confirm_m
 
 #: English fallback texts per problem code; a program translates by code.
 MESSAGES = {
-    "download_failed": "The download client gave up on the download. Its release is blocked.",
+    "download_failed": "The download failed: the download client gave up on it, or its archive misses volumes or "
+    "wants a password. Its release is blocked.",
     "path_not_found": "nexcrate cannot see the folder the download client reports.",
     "packed": "The download holds archives nexcrate cannot unpack safely.",
     "no_video": "The download holds no video.",

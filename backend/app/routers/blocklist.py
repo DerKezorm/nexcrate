@@ -30,7 +30,9 @@ class BlocklistItem(BaseModel):
     id: int
     release_title: str
     indexer: str = Field(description="The indexer's name at the time.")
-    reason: str = Field(description="client_failed, encrypted, dangerous_file or removed_by_owner.")
+    reason: str = Field(
+        description="client_failed, encrypted, archive_incomplete, dangerous_file, multi_part or removed_by_owner."
+    )
     created_at: datetime
 
 

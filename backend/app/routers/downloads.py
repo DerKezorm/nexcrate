@@ -58,14 +58,16 @@ class DownloadProblem(BaseModel):
     code: str = Field(
         description="path_not_found, packed, no_video, no_space, gone_from_client, client_error, import_failed, "
         "dangerous_file, encrypted, client_unreachable or stalled. encrypted: an archive with a password; the release "
-        "is on the blocklist, like dangerous_file. Since S4: files_unassigned (videos of a series download nexcrate "
-        "could not file safely while an episode is missing), other_series_suspected (the files are named like "
-        "another series), several_videos (a movie download with several similar videos), multi_part (a movie in "
-        "parts, refused and blocked), import_stalled (30 minutes without progress), too_many_files. Since 24.09.2026: "
-        "file_truncated (a video the container says is cut off; not filed, it replaced nothing; for a series "
-        "download `episodes` names the episodes). Since 26.09.2026: title_mismatch (a movie download whose release "
-        "name and video name fit none of the movie's titles; not filed, it replaced nothing; filed with retry and "
-        "`confirm` title_mismatch, or removed and blocked)."
+        "is on the blocklist, like dangerous_file. Since 26.09.2026 a finished download whose archive wants a password "
+        "or misses volumes fails instead (failed_reason encrypted or archive_incomplete); encrypted and packed with "
+        "incomplete stay problems only for a series download that filed episodes already. Since S4: files_unassigned "
+        "(videos of a series download nexcrate could not file safely while an episode is missing), "
+        "other_series_suspected (the files are named like another series), several_videos (a movie download with "
+        "several similar videos), multi_part (a movie in parts, refused and blocked), import_stalled (30 minutes "
+        "without progress), too_many_files. Since 24.09.2026: file_truncated (a video the container says is cut off; "
+        "not filed, it replaced nothing; for a series download `episodes` names the episodes). Since 26.09.2026: "
+        "title_mismatch (a movie download whose release name and video name fit none of the movie's titles; not filed, "
+        "it replaced nothing; filed with retry and `confirm` title_mismatch, or removed and blocked)."
     )
     needs_owner: bool
     values: dict[str, Any] = Field(
@@ -143,7 +145,9 @@ class Download(BaseModel):
         examples=["Movie (2003)/Movie (2003) Bluray-1080p.mkv"],
     )
     failed_reason: str | None = Field(
-        description="For a failed download: client_failed (SABnzbd reported Failed) or encrypted. Null otherwise."
+        description="For a failed download: client_failed (the client reported Failed), encrypted (the client or "
+        "nexcrate found an archive with a password), archive_incomplete (the client reported the download finished, "
+        "but its archive misses volumes) or not_taken. Null otherwise."
     )
     failed_detail: str | None = Field(
         default=None,

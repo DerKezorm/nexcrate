@@ -258,6 +258,7 @@
     "failed": {
       "client_failed": "The download failed, as {{client}} reports. nexcrate blocked the release.",
       "encrypted": "The release was protected with a password. nexcrate blocked it.",
+      "archive_incomplete": "The archive was incomplete, although {{client}} reported the download as finished. nexcrate blocked the release.",
       "not_taken": "{{client}} did not take the release in time and never showed it later. The release is not blocked."
     },
     "filed_one": "{{value}} episode stored",
