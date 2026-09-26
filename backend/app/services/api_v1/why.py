@@ -236,6 +236,8 @@ def _season(item: dict[str, Any], public: dict[int, str]) -> dict[str, Any]:
                     "not_found": int(entry.get("not_found") or 0),
                     "no_fit": int(entry.get("no_fit") or 0),
                     "codes": list(entry.get("codes") or []),
+                    "fitting": entry.get("fitting") if isinstance(entry.get("fitting"), int) else None,
+                    "refused": [dict(item) for item in entry.get("refused") or [] if isinstance(item, dict)],
                     "pack_only": entry.get("pack_only"),
                     "load_code": entry.get("load_code"),
                 }

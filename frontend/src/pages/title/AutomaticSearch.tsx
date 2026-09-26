@@ -13,6 +13,7 @@ import { whenText } from '../../lib/when'
 import { downloadOriginSymbol, downloadOriginText } from '../downloads/downloadText'
 import { AUTOMATIC_TAB_PATH } from '../settings/tabs'
 import { anchorText, indexerCodeText, loadCodeText, planReasonText, rejectionPhrase, seasonReasonText } from './automaticText'
+import { ReleaseCounts } from './ReleaseCounts'
 import { SeasonPlanLines } from './SeasonPlanLines'
 import { SeriesHolds } from './SeriesHolds'
 
@@ -222,16 +223,11 @@ function Outcome({ summary }: { summary: SearchSummary }) {
 
 /**
  * Das beste Release einer Fassung aus der letzten Suche, mit seinen ersten Gruenden als kurze Wendungen ohne Zahl. Wurde
- * es nicht geladen, sagt eine Zeile warum. Darunter, seit dem 26.09.2026, wie viele Releases passten und je Grund, wie viele
- * er abgelehnt hat: Das beste Release allein sagte bei 108 gefundenen nicht, dass keins in erlaubter Qualitaet dabei war.
+ * es nicht geladen, sagt eine Zeile warum. Darunter, wie viele Releases passten und je Grund, wie viele er abgelehnt hat
+ * (`ReleaseCounts`).
  */
 function VersionResult({ version }: { version: SearchSummaryVersion }) {
-  const { t, i18n } = useTranslation()
-  const language = i18n.language
-  const fitting = typeof version.fitting === 'number' && Number.isFinite(version.fitting) ? version.fitting : null
-  const refused = Array.isArray(version.refused)
-    ? version.refused.filter((item) => typeof item.code === 'string' && item.code !== '' && typeof item.releases === 'number')
-    : []
+  const { t } = useTranslation()
   const codes = Array.isArray(version.codes) ? version.codes.filter((code) => typeof code === 'string' && code !== '').slice(0, 5) : []
   const best = typeof version.best_title === 'string' && version.best_title !== '' ? version.best_title : null
   const loaded = version.loaded === true
@@ -281,20 +277,7 @@ function VersionResult({ version }: { version: SearchSummaryVersion }) {
           </ul>
         </div>
       )}
-      {fitting !== null && <p className="text-sm text-mist-300">{t('title.automatic.summary.fitting', { count: fitting, value: formatNumber(fitting, language) })}</p>}
-      {refused.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <p className="text-xs font-semibold text-mist-400">{t('title.automatic.summary.refusedTitle')}</p>
-          <ul aria-label={t('title.automatic.summary.refusedTitle')} className="flex flex-col gap-1">
-            {refused.map((item) => (
-              <li key={item.code} className="flex items-baseline justify-between gap-3 text-sm text-mist-200">
-                <span className="min-w-0 wrap-anywhere">{rejectionPhrase(t, item.code)}</span>
-                <span className="shrink-0 text-mist-400 tabular-nums">{t('title.automatic.summary.refusedCount', { count: item.releases, value: formatNumber(item.releases, language) })}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <ReleaseCounts fitting={version.fitting} refused={version.refused} />
       {loadCode !== null && <p className="text-sm wrap-anywhere text-mist-300">{t('title.automatic.summary.notLoaded', { reason: loadCodeText(t, loadCode, version.label) })}</p>}
     </div>
   )

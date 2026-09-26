@@ -974,6 +974,7 @@ def judge_and_load_series(
         if body is None:
             return 0
         loading.decorate_series(body, search_jobs.info_hashes(search.search_id))
+        judged = body
         outcomes, body = series_loading.load(search, body, now)
         loaded = sum(len(outcome.loaded) for outcome in outcomes.values())
         if loaded:
@@ -982,7 +983,7 @@ def judge_and_load_series(
                 title = db.get(Title, title_id)
                 if title is not None:
                     title.search_summary = series_loading.summary(
-                        search, body, outcomes, now, seasons, title.search_summary
+                        search, body, outcomes, now, seasons, title.search_summary, judged
                     )
                     db.flush()
                     planning.replan(db, [title_id], now)

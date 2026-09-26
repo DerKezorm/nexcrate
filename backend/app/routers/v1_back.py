@@ -330,6 +330,14 @@ class SeasonSearchOut(BaseModel):
     not_found: int
     no_fit: int
     codes: list[str]
+    fitting: int | None = Field(
+        default=None, description="Releases of the season this version would take; null for a search before 26.09.2026."
+    )
+    refused: list[RefusedOut] = Field(
+        default_factory=list,
+        description="Per code how many releases of the season it refused, most frequent first, at most 10; no_gain for "
+        "one that fits but brings no episode.",
+    )
     pack_only: dict[str, Any] | None = Field(description="Only a pack of the season would do: its size and episodes.")
     load_code: str | None
 

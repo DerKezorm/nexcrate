@@ -56,7 +56,7 @@ import logging
 import math
 import secrets
 import threading
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -651,14 +651,22 @@ def release_counts(entry: dict[str, Any], belonging: list[dict[str, Any]]) -> tu
     profile allows or small enough, showed one name and one reason, and looked as if the indexer had nothing.
     """
     version_id = entry["version_id"]
-    fitting = 0
-    refused: dict[str, int] = {}
+    per_release: list[list[str]] = []
     for release in belonging:
         placed = next((item for item in release.get("versions") or [] if item.get("version_id") == version_id), None)
         result = placed.get("result") if placed is not None else None
         if placed is None or result is None:
             continue
-        codes = _refusals(release, result)
+        per_release.append(_refusals(release, result))
+    return count_refusals(per_release)
+
+
+def count_refusals(per_release: Iterable[list[str]]) -> tuple[int, list[dict[str, Any]]]:
+    """The releases without a refusal code, and per code how many releases it refused, most frequent first, then by
+    code, at most ``REFUSED_CODES``. A code twice on one release counts once. Shared by movies, series and albums."""
+    fitting = 0
+    refused: dict[str, int] = {}
+    for codes in per_release:
         if not codes:
             fitting += 1
             continue
@@ -666,6 +674,14 @@ def release_counts(entry: dict[str, Any], belonging: list[dict[str, Any]]) -> tu
             refused[code] = refused.get(code, 0) + 1
     ordered = sorted(refused.items(), key=lambda item: (-item[1], item[0]))[:REFUSED_CODES]
     return fitting, [{"code": code, "releases": count} for code, count in ordered]
+
+
+def refused_text(refused: object) -> str:
+    """The most frequent refusals of a summary entry for a log line: ", refused: 90 quality_not_allowed, 18 too_large",
+    or nothing."""
+    items = [item for item in refused if isinstance(item, dict)] if isinstance(refused, list) else []
+    shown = [f"{item.get('releases')} {item.get('code')}" for item in items[:SUMMARY_CODES]]
+    return ", refused: " + ", ".join(shown) if shown else ""
 
 
 def best_release(entry: dict[str, Any], belonging: list[dict[str, Any]]) -> tuple[str | None, list[str]]:
@@ -856,8 +872,5 @@ def outcome_text(written: dict[str, Any]) -> str:
             text += ", loaded"
         elif entry.get("load_code"):
             text += f", not loaded: {entry['load_code']}"
-        refused = [f"{item['releases']} {item['code']}" for item in (entry.get("refused") or [])[:SUMMARY_CODES]]
-        if refused:
-            text += ", refused: " + ", ".join(refused)
-        parts.append(text)
+        parts.append(text + refused_text(entry.get("refused")))
     return "; " + "; ".join(parts) if parts else ""

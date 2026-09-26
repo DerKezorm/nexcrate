@@ -434,6 +434,27 @@ def _in_season(codes: Collection[str], season: int) -> list[str]:
     return [code for code in codes if season_of(code) == season]
 
 
+def release_counts(body: dict[str, Any], version_id: int, season: int) -> tuple[int, list[dict[str, Any]]]:
+    """As ``scheduler.release_counts``, per season: the releases of the series whose episodes lie in ``season``. One
+    fits when the version would take it (it fits and fills or replaces an episode) and it is not blocked; else it
+    counts for its rejection codes, ``blocklisted``, or ``no_gain`` when it fits but brings no episode."""
+    per_release: list[list[str]] = []
+    for release in body.get("releases") or []:
+        if not release.get("belongs") or not _in_season((release.get("match") or {}).get("episodes") or [], season):
+            continue
+        placed = next((item for item in release.get("versions") or [] if item.get("version_id") == version_id), None)
+        result = placed.get("series_result") if placed is not None else None
+        if not isinstance(result, dict):
+            continue
+        codes = [item["code"] for item in result.get("rejections") or [] if isinstance(item, dict) and item.get("code")]
+        if release.get("blocklisted"):
+            codes.append("blocklisted")
+        if result.get("accepted") and not codes and not result.get("would_take"):
+            codes.append("no_gain")
+        per_release.append(codes)
+    return scheduler.count_refusals(per_release)
+
+
 def summary(
     search: search_jobs.Search,
     body: dict[str, Any],
@@ -441,8 +462,13 @@ def summary(
     now: datetime,
     seasons: Collection[int],
     previous: object,
+    judged: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """``search_summary`` of a series: counts, codes and sizes per season and version, merged into the one before."""
+    """``search_summary`` of a series: counts, codes and sizes per season and version, merged into the one before.
+
+    ``fitting`` and ``refused`` count the releases as ``judged`` holds them, the answer before anything loaded: formed
+    again after a load, the loaded episodes would make every release that holds them look like no gain."""
+    counted = judged if judged is not None else body
     at = planning.format_time(now)
     written: dict[int, dict[str, Any]] = {}
     for season in sorted(set(seasons)):
@@ -453,6 +479,7 @@ def summary(
             outcome = outcomes.get(entry["version_id"], Outcome())
             loaded = [item for item in outcome.loaded if _in_season([*item[1], *item[2]], season)]
             pack = next((item for item in outcome.pack_only if item.get("season") == season), None)
+            fitting, refused = release_counts(counted, entry["version_id"], season)
             versions.append(
                 {
                     "version_id": entry["version_id"],
@@ -463,6 +490,8 @@ def summary(
                     "not_found": len(_in_season(entry.get("not_found") or [], season)),
                     "no_fit": len(_in_season(entry.get("no_fit") or [], season)),
                     "codes": [item["code"] for item in entry.get("nothing_fits") or []][:SUMMARY_CODES],
+                    "fitting": fitting,
+                    "refused": refused,
                     "pack_only": {"size": pack.get("size"), "episodes": pack.get("episodes")} if pack else None,
                     "load_code": outcome.code,
                 }
@@ -513,6 +542,7 @@ def after_search(search: search_jobs.Search, now: datetime) -> None:
     if body is None:
         return
     loading.decorate_series(body, search_jobs.info_hashes(search.search_id))
+    judged = body
     outcomes, body = load(search, body, now)
     hits = _id_hits(search)
     with SessionLocal() as db:
@@ -533,16 +563,34 @@ def after_search(search: search_jobs.Search, now: datetime) -> None:
             title.id_search_seen = seen
         title.last_search_at = now
         stopped = any(outcome.code == scheduler.GRAB_STOPPED for outcome in outcomes.values())
-        written = summary(search, body, outcomes, now, search.covered, title.search_summary)
+        written = summary(search, body, outcomes, now, search.covered, title.search_summary, judged)
         title.search_summary = scheduler.hold_for_grab_limit(written, stopped, body, now)
         db.flush()
         planning.replan(db, [title.id], now)
         db.commit()
     logger.info(
-        "Automatic search %s of series %d: %d seasons, %d episodes searched, %d releases loaded",
+        "Automatic search %s of series %d: %d seasons, %d episodes searched, %d releases loaded%s",
         search.search_id,
         search.title_id,
         len(search.covered),
         len(search.searched),
         sum(len(outcome.loaded) for outcome in outcomes.values()),
+        season_text(written, search.covered),
     )
+
+
+def season_text(written: dict[str, Any], seasons: Collection[int]) -> str:
+    """Per searched season and version, for the log line after a series search, as ``scheduler.outcome_text`` for
+    movies: "; season 2 version 3: 1 fitting, 1 loaded, refused: 2 quality_not_allowed". Empty without one."""
+    parts: list[str] = []
+    for item in written.get("seasons") or []:
+        if item.get("season") not in seasons:
+            continue
+        for entry in item.get("versions") or []:
+            text = f"season {item['season']} version {entry['version_id']}: {int(entry.get('fitting') or 0)} fitting"
+            if entry.get("loaded"):
+                text += f", {int(entry['loaded'])} loaded"
+            elif entry.get("load_code"):
+                text += f", not loaded: {entry['load_code']}"
+            parts.append(text + scheduler.refused_text(entry.get("refused")))
+    return "; " + "; ".join(parts) if parts else ""

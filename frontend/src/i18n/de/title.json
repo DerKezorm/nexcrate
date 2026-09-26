@@ -110,7 +110,18 @@
         "score_not_higher": "Nicht mehr Punkte als die Datei",
         "upgrade_until_reached": "Die Datei hat genug Punkte",
         "step_too_small": "Zu kleiner Schritt nach oben",
-        "same_release": "Dasselbe Release wie die Datei"
+        "same_release": "Dasselbe Release wie die Datei",
+        "no_gain": "Bringt keine Folge",
+        "not_better": "Nicht besser als die Dateien",
+        "no_episode_match": "Keiner Folge zuzuordnen",
+        "season_incomplete": "Staffel noch nicht ganz gelaufen",
+        "refused_form": "Diese Form nimmt nexcrate nicht",
+        "several_albums": "Mehrere Alben in einem",
+        "cue_single_file": "Eine Datei mit Cue-Sheet",
+        "audiobook": "Hörbuch",
+        "not_the_target": "Nicht die Zielqualität",
+        "step_never_taken": "Diese Qualität nimmt das Profil nie",
+        "too_small_for_album": "Zu klein für das ganze Album"
       }
     },
     "series": {

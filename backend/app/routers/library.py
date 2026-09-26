@@ -560,6 +560,15 @@ class SeasonResultVersion(BaseModel):
     not_found: int = Field(description="Wanted episodes no release names.")
     no_fit: int = Field(description="Wanted episodes with releases, none of which fits or may be taken.")
     codes: list[str] = Field(description="At most 5 reasons why releases did not fit, most frequent first.")
+    fitting: int | None = Field(
+        default=None,
+        description="How many releases of this season the version would take; null in a result from before 26.09.2026.",
+    )
+    refused: list[SearchSummaryRefused] = Field(
+        default_factory=list,
+        description="Per reason how many releases of this season it refused, most frequent first, at most 10; "
+        "`no_gain` for one that fits but brings no episode.",
+    )
     pack_only: SeasonPackOnly | None = Field(
         description="Only a season pack would upgrade these episodes, fewer than half of its own: the owner loads it."
     )

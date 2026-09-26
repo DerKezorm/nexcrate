@@ -100,6 +100,28 @@ export function rejectionPhrase(t: TFunction, code: string): string {
       return t('title.automatic.summary.rejection.step_too_small')
     case 'same_release':
       return t('title.automatic.summary.rejection.same_release')
+    case 'no_gain':
+      return t('title.automatic.summary.rejection.no_gain')
+    case 'not_better':
+      return t('title.automatic.summary.rejection.not_better')
+    case 'no_episode_match':
+      return t('title.automatic.summary.rejection.no_episode_match')
+    case 'season_incomplete':
+      return t('title.automatic.summary.rejection.season_incomplete')
+    case 'refused_form':
+      return t('title.automatic.summary.rejection.refused_form')
+    case 'several_albums':
+      return t('title.automatic.summary.rejection.several_albums')
+    case 'cue_single_file':
+      return t('title.automatic.summary.rejection.cue_single_file')
+    case 'audiobook':
+      return t('title.automatic.summary.rejection.audiobook')
+    case 'not_the_target':
+      return t('title.automatic.summary.rejection.not_the_target')
+    case 'step_never_taken':
+      return t('title.automatic.summary.rejection.step_never_taken')
+    case 'too_small_for_album':
+      return t('title.automatic.summary.rejection.too_small_for_album')
     default:
       return t('title.automatic.summary.rejection.unknown', { code })
   }

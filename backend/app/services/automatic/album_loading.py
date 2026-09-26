@@ -238,19 +238,45 @@ def _best(body: dict[str, Any]) -> tuple[str | None, list[str]]:
     return best["title"], list(dict.fromkeys(codes))
 
 
+def release_counts(body: dict[str, Any]) -> tuple[int, list[dict[str, Any]]]:
+    """As ``scheduler.release_counts``, for the judged releases of this album: one fits when the music version may
+    take it (accepted, not blocked and, with files, of a better step), else it counts for its rejection codes,
+    ``blocklisted``, or ``not_better`` when only the step of the album's files stands in the way."""
+    current = body.get("current_step")
+    per_release: list[list[str]] = []
+    for release in body.get("releases") or []:
+        verdict = release.get("verdict")
+        if (release.get("match") or {}).get("kind") != "this" or not isinstance(verdict, dict):
+            continue
+        rejections = verdict.get("rejections") or []
+        codes = [item["code"] for item in rejections if isinstance(item, dict) and item.get("code")]
+        if release.get("blocklisted"):
+            codes.append("blocklisted")
+        step = release.get("step")
+        better = current is None or (step in mq.STEPS and mq.rank(step) < mq.rank(current))
+        if verdict.get("accepted") and not codes and not better:
+            codes.append("not_better")
+        per_release.append(codes)
+    return scheduler.count_refusals(per_release)
+
+
 def summary(search: search_jobs.Search, body: dict[str, Any], loaded: bool, code: str | None, now: datetime) -> dict:
-    """``search_summary`` in the movies' shape; ``releases`` counts the releases of this album."""
+    """``search_summary`` in the movies' shape, with ``fitting`` and ``refused`` as there; ``releases`` counts the
+    releases of this album."""
     decision = next(iter(body.get("versions") or []), None)
     ours = [release for release in body.get("releases") or [] if (release.get("match") or {}).get("kind") == "this"]
     versions = []
     if decision is not None and decision.get("has_profile"):
         best, codes = _best(body)
+        fitting, refused = release_counts(body)
         versions.append(
             {
                 "version_id": decision["version_id"],
                 "label": decision["label"],
                 "best_title": best,
                 "codes": codes[: scheduler.SUMMARY_CODES],
+                "fitting": fitting,
+                "refused": refused,
                 "loaded": loaded,
                 "load_code": code if code is not None else (None if loaded else decision.get("load_block")),
             }
@@ -303,9 +329,10 @@ def after_search(search: search_jobs.Search, now: datetime) -> None:
         planning.replan(db, [title.id], now)
         db.commit()
     logger.info(
-        "Automatic search %s of album %d: %d releases of the album, loaded %s",
+        "Automatic search %s of album %d: %d releases of the album, loaded %s%s",
         search.search_id,
         search.title_id,
         written["releases"],
         loaded,
+        scheduler.outcome_text(written),
     )

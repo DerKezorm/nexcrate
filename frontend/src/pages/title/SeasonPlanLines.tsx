@@ -6,6 +6,7 @@ import { Button } from '../../components/ui'
 import { formatGb, formatNumber } from '../../lib/format'
 import { whenText } from '../../lib/when'
 import { loadCodeText, rejectionPhrase, seasonReasonText } from './automaticText'
+import { ReleaseCounts } from './ReleaseCounts'
 
 const GIB = 1024 ** 3
 
@@ -118,6 +119,7 @@ function VersionLine({
         </p>
       ))}
       {noFit > 0 && codes.length > 0 && <p className="wrap-anywhere text-mist-400">{codes.map((code) => rejectionPhrase(t, code)).join(' · ')}</p>}
+      <ReleaseCounts fitting={version.fitting} refused={version.refused} />
       {pack !== null && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <p className="flex min-w-0 items-start gap-2 text-mist-200">

@@ -1998,6 +1998,10 @@ export type SeasonResultVersion = {
   not_found: number
   no_fit: number
   codes: string[]
+  /** Wie viele Releases der Staffel die Fassung nehmen wuerde; null in einem Ergebnis von vor dem 26.09.2026. */
+  fitting?: number | null
+  /** Je Grund, wie viele Releases der Staffel er abgelehnt hat; `no_gain`: passt, bringt aber keine Folge. */
+  refused?: SearchSummaryRefused[]
   pack_only: SeasonPackOnly | null
   load_code: string | null
 }
