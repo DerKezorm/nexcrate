@@ -1149,8 +1149,9 @@ def record_problem(download_id: int, problem: Problem) -> None:
         row = db.get(Download, download_id)
         if row is None or row.state != "importing":
             return
-        if broken is not None and not row.filed_count:
-            # A certainly broken archive fails as a failure the client reported, and the job goes with its files.
+        if broken is not None and not discard.filed_something(db, row):
+            # A certainly broken archive fails as a failure the client reported, and the job goes with its files. An
+            # album counts its filed files only once it is done: its placed rows say whether it filed one already.
             left = discard.fail(db, row, broken, moment)
         else:
             row.state, row.problem_code, row.problem_values = "problem", problem.code, dict(problem.values)

@@ -842,7 +842,7 @@ def _record_problem(download_id: int, problem: Problem) -> None:
         row = db.get(Download, download_id)
         if row is None or row.state != "importing":
             return
-        if broken is not None:
+        if broken is not None and not discard.filed_something(db, row):
             # A certainly broken archive fails as a failure the client reported, and the job goes with its files.
             left = discard.fail(db, row, broken, moment)
         else:

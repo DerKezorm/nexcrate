@@ -7,6 +7,10 @@
   ``.tar.bz2``, ``.tbz2``. Every other volume belongs to its first in the same folder. Volumes without their first are
   ``packed`` with ``incomplete``; nothing to unpack at all (a single ``.gz``) is ``unsupported``. Several first volumes
   (CD1 and CD2) go one after another into the same folder.
+* **Missing volumes** (``volumes_missing`` with ``incomplete``): only when they are missing by their names, a gap in
+  the numbers or no first, and no other set lies in the folder (an obfuscated volume may belong to a set of another
+  name). A tool's ``incomplete`` without such a gap stays without it: rarfile says so for any error opening the next
+  volume. Only with it does the import fail the download (``discard``).
 * **The listing first**, for every set before anything is written: encrypted is the problem ``encrypted``; a dangerous
   or executable name ``dangerous_file``; an absolute name, a ``..`` part, a link or anything but files and folders
   ``packed`` with ``unsafe``; an archive inside ``nested``; more than 1000 files, or more than 5 times the size of a
@@ -71,8 +75,8 @@ _steps: dict[int, str] = {}
 _steps_lock = threading.Lock()
 
 
-def packed(reason: str) -> files.FileProblem:
-    return files.FileProblem("packed", reason=reason)
+def packed(reason: str, **values: Any) -> files.FileProblem:
+    return files.FileProblem("packed", reason=reason, **values)
 
 
 # --- What to unpack ------------------------------------------------------------------------------------------ #
@@ -96,11 +100,29 @@ def wanted(found: files.Scan) -> bool:
     return sum(size for _path, size in found.archive_files) > max(size for _path, size in found.videos)
 
 
-def _sets_in_folder(entries: dict[str, tuple[Path, int]]) -> tuple[list[ArchiveSet], bool]:
-    """The sets of one folder, by names in lower case, and whether volumes lack their first."""
+def _gaps(numbers: Iterable[int], first: int) -> int:
+    """How many volume numbers from ``first`` to the highest there are missing."""
+    present = set(numbers)
+    return sum(1 for number in range(first, max(present, default=first - 1) + 1) if number not in present)
+
+
+def missing_volumes(archive: ArchiveSet) -> int:
+    """How many volumes of a set are missing by their names: gaps in ``part1``, ``part2`` ..., ``r00``, ``r01`` ... or
+    ``001``, ``002`` .... 0 when the names show no gap, or a set has no numbered volumes at all."""
+    names = [path.name.lower() for path in archive.volumes]
+    for pattern, first in ((_PART_RAR, 1), (_SPLIT, 1), (_OLD_VOLUME, 0)):
+        numbers = [int(match["number"]) for name in names if (match := pattern.match(name)) is not None]
+        if numbers:
+            return _gaps(numbers, first)
+    return 0
+
+
+def _sets_in_folder(entries: dict[str, tuple[Path, int]]) -> tuple[list[ArchiveSet], int]:
+    """The sets of one folder, by names in lower case, and how many volumes are missing where volumes lack their first
+    (the first counted, and the gaps up to the highest volume)."""
     claimed: set[str] = set()
     sets: list[ArchiveSet] = []
-    lost = False
+    lost = 0
 
     def make(kind: str, names: list[str]) -> None:
         claimed.update(names)
@@ -120,7 +142,7 @@ def _sets_in_folder(entries: dict[str, tuple[Path, int]]) -> tuple[list[ArchiveS
             make("rar", [numbers[number] for number in sorted(numbers)])
         else:
             claimed.update(numbers.values())
-            lost = True
+            lost += _gaps(numbers, 1)
     old = numbered(_OLD_VOLUME)
     for name in sorted(entries):
         if name not in claimed and name.endswith(".rar"):
@@ -132,13 +154,13 @@ def _sets_in_folder(entries: dict[str, tuple[Path, int]]) -> tuple[list[ArchiveS
             make("rar", [numbers[number] for number in sorted(numbers)])
         else:
             claimed.update(numbers.values())
-            lost = True
+            lost += _gaps(numbers, 0)
     for numbers in numbered(_SPLIT).values():
         if 1 in numbers:
             make("7z", [numbers[number] for number in sorted(numbers)])
         else:
             claimed.update(numbers.values())
-            lost = True
+            lost += _gaps(numbers, 1)
     for name in sorted(entries):
         if name in claimed:
             continue
@@ -157,13 +179,15 @@ def archive_sets(archives: Iterable[tuple[Path, int]]) -> list[ArchiveSet]:
     for path, size in archives:
         by_folder.setdefault(path.parent, {})[path.name.lower()] = (path, size)
     found: list[ArchiveSet] = []
-    lost = False
+    lost = certain = 0
     for entries in by_folder.values():
-        sets, missing_first = _sets_in_folder(entries)
+        sets, missing = _sets_in_folder(entries)
         found.extend(sets)
-        lost = lost or missing_first
+        lost += missing
+        # Only in a folder without any set: an obfuscated first volume may have formed a set of another name.
+        certain += missing if not sets else 0
     if lost:
-        raise packed("incomplete")
+        raise packed("incomplete", volumes_missing=certain) if lost == certain else packed("incomplete")
     if not found:
         raise packed("unsupported")
     return sorted(found, key=lambda item: (str(item.first.parent).lower(), item.first.name.lower()))
@@ -531,6 +555,23 @@ def _extract(archive: ArchiveSet, folder: Path, allowed_bytes: int, download_id:
         raise problem
 
 
+@contextlib.contextmanager
+def _judging(archive: ArchiveSet, sets: list[ArchiveSet]) -> Iterator[None]:
+    """A tool's ``incomplete`` names missing volumes only when the set's names show a gap, and no other set lies in its
+    folder. rarfile says "Cannot open next volume" for any error opening it, a share that went away or a volume nexcrate
+    may not read as well, and an obfuscated volume may belong to a set of another name."""
+    try:
+        yield
+    except files.FileProblem as exc:
+        if exc.code != "packed" or exc.values.get("reason") != "incomplete" or exc.values.get("volumes_missing"):
+            raise
+        alone = sum(1 for other in sets if other.first.parent == archive.first.parent) == 1
+        missing = missing_volumes(archive) if alone else 0
+        if not missing:
+            raise
+        raise packed("incomplete", volumes_missing=missing) from exc
+
+
 def unpack(sets: list[ArchiveSet], destination: Path, download_id: int) -> Path:
     """Every set into the download's unpack folder in ``destination``, which is returned.
 
@@ -539,7 +580,8 @@ def unpack(sets: list[ArchiveSet], destination: Path, download_id: int) -> Path:
     with _stepping(download_id):
         total_files = total_bytes = 0
         for archive in sets:
-            count, size = _check(_list(archive, download_id), archive)
+            with _judging(archive, sets):
+                count, size = _check(_list(archive, download_id), archive)
             total_files += count
             total_bytes += size
             if total_files > MAX_FILES:
@@ -550,7 +592,8 @@ def unpack(sets: list[ArchiveSet], destination: Path, download_id: int) -> Path:
             allowed_bytes = 0
             for archive in sets:
                 allowed_bytes += MAX_RATIO * archive.size_bytes
-                _extract(archive, folder, allowed_bytes, download_id)
+                with _judging(archive, sets):
+                    _extract(archive, folder, allowed_bytes, download_id)
             check_folder(folder, allowed_bytes)
         except BaseException:
             remove(destination, download_id)
