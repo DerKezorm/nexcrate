@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
-from sqlalchemy import exists, func, select, update
+from sqlalchemy import exists, func, insert, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from .. import crypto
@@ -974,6 +974,54 @@ def _failed_from(exc: HTTPException) -> JobFailed:
     return JobFailed(code, **detail)
 
 
+def _locate(version: Version, located: Found) -> None:
+    version.has_file = True
+    version.file_ref = f"taken:{version.file_ref or 0}"[:64]
+    version.root_folder = located.root_folder
+    version.relative_path = located.relative_path
+    version.size = located.size
+
+
+def _verdicts(source_id: int, found: dict[int, Found]) -> dict[int, bool]:
+    """Per version with a found file whether nexcrate's rules would upgrade it, judged as the takeover will store it.
+
+    Only reads, before the takeover's transaction: judging every file under the write lock held it for 1.5 s with
+    4,000 movies (measured 26.09.2026). The connection is claimed, no import changes what is judged meanwhile.
+    """
+    verdicts: dict[int, bool] = {}
+    with SessionLocal() as db:
+        source = db.get(Source, source_id)
+        if source is None:
+            return verdicts
+        rules = judging.usable_rules(profile_store.of_version(db, source.version_id))
+        if rules is None:
+            return verdicts
+        versions = [
+            version
+            for version in db.scalars(select(Version).where(Version.source_id == source_id))
+            if version.id in found
+        ]
+        languages = _original_languages(db, {version.title_id for version in versions})
+        for version in versions:
+            # Changed in memory only, to judge the file as stored after the takeover; nothing is written.
+            _locate(version, found[version.id])
+            verdicts[version.id] = judging.verdict(rules, version, languages.get(version.title_id))
+        db.rollback()
+    return verdicts
+
+
+def _verdict_now(db: OrmSession, rules: dict[str, Any], version_id: int, located: Found) -> bool:
+    """``_verdicts`` for one version it did not judge, inside the transaction; the row is left as it was."""
+    version = db.get(Version, version_id)
+    if version is None:
+        return False
+    language = db.scalar(select(Title.original_language).where(Title.id == version.title_id))
+    _locate(version, located)
+    judged = judging.verdict(rules, version, language)
+    db.expunge(version)
+    return judged
+
+
 def save(
     source_id: int,
     request: Request,
@@ -984,9 +1032,11 @@ def save(
     """The takeover's one transaction. Returns the counts of ``taken``.
 
     ``targets`` holds the folder a version without a found file keeps as its ``root_folder`` (``target_folders``).
+    The files are judged before, without the write lock (``_verdicts``).
     """
     targets = targets or {}
     moment = now()
+    verdicts = _verdicts(source_id, found)
     with SessionLocal() as db:
         # A write first: it takes SQLite's write lock before anything is read.
         db.execute(update(Source).where(Source.id == source_id).values(updated_at=moment))
@@ -1008,69 +1058,92 @@ def save(
                 db.rollback()
                 raise _failed_from(exc) from exc
         rules = judging.usable_rules(profile_store.of_version(db, definition.id))
-        versions = list(db.scalars(select(Version).where(Version.source_id == source.id).order_by(Version.id)))
-        languages = _original_languages(db, {version.title_id for version in versions})
-        with_file = missing = 0
-        for version in versions:
-            located = found.get(version.id)
-            had_file = bool(version.has_file)
-            version.source_id = None
-            version.radarr_movie_id = None
-            version.profile_name = None
-            version.upgrade_to = None
-            version.source_movie_path = None
-            version.progress = None
-            version.problem_code = None
+        # Few columns, and the rows written with one statement each for all of them: loading and flushing every
+        # version as an object held the write lock for a second with 4,000 movies.
+        versions = (
+            db.execute(
+                select(Version.id, Version.title_id, Version.has_file, Version.file_ref, Version.monitored)
+                .where(Version.source_id == source.id)
+                .order_by(Version.id)
+            )
+            .tuples()
+            .all()
+        )
+        rows: list[dict[str, Any]] = []
+        with_file = missing = kept = 0
+        for version_id, _title_id, had_file, file_ref, monitored in versions:
+            located = found.get(version_id)
+            values: dict[str, Any] = {
+                "id": version_id,
+                "source_id": None,
+                "radarr_movie_id": None,
+                "profile_name": None,
+                "upgrade_to": None,
+                "source_movie_path": None,
+                "progress": None,
+                "problem_code": None,
+                "updated_at": moment,
+            }
             # ``monitored`` and ``minimum_availability`` stay as Radarr had them.
             if located is not None:
-                version.has_file = True
-                version.file_ref = f"taken:{version.file_ref or 0}"[:64]
-                version.root_folder = located.root_folder
-                version.relative_path = located.relative_path
-                version.size = located.size
                 # Judged by nexcrate's rules through the one judgement of stored files (finding 15), which names the
                 # file as the search does; without a profile nothing to judge.
-                version.cutoff_not_met = judging.verdict(rules, version, languages.get(version.title_id))
+                cutoff = bool(verdicts[version_id]) if rules is not None and version_id in verdicts else False
+                if rules is not None and version_id not in verdicts:
+                    cutoff = _verdict_now(db, rules, version_id, located)
+                values.update(
+                    has_file=True,
+                    file_ref=f"taken:{file_ref or 0}"[:64],
+                    root_folder=located.root_folder,
+                    relative_path=located.relative_path,
+                    size=located.size,
+                    cutoff_not_met=cutoff,
+                    state="upgrade" if cutoff else "available",
+                )
                 with_file += 1
             else:
                 missing += 1 if had_file else 0
-                version.has_file = False
-                version.file_ref = None
-                version.quality = None
-                version.size = 0
-                version.languages = []
-                version.release_group = None
-                version.relative_path = None
                 # The folder of its root folder when that has one: its next file goes there (finding 13).
-                version.root_folder = targets.get(version.id)
-                version.release_title = None
-                version.media_info = None
-                version.cutoff_not_met = False
-            if version.has_file:
-                version.state = "upgrade" if version.cutoff_not_met else "available"
-            else:
-                version.state = "wanted" if version.monitored else "unmonitored"
-            version.updated_at = moment
-            db.add(
-                HistoryEntry(
-                    title_id=version.title_id,
-                    version_id=version.id,
-                    version_definition_id=definition.id,
-                    version_label=definition.label,
-                    event="taken_over",
-                    at=moment,
-                    detail=source.name[:1024],
+                root = targets.get(version_id)
+                kept += 1 if root else 0
+                values.update(
+                    has_file=False,
+                    file_ref=None,
+                    quality=None,
+                    size=0,
+                    languages=[],
+                    release_group=None,
+                    relative_path=None,
+                    root_folder=root,
+                    release_title=None,
+                    media_info=None,
+                    cutoff_not_met=False,
+                    state="wanted" if monitored else "unmonitored",
                 )
+            rows.append(values)
+        if rows:
+            db.execute(update(Version), rows)
+            db.execute(
+                insert(HistoryEntry),
+                [
+                    {
+                        "title_id": title_id,
+                        "version_id": version_id,
+                        "version_definition_id": definition.id,
+                        "version_label": definition.label,
+                        "event": "taken_over",
+                        "at": moment,
+                        "detail": source.name[:1024],
+                    }
+                    for version_id, title_id, *_rest in versions
+                ],
             )
-        db.flush()
         # Titles whose data came from this connection lose that tie, so TMDB's data takes over.
         db.execute(
             update(Title).where(Title.meta_source_id == source.id).values(meta_source_id=None),
             execution_options={"synchronize_session": False},
         )
-        titles = _handed_to_fill(db, {version.title_id for version in versions})
-        # Counted before the commit: the rows expire with it.
-        kept = sum(1 for version in versions if not version.has_file and version.root_folder)
+        titles = _handed_to_fill(db, {title_id for _version_id, title_id, *_rest in versions})
         # The key stays, encrypted, for undoing the takeover; nothing reads a taken-over connection until then.
         source.taken_over_at = moment
         # The connection's tags become the owner's.

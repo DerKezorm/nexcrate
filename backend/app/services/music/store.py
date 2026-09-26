@@ -901,16 +901,20 @@ def _release_text(release: Release | None) -> str:
     return f"{release.name} ({formats}, {release.track_count} tracks, {release.country or '?'}, {release.date or '?'})"
 
 
-def _count_tracks(db: OrmSession, version: Version) -> None:
+def _count_tracks(db: OrmSession, version: Version, files: list[TrackFile] | None = None) -> None:
     """``wanted`` is the target's track count; ``present`` how many of the target's tracks the files cover as songs
     (``same_song``: the recording, or the name when it is unique in its release), so a file of another release counts
     for the target's track with the same song and a second file of one song never counts twice (finding of
-    19.09.2026: 50 of 42). A file of a source without nexcrate's tracks counts once per track it names."""
+    19.09.2026: 50 of 42). A file of a source without nexcrate's tracks counts once per track it names.
+
+    ``files``: counted instead of the version's rows, for a count ahead of a change (a takeover counts before it
+    writes)."""
     wanted = 0
     if version.target_release_id is not None:
         release = db.get(Release, version.target_release_id)
         wanted = release.track_count if release is not None else 0
-    files = list(db.scalars(select(TrackFile).where(TrackFile.version_id == version.id)))
+    if files is None:
+        files = list(db.scalars(select(TrackFile).where(TrackFile.version_id == version.id)))
     ids: set[int] = set()
     extra = 0
     for file in files:

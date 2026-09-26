@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from ... import crypto
@@ -400,6 +400,84 @@ def album_places(
     return places
 
 
+def _place_track(
+    file_id: int, version_id: int, found: dict[int, takeover.Found], places: dict[int, tuple[str, str | None]]
+) -> tuple[str, int] | None:
+    """Where a Lidarr file lies below its album folder, and its size; None when it goes."""
+    located = found.get(file_id)
+    place = places.get(version_id)
+    if located is None or place is None or place[1] is None:
+        return None
+    try:
+        inside = Path(located.root_folder, located.relative_path).relative_to(Path(place[0], place[1]))
+    except ValueError:
+        return None
+    return inside.as_posix()[:2048], located.size
+
+
+@dataclass(frozen=True)
+class _Counted:
+    """What an album version counts after the takeover, and of which files."""
+
+    files: frozenset[int]
+    track_counts: dict[str, int]
+    has_file: bool
+    state: str
+
+
+@dataclass
+class _Prepared:
+    placed: dict[int, tuple[str, int] | None]
+    counted: dict[int, _Counted]
+    #: Per artist the folder its albums lie in, from the first album with one.
+    artist_folders: dict[int, str]
+
+
+def _prepare(source_id: int, found: dict[int, takeover.Found], places: dict[int, tuple[str, str | None]]) -> _Prepared:
+    """Where every Lidarr file lies and what every version counts once the takeover dropped the files that went.
+
+    Only reads, before the takeover's transaction: counting the tracks of 3,000 albums one by one held the write lock
+    of a takeover for 4.8 s (measured 26.09.2026). The connection is claimed, no import changes it meanwhile; what
+    changed all the same is counted again inside the transaction.
+    """
+    prepared = _Prepared({}, {}, {})
+    with SessionLocal() as db:
+        versions = list(db.scalars(select(Version).where(Version.source_id == source_id).order_by(Version.id)))
+        for start in range(0, len(versions), 500):
+            part = versions[start : start + 500]
+            by_version: dict[int, list[TrackFile]] = defaultdict(list)
+            for row in db.scalars(select(TrackFile).where(TrackFile.version_id.in_([item.id for item in part]))):
+                by_version[row.version_id].append(row)
+            artist_of = dict(
+                db.execute(select(Title.id, Title.artist_id).where(Title.id.in_({item.title_id for item in part})))
+                .tuples()
+                .all()
+            )
+            for version in part:
+                staying: list[TrackFile] = []
+                for row in by_version.get(version.id, []):
+                    if row.source_file_id is None:
+                        staying.append(row)
+                        continue
+                    prepared.placed[row.id] = _place_track(row.id, version.id, found, places)
+                    if prepared.placed[row.id] is not None:
+                        staying.append(row)
+                # Counted as ``save`` leaves it, in memory only; nothing is written.
+                store._count_tracks(db, version, staying)
+                prepared.counted[version.id] = _Counted(
+                    frozenset(row.id for row in by_version.get(version.id, [])),
+                    dict(version.track_counts or {}),
+                    bool(version.has_file),
+                    version.state,
+                )
+                relative = places.get(version.id, (None, None))[1]
+                artist_id = artist_of.get(version.title_id)
+                if artist_id is not None and relative and len(relative.split("/")) > 1:
+                    prepared.artist_folders.setdefault(artist_id, relative.split("/")[0])
+        db.rollback()
+    return prepared
+
+
 def save(
     source_id: int,
     request: takeover.Request,
@@ -407,8 +485,13 @@ def save(
     looked: Looked,
     places: dict[int, tuple[str, str | None]],
 ) -> dict[str, Any]:
-    """The takeover's one transaction. Returns the counts of ``taken`` and the version ids for the phases after."""
+    """The takeover's one transaction. Returns the counts of ``taken`` and the version ids for the phases after.
+
+    What takes time is done before it, without the write lock (``_prepare``); the transaction writes with few
+    statements for many rows, and the plans of the albums follow after the commit, in parts (``replan_apart``).
+    """
     moment = takeover.now()
+    prepared = _prepare(source_id, found, places)
     with SessionLocal() as db:
         db.execute(update(Source).where(Source.id == source_id).values(updated_at=moment))
         source = db.get(Source, source_id)
@@ -428,78 +511,100 @@ def save(
             except HTTPException as exc:
                 db.rollback()
                 raise takeover._failed_from(exc) from exc
-        versions = list(db.scalars(select(Version).where(Version.source_id == source.id).order_by(Version.id)))
-        version_ids = [version.id for version in versions]
-        for version in versions:
-            root, relative = places.get(version.id, (None, None))
-            version.source_id = None
-            version.lidarr_album_id = None
-            version.source_album_path = None
-            version.profile_name = None
-            version.root_folder = root
-            version.relative_path = relative
-            if version.target_set_by == "source":
-                # Decision 8: the release the album has is the owner's choice from now on.
-                version.target_set_by = "owner"
-            version.own_since = moment
-            version.files_read_at = None if relative else moment
-            version.updated_at = moment
-            db.add(
-                HistoryEntry(
-                    title_id=version.title_id,
-                    version_id=version.id,
-                    version_definition_id=definition.id,
-                    version_label=definition.label,
-                    event="taken_over",
-                    at=moment,
-                    detail=source.name[:1024],
-                )
-            )
-        db.flush()
-
-        kept = missing = 0
-        gone: list[int] = []
+        versions = (
+            db.execute(select(Version.id, Version.title_id).where(Version.source_id == source.id).order_by(Version.id))
+            .tuples()
+            .all()
+        )
+        version_ids = [version_id for version_id, _title_id in versions]
+        files_of: dict[int, set[int]] = defaultdict(set)
+        lidarr_files: list[tuple[int, int]] = []
         for start in range(0, len(version_ids), 500):
-            rows = list(
-                db.scalars(
-                    select(TrackFile).where(
-                        TrackFile.version_id.in_(version_ids[start : start + 500]),
-                        TrackFile.source_file_id.is_not(None),
-                    )
+            for file_id, version_id, source_file_id in db.execute(
+                select(TrackFile.id, TrackFile.version_id, TrackFile.source_file_id).where(
+                    TrackFile.version_id.in_(version_ids[start : start + 500])
                 )
+            ).tuples():
+                files_of[version_id].add(file_id)
+                if source_file_id is not None:
+                    lidarr_files.append((file_id, version_id))
+        kept: list[dict[str, Any]] = []
+        gone: list[int] = []
+        for file_id, version_id in lidarr_files:
+            # Nothing adds files while the connection is claimed; should one come all the same, it is placed here.
+            placed = (
+                prepared.placed[file_id]
+                if file_id in prepared.placed
+                else _place_track(file_id, version_id, found, places)
             )
-            for row in rows:
-                located = found.get(row.id)
-                place = places.get(row.version_id)
-                if located is None or place is None or place[1] is None:
-                    gone.append(row.id)
-                    missing += 1
-                    continue
-                try:
-                    inside = Path(located.root_folder, located.relative_path).relative_to(Path(place[0], place[1]))
-                except ValueError:
-                    gone.append(row.id)
-                    missing += 1
-                    continue
-                row.relative_path = inside.as_posix()[:2048]
-                row.size = located.size
-                row.updated_at = moment
-                kept += 1
+            if placed is None:
+                gone.append(file_id)
+            else:
+                kept.append({"id": file_id, "relative_path": placed[0], "size": placed[1], "updated_at": moment})
+        # A version whose files changed after ``_prepare`` counts again below, from the rows.
+        again = [
+            version_id
+            for version_id in version_ids
+            if version_id not in prepared.counted
+            or prepared.counted[version_id].files != frozenset(files_of[version_id])
+        ]
+        rows: list[dict[str, Any]] = []
+        for version_id in version_ids:
+            root, relative = places.get(version_id, (None, None))
+            values: dict[str, Any] = {
+                "id": version_id,
+                "source_id": None,
+                "lidarr_album_id": None,
+                "source_album_path": None,
+                "profile_name": None,
+                "root_folder": root,
+                "relative_path": relative,
+                "own_since": moment,
+                "files_read_at": None if relative else moment,
+                "updated_at": moment,
+            }
+            counted = prepared.counted.get(version_id)
+            if counted is not None and version_id not in again:
+                values.update(track_counts=counted.track_counts, has_file=counted.has_file, state=counted.state)
+            rows.append(values)
+        if rows:
+            db.execute(update(Version), rows)
+            db.execute(
+                insert(HistoryEntry),
+                [
+                    {
+                        "title_id": title_id,
+                        "version_id": version_id,
+                        "version_definition_id": definition.id,
+                        "version_label": definition.label,
+                        "event": "taken_over",
+                        "at": moment,
+                        "detail": source.name[:1024],
+                    }
+                    for version_id, title_id in versions
+                ],
+            )
+        for start in range(0, len(version_ids), 500):
+            # Decision 8: the release the album has is the owner's choice from now on.
+            db.execute(
+                update(Version)
+                .where(Version.id.in_(version_ids[start : start + 500]), Version.target_set_by == "source")
+                .values(target_set_by="owner"),
+                execution_options={"synchronize_session": False},
+            )
+        if kept:
+            db.execute(update(TrackFile), kept)
         for start in range(0, len(gone), 500):
             db.execute(
                 delete(TrackFile).where(TrackFile.id.in_(gone[start : start + 500])),
                 execution_options={"synchronize_session": False},
             )
         db.flush()
-        artists: dict[int, str] = {}
-        for version in versions:
-            store._count_tracks(db, version)
-            title = db.get(Title, version.title_id)
-            if title is not None and title.artist_id is not None and version.relative_path:
-                parts = version.relative_path.split("/")
-                if len(parts) > 1:
-                    artists.setdefault(title.artist_id, parts[0])
-        for artist_id, folder in artists.items():
+        for version_id in again:
+            version = db.get(Version, version_id)
+            if version is not None:
+                store._count_tracks(db, version)
+        for artist_id, folder in prepared.artist_folders.items():
             artist = db.get(Artist, artist_id)
             if artist is not None and not artist.folder:
                 artist.folder = folder
@@ -507,7 +612,7 @@ def save(
         # The connection's tags become the owner's.
         tags.release(db, source.id)
         source.updated_at = moment
-        planned = {version.title_id for version in versions}
+        planned = {title_id for _version_id, title_id in versions}
         db.commit()
     from ..automatic import clock as automatic_clock
     from ..automatic import planning as automatic_planning
@@ -518,13 +623,13 @@ def save(
         "Lidarr source %d taken over: %d versions, %d files kept, %d files missing",
         source_id,
         len(version_ids),
-        kept,
-        missing,
+        len(kept),
+        len(gone),
     )
     return {
         "versions": len(version_ids),
-        "with_file": kept,
-        "missing": missing,
+        "with_file": len(kept),
+        "missing": len(gone),
         "titles": 0,
         "version_ids": version_ids,
     }

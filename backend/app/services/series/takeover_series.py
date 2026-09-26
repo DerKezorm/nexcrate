@@ -27,12 +27,12 @@ import asyncio
 import hashlib
 import logging
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from ... import __version__, crypto
@@ -490,6 +490,109 @@ def _rule_of(details: dict[str, Any] | None) -> str:
     return "all" if details.get("monitored") and details.get("monitor_new_items") == "all" else "none"
 
 
+@dataclass(frozen=True)
+class _Placed:
+    """A Sonarr file found in its series folder: where it lies below that folder, its size and nexcrate's judgement."""
+
+    version_id: int
+    relative: str
+    size: int
+    file_ref: str
+    cutoff_not_met: bool
+    #: The season folder it names, when it lies in one and holds episodes of one season.
+    season: tuple[int, str] | None
+
+
+def _place_files(
+    db: OrmSession,
+    definition_id: int,
+    file_ids: list[int],
+    found: dict[int, takeover.Found],
+    places: dict[int, tuple[str, str, bool]],
+) -> dict[int, _Placed | None]:
+    """Per Sonarr file of the takeover where it lies, or None when it goes (not found, or not in its series folder).
+
+    Only reads: the takeover runs it before its transaction. ⚠️ Judging the files is what held the write lock of a
+    takeover of 10,000 episode files for 13.7 s (measured 26.09.2026); nothing another writer does meanwhile changes
+    what it reads, the connection is claimed and no import feeds it.
+    """
+    placed: dict[int, _Placed | None] = {}
+    if not file_ids:
+        return placed
+    rules = _rules(db, definition_id)
+    for start in range(0, len(file_ids), 500):
+        chunk = file_ids[start : start + 500]
+        rows = list(db.scalars(select(EpisodeFile).where(EpisodeFile.id.in_(chunk))))
+        links: dict[int, list[int]] = defaultdict(list)
+        for episode_id, file_id in db.execute(
+            select(EpisodeVersion.episode_id, EpisodeVersion.episode_file_id).where(
+                EpisodeVersion.episode_file_id.in_(chunk)
+            )
+        ).tuples():
+            links[int(file_id)].append(episode_id)
+        episode_ids = [episode_id for ids in links.values() for episode_id in ids]
+        seasons_of: dict[int, int] = {}
+        for index in range(0, len(episode_ids), 500):
+            seasons_of.update(
+                db.execute(
+                    select(Episode.id, Episode.season_number).where(Episode.id.in_(episode_ids[index : index + 500]))
+                )
+                .tuples()
+                .all()
+            )
+        facts = {
+            version_id: (language, series_type)
+            for version_id, language, series_type in db.execute(
+                select(Version.id, Title.original_language, Title.series_type)
+                .join(Title, Title.id == Version.title_id)
+                .where(Version.id.in_({row.version_id for row in rows}))
+            ).tuples()
+        }
+        for row in rows:
+            located = found.get(row.id)
+            place = places.get(row.version_id)
+            if located is None or place is None or not place[2]:
+                placed[row.id] = None
+                continue
+            try:
+                relative = (
+                    Path(located.root_folder, located.relative_path).relative_to(Path(place[0], place[1])).as_posix()
+                )
+            except ValueError:
+                placed[row.id] = None
+                continue
+            episodes = links.get(row.id, [])
+            language, series_type = facts.get(row.version_id, (None, None))
+            cutoff_not_met = False
+            if rules is not None and episodes:
+                # Judged under the name it has from now on, as the takeover names it.
+                current = replace(_current(row, len(episodes), located.size), name=relative[:2048])
+                judged = series_decision.judge_episode_file(
+                    series_profile.rules_for(rules, series_type), current, language
+                )
+                cutoff_not_met = judged is not None and judged.reason is not None
+            parts = relative.split("/")
+            numbers = {seasons_of[episode_id] for episode_id in episodes if episode_id in seasons_of}
+            season = (next(iter(numbers)), parts[0]) if len(parts) == 2 and len(numbers) == 1 else None
+            file_ref = f"taken:{row.source_file_id or 0}"[:64]
+            placed[row.id] = _Placed(row.version_id, relative[:2048], located.size, file_ref, cutoff_not_met, season)
+    return placed
+
+
+def _sonarr_files(db: OrmSession, version_ids: list[int]) -> list[int]:
+    ids: list[int] = []
+    for start in range(0, len(version_ids), 500):
+        ids.extend(
+            db.scalars(
+                select(EpisodeFile.id).where(
+                    EpisodeFile.version_id.in_(version_ids[start : start + 500]),
+                    EpisodeFile.source_file_id.is_not(None),
+                )
+            )
+        )
+    return sorted(ids)
+
+
 def save(
     source_id: int,
     request: takeover.Request,
@@ -498,9 +601,18 @@ def save(
     places: dict[int, tuple[str, str, bool]],
     patterns: dict[str, str] | None,
 ) -> dict[str, Any]:
-    """The takeover's one transaction. Returns the counts of ``taken`` and the version ids for the phases after."""
+    """The takeover's one transaction. Returns the counts of ``taken`` and the version ids for the phases after.
+
+    What takes time is done before it, without the write lock: where each file lies and how nexcrate judges it
+    (``_place_files``). The transaction writes with few statements for many rows, and the plans of the series follow
+    after the commit, in parts (``replan_apart``).
+    """
     moment = takeover.now()
     on = watching.today()
+    with SessionLocal() as db:
+        definition_id = db.scalar(select(Source.version_id).where(Source.id == source_id))
+        fed = list(db.scalars(select(Version.id).where(Version.source_id == source_id)))
+        prepared = _place_files(db, definition_id or 0, _sonarr_files(db, fed), found, places)
     with SessionLocal() as db:
         db.execute(update(Source).where(Source.id == source_id).values(updated_at=moment))
         source = db.get(Source, source_id)
@@ -520,10 +632,14 @@ def save(
             except HTTPException as exc:
                 db.rollback()
                 raise takeover._failed_from(exc) from exc
-        rules = _rules(db, definition.id)
         versions = list(db.scalars(select(Version).where(Version.source_id == source.id).order_by(Version.id)))
         version_ids = [version.id for version in versions]
-        with_files = missing = 0
+        file_ids = _sonarr_files(db, version_ids)
+        late = [file_id for file_id in file_ids if file_id not in prepared]
+        if late:
+            # Nothing adds files while the connection is claimed; should one come all the same, it is placed here.
+            prepared.update(_place_files(db, definition.id, late, found, places))
+        name = source.name[:1024]
         for version in versions:
             place = places.get(version.id)
             version.source_id = None
@@ -539,117 +655,59 @@ def save(
             version.own_since = moment
             version.files_read_at = None if version.relative_path else moment
             version.updated_at = moment
+        for start in range(0, len(version_ids), 500):
+            chunk = version_ids[start : start + 500]
             db.execute(
                 update(EpisodeVersion)
-                .where(EpisodeVersion.version_id == version.id)
+                .where(EpisodeVersion.version_id.in_(chunk))
                 .values(in_source=None, queue_state=None, progress=None, problem_code=None),
                 execution_options={"synchronize_session": False},
             )
             db.execute(
                 update(EpisodeVersion)
-                .where(EpisodeVersion.version_id == version.id, EpisodeVersion.set_by == "source")
+                .where(EpisodeVersion.version_id.in_(chunk), EpisodeVersion.set_by == "source")
                 .values(set_by="owner"),
                 execution_options={"synchronize_session": False},
             )
             db.execute(
-                update(SeasonVersion).where(SeasonVersion.version_id == version.id).values(set_by="owner"),
+                update(SeasonVersion).where(SeasonVersion.version_id.in_(chunk)).values(set_by="owner"),
                 execution_options={"synchronize_session": False},
             )
-            db.add(
-                HistoryEntry(
-                    title_id=version.title_id,
-                    version_id=version.id,
-                    version_definition_id=definition.id,
-                    version_label=definition.label,
-                    event="taken_over",
-                    at=moment,
-                    detail=source.name[:1024],
-                )
+        if versions:
+            db.execute(
+                insert(HistoryEntry),
+                [
+                    {
+                        "title_id": version.title_id,
+                        "version_id": version.id,
+                        "version_definition_id": definition.id,
+                        "version_label": definition.label,
+                        "event": "taken_over",
+                        "at": moment,
+                        "detail": name,
+                    }
+                    for version in versions
+                ],
             )
         db.flush()
 
-        titles = {version.id: version.title_id for version in versions}
-        languages = (
-            dict(
-                db.execute(select(Title.id, Title.original_language).where(Title.id.in_(set(titles.values()))))
-                .tuples()
-                .all()
+        kept = [(file_id, placed) for file_id in file_ids if (placed := prepared.get(file_id)) is not None]
+        gone = [file_id for file_id in file_ids if prepared.get(file_id) is None]
+        if kept:
+            db.execute(
+                update(EpisodeFile),
+                [
+                    {
+                        "id": file_id,
+                        "relative_path": placed.relative,
+                        "size": placed.size,
+                        "file_ref": placed.file_ref,
+                        "cutoff_not_met": placed.cutoff_not_met,
+                        "updated_at": moment,
+                    }
+                    for file_id, placed in kept
+                ],
             )
-            if titles
-            else {}
-        )
-        series_types = (
-            dict(
-                db.execute(select(Title.id, Title.series_type).where(Title.id.in_(set(titles.values()))))
-                .tuples()
-                .all()
-            )
-            if titles
-            else {}
-        )
-        links: dict[int, list[int]] = defaultdict(list)
-        if version_ids:
-            for episode_id, file_id in db.execute(
-                select(EpisodeVersion.episode_id, EpisodeVersion.episode_file_id).where(
-                    EpisodeVersion.version_id.in_(version_ids), EpisodeVersion.episode_file_id.is_not(None)
-                )
-            ).tuples():
-                links[int(file_id)].append(episode_id)
-        seasons_of: dict[int, int] = {}
-        if links:
-            episode_ids = [episode_id for ids in links.values() for episode_id in ids]
-            for index in range(0, len(episode_ids), 500):
-                chunk = episode_ids[index : index + 500]
-                seasons_of.update(
-                    db.execute(select(Episode.id, Episode.season_number).where(Episode.id.in_(chunk))).tuples().all()
-                )
-        gone: list[int] = []
-        folders_of: dict[int, dict[int, str]] = defaultdict(dict)
-        rows = (
-            list(
-                db.scalars(
-                    select(EpisodeFile).where(
-                        EpisodeFile.version_id.in_(version_ids), EpisodeFile.source_file_id.is_not(None)
-                    )
-                )
-            )
-            if version_ids
-            else []
-        )
-        for row in rows:
-            located = found.get(row.id)
-            place = places.get(row.version_id)
-            if located is None or place is None or not place[2]:
-                gone.append(row.id)
-                missing += 1
-                continue
-            series_prefix = Path(place[0], place[1])
-            try:
-                relative = Path(located.root_folder, located.relative_path).relative_to(series_prefix).as_posix()
-            except ValueError:
-                gone.append(row.id)
-                missing += 1
-                continue
-            row.relative_path = relative[:2048]
-            row.size = located.size
-            row.file_ref = f"taken:{row.source_file_id or 0}"[:64]
-            row.updated_at = moment
-            episodes = links.get(row.id, [])
-            if rules is not None and episodes:
-                judged = series_decision.judge_episode_file(
-                    series_profile.rules_for(rules, series_types.get(titles.get(row.version_id))),
-                    _current(row, len(episodes)),
-                    languages.get(titles.get(row.version_id)),
-                )
-                row.cutoff_not_met = judged is not None and judged.reason is not None
-            else:
-                row.cutoff_not_met = False
-            with_files += 1
-            parts = relative.split("/")
-            numbers = {seasons_of[episode_id] for episode_id in episodes if episode_id in seasons_of}
-            if len(parts) == 2 and len(numbers) == 1:
-                (number,) = numbers
-                folders_of[row.version_id].setdefault(number, parts[0])
         for index in range(0, len(gone), 500):
             chunk = gone[index : index + 500]
             db.execute(
@@ -659,11 +717,24 @@ def save(
             db.execute(
                 delete(EpisodeFile).where(EpisodeFile.id.in_(chunk)), execution_options={"synchronize_session": False}
             )
+        folders_of: dict[int, dict[int, str]] = defaultdict(dict)
+        for _file_id, placed in kept:
+            if placed.season is not None:
+                folders_of[placed.version_id].setdefault(*placed.season)
+        known: set[tuple[int, int]] = set()
+        for start in range(0, len(version_ids), 500):
+            known.update(
+                (version_id, number)
+                for version_id, number in db.execute(
+                    select(SeasonFolder.version_id, SeasonFolder.season_number).where(
+                        SeasonFolder.version_id.in_(version_ids[start : start + 500])
+                    )
+                ).tuples()
+            )
         for version_id, by_season in folders_of.items():
-            known = set(db.scalars(select(SeasonFolder.season_number).where(SeasonFolder.version_id == version_id)))
-            for number, name in by_season.items():
-                if number not in known:
-                    db.add(SeasonFolder(version_id=version_id, season_number=number, name=name))
+            for number, folder in by_season.items():
+                if (version_id, number) not in known:
+                    db.add(SeasonFolder(version_id=version_id, season_number=number, name=folder))
         db.flush()
         for version in versions:
             watching.recount(db, version, on)
@@ -673,22 +744,24 @@ def save(
         source.updated_at = moment
         if patterns is not None:
             naming_series.set_version(definition, patterns, definition.episode_numbering)
-        from ..automatic import clock as automatic_clock
-        from ..automatic import planning as automatic_planning
-
-        automatic_planning.replan(db, set(titles.values()), automatic_clock.now())
+        planned = {version.title_id for version in versions}
         db.commit()
+    from ..automatic import clock as automatic_clock
+    from ..automatic import planning as automatic_planning
+
+    # Every series of the connection, after the commit and in parts: not under the write lock of the takeover.
+    automatic_planning.replan_apart(planned, automatic_clock.now())
     logger.info(
         "Sonarr source %d taken over: %d versions, %d files kept, %d files missing",
         source_id,
         len(version_ids),
-        with_files,
-        missing,
+        len(kept),
+        len(gone),
     )
     return {
         "versions": len(version_ids),
-        "with_file": with_files,
-        "missing": missing,
+        "with_file": len(kept),
+        "missing": len(gone),
         "titles": 0,
         "version_ids": version_ids,
     }
