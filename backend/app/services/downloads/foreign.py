@@ -42,7 +42,7 @@ from ...models.downloads import PROTOCOL_OF_KIND
 from .. import downloaders, folders, naming, releases
 from ..automatic import replacement
 from ..schreibweisen import nfc
-from . import files, store
+from . import discard, files, store
 
 logger = logging.getLogger("nexcrate.downloads")
 
@@ -619,21 +619,9 @@ def _quality(kind: str, name: str) -> str | None:
 
 def _job_folder(row: ForeignJob, client: DownloadClient) -> Path | None:
     """The finished job's folder or file as nexcrate sees it, when it lies directly in a folder named like the
-    category inside a mount point; else None: then nothing on disk is touched."""
-    if not row.reported_path:
-        return None
-    mapped = files.map_remote(row.reported_path, list(client.path_mappings or []))
-    for candidate in ([mapped] if mapped is not None else []) + [row.reported_path]:
-        path = folders.visible_path(candidate)
-        if path is None or not path.exists():
-            continue
-        mount = folders.containing_mount(path)
-        if mount is None or files.is_link(path) or not files.strictly_inside(path, mount):
-            continue
-        if path.parent.name.casefold() != client.category.casefold():
-            continue
-        return path
-    return None
+    category inside a mount point and is no link; else None: then nothing on disk is touched. The same check as for a
+    download's own job (``discard``)."""
+    return discard.job_folder(row.reported_path, client.path_mappings or [], client.category)
 
 
 async def remove(foreign_id: int) -> None:

@@ -9,9 +9,10 @@
 * **Confirming a mapping** stores the proposal of a ``path_not_found`` problem on the client, once, and imports again.
   ⚠️ The local side must still be a visible folder.
 * **Removing** a download that is not finished: with ``remove_from_client`` the client drops the job with its files
-  (SABnzbd from queue and history, qBittorrent with ``deleteFiles``), then the download is ``removed``. An imported,
-  failed, removed or importing download cannot be removed from the client (``download_finished``). Removing never
-  touches imported files.
+  (SABnzbd from queue and history, qBittorrent with ``deleteFiles``), then the download is ``removed``. A Usenet job
+  the client finished keeps its folder there; nexcrate deletes it once the download is ``removed`` (``discard``). An
+  imported, failed, removed or importing download cannot be removed from the client (``download_finished``). Removing
+  never touches imported files.
 """
 
 from __future__ import annotations
@@ -24,13 +25,12 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import func, select
 
-from ... import crypto
 from ...db import SessionLocal
 from ...meldungen import meldung
 from ...models import Download, DownloadClient
 from ...models.downloads import ACTIVE_STATES, FINISHED_STATES
 from .. import downloaders, folders
-from . import files, importing, store, tracking
+from . import discard, files, importing, store, tracking
 
 logger = logging.getLogger("nexcrate.downloads")
 
@@ -202,9 +202,8 @@ def confirm_mapping(download_id: int) -> dict[str, Any]:
 @dataclass(frozen=True)
 class _Removal:
     state: str
-    client_download_id: str
-    #: ⚠️ With the decrypted secret; None when the client is gone.
-    target: downloaders.Target | None = field(repr=False)
+    #: ⚠️ With the decrypted secret of the client.
+    left: discard.Leftover = field(repr=False)
 
 
 def _removal(download_id: int) -> _Removal:
@@ -212,26 +211,16 @@ def _removal(download_id: int) -> _Removal:
         row = db.get(Download, download_id)
         if row is None:
             raise not_found()
-        client = db.get(DownloadClient, row.client_id) if row.client_id is not None else None
-        target = None
-        if client is not None:
-            target = downloaders.Target(
-                kind=client.kind,
-                url=client.url,
-                username=client.username or "",
-                secret=crypto.decrypt(client.secret) if client.secret else "",
-                category=client.category,
-                login_blocked=store.login_blocked(client),
-            )
-        return _Removal(state=row.state, client_download_id=row.client_download_id, target=target)
+        return _Removal(state=row.state, left=discard.leftover(db, row))
 
 
-def _mark_removed(download_id: int, *, blocklist: bool) -> None:
+def _mark_removed(download_id: int, *, blocklist: bool) -> bool:
+    """Returns whether the download is ``removed`` now: then no import claims it any more."""
     moment = store.now()
     with SessionLocal() as db:
         row = db.get(Download, download_id)
         if row is None:
-            return
+            return False
         if row.state not in FINISHED_STATES and row.state != "importing":
             row.state, row.problem_code, row.problem_values = "removed", None, None
             row.updated_at = moment
@@ -239,6 +228,7 @@ def _mark_removed(download_id: int, *, blocklist: bool) -> None:
             store.block(db, row, "removed_by_owner", moment)
         store.follow(db, row, moment)
         db.commit()
+        return row.state == "removed"
 
 
 async def remove(download_id: int, *, remove_from_client: bool, blocklist: bool) -> None:
@@ -246,12 +236,15 @@ async def remove(download_id: int, *, remove_from_client: bool, blocklist: bool)
     finished = removal.state in FINISHED_STATES or removal.state == "importing"
     if finished and remove_from_client:
         raise download_finished()
-    if remove_from_client and removal.target is not None and removal.client_download_id:
+    if remove_from_client:
         try:
-            async with downloaders.open_client(removal.target) as client:
-                await client.remove(removal.client_download_id, delete_files=True)
+            await discard.from_client(removal.left)
         except downloaders.ClientError as exc:
             logger.info("Download %d could not be removed from its client: %s", download_id, exc.code)
             raise ActionError(exc.detail, exc.status) from exc
-    await asyncio.to_thread(_mark_removed, download_id, blocklist=blocklist)
+    removed = await asyncio.to_thread(_mark_removed, download_id, blocklist=blocklist)
+    # A Usenet client keeps a finished job's folder when the job leaves it (the owner's finding of 26.09.2026). It goes
+    # once no import can claim the download: an import that took it meanwhile may be moving its files.
+    if remove_from_client and removed:
+        await asyncio.to_thread(discard.delete_folder, removal.left)
     logger.info("Download %d removed by the owner", download_id)

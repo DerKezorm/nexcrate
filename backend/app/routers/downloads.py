@@ -598,9 +598,10 @@ def choose_video(download_id: int, payload: ChooseIn) -> Download:
     response_model=None,
     summary="Remove a download",
     description=(
-        "With `remove_from_client` (default) the client drops the job: SABnzbd with its files, a torrent without its "
-        "files. `blocklist` puts the release on the title's blocklist. A finished download or one being filed away "
-        "cannot be removed from the client. Imported files are never touched."
+        "With `remove_from_client` (default) the client drops the job with its files. A Usenet job the client "
+        "finished keeps its folder there; nexcrate deletes it, only a direct child of the category folder and never "
+        "one that holds a library folder. `blocklist` puts the release on the title's blocklist. A finished download "
+        "or one being filed away cannot be removed from the client. Imported files are never touched."
     ),
     responses=error_responses((404, "download_not_found"), (409, "download_finished"), *downloaders.ERRORS),
 )
