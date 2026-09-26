@@ -12,6 +12,7 @@ of an empty database protects nothing and takes one of the kept slots.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import threading
@@ -46,11 +47,14 @@ WAL_SIZE_LIMIT = 64 * 1024 * 1024
 #: takeovers, their imports and the background jobs wrote at once, and three writes gave up with "database is locked"
 #: (the release.nex files of a takeover, the closing of its run, and a whole Lidarr import).
 BUSY_TIMEOUT_MS = 30_000
-#: The pause between two transactions of a writer that writes in parts. A writer that waits sits in SQLite's busy
-#: handler, which looks again after 1, 2, 5 and so on up to 100 ms; a writer in parts that takes the lock again at once
-#: after its commit left no gap to find, and the other waited as long as for one transaction (measured 26.09.2026: 2.6 s
-#: next to an import of 4,000 movies whose parts held the lock for 0.4 s at most).
+#: The longest pause between two transactions of a writer that writes in parts, while another writer waits
+#: (``between_parts``). A writer that waits sits in SQLite's busy handler, which looks again after 1, 2, 5 and so on
+#: up to 100 ms; a writer in parts that takes the lock again at once after its commit left no gap to find, and the
+#: other waited as long as for one transaction (measured 26.09.2026: 2.6 s next to an import of 4,000 movies whose parts
+#: held the lock for 0.4 s at most, 2.9 s next to adding an artist whose parts held it for 0.3 s).
 PART_PAUSE_SECONDS = 0.1
+#: How often the pause looks whether the waiting writer got the lock.
+PAUSE_STEP_SECONDS = 0.005
 
 
 def _pragmas(dbapi_connection: Any, _record: Any) -> None:
@@ -83,6 +87,8 @@ def _where() -> str:
 _holders_lock = threading.Lock()
 #: Writes that hold the lock now, by connection: where each began and since when. All writers live in this process.
 _holders: dict[int, tuple[str, float]] = {}
+#: Writes that wait for the lock now, by connection: since when (``between_parts`` gives way to them).
+_waiting: dict[int, float] = {}
 
 
 def _others(own: int, moment: float) -> str:
@@ -97,6 +103,8 @@ def _first_write(conn: Any, _cursor: Any, statement: str, *_rest: Any) -> None:
     if "write_try" not in conn.info and _WRITE.match(statement):
         moment = time.monotonic()
         conn.info["write_try"] = moment
+        with _holders_lock:
+            _waiting[id(conn.info)] = moment
         conn.info["write_where"] = _where()
         # Who holds the lock while this write may have to wait: named when the wait is long.
         conn.info["write_others"] = _others(id(conn.info), moment)
@@ -110,6 +118,7 @@ def _write_started(conn: Any, _cursor: Any, statement: str, *_rest: Any) -> None
     conn.info["write_since"] = moment
     waited = moment - conn.info["write_try"]
     with _holders_lock:
+        _waiting.pop(id(conn.info), None)
         _holders[id(conn.info)] = (conn.info.get("write_where", ""), moment)
     if waited > HELD_WARNING_SECONDS:
         logger.warning(
@@ -126,6 +135,7 @@ def _write_ended(conn: Any) -> None:
     where = conn.info.pop("write_where", "")
     others = conn.info.pop("write_others", "")
     with _holders_lock:
+        _waiting.pop(id(conn.info), None)
         _holders.pop(id(conn.info), None)
     moment = time.monotonic()
     if since is None:
@@ -142,9 +152,41 @@ def _write_ended(conn: Any) -> None:
         logger.warning("A write held the database for %.1f s; it began in %s", held, where)
 
 
-def between_parts() -> None:
-    """Let a waiting writer in between two transactions of a writer in parts (``PART_PAUSE_SECONDS``)."""
-    time.sleep(PART_PAUSE_SECONDS)
+def others_waiting() -> bool:
+    """Whether a write of this process waits for SQLite's lock now. A mark older than SQLite's wait is a write that
+    gave up without a rollback nexcrate saw; it waits for nothing any more."""
+    moment = time.monotonic()
+    with _holders_lock:
+        return any(moment - since < BUSY_TIMEOUT_MS / 1000 + 5 for since in _waiting.values())
+
+
+def between_parts(*, own_loop: bool = False) -> None:
+    """Between two transactions of a writer in parts: while another write waits, give it the lock first, up to
+    ``PART_PAUSE_SECONDS``. Nobody waiting costs nothing, so a large planning grows only when another writer is there.
+
+    ⚠️ Never on an event loop, where it would stop every request: there it does nothing, and ``between_parts_async``
+    is the one to await. ``own_loop``: the loop of this thread is a run's own (``asyncio.run`` in an import thread)
+    and serves nothing else, so the pause may block it."""
+    if not own_loop and _on_a_loop():
+        return
+    deadline = time.monotonic() + PART_PAUSE_SECONDS
+    while others_waiting() and time.monotonic() < deadline:
+        time.sleep(PAUSE_STEP_SECONDS)
+
+
+async def between_parts_async() -> None:
+    """``between_parts`` for a writer on an event loop."""
+    deadline = time.monotonic() + PART_PAUSE_SECONDS
+    while others_waiting() and time.monotonic() < deadline:
+        await asyncio.sleep(PAUSE_STEP_SECONDS)
+
+
+def _on_a_loop() -> bool:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return False
+    return True
 
 
 def database_locked(exc: BaseException) -> bool:

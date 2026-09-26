@@ -31,7 +31,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from ... import crypto
-from ...db import SessionLocal
+from ...db import SessionLocal, between_parts_async
 from ...models import (
     AlternateTitle,
     Episode,
@@ -223,6 +223,8 @@ async def _write_all(source_id: int, run_id: int, fetched: Fetched, token: str, 
         if not written:
             logger.info("Import of source %d stopped, the source was deleted or taken over", source_id)
             return
+        # A writer that waits goes first: a series after the other left it no gap when TMDB was not asked.
+        await between_parts_async()
         if index % PROGRESS_EVERY == 0:
             await asyncio.to_thread(_progress, run_id, "series", index, total)
     tag_names = (

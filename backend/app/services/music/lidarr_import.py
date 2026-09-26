@@ -23,7 +23,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from ... import crypto
-from ...db import SessionLocal, get_setting, set_setting
+from ...db import SessionLocal, between_parts, between_parts_async, get_setting, set_setting
 from ...models import (
     Artist,
     ImportRun,
@@ -269,6 +269,8 @@ async def _import(url: str, api_key: str, source_id: int, run_id: int, light: bo
                         "counts": [now - was for now, was in zip(tally.counts(), counted, strict=True)],
                     }
                     db.commit()
+                    # A writer that waits goes first; with every artist in the cache nothing else leaves it a gap.
+                    await between_parts_async()
                 if index % PROGRESS_EVERY == 0 or index == total:
                     _progress(run_id, "artists", index, total)
             unmapped = await lidarr.unmapped_files()
@@ -555,6 +557,8 @@ def _write_artist(
             # SQLite waits (5 s), and the loading job died with "database is locked" (found on the owner's import).
             # A write per album is safe as well, but costs a third of the run on a slow disk.
             db.commit()
+            # The loop of this thread is the import's own (``asyncio.run``): the pause blocks nothing else.
+            between_parts(own_loop=True)
             written = clock()
     needs = artist.groups_refreshed_at is None or bool(loading.albums_needing_releases(db, artist.id, moment))
     if needs and artist.load_state not in loading.UNFINISHED:

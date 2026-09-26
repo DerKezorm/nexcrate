@@ -45,7 +45,7 @@ from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.orm import Session as OrmSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from ...db import SessionLocal, database_locked
+from ...db import SessionLocal, between_parts, database_locked
 from ...models import Download, Title, Version, VersionDefinition
 from .. import judging
 from ..downloads import store
@@ -476,6 +476,8 @@ def replan_apart(title_ids: Collection[int], now: datetime) -> tuple[int, int]:
             planned += len(found)
             moved = differing(found)
             if moved:
+                # A writer that waits meanwhile goes first: parts that come one after the other left it no gap.
+                between_parts()
                 with SessionLocal() as db:
                     _counted, written = replan(db, moved, now)
                     db.commit()

@@ -33,7 +33,7 @@ from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session as OrmSession
 
-from ...db import SessionLocal, get_setting, set_setting
+from ...db import SessionLocal, between_parts, get_setting, set_setting
 from ...models import Artist, Download, Release, ReleaseTrack, Title, Version, utcnow
 from . import musicbrainz as mb
 from . import store, target
@@ -527,6 +527,8 @@ def drop_left_adds() -> int:
 
 def _drop_left_add(artist_id: int) -> bool:
     while True:
+        # A writer that waits meanwhile goes first; the parts come one after the other.
+        between_parts()
         with SessionLocal() as db:
             # The write lock first: an adding that starts now waits for it, and one registered before is seen here.
             store.take_write_lock(db)

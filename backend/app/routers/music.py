@@ -21,7 +21,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as OrmSession
 
-from ..db import SessionLocal, set_setting
+from ..db import SessionLocal, between_parts, set_setting
 from ..deps import DbSession
 from ..meldungen import error, error_responses
 from ..models import Artist, Release, Title, Version, VersionDefinition, utcnow
@@ -686,12 +686,16 @@ def _create_artist_once(
         return existing, False
     if resumed:
         _drop_strays(artist_id)
+    # Before every part a writer that waits meanwhile goes first (``between_parts``); it runs in a thread of its own.
     for start in range(0, len(groups), ADD_CHUNK):
+        between_parts()
         _write_groups(artist_id, groups[start : start + ADD_CHUNK], moment)
     albums = _albums_to_watch(artist_id, groups, monitor, moment)
     switch_on: list[int] = []
     for start in range(0, len(albums), ADD_CHUNK):
+        between_parts()
         switch_on += _watch_part(artist_id, albums[start : start + ADD_CHUNK], moment, mark)
+    between_parts()
     return _finish_artist(artist_id, groups, monitor, switch_on, moment, mark), True
 
 
@@ -738,6 +742,7 @@ def _drop_strays(artist_id: int) -> None:
     history (``store.drop_adding_strays``). Then this request's choice counts as for a new artist, not the one before
     (it may name other albums)."""
     while True:
+        between_parts()
         with SessionLocal() as db:
             store.take_write_lock(db)
             _adding(db, artist_id)

@@ -62,7 +62,7 @@ from typing import Any
 
 from sqlalchemy import and_, case, exists, or_, select
 
-from ...db import SessionLocal
+from ...db import SessionLocal, between_parts
 from ...models import Episode, EpisodeVersion, Indexer, Title, Version
 from .. import indexers, logs
 from ..downloads import loading
@@ -191,6 +191,7 @@ def plan_round(now: datetime) -> tuple[int, int]:
         planned += len(found)
         moved = planning.differing(found)
         if moved:
+            between_parts()
             with SessionLocal() as db:
                 _counted, written = planning.replan(db, moved, now)
                 db.commit()

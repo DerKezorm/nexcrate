@@ -489,12 +489,9 @@ def save_read(source_id: int, run_id: int, fetched: Fetched, started: float | No
     movies = unique_movies(fetched.movies)
     outcome = Outcome()
     now = utcnow()
-    # Only a run of several parts pauses before the last; one of a single part has kept nobody waiting for long.
-    several = False
     position = 0
     while position < len(movies):
         if position:
-            several = True
             between_parts()
         with SessionLocal() as db:
             source = _open_part(db, source_id, run_id)
@@ -508,8 +505,7 @@ def save_read(source_id: int, run_id: int, fetched: Fetched, started: float | No
             # After the commit: the versions belong to Radarr now, and a file claiming nexcrate's ownership would
             # mislead.
             companions.remove(removals)
-    if several:
-        between_parts()
+    between_parts()
     with SessionLocal() as db:
         source = _open_part(db, source_id, run_id)
         if source is None:
