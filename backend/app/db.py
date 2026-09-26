@@ -46,6 +46,11 @@ WAL_SIZE_LIMIT = 64 * 1024 * 1024
 #: takeovers, their imports and the background jobs wrote at once, and three writes gave up with "database is locked"
 #: (the release.nex files of a takeover, the closing of its run, and a whole Lidarr import).
 BUSY_TIMEOUT_MS = 30_000
+#: The pause between two transactions of a writer that writes in parts. A writer that waits sits in SQLite's busy
+#: handler, which looks again after 1, 2, 5 and so on up to 100 ms; a writer in parts that takes the lock again at once
+#: after its commit left no gap to find, and the other waited as long as for one transaction (measured 26.09.2026: 2.6 s
+#: next to an import of 4,000 movies whose parts held the lock for 0.4 s at most).
+PART_PAUSE_SECONDS = 0.1
 
 
 def _pragmas(dbapi_connection: Any, _record: Any) -> None:
@@ -135,6 +140,11 @@ def _write_ended(conn: Any) -> None:
     held = moment - since
     if held > HELD_WARNING_SECONDS:
         logger.warning("A write held the database for %.1f s; it began in %s", held, where)
+
+
+def between_parts() -> None:
+    """Let a waiting writer in between two transactions of a writer in parts (``PART_PAUSE_SECONDS``)."""
+    time.sleep(PART_PAUSE_SECONDS)
 
 
 def database_locked(exc: BaseException) -> bool:

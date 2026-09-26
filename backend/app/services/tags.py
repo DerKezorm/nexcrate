@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Iterable, Mapping
 from typing import Any
 
 from sqlalchemy import ColumnElement, delete, func, or_, select, update
@@ -156,10 +156,20 @@ def change_many(db: OrmSession, *, title_ids: Iterable[int] = (), artist_ids: It
     return changed
 
 
-def sync_titles(db: OrmSession, source_id: int, wanted: Mapping[int, Iterable[str]]) -> int:
+def sync_titles(
+    db: OrmSession,
+    source_id: int,
+    wanted: Mapping[int, Iterable[str]],
+    *,
+    only: Collection[int] | None = None,
+    keep: Collection[int] | None = None,
+) -> int:
     """Mirror a connection's tags onto its titles: ``wanted`` is title id to the app's names. What the app no longer
-    gives goes, the owner's tags stay. Returns how many links changed."""
-    return _sync(db, TitleTag, TitleTag.title_id, source_id, wanted)
+    gives goes, the owner's tags stay. Returns how many links changed.
+
+    For an import in parts: ``only`` limits it to these titles, and ``keep`` leaves the links of these titles alone
+    (``merge`` mirrored them part by part; the last part drops what is left on titles the app no longer has)."""
+    return _sync(db, TitleTag, TitleTag.title_id, source_id, wanted, only, keep)
 
 
 def sync_artists(db: OrmSession, source_id: int, wanted: Mapping[int, Iterable[str]]) -> int:
@@ -167,17 +177,27 @@ def sync_artists(db: OrmSession, source_id: int, wanted: Mapping[int, Iterable[s
     return _sync(db, ArtistTag, ArtistTag.artist_id, source_id, wanted)
 
 
-def _sync(db: OrmSession, model: Any, column: Any, source_id: int, wanted: Mapping[int, Iterable[str]]) -> int:
+def _sync(
+    db: OrmSession,
+    model: Any,
+    column: Any,
+    source_id: int,
+    wanted: Mapping[int, Iterable[str]],
+    only: Collection[int] | None = None,
+    keep: Collection[int] | None = None,
+) -> int:
     targets = {owner_id: [label for label in (_lenient(item) for item in labels) if label]
                for owner_id, labels in wanted.items()}  # fmt: skip
     ids = ensure(db, {label for labels in targets.values() for label in labels})
     # Every link of this connection: what the app dropped goes.
-    rows = db.scalars(select(model).where(model.source_id == source_id))
-    current = {(getattr(row, column.key), row.tag_id): row for row in rows}
+    query = select(model).where(model.source_id == source_id)
+    if only is not None:
+        query = query.where(column.in_(list(only)))
+    current = {(getattr(row, column.key), row.tag_id): row for row in db.scalars(query)}
     changed = 0
     desired = {(owner_id, ids[label]) for owner_id, labels in targets.items() for label in labels}
     for key, row in current.items():
-        if key not in desired:
+        if key not in desired and (keep is None or key[0] not in keep):
             db.delete(row)
             changed += 1
     # A link the owner has already (or another connection) stays as it is: one tag once per title.

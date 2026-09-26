@@ -9,7 +9,8 @@ A run, in order:
 
 1. Fetch status, quality profiles, root folders, movies and queue. Any error ends the run
    before the library is touched: a Sonarr answering at the address must not empty it.
-2. Upsert titles by TMDB id and the versions of the source's version definition. A version the
+2. Upsert titles by TMDB id and the versions of the source's version definition, ``IMPORT_CHUNK`` movies per
+   transaction. A version the
    owner added in that definition, which no source feeds, is taken over: it gets the source and
    its data, keeps ``added_by = owner`` and its history. Its ``release.nex`` entry goes after the
    run's commit, while the file is unchanged (L2); the file stays.
@@ -42,7 +43,7 @@ from sqlalchemy import case, delete, exists, func, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from .. import crypto
-from ..db import SessionLocal
+from ..db import SessionLocal, between_parts
 from ..models import AlternateTitle, HistoryEntry, ImportRun, Source, Title, Version, VersionDefinition, utcnow
 from . import companions, images, logs, media, tags
 from .radarr import (
@@ -456,20 +457,66 @@ def read_source(source_id: int, run_id: int, *, for_takeover: bool = False) -> R
     return Read(fetched, naming=naming, naming_error=naming_error, media=media)
 
 
+#: Movies one transaction of an import merges at most, and the longest it merges before it commits and lets others
+#: write (as the Lidarr import does): on a busy machine 200 movies took seconds. ⚠️ All of them in one transaction
+#: held the write lock for 6.2 s with 4,000 new movies (measured 26.09.2026), and every other writer waited for it.
+IMPORT_CHUNK = 200
+WRITE_SLICE_SECONDS = 0.5
+clock = time.monotonic
+
+
+def _open_part(db: OrmSession, source_id: int, run_id: int) -> Source | None:
+    """The start of every transaction of a run: a write first, it takes SQLite's write lock before anything is read
+    (a transaction that reads first and writes later fails outright when another write came in between). None when
+    the source or the run is gone, or the source was taken over meanwhile; the transaction is rolled back then."""
+    db.execute(update(ImportRun).where(ImportRun.id == run_id).values(status="running"))
+    source = db.get(Source, source_id)
+    run = db.get(ImportRun, run_id)
+    if source is None or run is None or source.taken_over_at is not None:
+        db.rollback()
+        return None
+    return source
+
+
 def save_read(source_id: int, run_id: int, fetched: Fetched, started: float | None = None) -> Outcome | None:
-    """Merge a read into the library and finish the run as done. None when the source or the run is gone."""
+    """Merge a read into the library and finish the run as done. None when the source or the run is gone.
+
+    In transactions of ``IMPORT_CHUNK`` movies or ``WRITE_SLICE_SECONDS`` each, then one that removes what Radarr no
+    longer has and finishes the run. A run that breaks off between them leaves every movie it merged merged and removes
+    nothing; the next run merges them again, which changes nothing, and goes on.
+    """
     started = time.perf_counter() if started is None else started
+    movies = unique_movies(fetched.movies)
+    outcome = Outcome()
+    now = utcnow()
+    # Only a run of several parts pauses before the last; one of a single part has kept nobody waiting for long.
+    several = False
+    position = 0
+    while position < len(movies):
+        if position:
+            several = True
+            between_parts()
+        with SessionLocal() as db:
+            source = _open_part(db, source_id, run_id)
+            if source is None:
+                logger.info("Import of source %d stopped, the source was deleted or taken over", source_id)
+                return None
+            merged, removals = merge(db, source, fetched, movies[position : position + IMPORT_CHUNK], outcome, now)
+            db.commit()
+        position += merged
+        if removals:
+            # After the commit: the versions belong to Radarr now, and a file claiming nexcrate's ownership would
+            # mislead.
+            companions.remove(removals)
+    if several:
+        between_parts()
     with SessionLocal() as db:
-        # A write first: it takes SQLite's write lock before anything is read. A transaction that
-        # reads first and writes later fails outright when another write came in between.
-        db.execute(update(ImportRun).where(ImportRun.id == run_id).values(status="running"))
-        source = db.get(Source, source_id)
-        run = db.get(ImportRun, run_id)
-        if source is None or run is None or source.taken_over_at is not None:
-            db.rollback()
+        source = _open_part(db, source_id, run_id)
+        if source is None:
             logger.info("Import of source %d stopped, the source was deleted or taken over", source_id)
             return None
-        outcome = apply(db, source, fetched)
+        finish(db, source, fetched, {movie.tmdb_id for movie in movies}, outcome, now)
+        run = db.get(ImportRun, run_id)
         run.status = "done"
         run.finished_at = utcnow()
         run.titles_new = outcome.titles_new
@@ -479,9 +526,6 @@ def save_read(source_id: int, run_id: int, fetched: Fetched, started: float | No
         run.error_code = None
         db.commit()
 
-    if outcome.companion_removals:
-        # After the commit: the versions belong to Radarr now, and a file claiming nexcrate's ownership would mislead.
-        companions.remove(outcome.companion_removals)
     images.forget(outcome.removed_title_ids)
     prune_runs(source_id)
     logger.info(
@@ -550,47 +594,78 @@ def _upgrade_target(profile: QualityProfile) -> str | None:
     return profile.cutoff_name[:200] if profile.cutoff_name else None
 
 
-def apply(db: OrmSession, source: Source, fetched: Fetched, now: datetime | None = None) -> Outcome:
-    """Merge what one source delivered into the library. The caller commits."""
-    now = now or utcnow()
+def unique_movies(movies: list[Movie]) -> list[Movie]:
+    """Radarr's movies, one per TMDB id: the first one counts."""
+    seen: set[int] = set()
+    kept: list[Movie] = []
+    for movie in movies:
+        if movie.tmdb_id not in seen:
+            seen.add(movie.tmdb_id)
+            kept.append(movie)
+    return kept
+
+
+def merge(
+    db: OrmSession, source: Source, fetched: Fetched, movies: list[Movie], outcome: Outcome, now: datetime
+) -> tuple[int, list[companions.Removal]]:
+    """Merge these movies of one source into the library, in order, and count them into ``outcome``; after
+    ``WRITE_SLICE_SECONDS`` it stops. Returns how many it merged (at least one) and the ``release.nex`` entries to
+    remove after the caller's commit. Reads only the rows of these movies."""
+    began = clock()
     definition = db.get(VersionDefinition, source.version_id)
     if definition is None:
         raise RuntimeError("the version definition of the source is missing")
     profiles = {profile.id: profile for profile in fetched.profiles}
     roots = sorted((folder.path for folder in fetched.root_folders), key=len, reverse=True)
+    wanted_ids = {movie.id for movie in movies}
     queue_by_movie: dict[int, list[QueueItem]] = defaultdict(list)
     for item in fetched.queue:
-        if item.movie_id is not None:
+        if item.movie_id is not None and item.movie_id in wanted_ids:
             queue_by_movie[item.movie_id].append(item)
 
-    titles = {title.tmdb_id: title for title in db.scalars(select(Title).where(Title.kind == "movie"))}
+    titles = {
+        title.tmdb_id: title
+        for title in db.scalars(
+            select(Title).where(Title.kind == "movie", Title.tmdb_id.in_([movie.tmdb_id for movie in movies]))
+        )
+    }
+    title_ids = [title.id for title in titles.values()]
     versions = {
-        version.title_id: version for version in db.scalars(select(Version).where(Version.source_id == source.id))
+        version.title_id: version
+        for version in db.scalars(
+            select(Version).where(Version.source_id == source.id, Version.title_id.in_(title_ids))
+        )
     }
     # The owner's versions in this definition that no source feeds: the import takes them over.
     unfed = {
         version.title_id: version
         for version in db.scalars(
-            select(Version).where(Version.version_definition_id == definition.id, Version.source_id.is_(None))
+            select(Version).where(
+                Version.version_definition_id == definition.id,
+                Version.source_id.is_(None),
+                Version.title_id.in_(title_ids),
+            )
         )
     }
     # A poster of a taken-over source gives way to the poster of a source nexcrate still reads.
     taken_over = set(db.scalars(select(Source.id).where(Source.taken_over_at.is_not(None))))
     alternates: dict[int, dict[str, AlternateTitle]] = defaultdict(dict)
-    for row in db.scalars(select(AlternateTitle).where(AlternateTitle.source_id == source.id)):
+    for row in db.scalars(
+        select(AlternateTitle).where(AlternateTitle.source_id == source.id, AlternateTitle.title_id.in_(title_ids))
+    ):
         if row.text in alternates[row.title_id]:
             db.delete(row)
         else:
             alternates[row.title_id][row.text] = row
 
-    outcome = Outcome()
+    removals: list[companions.Removal] = []
     companions_on = companions.enabled(db)
-    seen_tmdb: set[int] = set()
     tag_names: dict[int, list[str]] = {}
-    for movie in fetched.movies:
-        if movie.tmdb_id in seen_tmdb:
-            continue
-        seen_tmdb.add(movie.tmdb_id)
+    merged = 0
+    for movie in movies:
+        if merged and clock() - began >= WRITE_SLICE_SECONDS:
+            break
+        merged += 1
         title = titles.get(movie.tmdb_id)
         is_new = title is None
         if title is None:
@@ -612,7 +687,7 @@ def apply(db: OrmSession, source: Source, fetched: Fetched, now: datetime | None
                 # An owner's version with a file of nexcrate's own: its release.nex entry goes with the file fields,
                 # collected before ``_merge_version`` overwrites them (L2).
                 if companions_on and companions.owned(version):
-                    outcome.companion_removals.extend(companions.plan_removal(db, [version]))
+                    removals.extend(companions.plan_removal(db, [version]))
                     companions.clear_state(version)
                 version.source_id = source.id
         changed = (
@@ -625,20 +700,54 @@ def apply(db: OrmSession, source: Source, fetched: Fetched, now: datetime | None
         if changed and not is_new:
             title.updated_at = now
             outcome.titles_updated += 1
-
-    for version in versions.values():
-        if version.added_by == "owner":
-            detach(version, now)
-        else:
-            db.delete(version)
-            outcome.versions_removed += 1
-    for rows in alternates.values():
-        for row in rows.values():
-            db.delete(row)
     db.flush()
     if fetched.tags is not None:
-        # Radarr's tags of its movies, mirrored; the owner's own tags stay.
-        tags.sync_titles(db, source.id, tag_names)
+        # Radarr's tags of these movies, mirrored; the owner's own tags stay. What Radarr dropped goes in ``finish``.
+        tags.sync_titles(db, source.id, tag_names, only=tag_names.keys())
+    return merged, removals
+
+
+def finish(db: OrmSession, source: Source, fetched: Fetched, seen: set[int], outcome: Outcome, now: datetime) -> None:
+    """After ``merge`` of every movie Radarr listed (TMDB ids ``seen``): what Radarr no longer has. The caller commits.
+
+    A version of a movie that is gone: an owner's version stays, loses the source and is wanted again; an imported
+    version is removed. Then every title left without versions goes.
+    """
+    gone: list[int] = []
+    for version_id, kind, tmdb_id in db.execute(
+        select(Version.id, Title.kind, Title.tmdb_id)
+        .join(Title, Title.id == Version.title_id)
+        .where(Version.source_id == source.id)
+    ).tuples():
+        if kind != "movie" or tmdb_id not in seen:
+            gone.append(version_id)
+    for start in range(0, len(gone), _CHUNK):
+        for version in db.scalars(select(Version).where(Version.id.in_(gone[start : start + _CHUNK]))):
+            if version.added_by == "owner":
+                detach(version, now)
+            else:
+                db.delete(version)
+                outcome.versions_removed += 1
+    # The alternate titles of this source on titles it no longer has.
+    left = [
+        row_id
+        for row_id, kind, tmdb_id in db.execute(
+            select(AlternateTitle.id, Title.kind, Title.tmdb_id)
+            .join(Title, Title.id == AlternateTitle.title_id)
+            .where(AlternateTitle.source_id == source.id)
+        ).tuples()
+        if kind != "movie" or tmdb_id not in seen
+    ]
+    for start in range(0, len(left), _CHUNK):
+        db.execute(
+            delete(AlternateTitle).where(AlternateTitle.id.in_(left[start : start + _CHUNK])),
+            execution_options={"synchronize_session": False},
+        )
+    db.flush()
+    if fetched.tags is not None:
+        # Radarr's tags on titles it no longer has go; ``merge`` mirrored the others.
+        kept = set(db.scalars(select(Version.title_id).where(Version.source_id == source.id).distinct()))
+        tags.sync_titles(db, source.id, {}, keep=kept)
 
     # A source that no longer has a title gives up its claims on it; the next import of another
     # source takes over.
@@ -655,7 +764,6 @@ def apply(db: OrmSession, source: Source, fetched: Fetched, now: datetime | None
         execution_options={"synchronize_session": False},
     )
     outcome.removed_title_ids = remove_orphans(db)
-    return outcome
 
 
 def poster_gone() -> dict[str, object]:
