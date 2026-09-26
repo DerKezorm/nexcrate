@@ -337,9 +337,12 @@ def _edition_notes(parsed: ParsedAlbum, target: TargetInfo | None) -> list[dict[
 #: edition, which stays a hint (decision 14). Found on the owner's library, 25.09.2026: the automatic loaded whole
 #: box sets for single-disc albums, and 33 of their tracks did not fit on import.
 BOX_EDITIONS = frozenset({"box", "complete", "collection"})
-#: More media than the target's own, past one likely bonus disc, counts as a box too, even without one of the words
-#: above ("10CD"): the same brake ``music.target`` uses for its own choice among an album's releases.
-BOX_MEDIA_OVER = 1
+#: Without one of the words above, media alone counts as a box only past this many extra discs over the target: a
+#: leader's decision (26.09.2026) after a 3CD "Deluxe"/"Expanded" edition of a single-disc album was rejected on
+#: media count alone, against "Deluxe ja, Box nein". Two bonus discs still fit those editions (2CD and 3CD for a
+#: 1CD target); three or more make it a box even unnamed ("10CD"). With one of the words above every extra medium
+#: counts, the same brake ``music.target`` uses for its own choice among an album's releases.
+BOX_MEDIA_OVER = 2
 
 
 def _box_rejection(parsed: ParsedAlbum, target: TargetInfo | None) -> dict[str, Any] | None:
