@@ -20,9 +20,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session as OrmSession
 
+from ...db import get_setting, set_setting
 from ...models import (
     ACCOUNT_ID,
     Account,
@@ -33,6 +34,7 @@ from ...models import (
     Release,
     ReleaseMedium,
     ReleaseTrack,
+    Setting,
     Title,
     TrackFile,
     Version,
@@ -294,37 +296,70 @@ def remove_artist(db: OrmSession, artist: Artist) -> tuple[int, int]:
         if removed is not None:
             versions += removed
             albums += 1
+    forget_adding_versions(db, artist.id)
     db.delete(artist)
     return albums, versions
 
 
-def adding_strays(db: OrmSession, artist: Artist, group_mbids: list[str], limit: int) -> list[Version]:
-    """Versions an adding of ``artist`` that broke off made and never switched on (``routers.music._watch_part``):
-    unwatched, without a file, fed by no connection, made since the artist was first added, on its albums or on the
-    albums of its groups."""
-    albums = select(Title.id).where(
-        Title.kind == "album", or_(Title.artist_id == artist.id, Title.mbid.in_(group_mbids))
-    )
-    return list(
-        db.scalars(
-            select(Version)
-            .where(
-                Version.title_id.in_(albums),
-                Version.monitored.is_(False),
-                Version.has_file.is_(False),
-                Version.source_id.is_(None),
-                Version.created_at >= artist.added,
-            )
-            .order_by(Version.id)
-            .limit(limit)
+#: The versions an adding made (``routers.music._watch_part``), by artist: ``adding_versions:<artist id>`` holds their
+#: ids until the adding is complete. A mark in the settings, never in the version: nothing outside nexcrate ever sees
+#: it, and a version another way made or changed meanwhile is never taken for the adding's.
+ADDING_VERSIONS = "adding_versions:{}"
+
+
+def adding_versions(db: OrmSession, artist_id: int) -> list[int]:
+    stored = get_setting(db, ADDING_VERSIONS.format(artist_id), "")
+    return [int(item) for item in stored.split(",") if item.isdigit()]
+
+
+def mark_adding_versions(db: OrmSession, artist_id: int, version_ids: list[int]) -> None:
+    """Remember versions the adding of an artist made; the caller commits."""
+    if version_ids:
+        known = adding_versions(db, artist_id)
+        set_setting(db, ADDING_VERSIONS.format(artist_id), ",".join(str(item) for item in [*known, *version_ids]))
+
+
+def forget_adding_versions(db: OrmSession, artist_id: int) -> None:
+    db.execute(delete(Setting).where(Setting.key == ADDING_VERSIONS.format(artist_id)))
+
+
+def adding_strays(db: OrmSession, artist_id: int, limit: int | None = None) -> list[Version]:
+    """The versions an adding of the artist that broke off made and that are still as it left them: unwatched, without a
+    file, fed by no connection. On any album, a joint one of another artist too."""
+    marked = adding_versions(db, artist_id)
+    if not marked:
+        return []
+    query = (
+        select(Version)
+        .where(
+            Version.id.in_(marked),
+            Version.monitored.is_(False),
+            Version.has_file.is_(False),
+            Version.source_id.is_(None),
         )
+        .order_by(Version.id)
     )
+    return list(db.scalars(query if limit is None else query.limit(limit)))
+
+
+def drop_adding_strays(db: OrmSession, artist_id: int, limit: int | None = None) -> int:
+    """Remove up to ``limit`` of ``adding_strays`` with their history; once none is left, the mark goes too (a marked
+    version someone watched or filled meanwhile is no stray). Returns how many went; the caller commits."""
+    strays = adding_strays(db, artist_id, limit)
+    if not strays:
+        forget_adding_versions(db, artist_id)
+        return 0
+    ids = [version.id for version in strays]
+    db.execute(delete(HistoryEntry).where(HistoryEntry.version_id.in_(ids)))
+    for version in strays:
+        db.delete(version)
+    return len(ids)
 
 
 def made_by_adding_alone(db: OrmSession, artist: Artist) -> bool:
     """Whether an artist whose adding broke off holds nothing but what the adding wrote, and so may be taken away: no
-    album older than the artist, no watched version, none with a file or fed by a connection, no download. In doubt
-    it holds more."""
+    album older than the artist, no version the adding did not make (``adding_versions``), none watched, with a file
+    or fed by a connection, no download. In doubt it holds more."""
     albums = list(
         db.execute(select(Title.id, Title.added).where(Title.kind == "album", Title.artist_id == artist.id)).tuples()
     )
@@ -333,15 +368,12 @@ def made_by_adding_alone(db: OrmSession, artist: Artist) -> bool:
     ids = [title_id for title_id, _added in albums]
     if not ids:
         return True
-    kept = db.scalar(
-        select(Version.id)
-        .where(
-            Version.title_id.in_(ids),
-            or_(Version.monitored.is_(True), Version.has_file.is_(True), Version.source_id.is_not(None)),
-        )
-        .limit(1)
-    )
-    if kept is not None:
+    versions = list(db.scalars(select(Version).where(Version.title_id.in_(ids))))
+    marked = set(adding_versions(db, artist.id))
+    if any(
+        version.id not in marked or version.monitored or version.has_file or version.source_id is not None
+        for version in versions
+    ):
         return False
     return db.scalar(select(Download.id).where(Download.title_id.in_(ids)).limit(1)) is None
 

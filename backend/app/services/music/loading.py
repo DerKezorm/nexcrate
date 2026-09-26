@@ -171,7 +171,7 @@ def queue(db: OrmSession, artist: Artist, priority: int) -> None:
             # Its adding goes on to ``releases`` itself; the queue would browse it a second time meanwhile.
             return
         # An adding that broke off, and another way (an album of the owner, an import) now hangs something on it.
-        settle_left_add(artist)
+        settle_left_add(db, artist)
     if artist.load_state not in UNFINISHED:
         # Various Artists has no catalogue to browse: only the releases of its samplers are loaded.
         artist.load_state = "releases" if artist.is_various else "queued"
@@ -499,10 +499,12 @@ def work(db: OrmSession, artist: Artist, *, budget_end: float) -> None:
 DROP_CHUNK = 50
 
 
-def settle_left_add(artist: Artist) -> None:
+def settle_left_add(db: OrmSession, artist: Artist) -> None:
     """An artist whose adding broke off becomes an ordinary one that loads its catalogue in the background. It watches
     no album on its own (``monitor_new`` none, as an artist made for one album, decision 34): the request that chose
-    what to watch failed."""
+    what to watch failed. The versions the adding left unwatched go (``store.drop_adding_strays``)."""
+    store.drop_adding_strays(db, artist.id)
+    store.forget_adding_versions(db, artist.id)
     artist.monitor_new = "none"
     artist.load_state = "queued"
     artist.load_priority = PRIORITY_OWNER
@@ -531,8 +533,12 @@ def _drop_left_add(artist_id: int) -> bool:
             artist = db.get(Artist, artist_id)
             if artist is None or artist.load_state != ADDING or being_added(artist.mbid):
                 return False
+            # What the adding left unwatched goes first, on a joint album of another artist too.
+            if store.drop_adding_strays(db, artist_id, DROP_CHUNK):
+                db.commit()
+                continue
             if not store.made_by_adding_alone(db, artist):
-                settle_left_add(artist)
+                settle_left_add(db, artist)
                 db.commit()
                 logger.info("Artist %d was left half added and holds more; it stays and loads its catalogue", artist_id)
                 return False

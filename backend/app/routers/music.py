@@ -15,16 +15,16 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as OrmSession
 
 from ..db import SessionLocal, set_setting
 from ..deps import DbSession
 from ..meldungen import error, error_responses
-from ..models import Artist, HistoryEntry, Release, Title, Version, VersionDefinition, utcnow
+from ..models import Artist, Release, Title, Version, VersionDefinition, utcnow
 from ..models.music import LOAD_STATES, MONITOR_NEW
 from ..services import auto_tags, images, tags
 from ..services.automatic import planning
@@ -685,7 +685,7 @@ def _create_artist_once(
     if existing is not None:
         return existing, False
     if resumed:
-        _drop_strays(artist_id, [group.mbid for group in groups])
+        _drop_strays(artist_id)
     for start in range(0, len(groups), ADD_CHUNK):
         _write_groups(artist_id, groups[start : start + ADD_CHUNK], moment)
     albums = _albums_to_watch(artist_id, groups, monitor, moment)
@@ -733,22 +733,19 @@ def _begin_artist(
         return artist.id, None, resumed
 
 
-def _drop_strays(artist_id: int, group_mbids: list[str]) -> None:
-    """Before an adding goes on: the versions the broken off one made and never switched on go, in parts, with their
-    history. Then this request's choice counts as for a new artist, not the one before (it may name other albums)."""
+def _drop_strays(artist_id: int) -> None:
+    """Before an adding goes on: the versions the broken off one made and left unwatched go, in parts, with their
+    history (``store.drop_adding_strays``). Then this request's choice counts as for a new artist, not the one before
+    (it may name other albums)."""
     while True:
         with SessionLocal() as db:
             store.take_write_lock(db)
-            artist = _adding(db, artist_id)
-            strays = store.adding_strays(db, artist, group_mbids, ADD_CHUNK)
-            if not strays:
-                return
-            ids = [version.id for version in strays]
-            db.execute(delete(HistoryEntry).where(HistoryEntry.version_id.in_(ids)))
-            for version in strays:
-                db.delete(version)
+            _adding(db, artist_id)
+            dropped = store.drop_adding_strays(db, artist_id, ADD_CHUNK)
             db.commit()
-            logger.info("Artist %d: %d versions of an adding that broke off removed", artist_id, len(ids))
+            if not dropped:
+                return
+            logger.info("Artist %d: %d versions of an adding that broke off removed", artist_id, dropped)
 
 
 def _adding(db: OrmSession, artist_id: int) -> Artist:
@@ -809,12 +806,16 @@ def _watch_part(
         artist = _adding(db, artist_id)
         definition = store.ensure_definition(db, store.account_language(db))
         switch_on: list[int] = []
+        made: list[int] = []
         for title in db.scalars(select(Title).where(Title.id.in_(title_ids))):
             version = store.album_version(db, title.id)
             if version is None:
                 version = store.add_version(db, title, definition, moment, monitored=False)
+                made.append(version.id)
             if not version.monitored:
                 switch_on.append(version.id)
+        # Marked as the adding's until it is complete: only these may go when it breaks off.
+        store.mark_adding_versions(db, artist_id, made)
         if mark is not None:
             mark(db, artist, moment)
         db.commit()
@@ -839,6 +840,7 @@ def _finish_artist(
             version.updated_at = moment
         if mark is not None:
             mark(db, artist, moment)
+        store.forget_adding_versions(db, artist_id)
         artist.groups_total = len(groups)
         artist.groups_refreshed_at = moment
         artist.groups_due_at = store.groups_due(artist, loading.newest_album(db, artist.id), moment)
@@ -858,12 +860,12 @@ def _finish_artist(
     summary="Add an artist",
     description=(
         "Creates the artist with every release group as a title and, for the choice studio, one version per studio "
-        "album or EP (decision 33). The releases follow in the background. An artist that is in the library already "
-        "answers 200 with it: a second click adds nothing twice."
+        "album or EP (decision 33). The releases follow in the background. 201 when the artist came with this call; "
+        "an artist that is in the library already answers 200 with it: a second click adds nothing twice."
     ),
     responses=error_responses((422, "invalid_input"), *mb.ERRORS),
 )
-async def add_artist(payload: ArtistIn) -> ArtistSummary:
+async def add_artist(payload: ArtistIn, response: Response) -> ArtistSummary:
     mbid = _mbid(payload.mbid)
     if mbid == store.VARIOUS_ARTISTS_MBID:
         raise error("invalid_input", "The input is not valid.", 422, fields=["mbid"])
@@ -875,6 +877,8 @@ async def add_artist(payload: ArtistIn) -> ArtistSummary:
     summary, created = await asyncio.to_thread(_create_artist, data, groups, mbid, payload.monitor, payload.types)
     if created:
         await asyncio.to_thread(_auto_tag_artist, summary["id"])
+    else:
+        response.status_code = 200
     return ArtistSummary.model_validate(summary)
 
 
