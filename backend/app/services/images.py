@@ -10,9 +10,14 @@ A poster of a taken-over source is served from the cache as before; nexcrate nev
 again. When the source cannot deliver a poster at all (an error, or an answer that is not an image,
 found 25./26.09.2026: a Radarr/Sonarr behind forms login answers a redirect instead of the file),
 TMDB's poster of the title takes its place, while a TMDB token exists; otherwise the interface shows
-its placeholder, honestly. A movie fed by a live source never had its TMDB poster file looked up
-before (the TMDB refresh only runs for titles no source feeds), so the fallback looks it up once by
-the title's TMDB id and keeps it in ``titles.tmdb_poster_path`` for next time.
+its placeholder, honestly. A movie or series fed by a live source never had its TMDB poster file
+looked up before (the TMDB refresh only runs for titles no source feeds), so the fallback looks it
+up once, by the title's TMDB id, and keeps it in ``titles.tmdb_poster_path`` for next time.
+
+⚠️ Extended 26.09.2026 to series (Sonarr): the same gap, the same fallback, only the TMDB call
+differs (``/tv/<id>`` instead of ``/movie/<id>``). An album's cover (Lidarr) likely has the same gap
+(MusicBrainz/Cover Art Archive instead of a fallback), but was not measured or built here; see
+``.music.covers``.
 
 The file name carries the cache key (source id and ``lastWrite``): ``<title>-poster-<key>.jpg``.
 A new ``lastWrite`` means a new file, and the old ones of the title are removed. The address the
@@ -33,7 +38,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from sqlalchemy import select, update
+from sqlalchemy import case, select, update
 
 from .. import crypto
 from ..config import get_settings
@@ -80,14 +85,24 @@ def is_album(title_id: int) -> bool:
 
 def poster_url(title: Title) -> str | None:
     """``/api/images/<id>/poster?v=<cache key>``, or None without a poster. An album's cover comes from the Cover Art
-    Archive under the same address."""
+    Archive under the same address.
+
+    ⚠️ A series never gets a live ``poster_source_id`` (Sonarr import never sets one, unlike Radarr's movies): its
+    only address today is TMDB's, filled in at import from the same call that matches Sonarr to TMDB (S1.2). When
+    that call found no poster then, nothing ever asks again (the refresh job skips a title a source feeds, and a
+    series counts as fed the moment it has a version). Found 26.09.2026, alongside #note-51: a series address of
+    its own, ``pending``, so the interface still asks once; ``poster()`` looks TMDB up there and then, and once it
+    finds one, the row's own address takes over on the next listing (``_store_tmdb_poster_path``).
+    """
     if title.kind == "album":
         return cover_url(title)
     if title.poster_origin == "tmdb" and title.tmdb_poster_path:
         return f"/api/images/{title.id}/poster?v={tmdb_cache_key(title.tmdb_poster_path)}"
-    if not (title.poster_url and title.poster_source_id and title.poster_key):
-        return None
-    return f"/api/images/{title.id}/poster?v={cache_key(title.poster_source_id, title.poster_key)}"
+    if title.poster_url and title.poster_source_id and title.poster_key:
+        return f"/api/images/{title.id}/poster?v={cache_key(title.poster_source_id, title.poster_key)}"
+    if title.kind == "series":
+        return f"/api/images/{title.id}/poster?v=pending"
+    return None
 
 
 @dataclass(frozen=True)
@@ -206,39 +221,76 @@ async def fetch_poster(radarr: RadarrClient, relative_url: str) -> Image:
 
 
 def _store_tmdb_poster_path(title_id: int, poster_file: str) -> None:
+    """Kept for next time. A title a live source still owns (``poster_source_id`` set) keeps its ``poster_origin``
+    as it is: the source may recover, and this is only a fallback for while it does not. A title with none (a
+    series, or a movie added by hand) switches fully to TMDB, exactly as ``apply_movie_data`` already would."""
     with SessionLocal() as db:
-        db.execute(update(Title).where(Title.id == title_id).values(tmdb_poster_path=poster_file))
+        db.execute(
+            update(Title)
+            .where(Title.id == title_id)
+            .values(
+                tmdb_poster_path=poster_file,
+                poster_origin=case((Title.poster_source_id.is_(None), "tmdb"), else_=Title.poster_origin),
+            )
+        )
         db.commit()
 
 
+async def _series_poster_file(token: str, tmdb_id: int) -> str | None:
+    """Only the poster path of a TV series (``/tv/<id>``), never the seasons and episodes ``fetch_series``
+    also pulls in: fetching those just for a fallback poster would be slow for a show with many seasons.
+
+    A cache key of its own (``tv_poster``, not ``fetch_series``'s ``tv``): its answer is unslimmed and holds
+    every season, so sharing the key would either waste that or hand a season lookup a poster-only stub.
+    """
+    data = await tmdb._cached(  # the same private helper `series/tmdb_series.py` already imports from this module
+        token,
+        tmdb.cache_key("tv_poster", tmdb_id),
+        tmdb.DETAIL_TTL,
+        f"/tv/{tmdb_id}",
+        {"language": tmdb.FALLBACK_LOCALE},
+        title=True,
+        slim=lambda answer: {"poster_path": answer.get("poster_path")} if isinstance(answer, dict) else answer,
+    )
+    return tmdb.poster_file_of(data.get("poster_path")) if isinstance(data, dict) else None
+
+
 async def _looked_up_tmdb_file(title_id: int) -> str | None:
-    """A TMDB poster file looked up on demand for a movie a source feeds, and kept for next time.
+    """A TMDB poster file looked up on demand for a movie or series a source feeds, and kept for next time.
 
     A source-fed title never has ``tmdb_poster_path`` from the refresh job (it only refreshes titles no
     source feeds), so the fallback for it has to ask TMDB itself, once. None without a TMDB id, without
-    a stored token, or when TMDB knows no poster either.
+    a stored token, or when TMDB knows no poster either. An album's cover never comes from here (M1.0).
     """
     with SessionLocal() as db:
         row = db.execute(select(Title.kind, Title.tmdb_id).where(Title.id == title_id)).first()
-    if row is None or row.kind != "movie" or not row.tmdb_id:
+    if row is None or row.kind not in ("movie", "series") or not row.tmdb_id:
         return None
     stored, token = await asyncio.to_thread(tmdb.token_state)
     if not stored or not token:
         return None
     try:
-        data = await tmdb.fetch_movie(token, row.tmdb_id, tmdb.FALLBACK_LOCALE)
+        if row.kind == "movie":
+            data = await tmdb.fetch_movie(token, row.tmdb_id, tmdb.FALLBACK_LOCALE)
+            poster_file = data.poster_file
+        else:
+            poster_file = await _series_poster_file(token, row.tmdb_id)
     except tmdb.TmdbError as exc:
         logger.info("Could not look up a fallback TMDB poster for title %d: %s", title_id, exc)
         return None
-    if not data.poster_file:
+    if not poster_file:
         return None
-    await asyncio.to_thread(_store_tmdb_poster_path, title_id, data.poster_file)
-    return data.poster_file
+    await asyncio.to_thread(_store_tmdb_poster_path, title_id, poster_file)
+    return poster_file
 
 
-async def _fallback_poster(title_id: int, found: PosterReference) -> tuple[Path, str] | None:
-    """TMDB's poster in the source's place, while a TMDB token exists; None for an honest placeholder."""
-    fallback_file = found.fallback_tmdb_file or await _looked_up_tmdb_file(title_id)
+async def _fallback_poster(title_id: int, known_file: str | None = None) -> tuple[Path, str] | None:
+    """TMDB's poster in the source's place, while a TMDB token exists; None for an honest placeholder.
+
+    ``known_file``: a poster file ``reference()`` already read from the row (a taken-over source, or a live one
+    that once had a TMDB poster on record); without one, this asks TMDB itself, once (``_looked_up_tmdb_file``).
+    """
+    fallback_file = known_file or await _looked_up_tmdb_file(title_id)
     if fallback_file is None:
         return None
     return await tmdb.poster(TMDB_POSTER_SIZE, fallback_file)
@@ -250,7 +302,12 @@ async def poster(title_id: int) -> tuple[Path, str] | None:
     if found is None:
         from .music import covers
 
-        return await covers.cover(title_id)
+        cover = await covers.cover(title_id)
+        if cover is not None:
+            return cover
+        # Not an album either (or one with no cover): a series (``poster_url``'s ``pending`` address) or a movie
+        # added by hand, with nothing on record yet. ``_looked_up_tmdb_file`` itself says no for anything else.
+        return await _fallback_poster(title_id)
     if found.tmdb_file is not None:
         return await tmdb.poster(TMDB_POSTER_SIZE, found.tmdb_file)
     hit = cached(found.title_id, found.key)
@@ -258,13 +315,13 @@ async def poster(title_id: int) -> tuple[Path, str] | None:
         return hit
     if found.taken_over:
         # ⚠️ A taken-over source is never asked again; TMDB's poster takes the place of the copy that is gone.
-        return await _fallback_poster(title_id, found)
+        return await _fallback_poster(title_id, found.fallback_tmdb_file)
     api_key = await asyncio.to_thread(crypto.decrypt, found.stored_api_key)
     try:
         async with RadarrClient(found.source_url, api_key) as radarr:
             image = await fetch_poster(radarr, found.relative_url)
     except (ImageUnavailable, RadarrError, SourceUrlInvalid) as exc:
         logger.info("Poster of title %d is not available: %s", title_id, exc)
-        return await _fallback_poster(title_id, found)
+        return await _fallback_poster(title_id, found.fallback_tmdb_file)
     path = await asyncio.to_thread(store, found.title_id, found.key, image)
     return path, image.content_type
