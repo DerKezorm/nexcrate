@@ -867,11 +867,15 @@ def _restore_track(db: OrmSession, entry: RecycleEntry, title: Title, version: V
     columns = {column.key for column in TrackFile.__table__.columns} - _TRACK_FILE_SKIP
     values = {name: value for name, value in facts.items() if name in columns}
     # A track that left MusicBrainz's release since, or whose album was added again and has other rows: found by its
-    # MusicBrainz id, else the file comes back without one, as an unknown file does.
+    # MusicBrainz id. Else the file comes back without one and unclear, as reading the folder leaves a file it cannot
+    # place: the album page lists it under the unclear files, where the owner assigns it. Reading the folder again
+    # would not, it keeps a path it knows as it is.
     values["track_id"], values["track_ids"] = recycle_again.track_ids(
         db, entry, title, values.get("track_id"), values.get("track_ids")
     )
     track_id = values["track_id"]
+    if track_id is None:
+        values["unclear"] = True
     if track_id is not None and db.scalar(
         select(TrackFile.id).where(TrackFile.version_id == version.id, TrackFile.track_id == track_id).limit(1)
     ):

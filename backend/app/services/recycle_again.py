@@ -11,7 +11,10 @@ file goes back as always. When the title was added again in between, the file go
 * The program's ``origin`` and its key's name come back with title and version, so the program knows them as its own
   again and may take them back once more (the entry keeps them since 26.09.2026; an older entry brings none).
 * A series' episodes and an album's tracks have new rows then: the file finds them by TMDB's numbers and by the track's
-  MusicBrainz id. What is not found any more comes back without, as a file without an episode or a track does.
+  MusicBrainz id. An episode file whose episodes are not found comes back without, as an unclear file. So does a track
+  file whose track is not found, and that is always so for an album added again: its releases load afterwards, in the
+  background. It is listed under the album's unclear files and assigned there; reading the folder again does not
+  place it, a path the version knows stays as it is.
 
 Refused, with nothing added: the version no longer exists (``recycle_version_gone``), the file is gone
 (``recycle_file_gone``), the entry does not know the title's reference or TMDB and MusicBrainz no longer know the title
