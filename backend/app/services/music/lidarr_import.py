@@ -273,26 +273,43 @@ async def _import(url: str, api_key: str, source_id: int, run_id: int, light: bo
                     _progress(run_id, "artists", index, total)
             unmapped = await lidarr.unmapped_files()
             queue = await lidarr.queue()
+            artist_tags: dict[int, list[str]] | None = None
             if tag_names is not None:
                 # The artist list comes whole in every run, so its tags are mirrored whole too.
                 ids = {mbid: known.id for mbid, known in store.library_artists(db).items()}
-                tags.sync_artists(
-                    db,
-                    source_id,
-                    {
-                        ids[record.mbid]: [tag_names[tag_id] for tag_id in record.tags if tag_id in tag_names]
-                        for record in artists
-                        if record.mbid and record.mbid in ids
-                    },
-                )
-            _write_unmapped(db, source, unmapped, tally, moment)
-            _write_queue(db, source, queue)
-            set_setting(db, SETTING_SEEN.format(source_id=source_id), json.dumps(seen, separators=(",", ":")))
-            if not light:
-                set_setting(db, SETTING_FULL_READ.format(source_id=source_id), moment.isoformat())
-            _finish(db, source, run_id, seen_albums, tally, moment)
-            db.commit()
+                artist_tags = {
+                    ids[record.mbid]: [tag_names[tag_id] for tag_id in record.tags if tag_id in tag_names]
+                    for record in artists
+                    if record.mbid and record.mbid in ids
+                }
+            _close(db, source, run_id, seen_albums, tally, moment, seen, unmapped, queue, artist_tags, full=not light)
     return tally
+
+
+def _close(
+    db: OrmSession,
+    source: Source,
+    run_id: int,
+    seen_albums: set[int],
+    tally: Tally,
+    moment: datetime,
+    seen: dict[str, Any],
+    unmapped: list[TrackFileRecord],
+    queue: list[QueueRecord],
+    artist_tags: dict[int, list[str]] | None,
+    *,
+    full: bool = True,
+) -> None:
+    """What a run writes after its artists: tags, unmapped files, the queue, what it saw, and the run as done."""
+    if artist_tags is not None:
+        tags.sync_artists(db, source.id, artist_tags)
+    _write_unmapped(db, source, unmapped, tally, moment)
+    _write_queue(db, source, queue)
+    set_setting(db, SETTING_SEEN.format(source_id=source.id), json.dumps(seen, separators=(",", ":")))
+    if full:
+        set_setting(db, SETTING_FULL_READ.format(source_id=source.id), moment.isoformat())
+    _finish(db, source, run_id, seen_albums, tally, moment)
+    db.commit()
 
 
 def run(source_id: int, run_id: int, *, scheduled: bool = False) -> None:
