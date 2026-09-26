@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from ...models import (
@@ -28,6 +28,7 @@ from ...models import (
     Account,
     AlbumArtist,
     Artist,
+    Download,
     HistoryEntry,
     Release,
     ReleaseMedium,
@@ -267,25 +268,82 @@ def take_write_lock(db: OrmSession) -> None:
     )
 
 
+def remove_album(db: OrmSession, artist: Artist, title: Title) -> int | None:
+    """One album of an artist out of the library, with its versions; a joint album another artist of the library also
+    claims goes to that artist instead (None). Returns how many versions went; the caller commits."""
+    other = db.scalar(
+        select(AlbumArtist.artist_id)
+        .where(AlbumArtist.title_id == title.id, AlbumArtist.artist_id != artist.id)
+        .order_by(AlbumArtist.position)
+    )
+    if other is not None:
+        title.artist_id = other
+        return None
+    versions = len(list(db.scalars(select(Version.id).where(Version.title_id == title.id))))
+    db.delete(title)
+    return versions
+
+
 def remove_artist(db: OrmSession, artist: Artist) -> tuple[int, int]:
-    """The artist and every album of it out of the library; a joint album another artist of the library also claims
-    goes to that artist. Returns how many albums and versions went; the caller commits."""
+    """The artist and every album of it out of the library (``remove_album``). Returns how many albums and versions
+    went; the caller commits."""
     albums = 0
     versions = 0
     for title in list(db.scalars(select(Title).where(Title.kind == "album", Title.artist_id == artist.id))):
-        other = db.scalar(
-            select(AlbumArtist.artist_id)
-            .where(AlbumArtist.title_id == title.id, AlbumArtist.artist_id != artist.id)
-            .order_by(AlbumArtist.position)
-        )
-        if other is not None:
-            title.artist_id = other
-            continue
-        versions += len(list(db.scalars(select(Version.id).where(Version.title_id == title.id))))
-        db.delete(title)
-        albums += 1
+        removed = remove_album(db, artist, title)
+        if removed is not None:
+            versions += removed
+            albums += 1
     db.delete(artist)
     return albums, versions
+
+
+def adding_strays(db: OrmSession, artist: Artist, group_mbids: list[str], limit: int) -> list[Version]:
+    """Versions an adding of ``artist`` that broke off made and never switched on (``routers.music._watch_part``):
+    unwatched, without a file, fed by no connection, made since the artist was first added, on its albums or on the
+    albums of its groups."""
+    albums = select(Title.id).where(
+        Title.kind == "album", or_(Title.artist_id == artist.id, Title.mbid.in_(group_mbids))
+    )
+    return list(
+        db.scalars(
+            select(Version)
+            .where(
+                Version.title_id.in_(albums),
+                Version.monitored.is_(False),
+                Version.has_file.is_(False),
+                Version.source_id.is_(None),
+                Version.created_at >= artist.added,
+            )
+            .order_by(Version.id)
+            .limit(limit)
+        )
+    )
+
+
+def made_by_adding_alone(db: OrmSession, artist: Artist) -> bool:
+    """Whether an artist whose adding broke off holds nothing but what the adding wrote, and so may be taken away: no
+    album older than the artist, no watched version, none with a file or fed by a connection, no download. In doubt
+    it holds more."""
+    albums = list(
+        db.execute(select(Title.id, Title.added).where(Title.kind == "album", Title.artist_id == artist.id)).tuples()
+    )
+    if any(added is None or added < artist.added for _title_id, added in albums):
+        return False
+    ids = [title_id for title_id, _added in albums]
+    if not ids:
+        return True
+    kept = db.scalar(
+        select(Version.id)
+        .where(
+            Version.title_id.in_(ids),
+            or_(Version.monitored.is_(True), Version.has_file.is_(True), Version.source_id.is_not(None)),
+        )
+        .limit(1)
+    )
+    if kept is not None:
+        return False
+    return db.scalar(select(Download.id).where(Download.title_id.in_(ids)).limit(1)) is None
 
 
 def various_artist(db: OrmSession, moment: datetime) -> Artist:

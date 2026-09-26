@@ -17,14 +17,14 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as OrmSession
 
 from ..db import SessionLocal, set_setting
 from ..deps import DbSession
 from ..meldungen import error, error_responses
-from ..models import Artist, Release, Title, Version, VersionDefinition, utcnow
+from ..models import Artist, HistoryEntry, Release, Title, Version, VersionDefinition, utcnow
 from ..models.music import LOAD_STATES, MONITOR_NEW
 from ..services import auto_tags, images, tags
 from ..services.automatic import planning
@@ -633,8 +633,8 @@ async def preview_artist(payload: ArtistIn) -> ArtistPreview:
 #: Release groups one transaction of adding an artist writes, and albums one watches. ⚠️ Until 26.09.2026 adding an
 #: artist wrote its whole catalogue in one transaction: 1.5 s for 700 release groups alone, 11 s on the owner's instance
 #: under load ("A write held the database for 11.0 s; it began in routers/music.py _create_artist_once"), and every
-#: other writer waited, requests of other programs up to ``database_busy``.
-ADD_CHUNK = 100
+#: other writer waited, requests of other programs up to ``database_busy``. 100 took about 2 s a part under load.
+ADD_CHUNK = 50
 
 
 def _create_artist(
@@ -681,9 +681,11 @@ def _create_artist_once(
     mark: Callable[[OrmSession, Artist, datetime], None] | None,
 ) -> tuple[dict[str, Any], bool]:
     moment = utcnow()
-    artist_id, existing = _begin_artist(data, groups, requested, monitor, types, moment)
+    artist_id, existing, resumed = _begin_artist(data, groups, requested, monitor, types, moment)
     if existing is not None:
         return existing, False
+    if resumed:
+        _drop_strays(artist_id, [group.mbid for group in groups])
     for start in range(0, len(groups), ADD_CHUNK):
         _write_groups(artist_id, groups[start : start + ADD_CHUNK], moment)
     albums = _albums_to_watch(artist_id, groups, monitor, moment)
@@ -700,9 +702,9 @@ def _begin_artist(
     monitor: str,
     types: list[str] | None,
     moment: datetime,
-) -> tuple[int, dict[str, Any] | None]:
-    """The artist's row in ``adding``, new or left by an adding that broke off; or the summary of an artist that is
-    in the library already."""
+) -> tuple[int, dict[str, Any] | None, bool]:
+    """The artist's row in ``adding``, new or left by an adding that broke off (then the last is True); or the summary
+    of an artist that is in the library already."""
     with SessionLocal() as db:
         store.take_write_lock(db)
         language = store.account_language(db)
@@ -713,7 +715,8 @@ def _begin_artist(
                 # Asked for by an id MusicBrainz merged away: remember it, so the next click finds the row at once.
                 existing.mbid_old = [*(existing.mbid_old or []), requested]
                 db.commit()
-            return existing.id, _summary(db, existing)
+            return existing.id, _summary(db, existing), False
+        resumed = existing is not None and existing.load_state == loading.ADDING
         monitor_new = store.new_albums_for(monitor)
         artist, _new = store.upsert_artist(
             db, data, moment=moment, language=language, requested_mbid=requested, monitor_new=monitor_new,
@@ -727,7 +730,25 @@ def _begin_artist(
         artist.load_done = 0
         artist.load_total = max(1, (len(groups) + ADD_CHUNK - 1) // ADD_CHUNK)
         db.commit()
-        return artist.id, None
+        return artist.id, None, resumed
+
+
+def _drop_strays(artist_id: int, group_mbids: list[str]) -> None:
+    """Before an adding goes on: the versions the broken off one made and never switched on go, in parts, with their
+    history. Then this request's choice counts as for a new artist, not the one before (it may name other albums)."""
+    while True:
+        with SessionLocal() as db:
+            store.take_write_lock(db)
+            artist = _adding(db, artist_id)
+            strays = store.adding_strays(db, artist, group_mbids, ADD_CHUNK)
+            if not strays:
+                return
+            ids = [version.id for version in strays]
+            db.execute(delete(HistoryEntry).where(HistoryEntry.version_id.in_(ids)))
+            for version in strays:
+                db.delete(version)
+            db.commit()
+            logger.info("Artist %d: %d versions of an adding that broke off removed", artist_id, len(ids))
 
 
 def _adding(db: OrmSession, artist_id: int) -> Artist:

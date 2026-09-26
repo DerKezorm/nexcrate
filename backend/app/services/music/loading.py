@@ -89,7 +89,8 @@ def reset_state() -> None:
 
 
 #: The artists (MusicBrainz ids) being added in this process now, and a lock per id: a second request for the same
-#: artist waits for the first and then finds it complete. nexcrate runs one process.
+#: artist waits for the first and then finds it complete. ⚠️ This holds because nexcrate runs one process
+#: (``--workers 1`` in the Dockerfile): with a second worker an adding there would look broken off here.
 _adding_guard = threading.Lock()
 _adding_locks: dict[str, threading.Lock] = {}
 _adding_now: set[str] = set()
@@ -166,8 +167,11 @@ def next_artist(db: OrmSession, moment: datetime) -> Artist | None:
 def queue(db: OrmSession, artist: Artist, priority: int) -> None:
     """Put an artist (back) into the queue: for "refresh now" (decision 39), a waiting page, a due refresh."""
     if artist.load_state == ADDING:
-        # Its adding goes on to ``releases`` itself; the queue would browse it a second time meanwhile.
-        return
+        if being_added(artist.mbid):
+            # Its adding goes on to ``releases`` itself; the queue would browse it a second time meanwhile.
+            return
+        # An adding that broke off, and another way (an album of the owner, an import) now hangs something on it.
+        settle_left_add(artist)
     if artist.load_state not in UNFINISHED:
         # Various Artists has no catalogue to browse: only the releases of its samplers are loaded.
         artist.load_state = "releases" if artist.is_various else "queued"
@@ -491,31 +495,71 @@ def work(db: OrmSession, artist: Artist, *, budget_end: float) -> None:
         _fail(db, artist, "music_load_failed", now())
 
 
+#: Albums one transaction of taking away a half added artist removes.
+DROP_CHUNK = 50
+
+
+def settle_left_add(artist: Artist) -> None:
+    """An artist whose adding broke off becomes an ordinary one that loads its catalogue in the background. It watches
+    no album on its own (``monitor_new`` none, as an artist made for one album, decision 34): the request that chose
+    what to watch failed."""
+    artist.monitor_new = "none"
+    artist.load_state = "queued"
+    artist.load_priority = PRIORITY_OWNER
+    artist.load_done = 0
+    artist.load_total = None
+    artist.load_error = None
+    artist.updated_at = now()
+
+
 def drop_left_adds() -> int:
-    """Take away the artists whose adding broke off (a locked database, an error, a restart) and nobody finishes:
-    the request that added them failed, so the library shows none of it. A new request for one adds it again, or goes
-    on with it when it comes first (``routers.music._create_artist``). Returns how many."""
+    """The artists whose adding broke off (a locked database, an error, a restart) and nobody finishes. One that holds
+    only what its adding wrote is taken away, in parts: the request that added it failed, so the library shows none of
+    it. One that holds anything else (``store.made_by_adding_alone``) is kept as an ordinary artist. A new request for
+    one adds it again, or goes on with it when it comes first (``routers.music._create_artist``). Returns how many
+    were taken away."""
     with SessionLocal() as db:
-        if db.scalar(select(Artist.id).where(Artist.load_state == ADDING).limit(1)) is None:
-            return 0
-        # The write lock first: an adding that starts now waits for it, and one registered before is seen below.
-        store.take_write_lock(db)
-        left = list(db.scalars(select(Artist).where(Artist.load_state == ADDING)))
-        dropped = 0
-        for artist in left:
-            if being_added(artist.mbid):
+        left = list(db.scalars(select(Artist.id).where(Artist.load_state == ADDING)))
+    return sum(1 for artist_id in left if _drop_left_add(artist_id))
+
+
+def _drop_left_add(artist_id: int) -> bool:
+    while True:
+        with SessionLocal() as db:
+            # The write lock first: an adding that starts now waits for it, and one registered before is seen here.
+            store.take_write_lock(db)
+            artist = db.get(Artist, artist_id)
+            if artist is None or artist.load_state != ADDING or being_added(artist.mbid):
+                return False
+            if not store.made_by_adding_alone(db, artist):
+                settle_left_add(artist)
+                db.commit()
+                logger.info("Artist %d was left half added and holds more; it stays and loads its catalogue", artist_id)
+                return False
+            albums = list(
+                db.scalars(select(Title).where(Title.kind == "album", Title.artist_id == artist_id).limit(DROP_CHUNK))
+            )
+            if albums:
+                for title in albums:
+                    store.remove_album(db, artist, title)
+                db.commit()
                 continue
-            albums, _versions = store.remove_artist(db, artist)
-            logger.info("Artist %d was left half added; it is taken away with %d albums", artist.id, albums)
-            dropped += 1
-        db.commit()
-        return dropped
+            db.delete(artist)
+            db.commit()
+            logger.info("Artist %d was left half added; it is taken away", artist_id)
+            return True
 
 
 def run_job() -> None:
     """The job: artists in order until the budget is spent. Nothing to do costs two small queries."""
     try:
         drop_left_adds()
+    except OperationalError as exc:
+        if not mb.database_busy(exc):
+            raise
+        # Tried again at the next run; the loading of this run goes on all the same.
+        logger.info("The database was busy; half added artists are looked at in the next run")
+    try:
         _run()
     except OperationalError as exc:
         if not mb.database_busy(exc):

@@ -408,7 +408,7 @@ def _by_mbid(db: OrmSession, kind: str, values: set[str]) -> dict[str, int]:
     sign = -1 if kind == "artist" else 1
     conditions = [model.mbid.in_(values)]
     if kind == "album":
-        conditions.append(Title.kind == "album")
+        conditions += [Title.kind == "album", NOT_ADDING]
     else:
         conditions += [Artist.is_various.is_(False), Artist.load_state != music_loading.ADDING]
     rows = db.execute(select(model.id, model.mbid).where(*conditions)).tuples()
@@ -417,7 +417,7 @@ def _by_mbid(db: OrmSession, kind: str, values: set[str]) -> dict[str, int]:
     if left:
         merged = select(model.id, model.mbid_old).where(model.mbid_old.is_not(None))
         if kind == "album":
-            merged = merged.where(Title.kind == "album")
+            merged = merged.where(Title.kind == "album", NOT_ADDING)
         else:
             merged = merged.where(Artist.load_state != music_loading.ADDING)
         for row_id, old in db.execute(merged).tuples():
