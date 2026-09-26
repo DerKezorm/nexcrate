@@ -150,7 +150,7 @@ export function clientNameOf(t: TFunction, download: Pick<Download, 'client'>): 
 }
 
 /** Was passiert ist, in einem Satz. Ein unbekannter Code bekommt den allgemeinen Satz. */
-export function problemReasonText(t: TFunction, code: string, client: string, values: Record<string, unknown> = {}): string {
+export function problemReasonText(t: TFunction, code: string, client: string, values: Record<string, unknown> = {}, album = false): string {
   switch (code) {
     case 'download_failed': {
       const reason = typeof values.reason === 'string' ? values.reason : null
@@ -186,7 +186,8 @@ export function problemReasonText(t: TFunction, code: string, client: string, va
     case 'stalled':
       return t('downloads.problems.reason.stalled')
     case 'files_unassigned':
-      return t('downloads.problems.reason.files_unassigned')
+      // Bei einem Album spricht die Karte von Titeln, nicht von Folgen (es gibt dort keine).
+      return album ? t('downloads.problems.reason.files_unassignedAlbum') : t('downloads.problems.reason.files_unassigned')
     case 'other_series_suspected':
       return t('downloads.problems.reason.other_series_suspected')
     case 'several_videos':

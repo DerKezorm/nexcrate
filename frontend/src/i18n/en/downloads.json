@@ -138,6 +138,7 @@
       "stalled": "Nobody is sharing the file right now.",
       "unknown": "Something is wrong with this download.",
       "files_unassigned": "nexcrate could not safely assign some files to an episode.",
+      "files_unassignedAlbum": "nexcrate could not safely assign some files to a track.",
       "other_series_suspected": "The files are named like another series.",
       "several_videos": "The download holds several videos of a similar size.",
       "multi_part": "A movie in parts (CD1, CD2).",

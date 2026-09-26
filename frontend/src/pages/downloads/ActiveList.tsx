@@ -102,6 +102,7 @@ function ActiveRow({ download, onRemove }: { download: Download; onRemove: () =>
   ].filter((fact): fact is string => fact !== null)
   const problem = download.problem
   const client = clientNameOf(t, download)
+  const album = download.scope?.kind === 'album'
 
   return (
     <li className="flex min-w-0 flex-col gap-2.5 border-t border-ink-700/60 py-4 first:border-t-0 first:pt-0">
@@ -123,7 +124,7 @@ function ActiveRow({ download, onRemove }: { download: Download; onRemove: () =>
         <p className={'flex items-start gap-2 text-sm ' + (problem.needs_owner ? 'text-bad-500' : 'text-mist-300')}>
           <Symbol name={problem.needs_owner ? 'alert' : 'info'} className={'mt-0.5 h-4 w-4 shrink-0 ' + (problem.needs_owner ? '' : 'text-info-500')} />
           <span className="min-w-0 wrap-anywhere">
-            {problemReasonText(t, problem.code, client)} {problemWhyText(t, problem, client)}
+            {problemReasonText(t, problem.code, client, {}, album)} {problemWhyText(t, problem, client, album)}
           </span>
         </p>
       )}

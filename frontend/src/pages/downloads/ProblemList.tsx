@@ -228,7 +228,7 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
     >
       <DownloadHead download={download} hint={!urgent} />
       <div className="flex flex-col gap-1">
-        <p className="text-base font-medium wrap-anywhere text-mist-100">{problemReasonText(t, code, client)}</p>
+        <p className="text-base font-medium wrap-anywhere text-mist-100">{problemReasonText(t, code, client, {}, album)}</p>
         <p className="text-sm wrap-anywhere text-mist-400">{problemWhyText(t, info, client, album)}</p>
       </div>
       {proposal && (

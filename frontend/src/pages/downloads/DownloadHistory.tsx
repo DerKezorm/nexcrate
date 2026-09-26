@@ -32,7 +32,10 @@ export function DownloadHistory({ items }: { items: Download[] }) {
             const failed =
               download.state !== 'failed'
                 ? null
-                : (failedReasonText(t, download.failed_reason ?? null, client) ?? (problem !== null && isKnownProblem(problem.code) ? problemReasonText(t, problem.code, client) : null))
+                : (failedReasonText(t, download.failed_reason ?? null, client) ??
+                   (problem !== null && isKnownProblem(problem.code)
+                     ? problemReasonText(t, problem.code, client, {}, download.scope?.kind === 'album')
+                     : null))
             // Seit dem 22.09.2026: was SABnzbd sagte, und was aus dem Fehlschlag wurde.
             const said = download.state === 'failed' ? failedDetailText(t, download.failed_detail, client) : null
             const after = download.state === 'failed' ? aftermathText(t, download.aftermath, i18n.language) : null
