@@ -496,11 +496,15 @@ def change_quality(db: DbSession, payload: QualityListIn) -> QualityListOut:
         # ⚠️ Found 25./26.09.2026 (#note-6): with ~90 fields of the same name across every quality, the field alone
         # does not say which row is wrong. ``quality`` names the row, the way ``warningText`` names one elsewhere.
         if item.max_mb_per_min is not None and item.max_mb_per_min < item.min_mb_per_min:
-            raise error("invalid_input", "The input is not valid.", 422, fields=["max_mb_per_min"], quality=item.quality)
+            raise error(
+                "invalid_input", "The input is not valid.", 422, fields=["max_mb_per_min"], quality=item.quality
+            )
         if item.preferred_mb_per_min is not None and (
             profile_expert.within(item.preferred_mb_per_min, item.min_mb_per_min, item.max_mb_per_min) is None
         ):
-            raise error("invalid_input", "The input is not valid.", 422, fields=["preferred_mb_per_min"], quality=item.quality)
+            raise error(
+                "invalid_input", "The input is not valid.", 422, fields=["preferred_mb_per_min"], quality=item.quality
+            )
         row = rows.get(item.quality)
         if row is None:
             row = QualitySize(kind=payload.kind, quality=item.quality, updated_at=moment)
