@@ -2690,8 +2690,8 @@ export type ArtistMonitorNew = 'all' | 'none'
 /** `PATCH /api/music/artists/{id}`. */
 export type ArtistPatch = { monitor_new?: ArtistMonitorNew; monitored?: boolean }
 
-/** `load_state` eines Kuenstlers (M1.2). */
-export type ArtistLoadState = 'queued' | 'groups' | 'releases' | 'ready' | 'failed'
+/** `load_state` eines Kuenstlers (M1.2); `adding`, solange er in Teilen angelegt wird (zeigt sich als "laedt"). */
+export type ArtistLoadState = 'adding' | 'queued' | 'groups' | 'releases' | 'ready' | 'failed'
 
 export type ArtistSummary = {
   id: number

@@ -27,9 +27,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, utcnow
 
-#: The steps of loading an artist from MusicBrainz (decision 19): waiting, browsing its release groups, loading the
-#: releases and tracks of the albums that need them, done, or failed with ``load_error``.
-LOAD_STATES = ("queued", "groups", "releases", "ready", "failed")
+#: The steps of loading an artist from MusicBrainz (decision 19): being added by the owner or a program (its release
+#: groups are written in parts), waiting, browsing its release groups, loading the releases and tracks of the albums
+#: that need them, done, or failed with ``load_error``.
+LOAD_STATES = ("adding", "queued", "groups", "releases", "ready", "failed")
 #: The rule for albums that appear later (decision 24): ``all`` watches new studio albums and EPs, ``none`` nothing.
 MONITOR_NEW = ("all", "none")
 #: Who brought an artist: the owner, or an import from Lidarr.

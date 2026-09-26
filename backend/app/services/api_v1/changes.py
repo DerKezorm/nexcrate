@@ -78,10 +78,18 @@ def look(db: OrmSession, moment: datetime | None = None) -> int:
     now = moment or utcnow()
     known = {row.title_id: row for row in db.scalars(select(TitleChange))}
     live_ids = list(
-        db.scalars(select(Title.id).where(Title.kind.in_(TITLE_KINDS), titles.NAMEABLE).order_by(Title.id))
+        db.scalars(
+            select(Title.id).where(Title.kind.in_(TITLE_KINDS), titles.NAMEABLE, titles.NOT_ADDING).order_by(Title.id)
+        )
     )
-    # Artists stand under the negative of their row number; the collective one is no artist.
-    live_ids += [-artist_id for artist_id in db.scalars(select(Artist.id).where(Artist.is_various.is_(False)))]
+    # Artists stand under the negative of their row number; the collective one is no artist, and one being added is
+    # listed once it is complete.
+    live_ids += [
+        -artist_id
+        for artist_id in db.scalars(
+            select(Artist.id).where(Artist.is_various.is_(False), Artist.id.not_in(titles.ADDING_ARTISTS))
+        )
+    ]
     seq = _number(db, SETTING_SEQ)
     given = 0
 

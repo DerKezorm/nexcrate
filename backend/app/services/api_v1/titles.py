@@ -36,6 +36,7 @@ from ...models import (
 )
 from .. import tags as tag_store
 from ..music import kinds as music_kinds
+from ..music import loading as music_loading
 from ..series import anime, watching
 from ..series import detail as series_detail
 from . import KINDS, TITLE_KINDS, refs
@@ -361,6 +362,10 @@ NAMEABLE = or_(
     and_(Title.kind.in_(("movie", "series")), Title.tmdb_id.is_not(None)),
     and_(Title.kind == "album", Title.mbid.is_not(None)),
 )
+#: An artist being added (``music_loading.ADDING``) is written in parts: until it is complete, ``/api/v1`` neither
+#: finds nor lists it or its albums, so no program reads half a catalogue as the artist's.
+ADDING_ARTISTS = select(Artist.id).where(Artist.load_state == music_loading.ADDING)
+NOT_ADDING = or_(Title.artist_id.is_(None), Title.artist_id.not_in(ADDING_ARTISTS))
 
 
 def items(db: OrmSession, title_ids: Iterable[int]) -> dict[int, dict[str, Any]]:
@@ -405,7 +410,7 @@ def _by_mbid(db: OrmSession, kind: str, values: set[str]) -> dict[str, int]:
     if kind == "album":
         conditions.append(Title.kind == "album")
     else:
-        conditions.append(Artist.is_various.is_(False))
+        conditions += [Artist.is_various.is_(False), Artist.load_state != music_loading.ADDING]
     rows = db.execute(select(model.id, model.mbid).where(*conditions)).tuples()
     found = {mbid: sign * row_id for row_id, mbid in rows}
     left = values - set(found)
@@ -413,6 +418,8 @@ def _by_mbid(db: OrmSession, kind: str, values: set[str]) -> dict[str, int]:
         merged = select(model.id, model.mbid_old).where(model.mbid_old.is_not(None))
         if kind == "album":
             merged = merged.where(Title.kind == "album")
+        else:
+            merged = merged.where(Artist.load_state != music_loading.ADDING)
         for row_id, old in db.execute(merged).tuples():
             for mbid in old or []:
                 if mbid in left:

@@ -258,6 +258,36 @@ def upsert_artist(
     return artist, new
 
 
+def take_write_lock(db: OrmSession) -> None:
+    """A write that matches no row, so that SQLite's write lock is taken before anything is read: two writers that
+    both read first and then write would find the same nothing (nexbeat's finding 17 of 22.09.2026)."""
+    db.execute(
+        update(Artist).where(Artist.id < 1).values(name=Artist.name),
+        execution_options={"synchronize_session": False},
+    )
+
+
+def remove_artist(db: OrmSession, artist: Artist) -> tuple[int, int]:
+    """The artist and every album of it out of the library; a joint album another artist of the library also claims
+    goes to that artist. Returns how many albums and versions went; the caller commits."""
+    albums = 0
+    versions = 0
+    for title in list(db.scalars(select(Title).where(Title.kind == "album", Title.artist_id == artist.id))):
+        other = db.scalar(
+            select(AlbumArtist.artist_id)
+            .where(AlbumArtist.title_id == title.id, AlbumArtist.artist_id != artist.id)
+            .order_by(AlbumArtist.position)
+        )
+        if other is not None:
+            title.artist_id = other
+            continue
+        versions += len(list(db.scalars(select(Version.id).where(Version.title_id == title.id))))
+        db.delete(title)
+        albums += 1
+    db.delete(artist)
+    return albums, versions
+
+
 def various_artist(db: OrmSession, moment: datetime) -> Artist:
     """The collective artist for compilations (decision 35), made at the first sampler, never browsed."""
     row = db.scalar(select(Artist).where(Artist.mbid == VARIOUS_ARTISTS_MBID))
@@ -880,23 +910,17 @@ def new_albums_for(choice: str) -> str:
     return "none" if choice in ("none", "existing") else "all"
 
 
-def apply_choice(
-    db: OrmSession,
-    artist: Artist,
-    choice: str,
-    *,
-    moment: datetime,
-    definition: VersionDefinition,
-    today: str | None = None,
-) -> int:
-    """Watch the albums of an artist a choice names, among the groups of ``artist.album_types``. Returns how many albums
-    it watched that were not watched before; it never unwatches one.
+def albums_to_watch(
+    db: OrmSession, artist: Artist, choice: str, *, moment: datetime, today: str | None = None
+) -> list[tuple[Title, Version | None]]:
+    """The albums a choice names that are not watched yet, with their version (None: it has none), among the groups
+    of ``artist.album_types``.
 
     ``studio`` is every album of the groups, ``missing`` those without a file, ``existing`` those with one, ``first``
     and ``latest`` the earliest and the newest album out by ``today``. ``future`` and ``none`` watch nothing now.
     """
     if choice not in WATCH_CHOICES or choice in ("future", "none"):
-        return 0
+        return []
     albums = [
         title
         for title in db.scalars(
@@ -916,15 +940,27 @@ def apply_choice(
             key=lambda title: (title.first_release_date or "", title.id),
         )
         albums = out[:1] if choice == "first" else out[-1:]
+    return [(title, version) for title in albums if (version := versions[title.id]) is None or not version.monitored]
+
+
+def apply_choice(
+    db: OrmSession,
+    artist: Artist,
+    choice: str,
+    *,
+    moment: datetime,
+    definition: VersionDefinition,
+    today: str | None = None,
+) -> int:
+    """Watch the albums of an artist a choice names (``albums_to_watch``). Returns how many albums it watched that
+    were not watched before; it never unwatches one."""
     watched = 0
-    for title in albums:
-        version = versions[title.id]
+    for title, version in albums_to_watch(db, artist, choice, moment=moment, today=today):
         if version is None:
             add_version(db, title, definition, moment)
-            watched += 1
-        elif not version.monitored:
+        else:
             version.monitored = True
             version.state = state_of(version)
             version.updated_at = moment
-            watched += 1
+        watched += 1
     return watched

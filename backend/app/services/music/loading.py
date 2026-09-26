@@ -22,7 +22,10 @@ background lane of the gate; the owner's requests overtake it.
 from __future__ import annotations
 
 import logging
+import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -57,6 +60,10 @@ PRIORITY_PAGE = 1
 PRIORITY_IMPORT = 2
 PRIORITY_REFRESH = 3
 UNFINISHED = ("queued", "groups", "releases")
+#: An artist the owner or a program is adding right now: its release groups are written in parts
+#: (``routers.music._create_artist``). Nothing else lists, loads or plans it until the adding sets ``releases``, and an
+#: adding that broke off is taken away again (``drop_left_adds``).
+ADDING = "adding"
 #: The version of the target rule the stored targets were made with.
 SETTING_RULE = "music_target_rule"
 #: Counts up when the browse changes what it lists: every artist is browsed again, once, after the waiting ones
@@ -79,6 +86,33 @@ def reset_state() -> None:
     global _paused_until
     _paused_until = 0.0
     _busy_strikes.clear()
+
+
+#: The artists (MusicBrainz ids) being added in this process now, and a lock per id: a second request for the same
+#: artist waits for the first and then finds it complete. nexcrate runs one process.
+_adding_guard = threading.Lock()
+_adding_locks: dict[str, threading.Lock] = {}
+_adding_now: set[str] = set()
+
+
+@contextmanager
+def adding(mbid: str) -> Iterator[None]:
+    """While an artist is being added here: others for the same id wait, and ``drop_left_adds`` leaves it alone."""
+    with _adding_guard:
+        lock = _adding_locks.setdefault(mbid, threading.Lock())
+    with lock:
+        with _adding_guard:
+            _adding_now.add(mbid)
+        try:
+            yield
+        finally:
+            with _adding_guard:
+                _adding_now.discard(mbid)
+
+
+def being_added(mbid: str) -> bool:
+    with _adding_guard:
+        return mbid in _adding_now
 
 
 def paused() -> bool:
@@ -131,6 +165,9 @@ def next_artist(db: OrmSession, moment: datetime) -> Artist | None:
 
 def queue(db: OrmSession, artist: Artist, priority: int) -> None:
     """Put an artist (back) into the queue: for "refresh now" (decision 39), a waiting page, a due refresh."""
+    if artist.load_state == ADDING:
+        # Its adding goes on to ``releases`` itself; the queue would browse it a second time meanwhile.
+        return
     if artist.load_state not in UNFINISHED:
         # Various Artists has no catalogue to browse: only the releases of its samplers are loaded.
         artist.load_state = "releases" if artist.is_various else "queued"
@@ -454,9 +491,31 @@ def work(db: OrmSession, artist: Artist, *, budget_end: float) -> None:
         _fail(db, artist, "music_load_failed", now())
 
 
+def drop_left_adds() -> int:
+    """Take away the artists whose adding broke off (a locked database, an error, a restart) and nobody finishes:
+    the request that added them failed, so the library shows none of it. A new request for one adds it again, or goes
+    on with it when it comes first (``routers.music._create_artist``). Returns how many."""
+    with SessionLocal() as db:
+        if db.scalar(select(Artist.id).where(Artist.load_state == ADDING).limit(1)) is None:
+            return 0
+        # The write lock first: an adding that starts now waits for it, and one registered before is seen below.
+        store.take_write_lock(db)
+        left = list(db.scalars(select(Artist).where(Artist.load_state == ADDING)))
+        dropped = 0
+        for artist in left:
+            if being_added(artist.mbid):
+                continue
+            albums, _versions = store.remove_artist(db, artist)
+            logger.info("Artist %d was left half added; it is taken away with %d albums", artist.id, albums)
+            dropped += 1
+        db.commit()
+        return dropped
+
+
 def run_job() -> None:
-    """The job: artists in order until the budget is spent. Nothing to do costs one query."""
+    """The job: artists in order until the budget is spent. Nothing to do costs two small queries."""
     try:
+        drop_left_adds()
         _run()
     except OperationalError as exc:
         if not mb.database_busy(exc):

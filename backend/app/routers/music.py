@@ -17,7 +17,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as OrmSession
 
@@ -630,6 +630,13 @@ async def preview_artist(payload: ArtistIn) -> ArtistPreview:
     )
 
 
+#: Release groups one transaction of adding an artist writes, and albums one watches. ⚠️ Until 26.09.2026 adding an
+#: artist wrote its whole catalogue in one transaction: 1.5 s for 700 release groups alone, 11 s on the owner's instance
+#: under load ("A write held the database for 11.0 s; it began in routers/music.py _create_artist_once"), and every
+#: other writer waited, requests of other programs up to ``database_busy``.
+ADD_CHUNK = 100
+
+
 def _create_artist(
     data: mb.ArtistData,
     groups: list[mb.ReleaseGroupData],
@@ -638,23 +645,31 @@ def _create_artist(
     types: list[str] | None = None,
     mark: Callable[[OrmSession, Artist, datetime], None] | None = None,
 ) -> tuple[dict[str, Any], bool]:
-    """The artist with every group as a title and the watched albums as versions, in one transaction.
+    """The artist with every group as a title and the watched albums as versions, in short transactions of
+    ``ADD_CHUNK`` each.
 
-    ``mark`` lets ``/api/v1`` put its origin on a new artist and the versions made with it, in the same transaction.
+    Until the last one the artist stands in ``loading.ADDING``: the interface shows it loading, ``/api/v1`` and its
+    change list do not know it, the loading job leaves it alone, and its albums are watched only in the last
+    transaction, so the automatic plans nothing of a half catalogue. An adding that broke off goes on at the next
+    request for the artist; when none comes, the loading job takes it away (``loading.drop_left_adds``).
+
+    ``mark`` lets ``/api/v1`` put its origin on a new artist and the versions made with it.
 
     ⚠️ Two requests for the same new artist at once (nexbeat's finding 17 of 22.09.2026: two "whole artist" requests
-    ended in a 500 with ``UNIQUE constraint failed: artists.mbid``): the transaction takes SQLite's write lock before
-    it looks for the artist, so the second waits and finds the first's; a clash all the same answers with the artist.
+    ended in a 500 with ``UNIQUE constraint failed: artists.mbid``): the second waits for the first (``loading.adding``)
+    and finds its artist; every transaction takes SQLite's write lock before it reads, and a clash all the same answers
+    with the artist.
     """
-    try:
-        return _create_artist_once(data, groups, requested, monitor, types, mark)
-    except IntegrityError:
-        with SessionLocal() as db:
-            existing = store.find_artist(db, data.mbid) or store.find_artist(db, requested)
-            if existing is None:
-                raise
-            logger.info("Artist %d was added by another request at the same moment", existing.id)
-            return _summary(db, existing), False
+    with loading.adding(data.mbid):
+        try:
+            return _create_artist_once(data, groups, requested, monitor, types, mark)
+        except IntegrityError:
+            with SessionLocal() as db:
+                existing = store.find_artist(db, data.mbid) or store.find_artist(db, requested)
+                if existing is None or existing.load_state == loading.ADDING:
+                    raise
+                logger.info("Artist %d was added by another request at the same moment", existing.id)
+                return _summary(db, existing), False
 
 
 def _create_artist_once(
@@ -665,40 +680,142 @@ def _create_artist_once(
     types: list[str] | None,
     mark: Callable[[OrmSession, Artist, datetime], None] | None,
 ) -> tuple[dict[str, Any], bool]:
+    moment = utcnow()
+    artist_id, existing = _begin_artist(data, groups, requested, monitor, types, moment)
+    if existing is not None:
+        return existing, False
+    for start in range(0, len(groups), ADD_CHUNK):
+        _write_groups(artist_id, groups[start : start + ADD_CHUNK], moment)
+    albums = _albums_to_watch(artist_id, groups, monitor, moment)
+    switch_on: list[int] = []
+    for start in range(0, len(albums), ADD_CHUNK):
+        switch_on += _watch_part(artist_id, albums[start : start + ADD_CHUNK], moment, mark)
+    return _finish_artist(artist_id, groups, monitor, switch_on, moment, mark), True
+
+
+def _begin_artist(
+    data: mb.ArtistData,
+    groups: list[mb.ReleaseGroupData],
+    requested: str,
+    monitor: str,
+    types: list[str] | None,
+    moment: datetime,
+) -> tuple[int, dict[str, Any] | None]:
+    """The artist's row in ``adding``, new or left by an adding that broke off; or the summary of an artist that is
+    in the library already."""
     with SessionLocal() as db:
-        # A write first, though it matches no row: the lock is taken before anything is read (see above).
-        db.execute(
-            update(Artist).where(Artist.id < 1).values(name=Artist.name),
-            execution_options={"synchronize_session": False},
-        )
-        moment = utcnow()
+        store.take_write_lock(db)
         language = store.account_language(db)
-        definition = store.ensure_definition(db, language)
+        store.ensure_definition(db, language)
         existing = store.find_artist(db, data.mbid) or store.find_artist(db, requested)
-        if existing is not None and not existing.is_various:
+        if existing is not None and not existing.is_various and existing.load_state != loading.ADDING:
             if requested != existing.mbid and requested not in (existing.mbid_old or []):
                 # Asked for by an id MusicBrainz merged away: remember it, so the next click finds the row at once.
                 existing.mbid_old = [*(existing.mbid_old or []), requested]
                 db.commit()
-            return _summary(db, existing), False
+            return existing.id, _summary(db, existing)
         monitor_new = store.new_albums_for(monitor)
         artist, _new = store.upsert_artist(
             db, data, moment=moment, language=language, requested_mbid=requested, monitor_new=monitor_new,
             priority=loading.PRIORITY_OWNER,
         )  # fmt: skip
+        # Also when an adding that broke off goes on: this request's choice counts.
+        artist.monitor_new = monitor_new
         artist.album_types = sorted(set(types)) if types else None
-        while_making = monitor if monitor in store.WATCH_WHILE_MAKING else "none"
+        artist.load_state = loading.ADDING
+        artist.load_error = None
+        artist.load_done = 0
+        artist.load_total = max(1, (len(groups) + ADD_CHUNK - 1) // ADD_CHUNK)
+        db.commit()
+        return artist.id, None
+
+
+def _adding(db: OrmSession, artist_id: int) -> Artist:
+    """The artist being added; the owner may have removed it meanwhile (the interface shows it, loading)."""
+    artist = db.get(Artist, artist_id)
+    if artist is None or artist.load_state != loading.ADDING:
+        raise error("not_found", "This does not exist, or not any more.", 404)
+    return artist
+
+
+def _write_groups(artist_id: int, part: list[mb.ReleaseGroupData], moment: datetime) -> None:
+    """One part of the release groups as titles, nothing watched yet."""
+    with SessionLocal() as db:
+        store.take_write_lock(db)
+        artist = _adding(db, artist_id)
+        definition = store.definition(db)
         known = store.library_artists(db)
-        seen: set[str] = set()
-        for group in groups:
+        for group in part:
             store.apply_release_group(
-                db, artist, group, moment=moment, first_load=True, watch=while_making, definition=definition,
+                db, artist, group, moment=moment, first_load=True, watch="none", definition=definition,
                 artists_by_mbid=known,
             )  # fmt: skip
-            seen.add(group.mbid)
-        db.flush()
+        artist.load_done += 1
+        artist.updated_at = utcnow()
+        db.commit()
+
+
+def _albums_to_watch(artist_id: int, groups: list[mb.ReleaseGroupData], monitor: str, moment: datetime) -> list[int]:
+    """The albums the choice watches, read without the write lock. ``studio`` names every group of the artist's types
+    without a version, a joint album another artist owns too, as the groups come (decision 33); the other choices go
+    by ``store.albums_to_watch``."""
+    with SessionLocal() as db:
+        artist = _adding(db, artist_id)
         if monitor not in store.WATCH_WHILE_MAKING:
-            store.apply_choice(db, artist, monitor, moment=moment, definition=definition)
+            return [title.id for title, _version in store.albums_to_watch(db, artist, monitor, moment=moment)]
+        if monitor != "studio":
+            return []
+        wanted = [
+            group.mbid
+            for group in groups
+            if kinds.of_types(group.primary_type, group.secondary_types, artist.album_types)
+        ]
+        titles = list(db.scalars(select(Title.id).where(Title.kind == "album", Title.mbid.in_(wanted))))
+        with_version = set(db.scalars(select(Version.title_id).where(Version.title_id.in_(titles))))
+        return sorted(title_id for title_id in titles if title_id not in with_version)
+
+
+def _watch_part(
+    artist_id: int,
+    title_ids: list[int],
+    moment: datetime,
+    mark: Callable[[OrmSession, Artist, datetime], None] | None,
+) -> list[int]:
+    """One part of the albums to watch gets its version, not switched on yet: ``_finish_artist`` switches them all on
+    at once. Returns the versions to switch on."""
+    with SessionLocal() as db:
+        store.take_write_lock(db)
+        artist = _adding(db, artist_id)
+        definition = store.ensure_definition(db, store.account_language(db))
+        switch_on: list[int] = []
+        for title in db.scalars(select(Title).where(Title.id.in_(title_ids))):
+            version = store.album_version(db, title.id)
+            if version is None:
+                version = store.add_version(db, title, definition, moment, monitored=False)
+            if not version.monitored:
+                switch_on.append(version.id)
+        if mark is not None:
+            mark(db, artist, moment)
+        db.commit()
+        return switch_on
+
+
+def _finish_artist(
+    artist_id: int,
+    groups: list[mb.ReleaseGroupData],
+    monitor: str,
+    switch_on: list[int],
+    moment: datetime,
+    mark: Callable[[OrmSession, Artist, datetime], None] | None,
+) -> dict[str, Any]:
+    """The last transaction: the albums are watched, and the artist leaves ``adding`` for its releases."""
+    with SessionLocal() as db:
+        store.take_write_lock(db)
+        artist = _adding(db, artist_id)
+        for version in db.scalars(select(Version).where(Version.id.in_(switch_on))):
+            version.monitored = True
+            version.state = store.state_of(version)
+            version.updated_at = moment
         if mark is not None:
             mark(db, artist, moment)
         artist.groups_total = len(groups)
@@ -710,7 +827,7 @@ def _create_artist_once(
         artist.updated_at = moment
         db.commit()
         logger.info("Artist %d added: %s, %d release groups, watching %s", artist.id, artist.name, len(groups), monitor)
-        return _summary(db, artist), True
+        return _summary(db, artist)
 
 
 @router.post(
@@ -1056,22 +1173,7 @@ def remove_artist(db: DbSession, artist_id: int) -> ArtistRemoved:
     if artist.is_various:
         # The collection point of every sampler (decision 35) stays; a sampler goes like any other title.
         raise error("invalid_input", "The input is not valid.", 422, fields=["artist_id"])
-    titles = list(db.scalars(select(Title).where(Title.kind == "album", Title.artist_id == artist.id)))
-    albums = 0
-    versions = 0
-    for title in titles:
-        other = db.scalar(
-            select(store.AlbumArtist.artist_id)
-            .where(store.AlbumArtist.title_id == title.id, store.AlbumArtist.artist_id != artist.id)
-            .order_by(store.AlbumArtist.position)
-        )
-        if other is not None:
-            title.artist_id = other
-            continue
-        versions += len(list(db.scalars(select(Version.id).where(Version.title_id == title.id))))
-        db.delete(title)
-        albums += 1
-    db.delete(artist)
+    albums, versions = store.remove_artist(db, artist)
     db.commit()
     logger.info("Artist %d removed with %d albums and %d versions", artist_id, albums, versions)
     return ArtistRemoved(artist_id=artist_id, albums_removed=albums, versions_removed=versions)
