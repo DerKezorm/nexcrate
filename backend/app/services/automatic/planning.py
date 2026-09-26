@@ -34,6 +34,7 @@ the day.
 from __future__ import annotations
 
 import hashlib
+import logging
 from collections import defaultdict
 from collections.abc import Collection
 from dataclasses import dataclass
@@ -44,12 +45,14 @@ from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.orm import Session as OrmSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from ...db import SessionLocal
+from ...db import SessionLocal, database_locked
 from ...models import Download, Title, Version, VersionDefinition
 from .. import judging
 from ..downloads import store
 from ..profiles import store as profile_store
 from . import anchors, settings, upgrade_guard
+
+logger = logging.getLogger("nexcrate.automatic")
 
 REASONS = (
     "anchor",
@@ -460,19 +463,28 @@ def replan_apart(title_ids: Collection[int], now: datetime) -> tuple[int, int]:
     whose plan changed are planned again under it (``replan``), at most ``APART_CHUNK`` at a time. ⚠️ On 25.09.2026 a
     request for an artist planned its 670 albums in one transaction and held the lock for 8.4 s; a second request
     waited for it 30.7 s, gave up and answered 500.
+
+    Callers plan after their own commit. A part that meets a locked database is therefore left to the round, which
+    plans every title again in turn (``scheduler.plan_round``), instead of failing a change that is done already.
     """
     ids = sorted(set(title_ids))
     planned = changed = 0
     for start in range(0, len(ids), APART_CHUNK):
-        with SessionLocal() as db:
-            found = plans(db, ids[start : start + APART_CHUNK], now)
-        planned += len(found)
-        moved = differing(found)
-        if moved:
+        try:
             with SessionLocal() as db:
-                _counted, written = replan(db, moved, now)
-                db.commit()
-            changed += written
+                found = plans(db, ids[start : start + APART_CHUNK], now)
+            planned += len(found)
+            moved = differing(found)
+            if moved:
+                with SessionLocal() as db:
+                    _counted, written = replan(db, moved, now)
+                    db.commit()
+                changed += written
+        except Exception as exc:
+            if not database_locked(exc):
+                raise
+            logger.warning("Planning %d titles again found the database locked; the round plans them", len(ids) - start)
+            break
     return planned, changed
 
 

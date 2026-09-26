@@ -507,11 +507,13 @@ def save(
         # The connection's tags become the owner's.
         tags.release(db, source.id)
         source.updated_at = moment
-        from ..automatic import clock as automatic_clock
-        from ..automatic import planning as automatic_planning
-
-        automatic_planning.replan(db, {version.title_id for version in versions}, automatic_clock.now())
+        planned = {version.title_id for version in versions}
         db.commit()
+    from ..automatic import clock as automatic_clock
+    from ..automatic import planning as automatic_planning
+
+    # A whole Lidarr library, after the commit and in parts: not under the write lock of the takeover.
+    automatic_planning.replan_apart(planned, automatic_clock.now())
     logger.info(
         "Lidarr source %d taken over: %d versions, %d files kept, %d files missing",
         source_id,

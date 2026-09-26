@@ -486,7 +486,7 @@ function DownloadNote({ label, download }: { label: string; download: TitleDownl
     <div className={'flex flex-col gap-2 rounded-xl border p-3 text-sm ' + (urgent ? 'border-bad-500/40 bg-bad-500/10' : 'border-info-500/30 bg-info-500/5')}>
       <p className={'flex items-center gap-2 font-medium ' + (urgent ? 'text-bad-500' : 'text-info-500')}>
         <Symbol name={urgent ? 'alert' : 'download'} className="h-4 w-4 shrink-0" />
-        {downloadStateText(t, download.state)}
+        {downloadStateText(t, download.state, download.step ?? null)}
       </p>
       {client !== null && (
         <p className="flex min-w-0 items-center gap-1.5 text-xs text-mist-400">

@@ -767,6 +767,7 @@ def _work(job: Job, request: Request, run_id: int) -> dict[str, Any]:
         with SessionLocal() as db:
             kept = keep_as_is.apply(db, taken, utcnow())
             db.commit()
+        keep_as_is.plan_again(kept)
         logger.info(
             "Takeover of source %d keeps what it brought: %d movies, %d albums, %d episodes",
             job.source_id,

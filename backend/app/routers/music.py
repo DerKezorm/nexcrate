@@ -987,21 +987,26 @@ def change_artist(db: DbSession, artist_id: int, payload: ArtistPatch) -> Artist
         artist.updated_at = utcnow()
         db.commit()
     if payload.monitored is not None and payload.monitored != (artist.frozen_at is None):
-        freeze(db, artist, not payload.monitored)
+        albums = freeze(db, artist, not payload.monitored)
         db.commit()
+        planning.replan_apart(albums, utcnow())
     return ArtistSummary.model_validate(_summary(db, artist))
 
 
-def freeze(db: OrmSession, artist: Artist, frozen: bool) -> None:
+def freeze(db: OrmSession, artist: Artist, frozen: bool) -> list[int]:
     """Freeze or thaw an artist (fork 3). The albums keep their switches; the planned search
-    passes by every album of a frozen artist, so thawing brings back exactly what was watched."""
+    passes by every album of a frozen artist, so thawing brings back exactly what was watched.
+
+    Returns the artist's albums. The plan of each changes with it (a frozen artist's album is not due, a thawed one is
+    planned again): the caller commits and then plans them with ``planning.replan_apart``, in parts, not under the
+    write lock of this change.
+    """
     moment = utcnow()
     artist.frozen_at = moment if frozen else None
     artist.updated_at = moment
     albums = list(db.scalars(select(Title.id).where(Title.kind == "album", Title.artist_id == artist.id)))
-    # The plan of each album changes with it: a frozen artist's album is not due, a thawed one is planned again.
-    planning.replan(db, albums, moment)
     logger.info("Artist %d %s", artist.id, "frozen" if frozen else "thawed")
+    return albums
 
 
 @router.post(

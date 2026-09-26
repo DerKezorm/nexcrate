@@ -32,12 +32,21 @@ class Kept:
     movies: int = 0
     albums: int = 0
     episodes: int = 0
+    #: The titles whose plan may have changed; ``plan_again`` plans them after the caller's commit.
+    titles: tuple[int, ...] = ()
+
+
+def plan_again(kept: Kept) -> None:
+    """After the caller's commit: the titles ``apply`` touched are planned again in parts (``replan_apart``), not under
+    the write lock of the change, which after a takeover covers a whole library."""
+    from .automatic import clock as automatic_clock
+    from .automatic import planning as automatic_planning
+
+    automatic_planning.replan_apart(kept.titles, automatic_clock.now())
 
 
 def apply(db: OrmSession, version_ids: Collection[int], moment: datetime) -> Kept:
-    """Keep these versions' files as they are; the caller commits."""
-    from .automatic import clock as automatic_clock
-    from .automatic import planning as automatic_planning
+    """Keep these versions' files as they are; the caller commits and then calls ``plan_again``."""
     from .series import watching
 
     ids = sorted(set(version_ids))
@@ -83,8 +92,7 @@ def apply(db: OrmSession, version_ids: Collection[int], moment: datetime) -> Kep
             touched.add(version.title_id)
     if touched:
         db.flush()
-        automatic_planning.replan(db, sorted(touched), automatic_clock.now())
-    return Kept(movies=movies, albums=albums, episodes=episodes)
+    return Kept(movies=movies, albums=albums, episodes=episodes, titles=tuple(sorted(touched)))
 
 
 def arrived_since(db: OrmSession, moment: datetime, kinds: Collection[str]) -> list[int]:

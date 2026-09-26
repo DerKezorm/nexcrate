@@ -1529,7 +1529,15 @@ export type LoadBlock = 'version_fed_by_source' | 'version_no_profile' | 'versio
 export type DownloadRemoval = { remove_from_client: boolean; blocklist: boolean }
 
 /** Der aktive Download einer Fassung am Titel, mit dem Namen seines Programms. */
-export type TitleDownload = { id: number; state: DownloadState; progress: number | null; problem_code: string | null; client_name: string | null }
+/** `step` wie bei `/api/downloads` (seit 26.09.2026 auch auf der Titelseite). */
+export type TitleDownload = {
+  id: number
+  state: DownloadState
+  progress: number | null
+  problem_code: string | null
+  client_name: string | null
+  step?: DownloadStep | null
+}
 
 export type FolderMount = { path: string; free_bytes: number; total_bytes: number }
 

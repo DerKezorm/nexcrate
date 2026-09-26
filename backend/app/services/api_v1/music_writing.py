@@ -292,12 +292,13 @@ def _apply_withdraw(artist_id: int, delete_files: bool, caller: writing.Caller,
             )
             # Answer 4 of V2 for an artist: one a program brought goes when nothing of it is left.
             removing = artist.origin_key is not None and not left and fed is None
-            automatic_planning.replan(db, [title.id for title in albums], automatic_clock.now())
             db.commit()
         except BaseException:
             db.rollback()
             recycle_bin.undo(moves)
             raise
+        # Every album of the artist, after the commit and in parts (``replan_apart``), not under this write lock.
+        automatic_planning.replan_apart([title.id for title in albums], automatic_clock.now())
         if removing:
             music_router.remove_artist(db, artist_id)
     recycle_bin.tell_media_servers(folders)
@@ -320,8 +321,9 @@ def set_monitoring(raw: str, monitored: bool, new_albums: str | None, caller: wr
     with SessionLocal() as db:
         artist = artist_of(db, raw)
         changed = False
+        albums: list[int] = []
         if monitored != (artist.frozen_at is None):
-            music_router.freeze(db, artist, not monitored)
+            albums = music_router.freeze(db, artist, not monitored)
             changed = True
         if new_albums is not None and new_albums != artist.monitor_new:
             artist.monitor_new = new_albums
@@ -329,6 +331,7 @@ def set_monitoring(raw: str, monitored: bool, new_albums: str | None, caller: wr
             changed = True
         db.commit()
         artist_id = artist.id
+    automatic_planning.replan_apart(albums, automatic_clock.now())
     logger.info("Artist %d %s through key %d", artist_id, "thawed" if monitored else "frozen", caller.key_id)
     with SessionLocal() as db:
         detail = titles.detail(db, -artist_id)

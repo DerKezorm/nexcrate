@@ -446,6 +446,8 @@ def _download_brief(db: OrmSession, title_id: int, definition_id: int) -> dict[s
         "progress": row.progress,
         "problem_code": row.problem_code,
         "client_name": client.name if client is not None else None,
+        # Waiting for a free place or for the track lists, unpacking: said on the title page as on the downloads page.
+        "step": download_store.current_step(row),
     }
 
 

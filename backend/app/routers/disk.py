@@ -698,8 +698,9 @@ async def assign_folder(folder_id: int, payload: AssignIn) -> TitleDetail:
 
 def _keep(version_ids: list[int]) -> None:
     with SessionLocal() as db:
-        keep_as_is.apply(db, version_ids, utcnow())
+        kept = keep_as_is.apply(db, version_ids, utcnow())
         db.commit()
+    keep_as_is.plan_again(kept)
 
 
 @router.post(
@@ -782,6 +783,7 @@ def _with_series(kind: str, ids: list[int] | None, movie_work: Any, state: str, 
             with SessionLocal() as db:
                 kept = keep_as_is.apply(db, keep_as_is.arrived_since(db, started, ("movie", "album")), utcnow())
                 db.commit()
+            keep_as_is.plan_again(kept)
             logger.info("Disk job %s keeps what it brought: %d movies, %d albums", kind, kept.movies, kept.albums)
         return result
 

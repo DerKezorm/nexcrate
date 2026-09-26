@@ -155,6 +155,9 @@ class VersionDownload(BaseModel):
     progress: float | None = Field(description="0 to 100.")
     problem_code: str | None = Field(description="The download's problem or hint, null without one.")
     client_name: str | None = Field(description="The download client's name; null when the client was deleted.")
+    step: str | None = Field(
+        default=None, description="What filing away does right now, as `step` in /api/downloads; null otherwise."
+    )
 
 
 class VersionLocation(BaseModel):
