@@ -34,6 +34,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import bindparam, delete, func, insert, select, update
 from sqlalchemy.orm import Session as OrmSession
+from sqlalchemy.orm.attributes import set_committed_value
 
 from ... import crypto
 from ...db import SessionLocal
@@ -692,16 +693,24 @@ def prepare_undo(db: OrmSession, versions: list[Version], source_id: int) -> lis
             folder = companions_album._folder(version)
             if folder is not None:
                 removals.append(AlbumRemoval(folder, version.companion_sha256))
+    # A few statements for many albums: a statement and an object per album held the lock of an undo of 3,000 albums
+    # for 2.4 s (measured 26.09.2026).
+    ids = [version.id for version in versions]
+    cleared = {"companion_state": None, "companion_sha256": None, "companion_written_at": None, "own_since": None,
+               "files_read_at": None, "source_id": source_id}  # fmt: skip
+    for start in range(0, len(ids), 500):
+        part = ids[start : start + 500]
         db.execute(
-            delete(TrackFile).where(TrackFile.version_id == version.id),
+            delete(TrackFile).where(TrackFile.version_id.in_(part)), execution_options={"synchronize_session": False}
+        )
+        db.execute(
+            update(Version).where(Version.id.in_(part)).values(**cleared),
             execution_options={"synchronize_session": False},
         )
-        version.companion_state = None
-        version.companion_sha256 = None
-        version.companion_written_at = None
-        version.own_since = None
-        version.files_read_at = None
-        version.source_id = source_id
+    for version in versions:
+        # The rows are written; the loaded objects learn it without a statement of their own.
+        for name, value in cleared.items():
+            set_committed_value(version, name, value)
     return removals
 
 

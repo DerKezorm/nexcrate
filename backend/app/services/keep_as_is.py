@@ -20,11 +20,14 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session as OrmSession
 
-from ..models import EpisodeVersion, Title, Version
+from ..models import Download, EpisodeVersion, Title, Version
 from .downloads import store as download_store
+
+#: Versions one query reads, and SQLite's limit for an IN list with room to spare.
+_CHUNK = 500
 
 
 @dataclass(frozen=True)
@@ -46,7 +49,13 @@ def plan_again(kept: Kept) -> None:
 
 
 def apply(db: OrmSession, version_ids: Collection[int], moment: datetime) -> Kept:
-    """Keep these versions' files as they are; the caller commits and then calls ``plan_again``."""
+    """Keep these versions' files as they are; the caller commits and then calls ``plan_again``.
+
+    With few statements for many versions: one flush and two queries per version held the write lock of a kept
+    Lidarr library of 3,000 albums for 6.5 s, of 4,000 movies for 4.3 s (measured 26.09.2026). A version with a
+    download that is not finished follows it as before (``follow_version``), the others take the state of their file.
+    """
+    from .music import store as music_store
     from .series import watching
 
     ids = sorted(set(version_ids))
@@ -55,41 +64,84 @@ def apply(db: OrmSession, version_ids: Collection[int], moment: datetime) -> Kep
     movies = albums = episodes = 0
     touched: set[int] = set()
     on = watching.today()
-    for version, kind in db.execute(
-        select(Version, Title.kind)
-        .join(Title, Title.id == Version.title_id)
-        .where(Version.id.in_(ids), Version.source_id.is_(None))
-    ).tuples():
-        if kind in ("movie", "album"):
-            if not version.has_file or not version.monitored or (kind == "album" and version.state == "incomplete"):
-                continue
-            version.monitored = False
-            version.updated_at = moment
-            db.flush()
-            download_store.follow_version(db, version.title_id, version.version_definition_id, moment)
-            movies += kind == "movie"
-            albums += kind == "album"
-            touched.add(version.title_id)
-        elif kind == "series":
-            rows = list(
-                db.scalars(
-                    select(EpisodeVersion).where(
-                        EpisodeVersion.version_id == version.id,
-                        EpisodeVersion.watched.is_(True),
-                        EpisodeVersion.episode_file_id.is_not(None),
-                    )
+    loaded: list[tuple[Version, str]] = []
+    for start in range(0, len(ids), _CHUNK):
+        loaded.extend(
+            db.execute(
+                select(Version, Title.kind)
+                .join(Title, Title.id == Version.title_id)
+                .where(Version.id.in_(ids[start : start + _CHUNK]), Version.source_id.is_(None))
+            ).tuples()
+        )
+    kept = [
+        version
+        for version, kind in loaded
+        if kind in ("movie", "album")
+        and version.has_file
+        and version.monitored
+        and not (kind == "album" and version.state == "incomplete")
+    ]
+    kinds = {version.id: kind for version, kind in loaded}
+    title_ids = sorted({version.title_id for version in kept})
+    loading: set[int] = set()
+    for start in range(0, len(title_ids), _CHUNK):
+        loading.update(
+            db.scalars(
+                select(Download.title_id).where(
+                    Download.title_id.in_(title_ids[start : start + _CHUNK]),
+                    Download.state.in_(download_store.UNFINISHED_STATES),
                 )
             )
-            if not rows:
-                continue
-            for row in rows:
-                row.watched = False
-                row.set_by = "owner"
-            episodes += len(rows)
-            db.flush()
-            watching.recount(db, version, on)
-            version.updated_at = moment
-            touched.add(version.title_id)
+        )
+    following: list[Version] = []
+    for version in kept:
+        version.monitored = False
+        version.updated_at = moment
+        if version.title_id in loading:
+            following.append(version)
+        else:
+            # What ``follow_version`` gives a version with a file and no download.
+            state = "upgrade" if version.cutoff_not_met else "available"
+            if version.track_counts is not None and music_store.incomplete(version):
+                state = "incomplete"
+            version.state, version.progress, version.problem_code = state, None, None
+        movies += kinds[version.id] == "movie"
+        albums += kinds[version.id] == "album"
+        touched.add(version.title_id)
+    db.flush()
+    for version in following:
+        download_store.follow_version(db, version.title_id, version.version_definition_id, moment)
+
+    series = [version for version, kind in loaded if kind == "series"]
+    series_ids = [version.id for version in series]
+    watched_with_file = (
+        EpisodeVersion.watched.is_(True),
+        EpisodeVersion.episode_file_id.is_not(None),
+    )
+    counts: dict[int, int] = {}
+    for start in range(0, len(series_ids), _CHUNK):
+        part = series_ids[start : start + _CHUNK]
+        counts.update(
+            (version_id, int(count))
+            for version_id, count in db.execute(
+                select(EpisodeVersion.version_id, func.count())
+                .where(EpisodeVersion.version_id.in_(part), *watched_with_file)
+                .group_by(EpisodeVersion.version_id)
+            ).tuples()
+        )
+        db.execute(
+            update(EpisodeVersion)
+            .where(EpisodeVersion.version_id.in_(part), *watched_with_file)
+            .values(watched=False, set_by="owner"),
+            execution_options={"synchronize_session": False},
+        )
+    for version in series:
+        if not counts.get(version.id):
+            continue
+        episodes += counts[version.id]
+        watching.recount(db, version, on)
+        version.updated_at = moment
+        touched.add(version.title_id)
     if touched:
         db.flush()
     return Kept(movies=movies, albums=albums, episodes=episodes, titles=tuple(sorted(touched)))
