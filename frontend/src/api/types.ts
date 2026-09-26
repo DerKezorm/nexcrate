@@ -1932,12 +1932,19 @@ export type SearchAnchor = { date: string | null; kind: SearchAnchorKind; countr
 /** Ein Indexer der letzten Suche. `code` ist null, wenn er geliefert hat, sonst ein Indexer-Code. */
 export type SearchSummaryIndexer = { id: number; name: string; code: string | null }
 
+/** Wie viele Releases der letzten Suche ein Grund abgelehnt hat. */
+export type SearchSummaryRefused = { code: string; releases: number }
+
 /** Je Fassung das beste Release der letzten Suche, ohne Link, mit hoechstens fuenf Ablehnungen. */
 export type SearchSummaryVersion = {
   version_id: number
   label: string
   best_title: string | null
   codes: string[]
+  /** Wie viele Releases die Fassung nehmen darf; null in einer Zusammenfassung von vor dem 26.09.2026. */
+  fitting?: number | null
+  /** Je Grund, wie viele Releases er abgelehnt hat, der haeufigste zuerst, hoechstens zehn. */
+  refused?: SearchSummaryRefused[]
   loaded: boolean
   /** Warum das beste Release nicht geladen wurde. null, wenn es geladen wurde oder nichts dagegen sprach. */
   load_code: string | null

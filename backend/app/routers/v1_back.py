@@ -282,9 +282,14 @@ class BecauseOut(BaseModel):
     params: dict[str, Any] = Field(
         description="downloading: download_id, state, progress, remaining_seconds. problem: code, download_id. "
         "version_not_ready: reasons. held: reason, count. waiting_delay: until, release. not_released: date, kind "
-        "(digital, physical, theatrical, year). no_fitting_release: releases, codes, best, at. search_limit and "
-        "searching_soon: next_at."
+        "(digital, physical, theatrical, year). no_fitting_release: releases, codes, best, at, and since 26.09.2026 "
+        "fitting and refused as in last_search. search_limit and searching_soon: next_at."
     )
+
+
+class RefusedOut(BaseModel):
+    code: str = Field(description="The release checker's code, the upgrade check's reason or blocklisted.")
+    releases: int = Field(description="Releases refused for it.")
 
 
 class LastSearchOut(BaseModel):
@@ -293,6 +298,14 @@ class LastSearchOut(BaseModel):
     releases: int | None = Field(description="Releases of the title the search found, fitting or not.")
     best: str | None = Field(description="The name of the best release, fitting or not.")
     codes: list[str] = Field(description="Why the profile refused, as the release checker's codes.")
+    fitting: int | None = Field(
+        default=None, description="How many releases this version may take; null for a search before 26.09.2026."
+    )
+    refused: list[RefusedOut] = Field(
+        default_factory=list,
+        description="Per code how many releases it refused, most frequent first, at most 10. A release refused for "
+        "two reasons counts for both.",
+    )
     loaded: bool
     load_code: str | None = Field(description="Why nothing loaded although something fitted.")
 

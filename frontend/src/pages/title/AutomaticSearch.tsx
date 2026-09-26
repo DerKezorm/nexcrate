@@ -222,10 +222,16 @@ function Outcome({ summary }: { summary: SearchSummary }) {
 
 /**
  * Das beste Release einer Fassung aus der letzten Suche, mit seinen ersten Gruenden als kurze Wendungen ohne Zahl. Wurde
- * es nicht geladen, sagt eine Zeile warum.
+ * es nicht geladen, sagt eine Zeile warum. Darunter, seit dem 26.09.2026, wie viele Releases passten und je Grund, wie viele
+ * er abgelehnt hat: Das beste Release allein sagte bei 108 gefundenen nicht, dass keins in erlaubter Qualitaet dabei war.
  */
 function VersionResult({ version }: { version: SearchSummaryVersion }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const language = i18n.language
+  const fitting = typeof version.fitting === 'number' && Number.isFinite(version.fitting) ? version.fitting : null
+  const refused = Array.isArray(version.refused)
+    ? version.refused.filter((item) => typeof item.code === 'string' && item.code !== '' && typeof item.releases === 'number')
+    : []
   const codes = Array.isArray(version.codes) ? version.codes.filter((code) => typeof code === 'string' && code !== '').slice(0, 5) : []
   const best = typeof version.best_title === 'string' && version.best_title !== '' ? version.best_title : null
   const loaded = version.loaded === true
@@ -270,6 +276,20 @@ function VersionResult({ version }: { version: SearchSummaryVersion }) {
               <li key={`${code}-${index}`} className="flex items-start gap-2 text-sm text-mist-200">
                 <Symbol name="alert" className="mt-0.5 h-4 w-4 shrink-0 text-bad-500" />
                 <span className="min-w-0 wrap-anywhere">{rejectionPhrase(t, code)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {fitting !== null && <p className="text-sm text-mist-300">{t('title.automatic.summary.fitting', { count: fitting, value: formatNumber(fitting, language) })}</p>}
+      {refused.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-semibold text-mist-400">{t('title.automatic.summary.refusedTitle')}</p>
+          <ul aria-label={t('title.automatic.summary.refusedTitle')} className="flex flex-col gap-1">
+            {refused.map((item) => (
+              <li key={item.code} className="flex items-baseline justify-between gap-3 text-sm text-mist-200">
+                <span className="min-w-0 wrap-anywhere">{rejectionPhrase(t, item.code)}</span>
+                <span className="shrink-0 text-mist-400 tabular-nums">{t('title.automatic.summary.refusedCount', { count: item.releases, value: formatNumber(item.releases, language) })}</span>
               </li>
             ))}
           </ul>

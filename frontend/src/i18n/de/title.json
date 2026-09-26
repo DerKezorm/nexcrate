@@ -85,6 +85,11 @@
       "nothing": "Nichts gefunden",
       "loaded": "Geladen",
       "notLoaded": "Nicht geladen: {{reason}}",
+      "fitting_one": "{{value}} Release passt zu dieser Fassung.",
+      "fitting_other": "{{value}} Releases passen zu dieser Fassung.",
+      "refusedTitle": "Abgelehnt, nach Grund",
+      "refusedCount_one": "{{value}} Release",
+      "refusedCount_other": "{{value}} Releases",
       "rejection": {
         "quality_not_allowed": "Qualität nicht erlaubt",
         "score_below_minimum": "Zu wenig Punkte",
@@ -98,7 +103,14 @@
         "blocklisted": "Gesperrt",
         "unknown": "Grund: {{code}}",
         "already_imported": "Schon einmal geladen",
-        "older_than_retention": "Älter als die Aufbewahrung der Newsserver"
+        "older_than_retention": "Älter als die Aufbewahrung der Newsserver",
+        "worse_quality": "Schlechter als die vorhandene Datei",
+        "upgrades_disabled": "Verbessern ist aus",
+        "cutoff_met": "Die Datei hat die Zielqualität schon",
+        "score_not_higher": "Nicht mehr Punkte als die Datei",
+        "upgrade_until_reached": "Die Datei hat genug Punkte",
+        "step_too_small": "Zu kleiner Schritt nach oben",
+        "same_release": "Dasselbe Release wie die Datei"
       }
     },
     "series": {

@@ -36,6 +36,8 @@ def _version_result(entry: dict[str, Any], public: dict[int, str], releases: Any
         "releases": releases if isinstance(releases, int) else None,
         "best": entry.get("best_title"),
         "codes": list(entry.get("codes") or []),
+        "fitting": entry.get("fitting") if isinstance(entry.get("fitting"), int) else None,
+        "refused": [dict(item) for item in entry.get("refused") or [] if isinstance(item, dict)],
         "loaded": bool(entry.get("loaded")),
         "load_code": entry.get("load_code"),
     }
@@ -110,6 +112,8 @@ def _because(
                     "codes": result["codes"],
                     "best": result["best"],
                     "at": plan.get("last_at"),
+                    "fitting": result.get("fitting"),
+                    "refused": result.get("refused") or [],
                 },
             }
     if plan.get("reason") == "limit":

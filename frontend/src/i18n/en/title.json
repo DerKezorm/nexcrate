@@ -85,6 +85,11 @@
       "nothing": "Nothing found",
       "loaded": "Downloaded",
       "notLoaded": "Not downloaded: {{reason}}",
+      "fitting_one": "{{value}} release fits this version.",
+      "fitting_other": "{{value}} releases fit this version.",
+      "refusedTitle": "Refused, by reason",
+      "refusedCount_one": "{{value}} release",
+      "refusedCount_other": "{{value}} releases",
       "rejection": {
         "quality_not_allowed": "Quality not allowed",
         "score_below_minimum": "Too few points",
@@ -98,7 +103,14 @@
         "blocklisted": "Blocked",
         "unknown": "Reason: {{code}}",
         "already_imported": "Loaded once already",
-        "older_than_retention": "Older than the news servers keep it"
+        "older_than_retention": "Older than the news servers keep it",
+        "worse_quality": "Worse than the file there",
+        "upgrades_disabled": "Upgrades are off",
+        "cutoff_met": "The file has the target quality already",
+        "score_not_higher": "No more points than the file",
+        "upgrade_until_reached": "The file has enough points",
+        "step_too_small": "Too small a step up",
+        "same_release": "The same release as the file"
       }
     },
     "series": {

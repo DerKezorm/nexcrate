@@ -81,6 +81,8 @@ PLAN_CHUNK = 500
 DUE_BATCH = 50
 ATTEMPTS_PER_VERSION = 3
 SUMMARY_CODES = 5
+#: How many refusal codes a summary counts per version, most frequent first.
+REFUSED_CODES = 10
 #: Load refusals that belong to the release: the next fitting release may still load.
 RELEASE_CODES = frozenset(
     {
@@ -629,6 +631,43 @@ def _load(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> di
     return outcomes
 
 
+def _refusals(release: dict[str, Any], result: dict[str, Any]) -> list[str]:
+    """Why a version would not take this release: its rejection codes, the upgrade check's reason, ``blocklisted``.
+    Empty for a release it may take."""
+    codes = [rejection["code"] for rejection in result.get("rejections") or []]
+    upgrade = result.get("upgrade")
+    if result.get("accepted") and upgrade and not upgrade.get("better") and upgrade.get("reason"):
+        codes.append(upgrade["reason"])
+    if release.get("blocklisted"):
+        codes.append("blocklisted")
+    return codes
+
+
+def release_counts(entry: dict[str, Any], belonging: list[dict[str, Any]]) -> tuple[int, list[dict[str, Any]]]:
+    """How many releases of the title one version may take, and per refusal code how many it refused for that code,
+    most frequent first, then by code (at most ``REFUSED_CODES``). A release refused for two reasons counts for both.
+
+    The best release alone does not say why nothing loads: a search with 108 releases, none of them in a quality the
+    profile allows or small enough, showed one name and one reason, and looked as if the indexer had nothing.
+    """
+    version_id = entry["version_id"]
+    fitting = 0
+    refused: dict[str, int] = {}
+    for release in belonging:
+        placed = next((item for item in release.get("versions") or [] if item.get("version_id") == version_id), None)
+        result = placed.get("result") if placed is not None else None
+        if placed is None or result is None:
+            continue
+        codes = _refusals(release, result)
+        if not codes:
+            fitting += 1
+            continue
+        for code in dict.fromkeys(codes):
+            refused[code] = refused.get(code, 0) + 1
+    ordered = sorted(refused.items(), key=lambda item: (-item[1], item[0]))[:REFUSED_CODES]
+    return fitting, [{"code": code, "releases": count} for code, count in ordered]
+
+
 def best_release(entry: dict[str, Any], belonging: list[dict[str, Any]]) -> tuple[str | None, list[str]]:
     """The best release title of one version and its codes: what it would take with none, else the best ranked or the
     highest scored release with its rejection codes, the upgrade check's reason, and ``blocklisted``."""
@@ -642,12 +681,7 @@ def best_release(entry: dict[str, Any], belonging: list[dict[str, Any]]) -> tupl
             continue
         if would is not None and release["release_key"] == would:
             return release["title"], []
-        codes = [rejection["code"] for rejection in result.get("rejections") or []]
-        upgrade = result.get("upgrade")
-        if result.get("accepted") and upgrade and not upgrade.get("better") and upgrade.get("reason"):
-            codes.append(upgrade["reason"])
-        if release.get("blocklisted"):
-            codes.append("blocklisted")
+        codes = _refusals(release, result)
         rank = placed.get("rank")
         key = (
             0 if rank is not None else 1,
@@ -673,6 +707,7 @@ def summary(
         if not entry.get("has_profile"):
             continue
         best, codes = best_release(entry, belonging)
+        fitting, refused = release_counts(entry, belonging)
         loaded, load_code = outcomes.get(entry["version_id"], (False, entry.get("load_block")))
         versions.append(
             {
@@ -680,6 +715,8 @@ def summary(
                 "label": entry["label"],
                 "best_title": best,
                 "codes": codes[:SUMMARY_CODES],
+                "fitting": fitting,
+                "refused": refused,
                 "loaded": loaded,
                 "load_code": load_code,
             }
@@ -799,9 +836,28 @@ def after_search(search: search_jobs.Search) -> None:
         planning.replan(db, [title.id], now)
         db.commit()
     logger.info(
-        "Automatic search %s of title %d: %d releases of the movie, %d versions loaded",
+        "Automatic search %s of title %d: %d releases of the movie, %d versions loaded%s",
         search.search_id,
         search.title_id,
         written["releases"],
         sum(1 for loaded, _code in outcomes.values() if loaded),
+        outcome_text(written),
     )
+
+
+def outcome_text(written: dict[str, Any]) -> str:
+    """Per version of a summary, for the log line after a search: how many releases fit, why nothing loaded and the most
+    frequent refusals, as ids, counts and codes, for example "; version 1: 9 fitting, not loaded: version_fed_by_source;
+    version 2: 0 fitting, refused: 90 quality_not_allowed, 18 too_large". Empty without a version."""
+    parts: list[str] = []
+    for entry in written.get("versions") or []:
+        text = f"version {entry['version_id']}: {int(entry.get('fitting') or 0)} fitting"
+        if entry.get("loaded"):
+            text += ", loaded"
+        elif entry.get("load_code"):
+            text += f", not loaded: {entry['load_code']}"
+        refused = [f"{item['releases']} {item['code']}" for item in (entry.get("refused") or [])[:SUMMARY_CODES]]
+        if refused:
+            text += ", refused: " + ", ".join(refused)
+        parts.append(text)
+    return "; " + "; ".join(parts) if parts else ""

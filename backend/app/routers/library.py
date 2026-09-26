@@ -515,11 +515,25 @@ class SearchSummaryIndexer(BaseModel):
     code: str | None = Field(description="The indexer's error code in that search, null when it answered.")
 
 
+class SearchSummaryRefused(BaseModel):
+    code: str = Field(description="A reason of the release checker, the upgrade check or `blocklisted`.")
+    releases: int = Field(description="How many releases of the title this reason refused.")
+
+
 class SearchSummaryVersion(BaseModel):
     version_id: int
     label: str
     best_title: str | None = Field(description="The release it took or would take, else the closest one; never a link.")
     codes: list[str] = Field(description="At most 5 reasons why the best release does not fit or is no upgrade.")
+    fitting: int | None = Field(
+        default=None,
+        description="How many releases of the title this version may take; null in a summary from before 26.09.2026.",
+    )
+    refused: list[SearchSummaryRefused] = Field(
+        default_factory=list,
+        description="Per reason how many releases it refused, most frequent first, at most 10. A release refused for "
+        "two reasons counts for both.",
+    )
     loaded: bool
     load_code: str | None = Field(description="Why nothing was loaded for this version, when a code says why.")
 

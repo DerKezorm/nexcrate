@@ -86,6 +86,20 @@ export function rejectionPhrase(t: TFunction, code: string): string {
       return t('title.automatic.summary.rejection.blocklisted')
     case 'already_imported':
       return t('title.automatic.summary.rejection.already_imported')
+    case 'worse_quality':
+      return t('title.automatic.summary.rejection.worse_quality')
+    case 'upgrades_disabled':
+      return t('title.automatic.summary.rejection.upgrades_disabled')
+    case 'cutoff_met':
+      return t('title.automatic.summary.rejection.cutoff_met')
+    case 'score_not_higher':
+      return t('title.automatic.summary.rejection.score_not_higher')
+    case 'upgrade_until_reached':
+      return t('title.automatic.summary.rejection.upgrade_until_reached')
+    case 'step_too_small':
+      return t('title.automatic.summary.rejection.step_too_small')
+    case 'same_release':
+      return t('title.automatic.summary.rejection.same_release')
     default:
       return t('title.automatic.summary.rejection.unknown', { code })
   }
