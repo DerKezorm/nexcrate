@@ -18,6 +18,7 @@
     "noLimit": "ohne Grenze",
     "save": "Größen speichern",
     "saved": "Die Größen sind gespeichert. Profile von Hand wurden neu gebaut.",
+    "invalidField": "{{field}} ist nicht gültig.",
     "loading": "Größen werden geladen",
     "fromGb": "ab {{min}} GB",
     "rangeGb": "{{min}} bis {{max}} GB",

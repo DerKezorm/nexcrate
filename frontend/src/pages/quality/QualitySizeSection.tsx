@@ -1,7 +1,8 @@
+import type { TFunction } from 'i18next'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { errorText } from '../../api/client'
+import { ApiError, errorText } from '../../api/client'
 import { expertApi } from '../../api/expert'
 import type { MediaKind, QualitySizeRow } from '../../api/types'
 import { Button, FormMessage, Section, Spinner } from '../../components/ui'
@@ -11,6 +12,28 @@ import { formatGbPerHour } from '../profiles/profileText'
 /** Radarr rechnet in MB je Minute; nexcrate zeigt daneben, was das je Stunde ergibt. */
 function gbPerHour(mbPerMin: number, language: string): string {
   return formatGbPerHour((mbPerMin * 60) / 1024, language)
+}
+
+/** Welcher Spaltenschluessel zu welcher Aria-Beschriftung gehoert, in der Reihenfolge der Tabelle. */
+const FIELD_LABELS: readonly [string, string][] = [
+  ['min_mb_per_min', 'quality.sizes.minOf'],
+  ['max_mb_per_min', 'quality.sizes.maxOf'],
+  ['preferred_mb_per_min', 'quality.sizes.preferredOf'],
+]
+
+/**
+ * Die Meldung des Servers zu einer abgelehnten Groesse, mit Zeile (Qualitaet) und Spalte (Feld), wenn er sie
+ * mitschickt (#note-6, 25./26.09.2026: bei rund 90 gleich benannten Feldern sagte der Feldname allein nicht,
+ * welche der Qualitaeten gemeint war). Ohne diese Angaben bleibt es bei der allgemeinen Meldung.
+ */
+function sizesErrorText(t: TFunction, error: unknown): string {
+  if (error instanceof ApiError && error.code === 'invalid_input' && typeof error.values.quality === 'string') {
+    const fields = Array.isArray(error.values.fields) ? error.values.fields : []
+    const quality = error.values.quality
+    const labelKey = FIELD_LABELS.find(([field]) => fields.includes(field))?.[1]
+    if (labelKey !== undefined) return t('quality.sizes.invalidField', { field: t(labelKey, { quality }) })
+  }
+  return errorText(t, error)
 }
 
 function asNumber(value: string): number | null {
@@ -127,7 +150,7 @@ export function QualitySizeSection({ kind }: { kind: MediaKind }) {
         )
       ) : (
         <div className="flex flex-col gap-3">
-          {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
+          {problem !== null && <FormMessage>{sizesErrorText(t, problem)}</FormMessage>}
           <div className="overflow-x-auto rounded-xl border border-ink-700">
             <table className="w-full text-sm" aria-label={t('quality.sizes.table')}>
               <thead className="bg-ink-900 text-left text-xs text-mist-500">

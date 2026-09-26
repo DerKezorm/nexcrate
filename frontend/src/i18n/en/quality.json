@@ -18,6 +18,7 @@
     "noLimit": "no limit",
     "save": "Save sizes",
     "saved": "The sizes are saved. Profiles kept by hand were built again.",
+    "invalidField": "{{field}} is not valid.",
     "loading": "Loading the sizes",
     "fromGb": "from {{min}} GB",
     "rangeGb": "{{min}} to {{max}} GB",
