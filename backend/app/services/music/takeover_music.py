@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy import bindparam, delete, func, insert, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from ... import crypto
@@ -540,7 +540,7 @@ def save(
             if placed is None:
                 gone.append(file_id)
             else:
-                kept.append({"id": file_id, "relative_path": placed[0], "size": placed[1], "updated_at": moment})
+                kept.append({"file_id": file_id, "relative": placed[0], "file_size": placed[1]})
         # A version whose files changed after ``_prepare`` counts again below, from the rows.
         again = [
             version_id
@@ -593,7 +593,15 @@ def save(
                 execution_options={"synchronize_session": False},
             )
         if kept:
-            db.execute(update(TrackFile), kept)
+            # One plain statement for every file, the moment as a constant: lighter than the ORM's bulk update by key,
+            # which prepares every row on its own (30,000 of them in a large Lidarr library).
+            table = TrackFile.__table__
+            db.execute(
+                update(table)
+                .where(table.c.id == bindparam("file_id"))
+                .values(relative_path=bindparam("relative"), size=bindparam("file_size"), updated_at=moment),
+                kept,
+            )
         for start in range(0, len(gone), 500):
             db.execute(
                 delete(TrackFile).where(TrackFile.id.in_(gone[start : start + 500])),
