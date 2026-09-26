@@ -18,15 +18,17 @@ own; ``release.nex`` and files nexcrate does not know stay, the folder may be an
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as OrmSession
 
 from ..db import SessionLocal
@@ -48,6 +50,9 @@ from ..models import (
 )
 from . import folders
 from .downloads import files
+
+if TYPE_CHECKING:
+    from .recycle_again import Fetched
 
 logger = logging.getLogger("nexcrate.recycle_bin")
 
@@ -331,8 +336,14 @@ def history(
     )
 
 
-def _entry(title: Title, version: Version, label: str, actor: Actor, moment: datetime, **values: Any) -> RecycleEntry:
+def _entry(title: Title, version: Version, label: str, actor: Actor, moment: datetime, *,
+           file_facts: dict[str, Any], kept: dict[str, Any] | None = None, **values: Any) -> RecycleEntry:  # fmt: skip
+    """The row of one file. ``file_facts`` carries, besides the file's columns, what a restore needs to add title and
+    version again when they left the library (``recycle_again``)."""
+    from . import recycle_again
+
     return RecycleEntry(
+        file_facts={**file_facts, recycle_again.LIBRARY: recycle_again.facts(title, version, **(kept or {}))},
         deleted_at=moment,
         deleted_by=actor.kind,
         deleted_by_name=actor.name,
@@ -567,12 +578,12 @@ def _delete_album(db: OrmSession, title: Title, version: Version, label: str, sc
         return done
     root = _root(version.root_folder)
     folder = album_read.album_folder(version)
+    named = {row.track_id for row in chosen if row.track_id is not None}
+    named |= {value for row in chosen for value in row.track_ids or [] if isinstance(value, int)}
     track_refs = {
         track_id: mbid
         for track_id, mbid in db.execute(
-            select(ReleaseTrack.id, ReleaseTrack.mbid).where(
-                ReleaseTrack.id.in_({row.track_id for row in chosen if row.track_id is not None})
-            )
+            select(ReleaseTrack.id, ReleaseTrack.mbid).where(ReleaseTrack.id.in_(named))
         ).tuples()
     }
     for row in chosen:
@@ -584,7 +595,9 @@ def _delete_album(db: OrmSession, title: Title, version: Version, label: str, sc
             target = _move_into_bin(path, root, moment, result.moves)
             db.add(
                 _entry(title, version, label, actor, moment, relative_path=_relative(path, root),
-                       bin_path=_relative(target, root), size=size, file_facts=_track_file_facts(row))
+                       bin_path=_relative(target, root), size=size, file_facts=_track_file_facts(row),
+                       kept={"track": track_refs.get(row.track_id or 0),
+                             "tracks": [track_refs[value] for value in row.track_ids or [] if value in track_refs]})
             )  # fmt: skip
             result.folders.append(("music", str(path.parent)))
             done.files += 1
@@ -681,7 +694,7 @@ def delete(title_id: int, scope: Scope, actor: Actor = OWNER) -> Result:
 # --- Reading, restoring, purging ----------------------------------------------------------------------------------- #
 
 
-def _bin_file(entry: RecycleEntry) -> tuple[Path, Path] | None:
+def bin_file(entry: RecycleEntry) -> tuple[Path, Path] | None:
     """The version root as seen and the file in the bin, or None when the root is not there or the path is not in it."""
     root = _root(entry.root_folder)
     if root is None:
@@ -693,7 +706,10 @@ def _bin_file(entry: RecycleEntry) -> tuple[Path, Path] | None:
 
 
 def listed(db: OrmSession, kind: str | None = None) -> list[dict[str, Any]]:
-    """The bin, newest first. ``present`` says whether the file is still there (a share not mounted says no)."""
+    """The bin, newest first. ``present`` says whether the file is still there (a share not mounted says no);
+    ``can_add`` whether a restore could add title and version again when they left the library."""
+    from . import recycle_again
+
     query = select(RecycleEntry).order_by(RecycleEntry.deleted_at.desc(), RecycleEntry.id.desc())
     if kind is not None:
         query = query.where(RecycleEntry.kind == kind)
@@ -701,13 +717,15 @@ def listed(db: OrmSession, kind: str | None = None) -> list[dict[str, Any]]:
     out = []
     for entry in db.scalars(query):
         definition = definitions.get(entry.version_definition_id) if entry.version_definition_id else None
+        # The title the file goes back into: its own, or one of the same reference added again since.
+        title = recycle_again.find_title(db, entry)
         out.append(
             {
                 "id": entry.id,
                 "deleted_at": entry.deleted_at,
                 "deleted_by": entry.deleted_by,
                 "deleted_by_name": entry.deleted_by_name,
-                "title_id": entry.title_id,
+                "title_id": title.id if title is not None else None,
                 "kind": entry.kind,
                 "tmdb_id": entry.tmdb_id,
                 "title": entry.title_name,
@@ -720,7 +738,10 @@ def listed(db: OrmSession, kind: str | None = None) -> list[dict[str, Any]]:
                 "track_id": (entry.file_facts or {}).get("track_id") if entry.kind == "album" else None,
                 "file_name": file_name(entry.relative_path),
                 "size": entry.size,
-                "present": _bin_file(entry) is not None,
+                "present": bin_file(entry) is not None,
+                "can_add": recycle_again.can_add(db, entry, title is not None),
+                "album_mbid": recycle_again.ref_of(entry) if entry.kind == "album" else None,
+                "track_mbid": recycle_again.kept(entry).get("track") if entry.kind == "album" else None,
             }
         )
     return out
@@ -752,18 +773,26 @@ def _restore_subtitles(db: OrmSession, entry: RecycleEntry, root: Path, version:
         )
 
 
-def _target_free(root: Path, relative: str) -> Path:
+def target_free(root: Path, relative: str) -> Path:
     target = below(root, relative)
     if target is None or os.path.lexists(target):
         raise error("recycle_target_taken", "Something lies where the file was.", 409)
     return target
 
 
+def file_gone() -> Exception:
+    return error("recycle_file_gone", "The file is no longer in the recycle bin.", 409)
+
+
+def title_gone() -> Exception:
+    return error("recycle_title_gone", "The title left the library and cannot be added again.", 409)
+
+
 def _restore_movie(db: OrmSession, entry: RecycleEntry, version: Version, root: Path, source: Path, moves: list[Move],
                    moment: datetime) -> Path:  # fmt: skip
     if version.has_file:
         raise error("recycle_slot_taken", "The version has another file by now.", 409)
-    target = _target_free(root, entry.relative_path)
+    target = target_free(root, entry.relative_path)
     _move(source, target, moves)
     for name, value in (entry.file_facts or {}).items():
         if name in MOVIE_FILE_COLUMNS:
@@ -776,12 +805,18 @@ def _restore_movie(db: OrmSession, entry: RecycleEntry, version: Version, root: 
     return target
 
 
-def _restore_episode(db: OrmSession, entry: RecycleEntry, version: Version, root: Path, source: Path,
+def _restore_episode(db: OrmSession, entry: RecycleEntry, title: Title, version: Version, root: Path, source: Path,
                      moves: list[Move], moment: datetime) -> Path:  # fmt: skip
+    from . import recycle_again
     from .series import watching
 
     facts = {name: _load(value) for name, value in (entry.file_facts or {}).items()}
-    episode_ids = [int(value) for value in facts.pop("episode_ids", [])]
+    stored = [int(value) for value in facts.pop("episode_ids", [])]
+    episode_ids, found_again = recycle_again.episode_ids(db, entry, title, stored)
+    if found_again and facts.get("part") == 2:
+        # The title was added again: the second half names its episode's new row, or is a whole file without one.
+        facts["part_of_episode_id"] = episode_ids[0] if episode_ids else None
+        facts["part"] = 2 if episode_ids else None
     links = [db.get(EpisodeVersion, (episode_id, version.id)) for episode_id in episode_ids]
     second = facts.get("part") == 2
     if second:
@@ -807,7 +842,7 @@ def _restore_episode(db: OrmSession, entry: RecycleEntry, version: Version, root
         )
     ):
         raise error("recycle_target_taken", "Something lies where the file was.", 409)
-    target = _target_free(root, entry.relative_path)
+    target = target_free(root, entry.relative_path)
     _move(source, target, moves)
     row = EpisodeFile(version_id=version.id, **values)
     row.updated_at = moment
@@ -823,16 +858,21 @@ def _restore_episode(db: OrmSession, entry: RecycleEntry, version: Version, root
     return target
 
 
-def _restore_track(db: OrmSession, entry: RecycleEntry, version: Version, root: Path, source: Path,
-                   moves: list[Move], moment: datetime) -> Path:  # fmt: skip
+def _restore_track(db: OrmSession, entry: RecycleEntry, title: Title, version: Version, root: Path, source: Path,
+                   moves: list[Move], moment: datetime) -> tuple[Path, int | None]:  # fmt: skip
+    """Returns where the file went and the track it is linked to."""
+    from . import recycle_again
+
     facts = {name: _load(value) for name, value in (entry.file_facts or {}).items()}
     columns = {column.key for column in TrackFile.__table__.columns} - _TRACK_FILE_SKIP
     values = {name: value for name, value in facts.items() if name in columns}
-    track_id = values.get("track_id")
-    if track_id is not None and db.get(ReleaseTrack, track_id) is None:
-        # The track left MusicBrainz's release since; the file comes back without one, as an unknown file does.
-        values["track_id"] = None
-    elif track_id is not None and db.scalar(
+    # A track that left MusicBrainz's release since, or whose album was added again and has other rows: found by its
+    # MusicBrainz id, else the file comes back without one, as an unknown file does.
+    values["track_id"], values["track_ids"] = recycle_again.track_ids(
+        db, entry, title, values.get("track_id"), values.get("track_ids")
+    )
+    track_id = values["track_id"]
+    if track_id is not None and db.scalar(
         select(TrackFile.id).where(TrackFile.version_id == version.id, TrackFile.track_id == track_id).limit(1)
     ):
         raise error("recycle_slot_taken", "The track has another file by now.", 409)
@@ -842,7 +882,7 @@ def _restore_track(db: OrmSession, entry: RecycleEntry, version: Version, root: 
         )
     ):
         raise error("recycle_target_taken", "Something lies where the file was.", 409)
-    target = _target_free(root, entry.relative_path)
+    target = target_free(root, entry.relative_path)
     _move(source, target, moves)
     row = TrackFile(version_id=version.id, **values)
     row.updated_at = moment
@@ -850,49 +890,63 @@ def _restore_track(db: OrmSession, entry: RecycleEntry, version: Version, root: 
     db.flush()
     recount_album(db, version)
     version.updated_at = moment
-    return target
+    return target, track_id
 
 
-def restore(entry_id: int, actor: Actor = OWNER) -> dict[str, Any]:
+def restore(entry_id: int, actor: Actor = OWNER, fetched: Fetched | None = None) -> dict[str, Any]:
     """Put a file back where it was and record it again. Refuses when something lies there, the slot has another file,
-    or the title or version is gone; the file then stays in the bin."""
+    the version no longer exists, or the file is gone; the file then stays in the bin.
+
+    When the title or the version left the library they are added again first (``recycle_again``), in the same
+    transaction: the title from ``fetched``, what ``bring_back`` fetched from TMDB or MusicBrainz. Without it a missing
+    title is ``recycle_title_gone``. ``created`` in the answer says whether the title was added again.
+    """
+    from . import recycle_again
     from .automatic import clock, planning
+    from .series import folder_read
 
     moves: list[Move] = []
+    reading: list[int] = []
     with SessionLocal() as db:
         entry = db.get(RecycleEntry, entry_id)
         if entry is None:
             raise error("not_found", "This does not exist, or not any more.", 404)
-        title = db.get(Title, entry.title_id) if entry.title_id is not None else None
-        version = None
-        if title is not None and entry.version_definition_id is not None:
-            version = db.scalar(
-                select(Version).where(
-                    Version.title_id == title.id, Version.version_definition_id == entry.version_definition_id
-                )
-            )
-        if title is None or version is None:
-            raise error("recycle_title_gone", "The title or its version is no longer in the library.", 409)
-        if version.source_id is not None:
+        title = recycle_again.find_title(db, entry)
+        version = recycle_again.find_version(db, entry, title) if title is not None else None
+        if version is not None and version.source_id is not None:
             raise fed_by_source()
-        located = _bin_file(entry)
+        definition = recycle_again.definition_of(db, entry) if version is None else None
+        located = bin_file(entry)
         if located is None:
-            raise error("recycle_file_gone", "The file is no longer in the recycle bin.", 409)
+            raise file_gone()
         root, source = located
         moment = utcnow()
+        created = False
         try:
+            if title is None:
+                if fetched is None or fetched.kind != entry.kind or fetched.ref != recycle_again.ref_of(entry):
+                    raise title_gone()
+                assert definition is not None
+                title = recycle_again.add_title(db, entry, fetched, definition, moment)
+                created = True
+            if version is None:
+                assert definition is not None
+                version, read = recycle_again.add_version(db, entry, title, definition, moment)
+                if read:
+                    reading.append(version.id)
+            track_id = None
             if entry.kind == "movie":
                 target = _restore_movie(db, entry, version, root, source, moves, moment)
             elif entry.kind == "album":
-                target = _restore_track(db, entry, version, root, source, moves, moment)
+                target, track_id = _restore_track(db, entry, title, version, root, source, moves, moment)
             else:
-                target = _restore_episode(db, entry, version, root, source, moves, moment)
+                target = _restore_episode(db, entry, title, version, root, source, moves, moment)
             restored = (
                 [{"season": entry.season, "episode": number} for number in entry.episodes or []]
                 if entry.kind == "series" and entry.season is not None
                 else None
             )
-            back = _track_refs(db, entry) if entry.kind == "album" else None
+            back = _track_refs(db, track_id) if entry.kind == "album" else None
             db.add(
                 history(version, entry.version_label, "file_restored", 1, actor, moment, entry.size, restored, back)
             )
@@ -904,15 +958,35 @@ def restore(entry_id: int, actor: Actor = OWNER) -> dict[str, Any]:
             db.rollback()
             undo(moves)
             raise
-        answer = {"title_id": title.id, "kind": title.kind, "version_definition_id": version.version_definition_id}
+        answer = {
+            "title_id": title.id,
+            "kind": title.kind,
+            "version_definition_id": version.version_definition_id,
+            "created": created,
+        }
+    if reading:
+        folder_read.enqueue(reading)
     tell_media_servers([(answer["kind"], str(target.parent))])
     logger.info("Recycle entry %d restored for title %d (%s)", entry_id, answer["title_id"], actor.kind)
     return answer
 
 
-def _track_refs(db: OrmSession, entry: RecycleEntry) -> list[str]:
-    track_id = (entry.file_facts or {}).get("track_id")
-    track = db.get(ReleaseTrack, track_id) if isinstance(track_id, int) else None
+async def bring_back(entry_id: int, actor: Actor = OWNER) -> dict[str, Any]:
+    """``restore``, and when the title left the library, TMDB or MusicBrainz asked first. Everything that needs no
+    network is refused before; when they cannot answer, their error stands and nothing is added."""
+    from . import recycle_again
+
+    wanted = await asyncio.to_thread(recycle_again.missing, entry_id)
+    fetched = await recycle_again.fetch(wanted) if wanted is not None else None
+    try:
+        return await asyncio.to_thread(restore, entry_id, actor, fetched)
+    except IntegrityError:
+        # The same title was added at the same moment by another way: once more, the restore then finds it.
+        return await asyncio.to_thread(restore, entry_id, actor, fetched)
+
+
+def _track_refs(db: OrmSession, track_id: int | None) -> list[str]:
+    track = db.get(ReleaseTrack, track_id) if track_id is not None else None
     return [f"mbid:{track.mbid}"] if track is not None and track.mbid else []
 
 
@@ -960,7 +1034,7 @@ def forget_missing() -> int:
             root = _root(entry.root_folder)
             if root is None:
                 continue
-            if _bin_file(entry) is None:
+            if bin_file(entry) is None:
                 db.delete(entry)
                 removed += 1
         db.commit()

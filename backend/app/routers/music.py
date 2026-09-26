@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session as OrmSession
 from ..db import SessionLocal, set_setting
 from ..deps import DbSession
 from ..meldungen import error, error_responses
-from ..models import Artist, Release, Title, Version, utcnow
+from ..models import Artist, Release, Title, Version, VersionDefinition, utcnow
 from ..models.music import LOAD_STATES, MONITOR_NEW
 from ..services import auto_tags, images, tags
 from ..services.automatic import planning
@@ -808,29 +808,38 @@ def _create_album(group: mb.ReleaseGroupData, artists: list[mb.ArtistData]) -> t
                     loading.queue(db, artist, loading.PRIORITY_OWNER)
                 db.commit()
             return existing.id, False
-        home: Artist | None = None
-        if any(part.get("mbid") == store.VARIOUS_ARTISTS_MBID for part in group.credit):
-            home = store.various_artist(db, moment)
-        for data in artists:
-            artist, _new = store.upsert_artist(
-                db, data, moment=moment, language=language, monitor_new="none", priority=loading.PRIORITY_OWNER
-            )
-            if home is None:
-                home = artist
-            if artist.load_state == "queued" and artist.groups_refreshed_at is None:
-                # A new artist made for its album: its catalogue is not loaded, only this album (decision 34).
-                artist.load_state = "ready"
-        if home is None:
-            raise error("invalid_input", "The input is not valid.", 422, fields=["mbid"])
-        title, _new = store.apply_release_group(
-            db, home, group, moment=moment, first_load=True, watch="none", definition=definition,
-            artists_by_mbid=store.library_artists(db),
-        )  # fmt: skip
+        title = new_album(db, group, artists, moment, definition)
         store.add_version(db, title, definition, moment)
-        loading.queue(db, home, loading.PRIORITY_OWNER)
         db.commit()
         logger.info("Album %d added by hand: %s", title.id, title.title)
         return title.id, True
+
+
+def new_album(db: OrmSession, group: mb.ReleaseGroupData, artists: list[mb.ArtistData], moment: datetime,
+              definition: VersionDefinition) -> Title:  # fmt: skip
+    """A release group the library lacks as its album, without a version, and its artist's loading queued. An artist
+    of the credit that is not in the library is made with ``monitor_new`` none (decision 34). The caller commits."""
+    language = store.account_language(db)
+    home: Artist | None = None
+    if any(part.get("mbid") == store.VARIOUS_ARTISTS_MBID for part in group.credit):
+        home = store.various_artist(db, moment)
+    for data in artists:
+        artist, _new = store.upsert_artist(
+            db, data, moment=moment, language=language, monitor_new="none", priority=loading.PRIORITY_OWNER
+        )
+        if home is None:
+            home = artist
+        if artist.load_state == "queued" and artist.groups_refreshed_at is None:
+            # A new artist made for its album: its catalogue is not loaded, only this album (decision 34).
+            artist.load_state = "ready"
+    if home is None:
+        raise error("invalid_input", "The input is not valid.", 422, fields=["mbid"])
+    title, _new = store.apply_release_group(
+        db, home, group, moment=moment, first_load=True, watch="none", definition=definition,
+        artists_by_mbid=store.library_artists(db),
+    )  # fmt: skip
+    loading.queue(db, home, loading.PRIORITY_OWNER)
+    return title
 
 
 class AlbumCreated(BaseModel):

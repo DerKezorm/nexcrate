@@ -25,6 +25,7 @@ from ..services import recycle_bin, tmdb
 from ..services.api_v1 import music_writing, titles, writing
 from ..services.api_v1 import versions as v1_versions
 from ..services.downloads import store as download_store
+from ..services.music import musicbrainz as mb
 from . import library as library_router
 from .v1 import TitleOut
 
@@ -404,7 +405,7 @@ def _running_of(kind: str, ref: str) -> tuple[int, list[tuple[int, str, int | No
     description=(
         "As the button in nexcrate: nexcrate's own versions go, and the title when none is left. Its running "
         "downloads are stopped at their client first. With `delete_files` the files go into the recycle bin before; "
-        "⚠️ a title that is gone cannot take them back, so add it again first. Versions a Radarr or Sonarr connection "
+        "restoring such a file adds the title again, unwatched. Versions a Radarr or Sonarr connection "
         "feeds stay, and the answer is 409 `title_has_source_versions`."
     ),
     responses=v1_error_responses(*_TITLE_ERRORS, (409, "download_finished"), (409, "title_has_source_versions")),
@@ -460,8 +461,8 @@ class RecycleEntryOut(BaseModel):
     entry_id: int
     kind: str
     ref: str | None = Field(
-        description="`tmdb:<number>` of the title, also when it left the library; `mbid:<release group>` of an album "
-        "while it is there."
+        description="`tmdb:<number>` of the title, `mbid:<release group>` of an album, also when it left the library; "
+        "null when the entry does not know it."
     )
     name: str | None
     year: int | None
@@ -475,7 +476,13 @@ class RecycleEntryOut(BaseModel):
     deleted_by: str = Field(description="owner, or key: a program; `deleted_by_name` is then its key's name.")
     deleted_by_name: str | None
     present: bool = Field(description="False when the file is gone or its disk cannot be seen right now.")
-    in_library: bool = Field(description="False when the title or its version left the library: it cannot come back.")
+    in_library: bool = Field(
+        description="False when the title or its version left the library; restoring adds them again, unwatched."
+    )
+    restorable: bool = Field(
+        description="Whether the file can come back: it is there, and its title and version are in the library or "
+        "can be added again (the version still exists and the entry knows the title)."
+    )
 
 
 class RecycleBinOut(BaseModel):
@@ -485,11 +492,13 @@ class RecycleBinOut(BaseModel):
 def _entry_out(item: dict[str, Any], present_versions: set[tuple[int, int]], albums: dict[int, str],
                tracks: dict[int, str]) -> RecycleEntryOut:  # fmt: skip
     if item["kind"] == "album":
-        mbid = albums.get(item["title_id"] or 0)
+        mbid = albums.get(item["title_id"] or 0) or item["album_mbid"]
         ref = f"mbid:{mbid}" if mbid else None
     else:
         ref = f"tmdb:{item['tmdb_id']}" if item["tmdb_id"] else None
-    track = tracks.get(item["track_id"] or 0) if item.get("track_id") else None
+    # The track the entry kept first: the row may be gone, or its number taken by another track.
+    track = item["track_mbid"] or (tracks.get(item["track_id"] or 0) if item.get("track_id") else None)
+    in_library = (item["title_id"], item["version_definition_id"]) in present_versions
     return RecycleEntryOut(
         entry_id=item["id"],
         kind=item["kind"],
@@ -506,7 +515,8 @@ def _entry_out(item: dict[str, Any], present_versions: set[tuple[int, int]], alb
         deleted_by=item["deleted_by"],
         deleted_by_name=item["deleted_by_name"],
         present=item["present"],
-        in_library=(item["title_id"], item["version_definition_id"]) in present_versions,
+        in_library=in_library,
+        restorable=item["present"] and (in_library or item["can_add"]),
     )
 
 
@@ -544,7 +554,16 @@ def read_bin(db: DbSession, kind: Annotated[str | None, Query(max_length=16)] = 
 
 
 class RestoredOut(BaseModel):
+    created: bool = Field(
+        description="True when the title had left the library and was added again for the file: unwatched, with the "
+        "origin it had. Its `ref` is the same, its change number new."
+    )
     title: TitleOut
+
+
+def _restored_detail(title_id: int) -> dict[str, Any] | None:
+    with SessionLocal() as db:
+        return titles.detail(db, title_id)
 
 
 @router.post(
@@ -552,22 +571,28 @@ class RestoredOut(BaseModel):
     response_model=RestoredOut,
     summary="Take a file back out of the recycle bin",
     description=(
-        "The file goes back where it was and counts again. Refused when something lies there "
-        "(`recycle_target_taken`), when the version or episode has another file by now (`recycle_slot_taken`), when "
-        "the title or version left the library (`recycle_title_gone`) or when the file is gone (`recycle_file_gone`); "
-        "the file then stays in the bin."
+        "The file goes back where it was and counts again. When its title or version left the library they are added "
+        "again first, unwatched and with the `origin` they had: the title from TMDB, an album from MusicBrainz "
+        "(`created`). Refused when something lies there (`recycle_target_taken`), when the version or episode has "
+        "another file by now (`recycle_slot_taken`), when the version no longer exists (`recycle_version_gone`), when "
+        "the title cannot be added again because the entry does not know it or TMDB or MusicBrainz no longer does "
+        "(`recycle_title_gone`), when the file is gone "
+        "(`recycle_file_gone`), or when TMDB or MusicBrainz cannot answer; the file then stays in the bin and nothing "
+        "is added."
     ),
     responses=v1_error_responses(
         (404, "not_found"),
         (409, "recycle_target_taken"),
         (409, "recycle_slot_taken"),
         (409, "recycle_title_gone"),
+        (409, "recycle_version_gone"),
         (409, "recycle_file_gone"),
         (409, "version_fed_by_source"),
+        *tmdb.ERRORS,
+        *mb.ERRORS,
     ),
 )
-def restore(entry_id: int, key: RequestKey) -> RestoredOut:
-    answer = recycle_bin.restore(entry_id, _caller(key).actor)
-    with SessionLocal() as db:
-        found = titles.detail(db, answer["title_id"])
-    return RestoredOut(title=TitleOut.model_validate(found))
+async def restore(entry_id: int, key: RequestKey) -> RestoredOut:
+    answer = await recycle_bin.bring_back(entry_id, _caller(key).actor)
+    found = await asyncio.to_thread(_restored_detail, answer["title_id"])
+    return RestoredOut(created=answer["created"], title=TitleOut.model_validate(found))

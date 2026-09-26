@@ -18,7 +18,8 @@ type Asked = { kind: 'purge'; entry: RecycleBinEntry } | { kind: 'empty' } | nul
 /**
  * Was im Papierkorb liegt (Antwort 2): geloescht vom Besitzer oder von einem Programm mit
  * Schluessel. Zurueckholen legt die Datei an ihren alten Platz; endgueltig loeschen und leeren fragen vorher nach.
- * Ein Eintrag, dessen Titel weg ist, laesst sich nur noch endgueltig loeschen.
+ * Ist der Titel oder die Fassung weg, legt Zurueckholen sie wieder an, ohne Ueberwachung. Nur was sich nicht wieder
+ * anlegen laesst, kann bloss noch endgueltig geloescht werden.
  */
 export function RecycleBinList() {
   const { t, i18n } = useTranslation()
@@ -68,8 +69,8 @@ export function RecycleBinList() {
 
   const restore = (entry: RecycleBinEntry) =>
     act(entry.id, async () => {
-      await recycleApi.restore(entry.id)
-      return t('settings.files.bin.restored', { file: entry.file_name })
+      const answer = await recycleApi.restore(entry.id)
+      return answer.created ? t('settings.files.bin.restoredAdded', { file: entry.file_name }) : t('settings.files.bin.restored', { file: entry.file_name })
     })
   const purge = (entry: RecycleBinEntry) =>
     act(entry.id, async () => {
@@ -158,7 +159,7 @@ function BinRow({ entry, busy, blocked, onRestore, onPurge }: { entry: RecycleBi
   const language = i18n.language
   const name = entry.year ? `${entry.title} (${entry.year})` : entry.title
   const date = formatDateTime(entry.deleted_at, language)
-  const restorable = entry.present && entry.in_library
+  const restorable = entry.present && entry.restorable
   return (
     <li className="flex flex-col gap-2 rounded-xl border border-ink-700 bg-ink-900/60 p-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 flex-col gap-1">
@@ -181,7 +182,9 @@ function BinRow({ entry, busy, blocked, onRestore, onPurge }: { entry: RecycleBi
           {entry.deleted_by === 'key' && entry.deleted_by_name ? t('settings.files.bin.byProgram', { name: entry.deleted_by_name, date }) : t('settings.files.bin.byOwner', { date })}
         </span>
         {!entry.present && <span className="text-xs text-bad-500">{t('settings.files.bin.gone')}</span>}
-        {entry.present && !entry.in_library && <span className="text-xs text-mist-500">{t('settings.files.bin.notInLibrary')}</span>}
+        {entry.present && !entry.in_library && (
+          <span className="text-xs text-mist-500">{entry.restorable ? t('settings.files.bin.addedAgain') : t('settings.files.bin.notInLibrary')}</span>
+        )}
       </div>
       <div className="flex shrink-0 flex-wrap gap-2">
         {restorable && (

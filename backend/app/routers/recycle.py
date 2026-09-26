@@ -13,7 +13,8 @@ from sqlalchemy import select
 from ..deps import DbSession
 from ..meldungen import error, error_responses
 from ..models import Version
-from ..services import recycle, recycle_bin
+from ..services import recycle, recycle_bin, tmdb
+from ..services.music import musicbrainz as mb
 
 logger = logging.getLogger("nexcrate.recycle")
 
@@ -68,7 +69,10 @@ def update_recycle(payload: RecycleIn, db: DbSession) -> RecycleOut:
 
 class BinEntry(BaseModel):
     id: int
-    title_id: int | None = Field(description="Null when the title left the library.")
+    title_id: int | None = Field(
+        description="The title the file goes back into, also one of the same reference added again since; null when "
+        "the title left the library."
+    )
     kind: str
     title: str
     year: int | None
@@ -81,7 +85,13 @@ class BinEntry(BaseModel):
     deleted_by: str = Field(description="owner, or key: a program; `deleted_by_name` is then its key's name.")
     deleted_by_name: str | None
     present: bool = Field(description="False when the file is gone or its disk cannot be seen right now.")
-    in_library: bool = Field(description="False when the title or its version left the library: it cannot come back.")
+    in_library: bool = Field(
+        description="False when the title or its version left the library; restoring adds them again, unwatched."
+    )
+    restorable: bool = Field(
+        description="Whether the file can come back: it is there, and its title and version are in the library or "
+        "can be added again (the version still exists and the entry knows the title)."
+    )
 
 
 class BinList(BaseModel):
@@ -103,6 +113,7 @@ def list_bin(db: DbSession) -> BinList:
             select(Version.title_id, Version.version_definition_id).where(Version.title_id.in_(title_ids))
         ).tuples()
     )
+    in_library = {item["id"]: (item["title_id"], item["version_definition_id"]) in present for item in listed}
     items = [
         BinEntry(
             id=item["id"],
@@ -119,7 +130,8 @@ def list_bin(db: DbSession) -> BinList:
             deleted_by=item["deleted_by"],
             deleted_by_name=item["deleted_by_name"],
             present=item["present"],
-            in_library=(item["title_id"], item["version_definition_id"]) in present,
+            in_library=in_library[item["id"]],
+            restorable=item["present"] and (in_library[item["id"]] or item["can_add"]),
         )
         for item in listed
     ]
@@ -129,6 +141,7 @@ def list_bin(db: DbSession) -> BinList:
 class RestoredEntry(BaseModel):
     title_id: int
     kind: str
+    created: bool = Field(description="True when the title had left the library and was added again for the file.")
 
 
 _RESTORE_ERRORS = (
@@ -136,8 +149,11 @@ _RESTORE_ERRORS = (
     (409, "recycle_target_taken"),
     (409, "recycle_slot_taken"),
     (409, "recycle_title_gone"),
+    (409, "recycle_version_gone"),
     (409, "recycle_file_gone"),
     (409, "version_fed_by_source"),
+    *tmdb.ERRORS,
+    *mb.ERRORS,
 )
 
 
@@ -146,14 +162,16 @@ _RESTORE_ERRORS = (
     response_model=RestoredEntry,
     summary="Put a file back",
     description=(
-        "The file goes back where it was and counts again. Refused when something lies there, the version or episode "
-        "has another file by now, the title or version left the library, or the file is gone; it then stays in the bin."
+        "The file goes back where it was and counts again. When its title or version left the library they are added "
+        "again first, unwatched: the title from TMDB, an album from MusicBrainz. Refused when something lies there, "
+        "the version or episode has another file by now, the version no longer exists, the title cannot be added "
+        "again, or the file is gone; it then stays in the bin and nothing is added."
     ),
     responses=error_responses(*_RESTORE_ERRORS),
 )
-def restore_entry(entry_id: int) -> RestoredEntry:
-    answer = recycle_bin.restore(entry_id)
-    return RestoredEntry(title_id=answer["title_id"], kind=answer["kind"])
+async def restore_entry(entry_id: int) -> RestoredEntry:
+    answer = await recycle_bin.bring_back(entry_id)
+    return RestoredEntry(title_id=answer["title_id"], kind=answer["kind"], created=answer["created"])
 
 
 @router.delete(

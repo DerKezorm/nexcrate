@@ -1868,8 +1868,10 @@ export type RecycleBinEntry = {
   deleted_by_name: string | null
   /** false: die Datei ist weg oder ihre Platte gerade nicht zu sehen. */
   present: boolean
-  /** false: Titel oder Fassung sind nicht mehr in der Bibliothek; zurueck geht dann nichts. */
+  /** false: Titel oder Fassung sind nicht mehr in der Bibliothek; Zurueckholen legt sie dann wieder an. */
   in_library: boolean
+  /** Die Datei ist da, und Titel und Fassung stehen in der Bibliothek oder lassen sich wieder anlegen. */
+  restorable: boolean
 }
 
 export type RecycleBin = { items: RecycleBinEntry[]; size_bytes: number }

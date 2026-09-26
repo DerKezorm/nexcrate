@@ -630,11 +630,8 @@ def _create_series(data: tmdb_series.SeriesData) -> tuple[int, bool]:
         return title.id, True
 
 
-async def _create_album(mbid: str) -> tuple[int, bool]:
-    """An album from MusicBrainz, made as "Add album" in the interface makes it: with its version, and with the
-    artists of its credit that the library lacks, whose new albums are not watched (decision 34)."""
-    from ...routers import music as music_router
-
+async def _album_data(mbid: str) -> tuple[mb.ReleaseGroupData, list[mb.ArtistData]]:
+    """An album's release group with the artists of its credit, from MusicBrainz."""
     try:
         group = await mb.lookup_release_group(mbid, mb.OWNER)
         artists: list[mb.ArtistData] = []
@@ -643,26 +640,39 @@ async def _create_album(mbid: str) -> tuple[int, bool]:
             if credited and credited != music_store.VARIOUS_ARTISTS_MBID and mb.valid_mbid(credited):
                 artists.append(await mb.lookup_artist(credited, mb.OWNER))
     except mb.MusicBrainzError as exc:
-        logger.info("A request for an album failed at MusicBrainz: %s", exc.code)
+        logger.info("Reading an album at MusicBrainz failed: %s", exc.code)
         raise exc.http() from exc
-    return await asyncio.to_thread(music_router._create_album, group, artists)
+    return group, artists
 
 
-async def _fetch_and_create(kind: str, value: str) -> tuple[int, bool]:
+async def fetch(kind: str, value: str) -> Any:
+    """What a title nexcrate lacks is added from: TMDB's movie or series by its number, or an album's release group
+    with its credited artists. Raises the service's error as the API answers it; nothing is written."""
     if kind == "album":
-        return await _create_album(value)
+        return await _album_data(value)
     tmdb_id = int(value)
     token = await asyncio.to_thread(tmdb.require_token)
     locale = await asyncio.to_thread(tmdb.account_locale)
     try:
         if kind == "movie":
-            movie = await tmdb.fetch_movie(token, tmdb_id, locale)
-            return await asyncio.to_thread(_create_movie, movie)
-        series = await tmdb_series.fetch_series(token, tmdb_id, locale)
+            return await tmdb.fetch_movie(token, tmdb_id, locale)
+        return await tmdb_series.fetch_series(token, tmdb_id, locale)
     except tmdb.TmdbError as exc:
-        logger.info("A request for TMDB %s %d failed at TMDB: %s", kind, tmdb_id, exc.code)
+        logger.info("Reading TMDB %s %d failed: %s", kind, tmdb_id, exc.code)
         raise exc.http() from exc
-    return await asyncio.to_thread(_create_series, series)
+
+
+async def _fetch_and_create(kind: str, value: str) -> tuple[int, bool]:
+    data = await fetch(kind, value)
+    if kind == "album":
+        # Made as "Add album" in the interface makes it: with its version, and with the artists of its credit that
+        # the library lacks, whose new albums are not watched (decision 34).
+        from ...routers import music as music_router
+
+        return await asyncio.to_thread(music_router._create_album, *data)
+    if kind == "movie":
+        return await asyncio.to_thread(_create_movie, data)
+    return await asyncio.to_thread(_create_series, data)
 
 
 def _drop_if_empty(title_id: int) -> None:
