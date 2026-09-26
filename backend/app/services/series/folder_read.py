@@ -893,6 +893,7 @@ def _keep_now(version_ids: list[int]) -> None:
     with SessionLocal() as db:
         kept = keeping.apply(db, version_ids, utcnow())
         db.commit()
+    keeping.plan_again(kept)
     if kept.episodes:
         logger.info("Series versions %s keep what their folder holds: %d episodes", version_ids, kept.episodes)
 
