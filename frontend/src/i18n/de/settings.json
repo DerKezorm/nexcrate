@@ -503,6 +503,7 @@
       "episodes": "Staffel {{season}}, Folge {{episodes}}",
       "byOwner": "Von dir gelöscht am {{date}}",
       "byProgram": "Von {{name}} gelöscht am {{date}}",
+      "byReplace": "Beim Ablegen ersetzt am {{date}}",
       "gone": "Die Datei ist nicht mehr da oder ihre Platte gerade nicht zu sehen.",
       "notInLibrary": "Der Titel oder seine Fassung ist nicht mehr in der Bibliothek. Zurückholen geht nicht.",
       "addedAgain": "Der Titel oder seine Fassung ist nicht mehr in der Bibliothek. Zurückholen legt sie wieder an, ohne Überwachung.",

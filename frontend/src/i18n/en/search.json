@@ -12,6 +12,7 @@
     "started": "Downloading. You can follow the progress under Downloads.",
     "toDownloads": "Go to downloads",
     "blocklisted": "Blocked",
+    "titleMismatch": "Title does not fit the movie",
     "block": {
       "version_fed_by_source": "A connection feeds {{label}}. nexcrate only downloads for versions without a connection.",
       "version_no_profile": "{{label}} has no profile yet.",
@@ -34,6 +35,7 @@
       "title": "Download anyway?",
       "notFitting": "The release does not fit the profile of {{label}}.",
       "blocklisted": "The release is on the blocklist of this title. nexcrate does not download it without your confirmation.",
+      "titleMismatch": "The title in the name fits none of the movie's titles. If you download it anyway, nexcrate files it without asking again and replaces a file already there. The old one goes into the recycle bin.",
       "submit": "Download anyway",
       "noGain_one": "Brings nothing new: replaces {{value}} existing file.",
       "noGain_other": "Brings nothing new: replaces {{value}} existing files."
@@ -138,7 +140,9 @@
     "already_imported_one": "{{value}} release that episodes came from already",
     "already_imported_other": "{{value}} releases that episodes came from already",
     "older_than_retention_one": "{{value}} release older than the news servers keep it",
-    "older_than_retention_other": "{{value}} releases older than the news servers keep them"
+    "older_than_retention_other": "{{value}} releases older than the news servers keep them",
+    "title_mismatch_one": "{{value}} release whose title does not fit the movie",
+    "title_mismatch_other": "{{value}} releases whose title does not fit the movie"
   },
   "releases": {
     "title": "Releases for {{label}}",

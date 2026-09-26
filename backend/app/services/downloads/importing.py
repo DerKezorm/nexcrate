@@ -9,6 +9,11 @@
   point. Otherwise a proposal from below the mount points and the problem ``path_not_found``. A folder ``_UNPACK_`` or
   ``_FAILED_`` sends the download back to ``completed``: the next round tries again.
 * **The file:** see ``files``. A dangerous file refuses the download: its release goes on the blocklist.
+* **The names** (the owner's decision of 26.09.2026): before anything moves, the title read from the release name or
+  from the chosen video's name must fit the movie (``search.matching.name_fits``). When neither does, nothing is filed
+  and nothing replaced: the problem ``title_mismatch``, with the titles read and, as a hint only, the video's runtime
+  next to TMDB's (an extended cut runs longer). The owner files it anyway (``title_mismatch`` in ``confirmed``, also
+  when the owner loaded the release despite the warning of the search) or removes and blocks it.
 * **The target:** ``<destination>/<folder name>/<file name>``, the folder name built from the version's pattern. A
   version with a current file (``file_ref`` starting with ``nexcrate:`` or ``taken:``, its ``root_folder`` visible, the
   file below it) is upgraded into the folder of that file, as in Radarr, however deep Radarr's folder format put it.
@@ -17,7 +22,8 @@
   folders of a file that is gone are used again below that destination. Unpacking uses the same destination. Another
   file under the target name is ``import_failed`` with ``destination_exists``.
 * **Replacing:** the new file under its temporary name first, then the old file into the recycle folder of the folder
-  it lies in, then the rename.
+  it lies in, then the rename. The old file is an entry of the recycle bin (``recycle_bin``, ``deleted_by`` replaced)
+  with its subtitles and what the version knew about it, and comes back from there like a deleted one.
 * **Subtitles** (C9): once the video is in place, the recorded subtitles of the replaced file go
   into the recycle folder with it, and with the switch on the download's subtitles that belong to the movie are placed
   next to it (``subtitles.placing``). Neither ever fails the import; what fails is counted in the log.
@@ -38,6 +44,7 @@ import contextvars
 import dataclasses
 import logging
 import os
+import re
 import threading
 import time
 from collections.abc import Callable
@@ -50,11 +57,22 @@ from sqlalchemy import delete, select, update
 
 from ... import crypto
 from ...db import SessionLocal, database_locked
-from ...models import Download, DownloadClient, DownloadFile, Title, Version, VersionDefinition
+from ...models import (
+    AlternateTitle,
+    Download,
+    DownloadClient,
+    DownloadFile,
+    RecycleEntry,
+    Title,
+    Version,
+    VersionDefinition,
+)
 from .. import companions, downloaders, folder_rules, folders, judging, media, naming, recycle, releases
 from ..automatic import replacement
 from ..mediaservers import notify as mediaserver_notify
 from ..rename import guard as rename_guard
+from ..search import matching
+from ..search.model import TitleInfo, title_info
 from ..subtitles import placing as subtitle_placing
 from ..subtitles import records as subtitle_records
 from ..subtitles import settings as subtitle_settings
@@ -311,6 +329,16 @@ class Context:
     current_subtitles: tuple[tuple[int, str], ...] = ()
     #: The video the owner chose of several (decision 39), relative to the download; None to choose by size.
     chosen: str | None = None
+    #: The movie's names, for the check of the release and video names; None when the title is gone.
+    names: TitleInfo | None = None
+    #: The owner confirmed a release whose names fit none of the movie's titles: it is filed without the check.
+    names_confirmed: bool = False
+    #: The file the version records, relative to its ``root_folder``, and its subtitles, whether they are there or not:
+    #: after a stop between replacing and recording they lie in the recycle folder already (``_moved_before_a_stop``).
+    recorded_file: str | None = None
+    recorded_subtitles: tuple[tuple[int, str], ...] = ()
+    #: The paths in the recycle folder, relative to ``root_folder``, that have an entry of the bin already.
+    entered_bins: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -326,6 +354,19 @@ class Outcome:
     subtitles_gone: tuple[int, ...] = ()
     #: The media tool's answer, read before the movie moved; None: recording reads the filed movie.
     media_read: media.Read | None = None
+    #: The file the movie replaced, now in the recycle folder, for its entry in the bin.
+    replaced: Replaced | None = None
+
+
+@dataclass(frozen=True)
+class Replaced:
+    """A replaced file: its path before and in the bin relative to the folder it was filed into, its size, and its
+    subtitles that went with it (``Recycled.binned``)."""
+
+    relative_path: str
+    bin_path: str
+    size_bytes: int
+    subtitles: tuple[tuple[int, str, str], ...] = ()
 
 
 def _claim(download_id: int) -> bool:
@@ -391,9 +432,32 @@ def _load(download_id: int) -> Context | None:
         if version is not None and version.has_file and (version.file_ref or "").startswith(KNOWN_FILE_REFS):
             current, current_root, current_parts = _current(version.root_folder, version.relative_path)
         current_subtitles = subtitle_records.current_rows(db, version) if version is not None and current else []
+        recorded_file: str | None = None
+        recorded_subtitles: list[tuple[int, str]] = []
+        entered_bins: frozenset[str] = frozenset()
+        if version is not None and version.has_file and (version.file_ref or "").startswith(KNOWN_FILE_REFS):
+            recorded_file = version.relative_path or None
+            recorded_subtitles = subtitle_records.current_rows(db, version)
+            entered_bins = frozenset(
+                db.scalars(select(RecycleEntry.bin_path).where(RecycleEntry.root_folder == (version.root_folder or "")))
+            )
         chosen = db.scalar(
             select(DownloadFile.path).where(DownloadFile.download_id == row.id, DownloadFile.decision == "chosen")
         )
+        names = None
+        if title is not None:
+            alternatives = db.scalars(select(AlternateTitle.text).where(AlternateTitle.title_id == title.id))
+            names = title_info(
+                title_id=title.id,
+                title=title.title,
+                original_title=title.original_title,
+                year=title.year,
+                tmdb_id=title.tmdb_id,
+                imdb_id=title.imdb_id,
+                runtime_min=title.runtime,
+                alternative_titles=list(alternatives),
+                stored_keys=[title.search_keys, title.tmdb_search_keys],
+            )
         return Context(
             download_id=row.id,
             title_id=row.title_id,
@@ -422,6 +486,11 @@ def _load(download_id: int) -> Context | None:
             subtitles_enabled=subtitle_settings.load_enabled(db),
             current_subtitles=tuple(current_subtitles),
             chosen=chosen,
+            names=names,
+            names_confirmed="title_mismatch" in (row.confirmed or []),
+            recorded_file=recorded_file,
+            recorded_subtitles=tuple(recorded_subtitles),
+            entered_bins=entered_bins,
         )
 
 
@@ -558,6 +627,8 @@ def _file(context: Context, folder: Path, job: Path, origin: Path, source: Path,
         raise StillUnpacking
     if not files.inside(source, origin):
         raise Problem("import_failed", reason="source_outside")
+    # Nothing has moved yet: a movie of another name is never filed and never replaces the one there.
+    _check_names(context, source)
 
     release = dataclasses.replace(context.release, original_filename=Path(source.name).stem)
     if context.current_file is not None:
@@ -603,6 +674,7 @@ def _file(context: Context, folder: Path, job: Path, origin: Path, source: Path,
     except OSError as exc:
         raise Problem("import_failed", reason="transfer_failed") from exc
     recycled: Path | None = None
+    old_size = _size_of(context.current_file)
     try:
         if context.current_file is not None and os.path.lexists(context.current_file):
             recycled = files.recycle(context.current_file, folder, store.now())
@@ -624,7 +696,7 @@ def _file(context: Context, folder: Path, job: Path, origin: Path, source: Path,
         except OSError:
             logger.warning("Download %d: the copied source file could not be deleted", context.download_id)
     # The movie is in place: the old file's subtitles follow the old file, then the new ones come. Neither fails it.
-    gone = _recycle_subtitles(context, folder) if context.current_file is not None else ()
+    gone = _recycle_subtitles(context, folder) if context.current_file is not None else subtitle_placing.Recycled()
     subtitles = _place_subtitles(context, folder, job, origin, source, target, videos)
     return Outcome(
         folder=folder,
@@ -633,8 +705,50 @@ def _file(context: Context, folder: Path, job: Path, origin: Path, source: Path,
         transfer=placed.transfer,
         job=job,
         subtitles=subtitles,
-        subtitles_gone=gone,
+        subtitles_gone=gone.gone,
         media_read=answer,
+        replaced=_replaced(context, folder, recycled, old_size, gone),
+    )
+
+
+def _size_of(path: Path | None) -> int:
+    try:
+        return path.stat().st_size if path is not None and path.is_file() else 0
+    except OSError:
+        return 0
+
+
+def _replaced(
+    context: Context, folder: Path, recycled: Path | None, size: int, subtitles: subtitle_placing.Recycled
+) -> Replaced | None:
+    """What the entry of the replaced file in the bin needs; None when no file was replaced."""
+    if recycled is None or context.current_file is None:
+        return None
+    base = files.resolved(folder) or folder
+    try:
+        before = context.current_file.relative_to(base).as_posix()
+        binned = recycled.relative_to(base).as_posix()
+    except ValueError:
+        logger.warning("Download %d: the replaced movie is in the recycle folder without an entry", context.download_id)
+        return None
+    return Replaced(before, binned, size, subtitles.binned)
+
+
+def _check_names(context: Context, source: Path) -> None:
+    """The problem ``title_mismatch`` when neither the release name nor the video's name fits the movie, unless the
+    owner confirmed it. The runtimes go with it as a hint only: an extended cut runs longer than TMDB says."""
+    if context.names is None or context.names_confirmed:
+        return
+    names = (context.release.release_title, source.stem)
+    if matching.name_fits(context.names, names) is not False:
+        return
+    seconds = (_read_media(source).media or {}).get("duration_seconds")
+    raise Problem(
+        "title_mismatch",
+        parsed_release_title=releases.parse(names[0]).movie.title or None,
+        parsed_file_title=releases.parse(names[1]).movie.title or None,
+        file_runtime_min=round(seconds / 60) if isinstance(seconds, int | float) and seconds > 0 else None,
+        runtime_min=context.names.runtime_min,
     )
 
 
@@ -646,18 +760,19 @@ def _read_media(path: Path) -> media.Read:
 # --- Subtitles (C9) ------------------------------------------------------------------------ #
 
 
-def _recycle_subtitles(context: Context, folder: Path) -> tuple[int, ...]:
-    """The recorded subtitles of the replaced file into the recycle folder, as the file went. Returns the rows that go.
+def _recycle_subtitles(context: Context, folder: Path) -> subtitle_placing.Recycled:
+    """The recorded subtitles of the replaced file into the recycle folder, as the file went. Returns what went: the
+    rows that go and the files moved.
 
     ⚠️ Never fails the import: the new movie is in place already. A subtitle that cannot be moved stays with its row.
     """
     if not context.current_subtitles:
-        return ()
+        return subtitle_placing.Recycled()
     try:
         recycled = subtitle_placing.recycle(context.current_subtitles, folder, store.now())
     except Exception:  # noqa: BLE001 - the movie is in place; its old subtitles must not undo the import
         logger.warning("Download %d: the subtitle files of the old file could not be handled", context.download_id)
-        return ()
+        return subtitle_placing.Recycled()
     if recycled.moved or recycled.missing:
         logger.info(
             "Download %d: %d subtitle files of the old file went into the recycle folder, %d were gone already",
@@ -671,7 +786,7 @@ def _recycle_subtitles(context: Context, folder: Path) -> tuple[int, ...]:
             context.download_id,
             recycled.failed,
         )
-    return recycled.gone
+    return recycled
 
 
 def _place_subtitles(
@@ -765,6 +880,8 @@ def _record_import(context: Context, outcome: Outcome) -> bool:
         replaced = None
         if version is not None and version.has_file:
             replaced = {"quality": version.quality, "size_bytes": version.size}
+        if version is not None and version.source_id is None and outcome.replaced is not None:
+            _bin_entry(db, row, version, outcome, moment)
         if version is not None and version.source_id is None:
             version.has_file = True
             version.file_ref = f"nexcrate:{row.id}"
@@ -807,6 +924,84 @@ def _record_import(context: Context, outcome: Outcome) -> bool:
     if version_id is not None:
         _write_companion(context.download_id, version_id)
     return True
+
+
+#: A day folder of the recycle folder, as ``files.recycle`` names it.
+_DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def _day_folders(folder: Path) -> list[Path]:
+    """The day folders of the recycle folder of ``folder``, newest first. The daily cleanup keeps them for the recycle
+    time, so a round days after a stop still finds what the stop left there."""
+    root = folder / files.RECYCLE_FOLDER
+    if not root.is_dir() or files.is_link(root):
+        return []
+    days = [entry for entry in root.iterdir() if _DAY.fullmatch(entry.name) and entry.is_dir()]
+    return sorted((day for day in days if not files.is_link(day)), key=lambda day: day.name, reverse=True)
+
+
+def _in_recycle_folder(folder: Path, relative: str, entered: frozenset[str], days: list[Path]) -> Path | None:
+    """The newest copy of a file ``files.recycle`` moved into one of the ``days`` of the recycle folder of ``folder``
+    and that has no entry of the bin yet: its own name, or with the number a later file of that name got
+    ("name (2).mkv")."""
+    parts = [part for part in relative.replace("\\", "/").split("/") if part]
+    if not parts or any(part in (".", "..") for part in parts):
+        return None
+    for day in days:
+        candidate = day.joinpath(*parts)
+        copies = [candidate]
+        counter = 2
+        while (other := candidate.with_name(f"{candidate.stem} ({counter}){candidate.suffix}")).is_file():
+            copies.append(other)
+            counter += 1
+        for found in reversed(copies):
+            if not found.is_file() or files.is_link(found) or not files.strictly_inside(found, folder):
+                continue
+            if found.relative_to(folder).as_posix() not in entered:
+                return found
+    return None
+
+
+def _moved_before_a_stop(context: Context, folder: Path, target: Path) -> Replaced | None:
+    """The replaced file, when a stop came after it went into the recycle folder and before the import was recorded:
+    the version still records it, it is no longer where it lay (or the new movie lies there under the same name), and
+    the recycle folder holds it. None otherwise."""
+    relative = context.recorded_file
+    if not relative:
+        return None
+    base = files.resolved(folder) or folder
+    old = base.joinpath(*[part for part in relative.replace("\\", "/").split("/") if part])
+    if os.path.lexists(old) and files.resolved(old) != files.resolved(target):
+        return None
+    binned = _in_recycle_folder(base, relative, context.entered_bins, _day_folders(base))
+    if binned is None:
+        return None
+    # The subtitles went into the same day folder, right after the movie.
+    day = [base / files.RECYCLE_FOLDER / binned.relative_to(base / files.RECYCLE_FOLDER).parts[0]]
+    subtitles = tuple(
+        (row_id, before, found.relative_to(base).as_posix())
+        for row_id, before in context.recorded_subtitles
+        if (found := _in_recycle_folder(base, before, context.entered_bins, day)) is not None
+    )
+    return Replaced(relative, binned.relative_to(base).as_posix(), _size_of(binned), subtitles)
+
+
+def _bin_entry(db: Any, row: Download, version: Version, outcome: Outcome, moment: datetime) -> None:
+    """The replaced file's entry in the recycle bin, with what the version knew about it, before the new file is
+    recorded. Its paths count from the version's ``root_folder`` as stored, the folder the old file lay below."""
+    from .. import recycle_bin
+
+    replaced, title = outcome.replaced, db.get(Title, row.title_id)
+    if replaced is None or title is None:
+        return
+    root = files.resolved(version.root_folder) if version.root_folder else None
+    if root is None or root != files.resolved(outcome.folder):
+        logger.warning("Download %d: the replaced movie is in the recycle folder without an entry", row.id)
+        return
+    recycle_bin.replaced_movie(
+        db, title, version, row.version_label, moment, relative_path=replaced.relative_path,
+        bin_path=replaced.bin_path, size=replaced.size_bytes, subtitles=replaced.subtitles,
+    )  # fmt: skip
 
 
 def _apply_media(version: Version, row: Download, outcome: Outcome, moment: datetime) -> None:
@@ -938,16 +1133,28 @@ def _adopt(context: Context) -> Outcome | None:
             except OSError:
                 logger.info("Download %d: a temporary movie of a stopped round stays unfinished", context.download_id)
         if _same_size(target, size):
+            recycled: Path | None = None
+            old_size = _size_of(context.current_file)
             if (
                 context.current_file is not None
                 and os.path.lexists(context.current_file)
                 and files.resolved(context.current_file) != files.resolved(target)
             ):
                 try:
-                    files.recycle(context.current_file, folder, store.now())
+                    recycled = files.recycle(context.current_file, folder, store.now())
                 except (OSError, files.FileProblem):
                     logger.warning("Download %d: the replaced movie stays in place", context.download_id)
-            gone = _recycle_subtitles(context, folder) if context.current_file is not None else ()
+            gone = (
+                _recycle_subtitles(context, folder) if context.current_file is not None else subtitle_placing.Recycled()
+            )
+            replaced = _replaced(context, folder, recycled, old_size, gone)
+            gone_rows = gone.gone
+            if replaced is None and recycled is None:
+                # The stop came after the old file went into the recycle folder: it and its subtitles are found there.
+                moved = _moved_before_a_stop(context, folder, target)
+                if moved is not None:
+                    replaced = moved
+                    gone_rows = (*gone_rows, *(row_id for row_id, _before, _binned in moved.subtitles))
             subtitles: tuple[subtitle_placing.Placed, ...] = ()
             if job is not None:
                 subtitles = _place_subtitles(context, folder, job, job, job / Path(named).name, target, 1)
@@ -959,7 +1166,8 @@ def _adopt(context: Context) -> Outcome | None:
                 transfer="hardlink" if context.protocol == "torrent" else "move",
                 job=job or folder,
                 subtitles=subtitles,
-                subtitles_gone=gone,
+                subtitles_gone=gone_rows,
+                replaced=replaced,
             )
         if source_there and os.path.lexists(partial) and not files.is_link(partial):
             try:

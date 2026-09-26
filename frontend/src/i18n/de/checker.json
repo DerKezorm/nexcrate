@@ -54,7 +54,8 @@
     "protocol_disabled_usenet": "Die Fassung nutzt kein Usenet (Protokoll und Wartezeit).",
     "protocol_disabled_torrent": "Die Fassung nutzt keine Torrents (Protokoll und Wartezeit).",
     "unknown": "Passt nicht, Grund: {{code}}",
-    "older_than_retention": "Das Release ist {{age}} Tage alt. Die Newsserver deiner Usenet-Programme halten Artikel nur {{retention}} Tage."
+    "older_than_retention": "Das Release ist {{age}} Tage alt. Die Newsserver deiner Usenet-Programme halten Artikel nur {{retention}} Tage.",
+    "title_mismatch": "Titel passt nicht zum Film: Der Name sagt „{{title}}“. Vielleicht führt der Indexer einen anderen Film unter dieser Kennung."
   },
   "upgrade": {
     "current": "Vorhanden: {{quality}} mit {{score}} Punkten.",

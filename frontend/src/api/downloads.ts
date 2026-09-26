@@ -32,6 +32,8 @@ export const downloadsApi = {
     request<void>('DELETE', `/downloads/${id}?remove_from_client=${String(removal.remove_from_client)}&blocklist=${String(removal.blocklist)}`),
   /** Nur bei `problem` und `completed`, sonst 409 `download_not_retryable`. */
   retry: (id: number) => api.post<Download>(`/downloads/${id}/retry`),
+  /** Seit 26.09.2026: "Trotzdem ablegen" beim Problem `title_mismatch`. */
+  fileAnyway: (id: number) => api.post<Download>(`/downloads/${id}/retry`, { confirm: ['title_mismatch'] }),
   /** Nimmt einen fehlgeschlagenen Download von den Problemen. Er bleibt im Verlauf. 409 `download_not_failed`. */
   clear: (id: number) => api.post<Download>(`/downloads/${id}/clear`),
   /** Uebernimmt die vorgeschlagene Zuordnung ins Programm und versucht es erneut. 409 `mapping_not_proposed`. */

@@ -34,7 +34,8 @@ class RecycleEntry(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     deleted_at: Mapped[datetime] = mapped_column(default=utcnow, index=True)
-    #: ``owner`` or ``key``; with ``key`` the key's name stands in ``deleted_by_name``.
+    #: ``owner``, ``key`` or ``replaced`` (an import put a new file in its place); with ``key`` the key's name stands
+    #: in ``deleted_by_name``.
     deleted_by: Mapped[str] = mapped_column(String(16))
     deleted_by_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     title_id: Mapped[int | None] = mapped_column(

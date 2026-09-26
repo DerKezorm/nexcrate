@@ -16,7 +16,7 @@ import { percentOf } from '../../lib/states'
 import { DOWNLOADS_PATH, DOWNLOADS_PROBLEMS_PATH, DOWNLOADS_WAITING_PATH } from '../downloads/address'
 import { downloadStateText, isRunning, problemReasonText } from '../downloads/downloadText'
 import { seriesOriginText, watchText } from './seriesText'
-import { fileNameOf, isFromSource, originText, scoreUpgradeOf, subtitlesOf, subtitleText, targetText } from './versionDefinitions'
+import { fileNameOf, fileOriginText, isFromSource, originText, scoreUpgradeOf, subtitlesOf, subtitleText, targetText } from './versionDefinitions'
 
 /** Warum ein Download haengt, in einem Satz. Die Codes kommen vom Server, unbekannte bekommen den allgemeinen Satz. */
 function problemText(t: TFunction, code: string | null): string {
@@ -240,6 +240,9 @@ export function VersionCard({
     { label: t('title.version.releaseGroup'), value: version.release_group },
     // Bei einer Serie ist das der Serienordner; er steht schon in der Zeile zum Ort.
     { label: t('title.version.path'), value: series ? null : version.relative_path, mono: true },
+    // Seit 26.09.2026: der Release, aus dem die Datei kam, und woher sie kam. So findet man eine falsche Datei spaeter.
+    { label: t('title.version.release'), value: series ? null : (version.release_title ?? null), mono: true },
+    { label: t('title.version.fileOrigin'), value: series ? null : fileOriginText(t, version) },
   ].filter((row) => row.value)
 
   return (

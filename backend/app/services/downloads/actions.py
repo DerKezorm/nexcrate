@@ -4,7 +4,8 @@
   unreachable client included), ``history`` imported, failed and removed. Newest first: active and problems by the
   time of loading, history by the last change.
 * **Retry** is for ``problem`` and ``completed``. A problem the client reported before the download finished goes back
-  to the client (tracking asks again soon); any other goes back to the import.
+  to the client (tracking asks again soon); any other goes back to the import. With ``title_mismatch`` confirmed the
+  import files a movie whose names fit none of its titles ("file it anyway").
 * **Confirming a mapping** stores the proposal of a ``path_not_found`` problem on the client, once, and imports again.
   ⚠️ The local side must still be a visible folder.
 * **Removing** a download that is not finished: with ``remove_from_client`` the client drops the job with its files
@@ -131,7 +132,9 @@ def clear(download_id: int) -> dict[str, Any]:
         return store.outs(db, [row])[0]
 
 
-def retry(download_id: int) -> dict[str, Any]:
+def retry(download_id: int, confirm: list[str] | None = None) -> dict[str, Any]:
+    """``confirm`` title_mismatch: the owner files a movie download whose names fit none of the movie's titles all the
+    same, the decision "file it anyway" of the problem ``title_mismatch``."""
     moment = store.now()
     with SessionLocal() as db:
         row = db.get(Download, download_id)
@@ -146,6 +149,9 @@ def retry(download_id: int) -> dict[str, Any]:
                 409,
             )
         back_to_client = row.state == "problem" and row.completed_at is None
+        if "title_mismatch" in (confirm or []) and "title_mismatch" not in (row.confirmed or []):
+            # A new list: a JSON column changed in place is not written.
+            row.confirmed = [*(row.confirmed or []), "title_mismatch"]
         row.state = "downloading" if back_to_client else "completed"
         row.problem_code, row.problem_values, row.missing_count = None, None, 0
         row.updated_at = moment

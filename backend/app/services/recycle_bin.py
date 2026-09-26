@@ -12,6 +12,11 @@ of them is asked for. An album's files go one by one, the whole album or the tra
 own; ``release.nex`` and files nexcrate does not know stay, the folder may be another album's too
 . The album stays watched and is ``incomplete`` afterwards, as in Lidarr.
 
+A movie file the import replaced is an entry too (``replaced_movie``, ``deleted_by`` replaced, since 26.09.2026), so a
+replacement can be undone: before, the old file lay in the recycle folder unseen. It comes back once the version's new
+file went into the bin; until then the version has another file (``recycle_slot_taken``). Episode and track files an
+import replaced still go into the recycle folder without an entry.
+
 ⚠️ Files move before the commit. When a later step fails, what moved is moved back and nothing is written.
 ⚠️ Log lines carry ids and counts, never a title, a path or a name.
 """
@@ -92,6 +97,9 @@ class Actor:
 
 
 OWNER = Actor()
+#: The import replaced the file with a new one (``deleted_by`` replaced). Before 26.09.2026 such a file went into the
+#: recycle folder without an entry: invisible here, and back only by hand.
+REPLACED = Actor("replaced")
 
 
 @dataclass(frozen=True)
@@ -374,6 +382,42 @@ def _subtitle(row: ExtraFile, base: Path, root: Path, moment: datetime, moves: l
         "forced": bool(row.forced),
         "sdh": bool(row.sdh),
     }
+
+
+def replaced_movie(
+    db: OrmSession,
+    title: Title,
+    version: Version,
+    label: str,
+    moment: datetime,
+    *,
+    relative_path: str,
+    bin_path: str,
+    size: int,
+    subtitles: Iterable[tuple[int, str, str]] = (),
+) -> RecycleEntry:
+    """The entry of a movie file the import replaced and already moved into the bin, with the version's facts about it
+    as they stand before the new file is recorded. ``subtitles`` are the old file's subtitles that went with it, as
+    ``(row id, path before, path in the bin)`` below the version's root folder."""
+    facts = {name: _dump(getattr(version, name)) for name in MOVIE_FILE_COLUMNS}
+    rows = {row.id: row for row in db.scalars(select(ExtraFile).where(ExtraFile.version_id == version.id))}
+    extras = [
+        {
+            "row_path": row.relative_path,
+            "path": before,
+            "bin": binned,
+            "kind": row.kind,
+            "language": row.language,
+            "forced": bool(row.forced),
+            "sdh": bool(row.sdh),
+        }
+        for row_id, before, binned in subtitles
+        if (row := rows.get(row_id)) is not None
+    ]
+    entry = _entry(title, version, label, REPLACED, moment, relative_path=relative_path, bin_path=bin_path,
+                   size=size, extras=extras or None, file_facts=facts)  # fmt: skip
+    db.add(entry)
+    return entry
 
 
 def clear_movie_file(version: Version, moment: datetime) -> None:

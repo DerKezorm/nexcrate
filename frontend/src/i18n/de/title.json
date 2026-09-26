@@ -27,6 +27,7 @@
     "ownerFed": "Von dir hinzugefügt, jetzt aus Radarr: {{name}}",
     "owner": "Von dir hinzugefügt",
     "importGone": "Aus einem Import",
+    "takenOver": "Fassung bei der Übernahme angelegt",
     "program": "Angefragt über {{key}}",
     "programRef": "Kennung des Programms: {{origin}}"
   },
@@ -104,6 +105,7 @@
         "unknown": "Grund: {{code}}",
         "already_imported": "Schon einmal geladen",
         "older_than_retention": "Älter als die Aufbewahrung der Newsserver",
+        "title_mismatch": "Titel passt nicht zum Film",
         "worse_quality": "Schlechter als die vorhandene Datei",
         "upgrades_disabled": "Verbessern ist aus",
         "cutoff_met": "Die Datei hat die Zielqualität schon",
@@ -190,6 +192,13 @@
     "languages": "Sprachen",
     "releaseGroup": "Release-Gruppe",
     "path": "Datei",
+    "release": "Release",
+    "fileOrigin": "Herkunft der Datei",
+    "fileOrigins": {
+      "download": "Eigener Download",
+      "taken": "Bei der Übernahme mitgekommen",
+      "disk": "Auf der Platte gefunden"
+    },
     "available": "Liegt vor und passt zum Profil.",
     "downloading": "{{percent}} % geladen",
     "problemCode": "Code: {{code}}",

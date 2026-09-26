@@ -84,6 +84,7 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
   const { t } = useTranslation()
   const [dialog, setDialog] = useState<OpenDialog>(null)
   const [retrying, setRetrying] = useState(false)
+  const [filing, setFiling] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [problem, setProblem] = useState<unknown>(null)
   const info = download.problem ?? { code: '', needs_owner: urgent, values: {} }
@@ -116,6 +117,19 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
       setProblem(error)
     } finally {
       setRetrying(false)
+    }
+  }
+
+  async function fileAnyway() {
+    setFiling(true)
+    setProblem(null)
+    try {
+      await downloadsApi.fileAnyway(download.id)
+      onChanged(t('downloads.problems.filedAnyway'))
+    } catch (error) {
+      setProblem(error)
+    } finally {
+      setFiling(false)
     }
   }
 
@@ -154,6 +168,12 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
     ),
     remove: removeButton,
     removeAndBlock: removeAndBlockButton,
+    fileAnyway: isRetryable(download.state) ? (
+      <Button size="sm" onClick={() => void fileAnyway()} loading={filing} aria-label={t('downloads.actions.fileAnywayLabel', { title })}>
+        {!filing && <Symbol name="check" />}
+        {t('downloads.actions.fileAnyway')}
+      </Button>
+    ) : null,
     toTitle,
     mapping: (
       <Button size="sm" onClick={() => setDialog('mapping')} aria-label={t('downloads.actions.mappingLabel', { title })}>

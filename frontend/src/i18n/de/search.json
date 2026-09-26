@@ -12,6 +12,7 @@
     "started": "Wird geladen. Den Fortschritt siehst du unter Downloads.",
     "toDownloads": "Zu den Downloads",
     "blocklisted": "Gesperrt",
+    "titleMismatch": "Titel passt nicht zum Film",
     "block": {
       "version_fed_by_source": "{{label}} wird von einer Verbindung gefüllt. nexcrate lädt nur für Fassungen ohne Verbindung.",
       "version_no_profile": "{{label}} hat noch kein Profil.",
@@ -34,6 +35,7 @@
       "title": "Trotzdem laden?",
       "notFitting": "Das Release passt nicht zum Profil von {{label}}.",
       "blocklisted": "Das Release steht auf der Sperrliste dieses Titels. Ohne deine Bestätigung lädt nexcrate es nicht.",
+      "titleMismatch": "Der Titel im Namen passt zu keinem Titel des Films. Lädst du es trotzdem, legt nexcrate es ohne weitere Frage ab und ersetzt eine vorhandene Datei. Die alte kommt in den Papierkorb.",
       "submit": "Trotzdem laden",
       "noGain_one": "Bringt nichts Neues: ersetzt {{value}} vorhandene Datei.",
       "noGain_other": "Bringt nichts Neues: ersetzt {{value}} vorhandene Dateien."
@@ -138,7 +140,9 @@
     "already_imported_one": "{{value}} Release, aus dem schon Folgen stammen",
     "already_imported_other": "{{value}} Releases, aus denen schon Folgen stammen",
     "older_than_retention_one": "{{value}} Release, älter als die Newsserver es aufbewahren",
-    "older_than_retention_other": "{{value}} Releases, älter als die Newsserver sie aufbewahren"
+    "older_than_retention_other": "{{value}} Releases, älter als die Newsserver sie aufbewahren",
+    "title_mismatch_one": "{{value}} Release, dessen Titel nicht zum Film passt",
+    "title_mismatch_other": "{{value}} Releases, deren Titel nicht zum Film passt"
   },
   "releases": {
     "title": "Releases für {{label}}",

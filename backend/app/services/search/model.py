@@ -40,6 +40,9 @@ class TitleInfo:
     runtime_min: int | None = None
     #: The spelling keys of the title, the original title and every alternative title.
     keys: frozenset[str] = frozenset()
+    #: The title, the original title and the alternative titles as written: ``matching.title_fits`` splits them into
+    #: their parts, which the keys cannot.
+    texts: tuple[str, ...] = ()
 
 
 def title_info(
@@ -57,8 +60,11 @@ def title_info(
 ) -> TitleInfo:
     """A title with its keys: those of its texts, and stored ``|key|key|`` strings (TMDB keeps only keys)."""
     keys: set[str] = set()
+    texts: list[str] = []
     for text in (title, original_title, *alternative_titles):
         keys.update(schreibweisen.keys(text))
+        if text and text not in texts:
+            texts.append(text)
     for stored in stored_keys:
         keys.update(key for key in (stored or "").split(schreibweisen.SEPARATOR) if key)
     return TitleInfo(
@@ -71,6 +77,7 @@ def title_info(
         original_language=original_language,
         runtime_min=runtime_min,
         keys=frozenset(keys),
+        texts=tuple(texts),
     )
 
 

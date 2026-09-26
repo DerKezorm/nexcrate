@@ -69,6 +69,8 @@ export const PROBLEM_CODES = [
   'download_failed',
   // 24.09.2026: ein abgeschnittenes Video, nie abgelegt.
   'file_truncated',
+  // 26.09.2026: Weder Release- noch Videoname passt zum Film, nie abgelegt, bis du es trotzdem ablegst.
+  'title_mismatch',
 ] as const
 
 export function isKnownProblem(code: string): boolean {
@@ -165,6 +167,8 @@ export function problemReasonText(t: TFunction, code: string, client: string, va
       return typeof values.episodes === 'string' && values.episodes !== ''
         ? t('downloads.problems.reason.file_truncatedEpisodes', { episodes: values.episodes })
         : t('downloads.problems.reason.file_truncated')
+    case 'title_mismatch':
+      return t('downloads.problems.reason.title_mismatch')
     case 'no_space':
       return t('downloads.problems.reason.no_space')
     case 'gone_from_client':
@@ -242,6 +246,25 @@ function packedWhyText(t: TFunction, reason: unknown): string {
   }
 }
 
+function minutesOf(value: unknown): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null
+}
+
+/**
+ * Weder Release- noch Videoname passt zum Film: was nexcrate gelesen hat, und die Laufzeiten nur als Hinweis. Eine
+ * laengere Schnittfassung laeuft laenger; deshalb sperrt die Laufzeit nie.
+ */
+function titleMismatchWhyText(t: TFunction, values: Record<string, unknown>): string {
+  const parts = [t('downloads.problems.why.title_mismatch')]
+  const read = [values.parsed_release_title, values.parsed_file_title].filter((value): value is string => typeof value === 'string' && value !== '')
+  const titles = [...new Set(read)]
+  if (titles.length > 0) parts.push(t('downloads.problems.why.titleMismatchRead', { titles: titles.map((title) => `„${title}“`).join(', ') }))
+  const file = minutesOf(values.file_runtime_min)
+  const tmdb = minutesOf(values.runtime_min)
+  if (file !== null && tmdb !== null) parts.push(t('downloads.problems.why.titleMismatchRuntime', { file: String(file), tmdb: String(tmdb) }))
+  return parts.join(' ')
+}
+
 /** Warum, und was als Naechstes hilft. */
 export function problemWhyText(t: TFunction, problem: DownloadProblem, client: string, album = false): string {
   switch (problem.code) {
@@ -253,6 +276,8 @@ export function problemWhyText(t: TFunction, problem: DownloadProblem, client: s
       return t('downloads.problems.why.no_video')
     case 'file_truncated':
       return t('downloads.problems.why.file_truncated')
+    case 'title_mismatch':
+      return titleMismatchWhyText(t, problem.values ?? {})
     case 'no_space':
       return t('downloads.problems.why.no_space')
     case 'gone_from_client':

@@ -263,6 +263,13 @@ function ReleaseRow({
                 {t('search.load.blocklisted')}
               </Badge>
             )}
+            {/* Seit 26.09.2026: Kennung passt, Name nicht. Die Automatik nimmt es nie, von Hand nach einer Rueckfrage. */}
+            {!series && release.title_mismatch && (
+              <Badge tone="bad">
+                <Symbol name="alert" className="h-3.5 w-3.5" />
+                {t('search.load.titleMismatch')}
+              </Badge>
+            )}
             <Button
               variant="ghost"
               size="sm"

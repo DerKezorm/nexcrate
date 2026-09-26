@@ -332,6 +332,10 @@ export type TitleVersion = {
   languages: string[]
   release_group: string | null
   relative_path: string | null
+  /** Seit 26.09.2026: der Name des Releases, aus dem die Datei kam. Damit findet man eine falsche Datei spaeter. */
+  release_title?: string | null
+  /** Seit 26.09.2026: woher die Datei kam, `download` (eigener Download), `taken` (aus Radarr uebernommen), `disk`. */
+  file_origin?: 'download' | 'taken' | 'disk' | null
   source_name: string | null
   /** Ob nexcrate diese Fassung beobachtet. Aus: Es sucht nichts mehr dafuer. Ein aelterer Server schickt es nicht. */
   monitored?: boolean
@@ -1156,6 +1160,11 @@ export type SearchRelease = {
   /** false: Das Release gehoert nach Titel oder Jahr zu einem anderen Film. */
   belongs: boolean
   not_this_movie: { parsed_title: string | null; parsed_year: number | null } | null
+  /**
+   * Seit 26.09.2026: Das Release gehoert nach seiner Kennung zum Film, sein Name passt aber zu keinem Titel des Films.
+   * Die Automatik nimmt es nie; von Hand laedt es nach einer Rueckfrage.
+   */
+  title_mismatch?: { parsed_title: string | null; parsed_year: number | null } | null
   /** null bei Serien. */
   parsed: ParsedRelease | null
   versions: SearchReleaseVersion[]
@@ -1864,7 +1873,8 @@ export type RecycleBinEntry = {
   file_name: string
   size_bytes: number
   deleted_at: string
-  deleted_by: 'owner' | 'key'
+  /** Seit 26.09.2026 auch `replaced`: Beim Ablegen hat eine neue Datei sie ersetzt. */
+  deleted_by: 'owner' | 'key' | 'replaced'
   deleted_by_name: string | null
   /** false: die Datei ist weg oder ihre Platte gerade nicht zu sehen. */
   present: boolean

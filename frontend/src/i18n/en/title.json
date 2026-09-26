@@ -27,6 +27,7 @@
     "ownerFed": "Added by you, now from Radarr: {{name}}",
     "owner": "Added by you",
     "importGone": "From an import",
+    "takenOver": "Version created by the takeover",
     "program": "Requested through {{key}}",
     "programRef": "The program's reference: {{origin}}"
   },
@@ -104,6 +105,7 @@
         "unknown": "Reason: {{code}}",
         "already_imported": "Loaded once already",
         "older_than_retention": "Older than the news servers keep it",
+        "title_mismatch": "Title does not fit the movie",
         "worse_quality": "Worse than the file there",
         "upgrades_disabled": "Upgrades are off",
         "cutoff_met": "The file has the target quality already",
@@ -190,6 +192,13 @@
     "languages": "Languages",
     "releaseGroup": "Release group",
     "path": "File",
+    "release": "Release",
+    "fileOrigin": "File origin",
+    "fileOrigins": {
+      "download": "nexcrate's own download",
+      "taken": "Came with the takeover",
+      "disk": "Found on disk"
+    },
     "available": "Available and matches the profile.",
     "downloading": "{{percent}} % downloaded",
     "problemCode": "Code: {{code}}",

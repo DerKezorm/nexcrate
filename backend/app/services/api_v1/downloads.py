@@ -50,6 +50,8 @@ MESSAGES = {
     "client_error": "The download client reports an error for the download.",
     "import_failed": "Filing the download away failed.",
     "file_truncated": "A video of the download is cut off; it was not filed and replaced nothing.",
+    "title_mismatch": "Neither the release name nor the video's name fits the movie's titles; nothing was filed or "
+    "replaced. Only the owner may file it anyway.",
     "dangerous_file": "The download holds a dangerous file; it was refused and its release blocked.",
     "encrypted": "The download is protected by a password; it was refused and its release blocked.",
     "client_unreachable": "The download client cannot be reached; nexcrate keeps asking.",
@@ -92,6 +94,8 @@ def choice(code: str | None, state: str, values: dict[str, Any], scope: str | No
         "packed": _REPLACE,
         "no_video": _REPLACE,
         "file_truncated": _REPLACE,
+        # Another movie under this one's number, perhaps: a program never files it, and never replaces it by itself.
+        "title_mismatch": (("remove_and_search", "remove"), ()),
         "no_audio": _REPLACE,
         "dangerous_file": _REFUSED,
         "encrypted": _REFUSED,

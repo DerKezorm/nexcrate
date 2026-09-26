@@ -54,7 +54,8 @@
     "protocol_disabled_usenet": "The version does not use Usenet (protocol and waiting time).",
     "protocol_disabled_torrent": "The version does not use torrents (protocol and waiting time).",
     "unknown": "Does not fit, reason: {{code}}",
-    "older_than_retention": "The release is {{age}} days old. The news servers of your Usenet clients keep articles for only {{retention}} days."
+    "older_than_retention": "The release is {{age}} days old. The news servers of your Usenet clients keep articles for only {{retention}} days.",
+    "title_mismatch": "The title does not fit the movie: the name says “{{title}}”. The indexer may list another movie under this number."
   },
   "upgrade": {
     "current": "Existing: {{quality}} with {{score}} points.",

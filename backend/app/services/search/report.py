@@ -6,6 +6,10 @@ back the ``versions`` and ``releases`` parts of the ``Search`` answer ("API").
 * Every release is read once, with the title's original language and its indexer's MULTi languages.
 * A release that does not belong to the title keeps ``not_this_movie`` with the title and year read from its name,
   and is not evaluated.
+* A release that belongs by its number while the title read from its name fits none of the movie's names
+  (``matching.title_fits``) keeps ``title_mismatch`` with that title and year, and every version with a profile rejects
+  it as ``title_mismatch``: the automatic never takes it, the owner loads it after a question (the owner's decision
+  of 26.09.2026).
 * A release that belongs is evaluated for every version with a profile: the title's original language and runtime,
   the release size, its indexer flags, the version's file and the MULTi languages. A torrent with known seeders below
   its indexer's minimum also gets ``not_enough_seeders`` and does not fit, a Usenet release older than the news
@@ -74,6 +78,8 @@ def evaluate(
                 parsed_year=parsed.movie.year,
             )
             age = _age_hours(release, moment)
+            # Listed under this movie's number with another movie's name: it belongs, but no version takes it unasked.
+            mismatch = belongs and not matching.title_fits(title, parsed.movie.title, release.title)
             entry: dict[str, Any] = {
                 "release_key": key,
                 "title": release.title,
@@ -90,6 +96,9 @@ def evaluate(
                 "not_this_movie": None
                 if belongs
                 else {"parsed_title": parsed.movie.title, "parsed_year": parsed.movie.year},
+                "title_mismatch": {"parsed_title": parsed.movie.title, "parsed_year": parsed.movie.year}
+                if mismatch
+                else None,
                 "parsed": parsed.as_dict(),
                 "versions": [],
             }
@@ -113,6 +122,9 @@ def evaluate(
                 )
                 result = releases.evaluate(version.rules, release.title, context, parsed=parsed)
                 result.pop("parsed", None)
+                if mismatch:
+                    result["rejections"].append({"code": matching.TITLE_MISMATCH, "parsed_title": parsed.movie.title})
+                    result["accepted"] = False
                 for refused in (too_few, too_old):
                     if refused is not None:
                         result["rejections"].append(dict(refused))

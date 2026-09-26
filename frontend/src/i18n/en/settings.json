@@ -503,6 +503,7 @@
       "episodes": "Season {{season}}, episode {{episodes}}",
       "byOwner": "Deleted by you on {{date}}",
       "byProgram": "Deleted by {{name}} on {{date}}",
+      "byReplace": "Replaced by a download on {{date}}",
       "gone": "The file is gone, or its disk cannot be seen right now.",
       "notInLibrary": "The title or its version is no longer in the library. It cannot go back.",
       "addedAgain": "The title or its version is no longer in the library. Taking it back adds them again, unwatched.",

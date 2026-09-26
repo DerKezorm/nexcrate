@@ -85,6 +85,8 @@ export function reasonCountText(t: TFunction, reason: ReasonCount, language: str
       return t('search.reasons.not_enough_seeders', values)
     case 'older_than_retention':
       return t('search.reasons.older_than_retention', values)
+    case 'title_mismatch':
+      return t('search.reasons.title_mismatch', values)
     case 'protocol_disabled':
       return t('search.reasons.protocol_disabled', values)
     // Seit Schritt 3: Ein gesperrtes Release nimmt nexcrate nie, der Server zaehlt es unter diesem Grund.

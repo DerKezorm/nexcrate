@@ -473,7 +473,10 @@ class RecycleEntryOut(BaseModel):
     file_name: str = Field(description="The file's name, never its folder.")
     size_bytes: int
     deleted_at: datetime
-    deleted_by: str = Field(description="owner, or key: a program; `deleted_by_name` is then its key's name.")
+    deleted_by: str = Field(
+        description="owner, key: a program (`deleted_by_name` is then its key's name), or replaced: an import put a "
+        "new file in its place."
+    )
     deleted_by_name: str | None
     present: bool = Field(description="False when the file is gone or its disk cannot be seen right now.")
     in_library: bool = Field(

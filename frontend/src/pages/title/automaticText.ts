@@ -53,6 +53,7 @@ export const REJECTION_PHRASE_CODES = [
   'not_enough_seeders',
   'older_than_retention',
   'blocklisted',
+  'title_mismatch',
 ] as const
 
 /**
@@ -80,6 +81,8 @@ export function rejectionPhrase(t: TFunction, code: string): string {
       return t('title.automatic.summary.rejection.not_enough_seeders')
     case 'older_than_retention':
       return t('title.automatic.summary.rejection.older_than_retention')
+    case 'title_mismatch':
+      return t('title.automatic.summary.rejection.title_mismatch')
     case 'protocol_disabled':
       return t('title.automatic.summary.rejection.protocol_disabled')
     case 'blocklisted':

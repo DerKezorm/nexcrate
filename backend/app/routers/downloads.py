@@ -63,7 +63,9 @@ class DownloadProblem(BaseModel):
         "another series), several_videos (a movie download with several similar videos), multi_part (a movie in "
         "parts, refused and blocked), import_stalled (30 minutes without progress), too_many_files. Since 24.09.2026: "
         "file_truncated (a video the container says is cut off; not filed, it replaced nothing; for a series "
-        "download `episodes` names the episodes)."
+        "download `episodes` names the episodes). Since 26.09.2026: title_mismatch (a movie download whose release "
+        "name and video name fit none of the movie's titles; not filed, it replaced nothing; filed with retry and "
+        "`confirm` title_mismatch, or removed and blocked)."
     )
     needs_owner: bool
     values: dict[str, Any] = Field(
@@ -71,7 +73,9 @@ class DownloadProblem(BaseModel):
         "incomplete, broken, unsafe, nested or too_large. no_space: `needed_bytes` and `free_bytes`. import_failed: "
         "`reason`, for example destination_exists or database_busy. files_unassigned: `filed` episodes and `open` "
         "files. several_videos: `count`. download_failed: `reason` and `detail` (see failed_detail); only while "
-        "nothing takes care of it by itself."
+        "nothing takes care of it by itself. title_mismatch: `parsed_release_title` and `parsed_file_title` (the "
+        "titles read from the names, null when none could be read), `file_runtime_min` (the video's, null when "
+        "unread) and `runtime_min` (TMDB's), the runtimes only a hint: a cut of another length is no reason."
     )
 
 
@@ -148,7 +152,11 @@ class Download(BaseModel):
         "nothing.",
     )
     aftermath: DownloadAftermath | None = Field(default=None, description="For a failed download: what came of it.")
-    confirmed: list[str] = Field(description="What the owner confirmed when loading: not_fitting, blocklisted.")
+    confirmed: list[str] = Field(
+        description="What the owner confirmed: not_fitting, blocklisted or no_gain when loading; title_mismatch when "
+        "the release's name fits none of the movie's titles and the owner loaded it all the same or filed it away "
+        "anyway."
+    )
     origin: str = Field(
         description="Who started it: manual, search (a planned search or searching automatically now), rss, or "
         "replacement (after a failed download)."
@@ -291,6 +299,14 @@ class AssignIn(BaseModel):
 
 class ChooseIn(BaseModel):
     key: int
+
+
+class RetryIn(BaseModel):
+    confirm: list[Literal["title_mismatch"]] = Field(
+        default_factory=list,
+        max_length=1,
+        description="title_mismatch: file the download although its names fit none of the movie's titles.",
+    )
 
 
 class AlbumTrackHeld(BaseModel):
@@ -605,13 +621,14 @@ async def remove_download(
     summary="Try a download again",
     description=(
         "For a download with a problem or one waiting to be filed away. A problem the client reported goes back to "
-        "the client, any other to the import."
+        "the client, any other to the import. With `confirm` title_mismatch the owner files a movie download whose "
+        "names fit none of the movie's titles all the same (the problem title_mismatch): it may replace the file there."
     ),
     responses=error_responses((404, "download_not_found"), (409, "download_not_retryable")),
 )
-def retry_download(download_id: int) -> Download:
+def retry_download(download_id: int, payload: RetryIn | None = None) -> Download:
     try:
-        return _download(actions.retry(download_id))
+        return _download(actions.retry(download_id, list(payload.confirm) if payload is not None else []))
     except actions.ActionError as exc:
         raise exc.http() from exc
 

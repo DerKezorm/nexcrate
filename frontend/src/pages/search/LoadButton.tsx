@@ -168,6 +168,8 @@ export function LoadButton({ release, entry, prominent = false }: { release: Sea
             {asking.includes('not_fitting') && (
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-mist-200">{t('search.load.confirm.notFitting', { label })}</p>
+                {/* Seit 26.09.2026: Wer bestaetigt, dem legt nexcrate den Film spaeter ohne weitere Frage ab. */}
+                {release.title_mismatch && <p className="text-sm text-bad-400">{t('search.load.confirm.titleMismatch')}</p>}
                 {entry.result && <RejectionList rejections={entry.result.rejections} />}
                 {entry.series_result && <RejectionList rejections={entry.series_result.rejections} />}
               </div>

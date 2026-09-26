@@ -412,6 +412,17 @@ class TitleVersion(BaseModel):
     languages: list[str] = Field(description="Languages of the file as the source names them.")
     release_group: str | None
     relative_path: str | None = Field(description="File name inside the movie folder.")
+    release_title: str | None = Field(
+        default=None,
+        description="The name of the release the file came from: the download nexcrate filed, or Radarr's scene name "
+        "or original file name. Null without a file or when nobody kept one. It finds a wrong file later.",
+    )
+    file_origin: str | None = Field(
+        default=None,
+        description="Where the file came from: download (filed from a download of nexcrate's own), taken (taken over "
+        "from Radarr), disk (found on disk and assigned or restored). Null without a file, and for a version a source "
+        "feeds.",
+    )
     source_name: str | None = Field(description="The connection that feeds this version; null when none does.")
     monitored: bool = Field(
         default=True, description="Whether nexcrate watches this version. Off: it searches nothing for it any more."

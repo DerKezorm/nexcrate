@@ -64,14 +64,33 @@ export function namedLabels(value: unknown, removing: readonly string[]): string
   return typeof value === 'string' && value !== '' ? [value] : [...removing]
 }
 
-/** Woher die Fassung kommt: "Aus Radarr: {name}" oder "Von dir hinzugefügt". */
+/**
+ * Woher die Fassung kommt: "Aus Radarr: {name}" oder "Von dir hinzugefügt". Eine Fassung, die ein Import aus Radarr
+ * angelegt hat und die nexcrate seit der Uebernahme selbst fuehrt, heisst "Fassung bei der Übernahme angelegt". Bis
+ * 26.09.2026 stand dort "Aus einem Import", und das las sich neben einer Datei aus einem eigenen Download wie die
+ * Herkunft der Datei. Das Wort Radarr steht hier nicht: Die Karte sagt sonst, Radarr kuemmere sich noch.
+ */
 export function originText(t: TFunction, version: TitleVersion): string {
   if (isFromSource(version)) {
     const name = version.source_name ?? ''
     // Selbst angelegt, dann hat ein Import den Platz uebernommen. Der Verlauf bleibt.
     return version.added_by === 'owner' ? t('title.origin.ownerFed', { name }) : t('title.origin.import', { name })
   }
-  return version.added_by === 'import' ? t('title.origin.importGone') : t('title.origin.owner')
+  return version.added_by === 'import' ? t('title.origin.takenOver') : t('title.origin.owner')
+}
+
+/** Woher die Datei kam, fuer die Zeile unter der Fassung; null ohne Datei oder bei einem Server von davor. */
+export function fileOriginText(t: TFunction, version: TitleVersion): string | null {
+  switch (version.file_origin) {
+    case 'download':
+      return t('title.version.fileOrigins.download')
+    case 'taken':
+      return t('title.version.fileOrigins.taken')
+    case 'disk':
+      return t('title.version.fileOrigins.disk')
+    default:
+      return null
+  }
 }
 
 /**

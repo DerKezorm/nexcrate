@@ -582,6 +582,18 @@ def _rules_of(db: OrmSession, definition_ids: set[int]) -> dict[int, dict[str, A
     }
 
 
+#: ``file_ref`` prefix to where a version's file came from, for the title page.
+_FILE_ORIGINS = {"nexcrate:": "download", "taken:": "taken", "disk:": "disk"}
+
+
+def file_origin(version: Version) -> str | None:
+    """download, taken or disk by the file's ``file_ref``; None without a file or for a version a source feeds."""
+    if not version.has_file or version.source_id is not None:
+        return None
+    ref = version.file_ref or ""
+    return next((origin for prefix, origin in _FILE_ORIGINS.items() if ref.startswith(prefix)), None)
+
+
 def detail(db: OrmSession, title_id: int) -> dict[str, Any] | None:
     title = db.get(Title, title_id)
     if title is None:
@@ -614,6 +626,9 @@ def detail(db: OrmSession, title_id: int) -> dict[str, Any] | None:
             "languages": list(version.languages or []),
             "release_group": version.release_group,
             "relative_path": version.relative_path,
+            # The release the file came from, to find a wrong file later (the owner's wish of 26.09.2026).
+            "release_title": version.release_title if version.has_file else None,
+            "file_origin": file_origin(version),
             "source_name": source_name,
             "added_by": version.added_by,
             # A program that asked for the version through /api/v1: its reference and key.

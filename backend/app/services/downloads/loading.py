@@ -71,6 +71,9 @@ LOAD_CODES = (
     "episodes_downloading",
 )
 CONFIRMABLE = ("not_fitting", "blocklisted", "no_gain")
+#: Stored with ``not_fitting`` when the release the owner confirmed had a name that fits none of the movie's titles:
+#: the import then files it without asking again (the owner's decision of 26.09.2026).
+TITLE_MISMATCH = "title_mismatch"
 _LOAD_MESSAGES = {
     "version_fed_by_source": (
         "This version comes from a Radarr, Sonarr or Lidarr connection; nexcrate does not load for it."
@@ -528,7 +531,7 @@ def _record(
             below_target=bool(result.get("below_target")),
             languages=list(parsed.get("languages") or []),
             formats=prepared.rename_formats,
-            confirmed=[value for value in CONFIRMABLE if value in confirm],
+            confirmed=_confirmed(found, confirm),
             origin=found.origin if found.origin in ORIGINS else "manual",
             state="queued",
             progress=0.0,
@@ -558,6 +561,14 @@ def _record(
             "Title %d: a release was handed to download client %d as download %d", found.title_id, choice.id, row.id
         )
         return row.id
+
+
+def _confirmed(found: search_jobs.FoundRelease, confirm: Collection[str]) -> list[str]:
+    """What the owner confirmed, and ``title_mismatch`` when that confirmation covered a name of another movie."""
+    confirmed = [value for value in CONFIRMABLE if value in confirm]
+    if "not_fitting" in confirmed and found.release.get("title_mismatch"):
+        confirmed.append(TITLE_MISMATCH)
+    return confirmed
 
 
 def _series_fields(db: Any, row: Download, found: search_jobs.FoundRelease, episodes: dict[int, str]) -> None:

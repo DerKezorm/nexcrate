@@ -36,6 +36,9 @@ export function problemActions(code: string, state: string, hasProposal: boolean
     // Seit 24.09.2026: bei einer Serie sind die anderen Folgen schon abgelegt, "Rest nicht ablegen" beendet ihn.
     case 'file_truncated':
       return series ? ['finish', 'removeAndBlock'] : ['removeAndBlock', 'toTitle']
+    // Seit 26.09.2026: Der Name passt nicht zum Film. Ablegen nur, wenn du es willst; sonst sperren.
+    case 'title_mismatch':
+      return ['fileAnyway', 'removeAndBlock', 'toTitle']
     case 'gone_from_client':
       return ['remove', 'toTitle']
     case 'dangerous_file':

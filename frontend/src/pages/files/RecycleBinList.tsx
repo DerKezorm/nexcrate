@@ -179,7 +179,11 @@ function BinRow({ entry, busy, blocked, onRestore, onPurge }: { entry: RecycleBi
         <span className="font-mono text-xs leading-5 wrap-anywhere text-mist-400">{entry.file_name}</span>
         <span className="text-xs text-mist-500 tabular-nums">
           {sizeText(t, entry.size_bytes, language)} ·{' '}
-          {entry.deleted_by === 'key' && entry.deleted_by_name ? t('settings.files.bin.byProgram', { name: entry.deleted_by_name, date }) : t('settings.files.bin.byOwner', { date })}
+          {entry.deleted_by === 'key' && entry.deleted_by_name
+            ? t('settings.files.bin.byProgram', { name: entry.deleted_by_name, date })
+            : entry.deleted_by === 'replaced'
+              ? t('settings.files.bin.byReplace', { date })
+              : t('settings.files.bin.byOwner', { date })}
         </span>
         {!entry.present && <span className="text-xs text-bad-500">{t('settings.files.bin.gone')}</span>}
         {entry.present && !entry.in_library && (

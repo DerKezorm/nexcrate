@@ -96,6 +96,8 @@ class Recycled:
     missing: int = 0
     #: Files that stay where they are.
     failed: int = 0
+    #: The files moved, as ``(id, path relative to the folder before, path relative to the folder in the bin)``.
+    binned: tuple[tuple[int, str, str], ...] = ()
 
 
 # --- Finding ----------------------------------------------------------------------------------------------------- #
@@ -319,6 +321,7 @@ def place(
 def recycle(rows: Iterable[tuple[int, str]], folder: Path, moment: datetime) -> Recycled:
     """Recorded subtitles of an old file, ``(id, path relative to folder)``, into the recycle folder of ``folder``."""
     gone: list[int] = []
+    binned: list[tuple[int, str, str]] = []
     moved = missing = failed = 0
     for row_id, relative in rows:
         parts = relative.replace("\\", "/").split("/")
@@ -334,10 +337,20 @@ def recycle(rows: Iterable[tuple[int, str]], folder: Path, moment: datetime) -> 
             failed += 1
             continue
         try:
-            files.recycle(path, folder, moment)
+            target = files.recycle(path, folder, moment)
         except OSError, files.FileProblem:
             failed += 1
             continue
         gone.append(row_id)
+        binned.append((row_id, path.relative_to(folder).as_posix(), _relative_to(target, folder)))
         moved += 1
-    return Recycled(tuple(gone), moved, missing, failed)
+    return Recycled(tuple(gone), moved, missing, failed, tuple(binned))
+
+
+def _relative_to(path: Path, folder: Path) -> str:
+    """``path`` below ``folder`` as ``files.recycle`` returns it: resolved, so the folder is resolved too."""
+    base = files.resolved(folder) or folder
+    try:
+        return path.relative_to(base).as_posix()
+    except ValueError:
+        return path.relative_to(folder).as_posix()

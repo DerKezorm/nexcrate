@@ -32,6 +32,7 @@ PROBLEMS: dict[str, dict[str, str]] = {
         'album_tracks_missing': 'Die Titellisten des Albums fehlen noch.',
         'download_failed': 'Der Download ist fehlgeschlagen. das Download-Programm hat ihn aufgegeben.',
         'file_truncated': 'Ein Video im Download ist abgeschnitten.',
+        'title_mismatch': 'Titel passt nicht zum Film.',
     },
     'en': {
         'path_not_found': 'The download is done, but nexcrate cannot find the files under the path the download client reports.',
@@ -58,6 +59,7 @@ PROBLEMS: dict[str, dict[str, str]] = {
         'album_tracks_missing': "The album's track lists are still missing.",
         'download_failed': 'The download failed. the download client gave it up.',
         'file_truncated': 'A video in the download is cut off.',
+        'title_mismatch': 'The title does not fit the movie.',
     },
 }
 

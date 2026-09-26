@@ -29,6 +29,8 @@ export const REJECTION_CODES = [
   'not_enough_seeders',
   'older_than_retention',
   'protocol_disabled',
+  // Seit 26.09.2026: Kennung passt, Name nicht (ein anderer Film unter dieser Kennung).
+  'title_mismatch',
 ] as const
 
 export const UPGRADE_REASONS = ['worse_quality', 'upgrades_disabled', 'cutoff_met', 'score_not_higher', 'upgrade_until_reached', 'step_too_small'] as const
@@ -108,6 +110,8 @@ export function rejectionText(t: TFunction, rejection: ReleaseRejection, languag
         minimum: formatNumber(numberOf(rejection.minimum), language),
       })
     }
+    case 'title_mismatch':
+      return t('checker.rejections.title_mismatch', { title: typeof rejection.parsed_title === 'string' ? rejection.parsed_title : '' })
     case 'older_than_retention':
       return t('checker.rejections.older_than_retention', {
         age: formatNumber(numberOf(rejection.age_days), language),

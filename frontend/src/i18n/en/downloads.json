@@ -96,6 +96,8 @@
     "mappingLabel": "Take the mapping: {{title}}",
     "retry": "Try again",
     "retryLabel": "Try again: {{title}}",
+    "fileAnyway": "File anyway",
+    "fileAnywayLabel": "File anyway: {{title}}",
     "remove": "Remove",
     "removeLabel": "Remove: {{title}}",
     "removeAndBlock": "Remove and block",
@@ -147,7 +149,8 @@
       "album_tracks_missing": "The album's track lists are still missing.",
       "download_failed": "The download failed. {{client}} gave it up.",
       "file_truncated": "A video in the download is cut off.",
-      "file_truncatedEpisodes": "The video for {{episodes}} is cut off."
+      "file_truncatedEpisodes": "The video for {{episodes}} is cut off.",
+      "title_mismatch": "The title does not fit the movie."
     },
     "why": {
       "pathProposal": "nexcrate and {{client}} see the same folder under different paths. nexcrate found the download under its own folders and suggests a mapping.",
@@ -207,12 +210,16 @@
       "albumMissingPart_one": "{{value}} track",
       "albumMissingPart_other": "{{value}} tracks",
       "download_failed": "Three replacements were tried today already, and the automatic is off. Search another release yourself, or take the card away with “Done”.",
-      "file_truncated": "The file is shorter than its content says. nexcrate did not file it, and a file already there stays as it is. Remove the download and take another release."
+      "file_truncated": "The file is shorter than its content says. nexcrate did not file it, and a file already there stays as it is. Remove the download and take another release.",
+      "title_mismatch": "Neither the release's name nor the video's fits a title of the movie. The indexer may list another movie under this number. nexcrate filed nothing, and a file already there stays as it is. If it is the right movie after all, file it anyway; otherwise remove and block the release.",
+      "titleMismatchRead": "Read: {{titles}}.",
+      "titleMismatchRuntime": "The video runs {{file}} minutes, TMDB says {{tmdb}}. This is only a hint: a longer cut runs longer."
     },
     "proposal": "nexcrate suggests this mapping",
     "clientSees": "In the download client",
     "nexcrateSees": "In nexcrate",
     "retried": "nexcrate tries again.",
+    "filedAnyway": "nexcrate files the download anyway.",
     "cleared": "The failed download is in the history only now."
   },
   "mapping": {

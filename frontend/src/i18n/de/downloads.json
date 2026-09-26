@@ -96,6 +96,8 @@
     "mappingLabel": "Zuordnung übernehmen: {{title}}",
     "retry": "Erneut versuchen",
     "retryLabel": "Erneut versuchen: {{title}}",
+    "fileAnyway": "Trotzdem ablegen",
+    "fileAnywayLabel": "Trotzdem ablegen: {{title}}",
     "remove": "Entfernen",
     "removeLabel": "Entfernen: {{title}}",
     "removeAndBlock": "Entfernen und sperren",
@@ -147,7 +149,8 @@
       "album_tracks_missing": "Die Titellisten des Albums fehlen noch.",
       "download_failed": "Der Download ist fehlgeschlagen. {{client}} hat ihn aufgegeben.",
       "file_truncated": "Ein Video im Download ist abgeschnitten.",
-      "file_truncatedEpisodes": "Das Video für {{episodes}} ist abgeschnitten."
+      "file_truncatedEpisodes": "Das Video für {{episodes}} ist abgeschnitten.",
+      "title_mismatch": "Titel passt nicht zum Film."
     },
     "why": {
       "pathProposal": "nexcrate und {{client}} sehen denselben Ordner unter verschiedenen Pfaden. nexcrate hat den Download unter seinen eigenen Ordnern gefunden und schlägt eine Zuordnung vor.",
@@ -207,12 +210,16 @@
       "albumMissingPart_one": "{{value}} Titel",
       "albumMissingPart_other": "{{value}} Titel",
       "download_failed": "Heute gab es schon drei Ersatzversuche, und die Automatik ist aus. Such selbst ein anderes Release, oder nimm die Karte mit „Erledigt“ weg.",
-      "file_truncated": "Die Datei ist kürzer, als ihr Inhalt angibt. nexcrate hat sie nicht abgelegt, eine vorhandene Datei bleibt, wie sie ist. Entferne den Download und nimm ein anderes Release."
+      "file_truncated": "Die Datei ist kürzer, als ihr Inhalt angibt. nexcrate hat sie nicht abgelegt, eine vorhandene Datei bleibt, wie sie ist. Entferne den Download und nimm ein anderes Release.",
+      "title_mismatch": "Weder der Name des Releases noch der des Videos passt zu einem Titel des Films. Vielleicht führt der Indexer einen anderen Film unter dieser Kennung. nexcrate hat nichts abgelegt, eine vorhandene Datei bleibt, wie sie ist. Ist es doch der richtige Film, leg ihn trotzdem ab, sonst entferne und sperre das Release.",
+      "titleMismatchRead": "Gelesen: {{titles}}.",
+      "titleMismatchRuntime": "Das Video läuft {{file}} Minuten, laut TMDB {{tmdb}}. Das ist nur ein Hinweis: Eine längere Schnittfassung läuft länger."
     },
     "proposal": "nexcrate schlägt diese Zuordnung vor",
     "clientSees": "Im Download-Programm",
     "nexcrateSees": "In nexcrate",
     "retried": "nexcrate versucht es noch einmal.",
+    "filedAnyway": "nexcrate legt den Download trotzdem ab.",
     "cleared": "Der fehlgeschlagene Download steht nur noch im Verlauf."
   },
   "mapping": {

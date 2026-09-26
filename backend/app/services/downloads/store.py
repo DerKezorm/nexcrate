@@ -56,6 +56,9 @@ PROBLEMS: dict[str, bool] = {
     "import_failed": True,
     # A video the container says is cut off: never filed, never replaces a file (24.09.2026).
     "file_truncated": True,
+    # A movie whose release name and video name fit none of its titles: never filed, never replaces a file, until the
+    # owner files it anyway or removes and blocks it (26.09.2026).
+    "title_mismatch": True,
     "dangerous_file": False,
     "encrypted": False,
     "client_unreachable": False,

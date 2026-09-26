@@ -82,8 +82,8 @@ class SearchIndexer(BaseModel):
 
 class NothingFits(BaseModel):
     code: str = Field(
-        description="A rejection code of the release checker, not_enough_seeders, or blocklisted for releases on the "
-        "title's blocklist."
+        description="A rejection code of the release checker, not_enough_seeders, title_mismatch for a release whose "
+        "name fits none of the movie's titles, or blocklisted for releases on the title's blocklist."
     )
     count: int = Field(description="How many releases had this code.")
 
@@ -191,7 +191,8 @@ class SearchReleaseVersion(BaseModel):
     result: ResultOut | None = Field(
         default=None,
         description="The release checker's result, with not_enough_seeders {seeders, minimum} among the rejections "
-        "for a torrent below its indexer's minimum. Null without a profile, and for a series.",
+        "for a torrent below its indexer's minimum, and title_mismatch {parsed_title} for a name that fits none of the "
+        "movie's titles. Null without a profile, and for a series.",
     )
     series_result: SeriesResultOut | None = Field(
         default=None, description="Series: the series checker's result, with not_enough_seeders as for movies."
@@ -234,6 +235,11 @@ class SearchRelease(BaseModel):
     )
     not_this_movie: NotThisMovie | None = Field(
         default=None, description="What the name says, for a release of another movie."
+    )
+    title_mismatch: NotThisMovie | None = Field(
+        default=None,
+        description="What the name says, for a release that belongs by its number while its name fits none of the "
+        "movie's titles: every version rejects it as title_mismatch, the automatic never takes it.",
     )
     parsed: ParsedOut | None = Field(default=None, description="The name as a movie release; null for a series.")
     not_this_series: NotThisSeries | None = Field(default=None, description="Series: a release of another series.")

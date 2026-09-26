@@ -802,6 +802,8 @@ _EDITION_NAMES = (
 )
 _EDITION_SINGLE = r"Uncensored|Remastered|Unrated|Uncut|Open[._ -]?Matte|IMAX|Fan[._ -]?Edit|Restored|[234]in1"
 _EDITION = re.compile(rf"\b(?:{_EDITION_NAMES}|{_EDITION_SINGLE})\b", _I)
+#: An edition as a pattern: a name read without a year keeps its edition in the title (``search.matching``).
+EDITION_PATTERN = rf"(?:{_EDITION_NAMES}|{_EDITION_SINGLE})"
 
 
 def parse_edition(masked: str) -> str | None:
