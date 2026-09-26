@@ -53,6 +53,10 @@ logger = logging.getLogger("nexcrate.images")
 CACHE_CONTROL = "private, max-age=31536000, immutable"
 #: TMDB images may not be kept longer than six months, in no cache; 30 days in the browser.
 TMDB_CACHE_CONTROL = "private, max-age=2592000"
+#: A live source's own address never changes while it stands in for a poster the source could not deliver just
+#: now: the source may answer again on the very next try, and a 30-day TMDB cache under that same address would
+#: hide its recovery for just as long. Never kept.
+FALLBACK_CACHE_CONTROL = "no-store"
 TMDB_POSTER_SIZE = "w500"
 _UNSAFE = re.compile(r"[^A-Za-z0-9-]")
 
@@ -296,32 +300,44 @@ async def _fallback_poster(title_id: int, known_file: str | None = None) -> tupl
     return await tmdb.poster(TMDB_POSTER_SIZE, fallback_file)
 
 
-async def poster(title_id: int) -> tuple[Path, str] | None:
-    """The cached poster file and its type, fetched from the source when needed. None if there is none."""
+def _with_cache(found: tuple[Path, str] | None, cache_control: str) -> tuple[Path, str, str] | None:
+    if found is None:
+        return None
+    path, media_type = found
+    return path, media_type, cache_control
+
+
+async def poster(title_id: int) -> tuple[Path, str, str] | None:
+    """The cached poster file, its type and the ``Cache-Control`` to answer it with. None if there is none."""
     found = await asyncio.to_thread(reference, title_id)
     if found is None:
         from .music import covers
 
         cover = await covers.cover(title_id)
         if cover is not None:
-            return cover
+            return _with_cache(cover, CACHE_CONTROL)
         # Not an album either (or one with no cover): a series (``poster_url``'s ``pending`` address) or a movie
         # added by hand, with nothing on record yet. ``_looked_up_tmdb_file`` itself says no for anything else.
-        return await _fallback_poster(title_id)
+        # Its own address changes once a poster is found (``_store_tmdb_poster_path``), so the long TMDB cache is
+        # safe here, unlike the live-source case below.
+        return _with_cache(await _fallback_poster(title_id), TMDB_CACHE_CONTROL)
     if found.tmdb_file is not None:
-        return await tmdb.poster(TMDB_POSTER_SIZE, found.tmdb_file)
+        return _with_cache(await tmdb.poster(TMDB_POSTER_SIZE, found.tmdb_file), TMDB_CACHE_CONTROL)
     hit = cached(found.title_id, found.key)
     if hit is not None:
-        return hit
+        return _with_cache(hit, CACHE_CONTROL)
     if found.taken_over:
-        # ⚠️ A taken-over source is never asked again; TMDB's poster takes the place of the copy that is gone.
-        return await _fallback_poster(title_id, found.fallback_tmdb_file)
+        # ⚠️ A taken-over source is never asked again; TMDB's poster takes the place of the copy that is gone,
+        # under this same address for good, so the long TMDB cache is right.
+        return _with_cache(await _fallback_poster(title_id, found.fallback_tmdb_file), TMDB_CACHE_CONTROL)
     api_key = await asyncio.to_thread(crypto.decrypt, found.stored_api_key)
     try:
         async with RadarrClient(found.source_url, api_key) as radarr:
             image = await fetch_poster(radarr, found.relative_url)
     except (ImageUnavailable, RadarrError, SourceUrlInvalid) as exc:
         logger.info("Poster of title %d is not available: %s", title_id, exc)
-        return await _fallback_poster(title_id, found.fallback_tmdb_file)
+        # ⚠️ Unlike a taken-over source, this one may answer again on the very next try: TMDB only stands in for
+        # now, under the source's own unchanged address, so it must never be kept.
+        return _with_cache(await _fallback_poster(title_id, found.fallback_tmdb_file), FALLBACK_CACHE_CONTROL)
     path = await asyncio.to_thread(store, found.title_id, found.key, image)
-    return path, image.content_type
+    return path, image.content_type, CACHE_CONTROL
