@@ -1288,9 +1288,10 @@ export type DownloadTransfer = 'hardlink' | 'copy' | 'move' | 'unpacked'
 
 /**
  * Was beim Ablegen gerade passiert. Nur waehrend `importing`, sonst null. Seit M4 bei Alben auch waehrend `completed`:
- * `waiting_tracks` (die Titellisten laden noch), `matching`, `fingerprinting`, `filing`.
+ * `waiting_tracks` (die Titellisten laden noch), `matching`, `fingerprinting`, `filing`. Seit 26.09.2026 bei jedem
+ * Download waehrend `completed`: `waiting_place` (der Import wartet auf einen freien Platz).
  */
-export type DownloadStep = 'unpacking' | 'waiting_tracks' | 'matching' | 'fingerprinting' | 'filing'
+export type DownloadStep = 'unpacking' | 'waiting_tracks' | 'waiting_place' | 'matching' | 'fingerprinting' | 'filing'
 
 export type Download = {
   id: number

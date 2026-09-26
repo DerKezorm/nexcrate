@@ -119,7 +119,7 @@ def _apply_existing(artist_id: int, scope: ArtistScope, origin: str | None, call
         watched = music_store.apply_choice(db, artist, scope.albums, moment=moment, definition=definition)
         db.flush()
         _mark_new(db, artist, moment, origin, caller)
-        automatic_planning.replan(db, [title.id for title in _albums(db, artist)], automatic_clock.now())
+        # The albums are planned again right after, in parts (``request_artist``): not here, under the write lock.
         db.commit()
         return watched
 
@@ -175,12 +175,19 @@ async def request_artist(raw: str, scope: ArtistScope, search_now: bool, origin:
     if not created:
         watched = await asyncio.to_thread(_apply_existing, artist_id, scope, origin, caller)
 
+    def the_artist(db: OrmSession) -> Artist:
+        artist = db.get(Artist, artist_id)
+        if artist is None:
+            raise error("title_not_found", "nexcrate does not have this artist.", 404, kind="artist")
+        return artist
+
     def finish() -> tuple[str, list[dict[str, Any]], dict[str, Any] | None]:
         with SessionLocal() as db:
-            artist = db.get(Artist, artist_id)
-            if artist is None:
-                raise error("title_not_found", "nexcrate does not have this artist.", 404, kind="artist")
-            automatic_planning.replan(db, [title.id for title in _albums(db, artist)], automatic_clock.now())
+            album_ids = [title.id for title in _albums(db, the_artist(db))]
+        # A whole catalogue (670 albums on 25.09.2026) is planned in parts, each holding the write lock briefly.
+        automatic_planning.replan_apart(album_ids, automatic_clock.now())
+        with SessionLocal() as db:
+            artist = the_artist(db)
             search = _wish(db, artist) if search_now else "not_asked"
             db.commit()
             if search == "queued":

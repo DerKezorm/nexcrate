@@ -14,7 +14,7 @@ change shows after the next look, some seconds later. The same look writes ``tit
 the feed, in the same transaction as the numbers.
 
 ⚠️ The job only reads the big tables and writes its own small one in one short transaction, so nothing waits for it
-(N37). After a look that took long the next one waits in proportion.
+(N37). After a look that took long the next one waits in proportion, but never longer than ``MAX_REST_SECONDS``.
 """
 
 from __future__ import annotations
@@ -39,6 +39,12 @@ JOB_NAME = "api_title_changes"
 INTERVAL_SECONDS = 10
 #: After a look the next one waits this many times as long as the look took, at least the interval.
 REST_FACTOR = 20
+#: ⚠️ And never longer than this. On 25.09.2026 a look took minutes while box sets were filed and requests queued for
+#: the lock; twenty times that stopped the list for about 70 minutes, and the other programs showed albums that had
+#: arrived long before as still wanted. Under load a look is slow because it waits, not because it works.
+MAX_REST_SECONDS = 120.0
+#: A look slower than this is named in the log with its rest; a quicker one speaks on debug only.
+SLOW_LOOK_SECONDS = 30.0
 #: Titles rendered at once.
 CHUNK = 2000
 PAGE_DEFAULT = 500
@@ -154,8 +160,11 @@ def run_job() -> None:
     with database.SessionLocal() as db:
         given = look(db)
     took = time.monotonic() - started
-    _not_before = time.monotonic() + max(0.0, took * REST_FACTOR - INTERVAL_SECONDS)
-    if given:
+    rest = min(MAX_REST_SECONDS, max(0.0, took * REST_FACTOR - INTERVAL_SECONDS))
+    _not_before = time.monotonic() + rest
+    if took > SLOW_LOOK_SECONDS:
+        logger.info("The library marker took %.0f s, %d titles moved; the next look in %.0f s", took, given, rest)
+    elif given:
         logger.debug("The library marker moved for %d titles in %.2fs", given, took)
 
 

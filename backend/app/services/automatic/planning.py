@@ -44,6 +44,7 @@ from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.orm import Session as OrmSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
+from ...db import SessionLocal
 from ...models import Download, Title, Version, VersionDefinition
 from .. import judging
 from ..downloads import store
@@ -446,6 +447,33 @@ def replan(db: OrmSession, title_ids: Collection[int], now: datetime) -> tuple[i
         title.next_search_at, title.next_search_reason = next_at, reason
         changed += 1
     return len(planned), changed
+
+
+#: Titles one part of ``replan_apart`` reads, and at most plans again under the write lock.
+APART_CHUNK = 100
+
+
+def replan_apart(title_ids: Collection[int], now: datetime) -> tuple[int, int]:
+    """Plan many titles again in transactions of their own and commit them; returns how many were planned and changed.
+
+    For a whole catalogue at once, as the round does it: each part is read without the write lock, and only the titles
+    whose plan changed are planned again under it (``replan``), at most ``APART_CHUNK`` at a time. ⚠️ On 25.09.2026 a
+    request for an artist planned its 670 albums in one transaction and held the lock for 8.4 s; a second request
+    waited for it 30.7 s, gave up and answered 500.
+    """
+    ids = sorted(set(title_ids))
+    planned = changed = 0
+    for start in range(0, len(ids), APART_CHUNK):
+        with SessionLocal() as db:
+            found = plans(db, ids[start : start + APART_CHUNK], now)
+        planned += len(found)
+        moved = differing(found)
+        if moved:
+            with SessionLocal() as db:
+                _counted, written = replan(db, moved, now)
+                db.commit()
+            changed += written
+    return planned, changed
 
 
 # --- What the title page shows ------------------------------------------------------------------------ #

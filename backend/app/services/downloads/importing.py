@@ -33,6 +33,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import contextvars
 import dataclasses
 import logging
@@ -81,6 +82,11 @@ _threads: list[threading.Thread] = []
 #: their video had moved: it lay in the library unrecorded. Radarr and Sonarr file one download after the other.
 PARALLEL_IMPORTS = 2
 _gate = threading.BoundedSemaphore(PARALLEL_IMPORTS)
+#: An album download larger than this is a big one: filing a box set of ten discs (10 to 16 GB on 25.09.2026) computed
+#: for 10 to 15 minutes. ⚠️ Two of them took both places, and 25 small albums waited up to 39 minutes. Only one big
+#: album is filed at a time now, so the other place stays free for everything else.
+BIG_ALBUM_BYTES = 3 * 1024**3
+_big_gate = threading.BoundedSemaphore(1)
 
 #: A locked database is a passing trouble (the owner's finding of 22.09.2026: download 178 met the lock once, became
 #: "import failed" and waited nine hours for a click that imported it at once). The import tries again by itself, with
@@ -188,9 +194,19 @@ def mark_interrupted() -> int:
     return count
 
 
+def _big(download_id: int) -> bool:
+    """Whether the download is a big album (``BIG_ALBUM_BYTES``), by the size its release was offered with."""
+    with SessionLocal() as db:
+        found = db.execute(select(Download.scope, Download.size_bytes).where(Download.id == download_id)).first()
+    return found is not None and found.scope == store.ALBUM_SCOPE and (found.size_bytes or 0) > BIG_ALBUM_BYTES
+
+
 def _execute(download_id: int, work: Callable[[], None] | None = None) -> None:
+    # Until a place is free the interface says so (``store.waiting_for_place``), not just "downloaded".
+    store.wait_for_place(download_id, True)
     try:
-        with _gate:
+        with _big_gate if _big(download_id) else contextlib.nullcontext(), _gate:
+            store.wait_for_place(download_id, False)
             if work is not None:
                 work()
             else:
@@ -205,6 +221,7 @@ def _execute(download_id: int, work: Callable[[], None] | None = None) -> None:
         with _lock:
             _busy.pop(download_id, None)
     finally:
+        store.wait_for_place(download_id, False)
         with _lock:
             _running.discard(download_id)
 

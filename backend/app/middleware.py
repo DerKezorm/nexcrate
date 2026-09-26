@@ -10,7 +10,8 @@ error quotes it, and one search in the log shows the whole request. It is 8
 characters on purpose: the redaction masks long runs, and it must never eat the id.
 
 **Unhandled errors** are logged here, while the request id is still bound, and answered
-with 500 ``internal_error`` and the ``request_id``.
+with 500 ``internal_error`` and the ``request_id``. A database that stayed locked is no error but a wait: 503
+``database_busy`` with ``Retry-After``.
 
 **CSRF.** A request that changes something must carry ``X-Requested-With: nexcrate``.
 A foreign page cannot send that header without a CORS preflight, which nexcrate never
@@ -34,6 +35,7 @@ from typing import Any
 
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from .db import database_locked
 from .meldungen import error_body, is_v1_path, meldung
 from .services import logs
 from .services.http_log import mask_query
@@ -72,6 +74,28 @@ def internal_error_response(request_id: str, path: str = "") -> JSONResponse:
         request_id=request_id,
     )
     return JSONResponse(status_code=500, content=error_body(path, detail))
+
+
+#: Seconds a caller is asked to wait when the database stayed locked. SQLite has waited ``db.BUSY_TIMEOUT_MS`` already.
+BUSY_RETRY_AFTER_SECONDS = 30
+
+
+def busy_response(path: str = "") -> JSONResponse:
+    """503 ``database_busy`` with ``Retry-After``: other writes held the database longer than SQLite waits.
+
+    ⚠️ Not a 500 (25.09.2026: two requests of another program for an artist ended in 500 after 44 and 135 s): nothing
+    is broken, and every request of ``/api/v1`` may be sent again without adding anything twice.
+    """
+    detail = meldung(
+        "database_busy",
+        "The database is busy with other writes. Ask again in a moment.",
+        retry_after=BUSY_RETRY_AFTER_SECONDS,
+    )
+    return JSONResponse(
+        status_code=503,
+        content=error_body(path, detail),
+        headers={"Retry-After": str(BUSY_RETRY_AFTER_SECONDS)},
+    )
 
 
 def _caller_id(scope: Scope) -> str | None:
@@ -124,8 +148,17 @@ class RequestContextMiddleware:
         method = scope.get("method", "?")
         try:
             await self.app(scope, receive, send_with_id)
-        except Exception:
+        except Exception as exc:
             elapsed = (time.perf_counter() - started) * 1000
+            if database_locked(exc) and not response_started:
+                logger.warning(
+                    "%s %s found the database locked after %dms; answered 503 database_busy",
+                    method,
+                    _path_for_log(scope),
+                    elapsed,
+                )
+                await busy_response(scope.get("path", ""))(scope, receive, send_with_id)
+                return
             logger.exception("Unhandled error on %s %s after %dms", method, _path_for_log(scope), elapsed)
             if response_started:
                 raise

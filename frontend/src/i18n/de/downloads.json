@@ -52,6 +52,7 @@
     "removed": "Entfernt",
     "unknown": "Zustand {{state}}",
     "waitingTracks": "Wartet auf die Titellisten",
+    "waitingPlace": "Wartet, bis ein Ablageplatz frei ist",
     "matching": "Wird zugeordnet",
     "fingerprinting": "Fingerabdrücke",
     "filing": "Wird abgelegt"

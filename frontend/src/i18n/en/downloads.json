@@ -52,6 +52,7 @@
     "removed": "Removed",
     "unknown": "State {{state}}",
     "waitingTracks": "Waiting for the track lists",
+    "waitingPlace": "Waiting for a free filing place",
     "matching": "Matching",
     "fingerprinting": "Fingerprints",
     "filing": "Filing"

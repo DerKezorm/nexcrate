@@ -1,6 +1,7 @@
 {
   "invalid_input": "The input is not valid.",
   "internal_error": "Something went wrong on the server. Reference for troubleshooting: {{request_id}}",
+  "database_busy": "The database is busy with other writes. Try again in a moment.",
   "not_found": "This does not exist, or not any more.",
   "csrf_header_missing": "The request did not come from the nexcrate interface and was refused.",
   "not_logged_in": "Please log in.",

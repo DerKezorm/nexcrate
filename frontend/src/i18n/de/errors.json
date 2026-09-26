@@ -1,6 +1,7 @@
 {
   "invalid_input": "Die Eingabe ist nicht gültig.",
   "internal_error": "Auf dem Server ist ein Fehler aufgetreten. Nummer für die Fehlersuche: {{request_id}}",
+  "database_busy": "Die Datenbank ist gerade mit anderen Schreibvorgängen beschäftigt. Versuch es gleich noch einmal.",
   "not_found": "Das gibt es nicht oder nicht mehr.",
   "csrf_header_missing": "Die Anfrage kam nicht aus der Oberfläche von nexcrate und wurde abgewiesen.",
   "not_logged_in": "Bitte melde dich an.",

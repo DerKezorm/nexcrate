@@ -123,8 +123,8 @@ class Download(BaseModel):
         description="queued, downloading, paused, completed, importing, imported, failed, problem or removed."
     )
     step: str | None = Field(
-        description="What filing away does right now: unpacking while nexcrate unpacks the download's archives. Null "
-        "otherwise; only while importing, and kept in memory only."
+        description="What filing away does right now: unpacking while nexcrate unpacks the download's archives; for a "
+        "completed download waiting_place while its import waits for a free place. Null otherwise; kept in memory only."
     )
     progress: float | None = Field(description="0 to 100.")
     remaining_seconds: int | None

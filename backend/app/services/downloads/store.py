@@ -105,6 +105,35 @@ def step_of(download_id: int) -> str | None:
         return _steps.get(download_id)
 
 
+#: The step of a finished download whose import waits for a free place (``importing.PARALLEL_IMPORTS``).
+STEP_WAITING_PLACE = "waiting_place"
+_waiting_place: set[int] = set()
+
+
+def wait_for_place(download_id: int, waiting: bool) -> None:
+    """Whether the import thread of this download waits for a free place, in memory. ⚠️ Without it the interface said
+    "downloaded" for 39 minutes while two box sets were filed (25.09.2026), and it looked as if nothing happened."""
+    with _step_lock:
+        if waiting:
+            _waiting_place.add(download_id)
+        else:
+            _waiting_place.discard(download_id)
+
+
+def waiting_for_place(download_id: int) -> bool:
+    with _step_lock:
+        return download_id in _waiting_place
+
+
+def current_step(row: Download) -> str | None:
+    """What filing away does right now, for ``download_out``: waiting for a place, unpacking, or an album's step."""
+    if row.state == "completed" and waiting_for_place(row.id):
+        return STEP_WAITING_PLACE
+    if row.state not in ("importing", "completed"):
+        return None
+    return unpacking.step_of(row.id) or step_of(row.id)
+
+
 def is_series(row: Download) -> bool:
     return row.scope in SERIES_SCOPES
 
@@ -293,7 +322,7 @@ def download_out(
             "below_target": bool(row.below_target),
         },
         "state": row.state,
-        "step": (unpacking.step_of(row.id) or step_of(row.id)) if row.state in ("importing", "completed") else None,
+        "step": current_step(row),
         "progress": row.progress,
         "remaining_seconds": row.remaining_seconds,
         "problem": problem_of(row, client.last_error_code if client is not None else None),

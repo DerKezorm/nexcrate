@@ -85,6 +85,8 @@ export function downloadStateText(t: TFunction, state: string, step: string | nu
     case 'paused':
       return t('downloads.state.paused')
     case 'completed':
+      // Seit 26.09.2026: der Import wartet auf einen freien Platz, etwa hinter einem grossen Box-Set.
+      if (step === 'waiting_place') return t('downloads.state.waitingPlace')
       // Seit M4: ein Albendownload wartet auf die Titellisten seines Albums.
       return step === 'waiting_tracks' ? t('downloads.state.waitingTracks') : t('downloads.state.completed')
     case 'importing':

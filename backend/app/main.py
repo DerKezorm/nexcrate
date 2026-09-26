@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import re
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -353,7 +354,8 @@ it for you.
 **Errors** have one shape: `{"detail": {"code": "...", "message": "..."}}`, with extra values
 next to `code`. The `code` is stable, `message` is an English fallback. Every answer carries the
 header `X-Request-Id`; a 500 also carries `request_id` in the body. Quote it when reporting a
-problem, it finds the matching log lines.
+problem, it finds the matching log lines. When other writes hold the database longer than it
+waits, the answer is 503 `database_busy` with a `Retry-After` header: send the request again then.
 
 **Other programs** use `/api/v1` and nothing else: it stays as it is while the routes above follow
 the interface. It opens with a key from Settings, API keys, sent as `Authorization: Bearer <key>`,
@@ -365,9 +367,21 @@ never with the session cookie, and it needs no `X-Requested-With`. Its errors ar
 _CODE_IN_DESCRIPTION = re.compile(r"`([a-z0-9_]+)`")
 
 
+#: How long a busy thread keeps Python's lock (the GIL) before a waiting one gets it; Python's default is 5 ms.
+#: ⚠️ Every SQLite step gives the GIL up and has to take it back. Next to a thread that computes without pause (filing a
+#: box set does for 10 to 15 minutes) each of these returns waits up to a whole interval, and a write holds SQLite's
+#: lock that much longer (25.09.2026: 39 writes gave up in ten minutes while two box sets were filed). Measured
+#: 26.09.2026 with Python 3.14, 700 small reads on Linux: 0.03 s alone; next to one computing thread 0.9 to 3 s, next
+#: to two 25 to 31 s. With 0.5 ms: 0.6 s and 2 to 5 s. Replanning 700 albums next to one computing thread on Windows:
+#: 5 to 7 s with the default, 0.2 s with 0.5 ms (1 ms still took 20 s there). The price: two threads that both compute
+#: get a fifth less done; one alone loses nothing.
+GIL_SWITCH_SECONDS = 0.0005
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     logs.setup()
+    sys.setswitchinterval(GIL_SWITCH_SECONDS)
     # A backup laid out by /api/backups/restore is swapped in before anything opens the database (plan-sicherung).
     try:
         restored = backups.apply_pending()
@@ -603,7 +617,7 @@ def _add_error_code(operation: dict[str, Any], status: int, code: str, model: st
 def build_openapi(app: FastAPI) -> dict[str, Any]:
     """The OpenAPI document, with the errors every route shares added to each operation.
 
-    Common to all: 500 ``internal_error``. Requests that change something: 403
+    Common to all: 500 ``internal_error``, 503 ``database_busy``. Requests that change something: 403
     ``csrf_header_missing``. Routes with a session: 401 ``not_logged_in``. Routes with input:
     422 ``invalid_input``, in place of FastAPI's validation error, which is never sent.
     """
@@ -638,7 +652,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
             operation = operations.get(method.lower())
             if operation is None:
                 continue
-            common = [(500, "internal_error")]
+            common = [(500, "internal_error"), (503, "database_busy")]
             if method not in SAFE_METHODS and not keyed:
                 common.append((403, "csrf_header_missing"))
             if protected:
