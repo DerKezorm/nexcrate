@@ -982,32 +982,50 @@ def _locate(version: Version, located: Found) -> None:
     version.size = located.size
 
 
-def _verdicts(source_id: int, found: dict[int, Found]) -> dict[int, bool]:
-    """Per version with a found file whether nexcrate's rules would upgrade it, judged as the takeover will store it.
+@dataclass(frozen=True)
+class _Verdicts:
+    """What ``_verdicts`` judged, and by which rules."""
 
-    Only reads, before the takeover's transaction: judging every file under the write lock held it for 1.5 s with
-    4,000 movies (measured 26.09.2026). The connection is claimed, no import changes what is judged meanwhile.
-    """
+    rules: dict[str, Any] | None
+    by_version: dict[int, bool]
+
+
+def _judge(db: OrmSession, source_id: int, found: dict[int, Found], rules: dict[str, Any]) -> dict[int, bool]:
+    """Per version of the connection with a found file whether these rules would upgrade it, judged as the takeover
+    will store it. The versions are changed in memory only and let go of afterwards: nothing is written."""
     verdicts: dict[int, bool] = {}
+    versions = [
+        version
+        for version in db.scalars(select(Version).where(Version.source_id == source_id))
+        if version.id in found
+    ]
+    languages = _original_languages(db, {version.title_id for version in versions})
+    for version in versions:
+        _locate(version, found[version.id])
+        verdicts[version.id] = judging.verdict(rules, version, languages.get(version.title_id))
+        db.expunge(version)
+    return verdicts
+
+
+def _verdicts(source_id: int, found: dict[int, Found]) -> _Verdicts:
+    """The judgement of every found file, before the takeover's transaction: judging them under the write lock held it
+    for 1.5 s with 4,000 movies (measured 26.09.2026).
+
+    What it read may change until the transaction: the version's rules (the owner saves the profile), and the rows it
+    judged. ``save`` compares the rules and judges everything again inside when they differ; a version it did not see
+    is judged inside as well. The rows themselves are not compared: what a file is judged by (release name, quality,
+    languages, the title's original language) comes from the connection's import, and the connection is claimed.
+    """
     with SessionLocal() as db:
         source = db.get(Source, source_id)
         if source is None:
-            return verdicts
+            return _Verdicts(None, {})
         rules = judging.usable_rules(profile_store.of_version(db, source.version_id))
         if rules is None:
-            return verdicts
-        versions = [
-            version
-            for version in db.scalars(select(Version).where(Version.source_id == source_id))
-            if version.id in found
-        ]
-        languages = _original_languages(db, {version.title_id for version in versions})
-        for version in versions:
-            # Changed in memory only, to judge the file as stored after the takeover; nothing is written.
-            _locate(version, found[version.id])
-            verdicts[version.id] = judging.verdict(rules, version, languages.get(version.title_id))
+            return _Verdicts(None, {})
+        judged = _judge(db, source_id, found, rules)
         db.rollback()
-    return verdicts
+    return _Verdicts(rules, judged)
 
 
 def _verdict_now(db: OrmSession, rules: dict[str, Any], version_id: int, located: Found) -> bool:
@@ -1036,7 +1054,7 @@ def save(
     """
     targets = targets or {}
     moment = now()
-    verdicts = _verdicts(source_id, found)
+    prepared = _verdicts(source_id, found)
     with SessionLocal() as db:
         # A write first: it takes SQLite's write lock before anything is read.
         db.execute(update(Source).where(Source.id == source_id).values(updated_at=moment))
@@ -1058,6 +1076,10 @@ def save(
                 db.rollback()
                 raise _failed_from(exc) from exc
         rules = judging.usable_rules(profile_store.of_version(db, definition.id))
+        verdicts = prepared.by_version
+        if rules is not None and rules != prepared.rules:
+            # The profile changed since ``_verdicts`` judged: judged again by the rules that count now.
+            verdicts = _judge(db, source.id, found, rules)
         # Few columns, and the rows written with one statement each for all of them: loading and flushing every
         # version as an object held the write lock for a second with 4,000 movies.
         versions = (
@@ -1123,6 +1145,8 @@ def save(
             rows.append(values)
         if rows:
             db.execute(update(Version), rows)
+            # ⚠️ A plain insert: the listener of ``api_v1.events`` on a new history line (``after_insert``) does not
+            # run for it. Right only while ``taken_over`` is no event of ``events.FROM_HISTORY`` (a test holds that).
             db.execute(
                 insert(HistoryEntry),
                 [
@@ -1277,6 +1301,9 @@ def undo(source_id: int, key: str | None) -> ImportRun:
             if undone:
                 # One statement for all of them: a history line per version as an object each held the lock of an
                 # undo of 4,000 movies for most of its 0.8 s (measured 26.09.2026).
+                # ⚠️ A plain insert: the listener of ``api_v1.events`` on a new history line (``after_insert``) does
+                # not run for it. Right only while ``takeover_undone`` is no event of ``events.FROM_HISTORY`` (a test
+                # holds that).
                 db.execute(
                     insert(HistoryEntry),
                     [

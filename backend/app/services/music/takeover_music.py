@@ -418,9 +418,10 @@ def _place_track(
 
 @dataclass(frozen=True)
 class _Counted:
-    """What an album version counts after the takeover, and of which files."""
+    """What an album version counts after the takeover, and from what: its files with their tracks, its target release,
+    its switch and its judgement (``_inputs``)."""
 
-    files: frozenset[int]
+    inputs: tuple[Any, ...]
     track_counts: dict[str, int]
     has_file: bool
     state: str
@@ -434,12 +435,23 @@ class _Prepared:
     artist_folders: dict[int, str]
 
 
+def _inputs(
+    target_release_id: int | None, monitored: bool, cutoff_not_met: bool | None, files: Any
+) -> tuple[Any, ...]:
+    """What a version's count and state depend on and ``save`` can compare cheaply: the target release, the switch, the
+    judgement, and its files with their single track. ``files`` holds (file id, track id) pairs."""
+    return (target_release_id, bool(monitored), bool(cutoff_not_met), frozenset(files))
+
+
 def _prepare(source_id: int, found: dict[int, takeover.Found], places: dict[int, tuple[str, str | None]]) -> _Prepared:
     """Where every Lidarr file lies and what every version counts once the takeover dropped the files that went.
 
     Only reads, before the takeover's transaction: counting the tracks of 3,000 albums one by one held the write lock
-    of a takeover for 4.8 s (measured 26.09.2026). The connection is claimed, no import changes it meanwhile; what
-    changed all the same is counted again inside the transaction.
+    of a takeover for 4.8 s (measured 26.09.2026). ``save`` counts a version again inside when its ``_inputs`` changed
+    meanwhile: a file added or gone, a file's single track, the target release, the switch or the judgement. Not
+    compared: the several tracks of a file that holds more than one (``track_ids``, ``source_track_ids``) and the
+    tracks of the releases themselves. They change when MusicBrainz loads a release or the owner assigns an unclear
+    file, rarely in the seconds between; the album's next count sets them right.
     """
     prepared = _Prepared({}, {}, {})
     with SessionLocal() as db:
@@ -466,7 +478,12 @@ def _prepare(source_id: int, found: dict[int, takeover.Found], places: dict[int,
                 # Counted as ``save`` leaves it, in memory only; nothing is written.
                 store._count_tracks(db, version, staying)
                 prepared.counted[version.id] = _Counted(
-                    frozenset(row.id for row in by_version.get(version.id, [])),
+                    _inputs(
+                        version.target_release_id,
+                        version.monitored,
+                        version.cutoff_not_met,
+                        ((row.id, row.track_id) for row in by_version.get(version.id, [])),
+                    ),
                     dict(version.track_counts or {}),
                     bool(version.has_file),
                     version.state,
@@ -512,21 +529,28 @@ def save(
             except HTTPException as exc:
                 db.rollback()
                 raise takeover._failed_from(exc) from exc
-        versions = (
-            db.execute(select(Version.id, Version.title_id).where(Version.source_id == source.id).order_by(Version.id))
+        facts = (
+            db.execute(
+                select(
+                    Version.id, Version.title_id, Version.target_release_id, Version.monitored, Version.cutoff_not_met
+                )
+                .where(Version.source_id == source.id)
+                .order_by(Version.id)
+            )
             .tuples()
             .all()
         )
+        versions = [(version_id, title_id) for version_id, title_id, *_rest in facts]
         version_ids = [version_id for version_id, _title_id in versions]
-        files_of: dict[int, set[int]] = defaultdict(set)
+        files_of: dict[int, set[tuple[int, int | None]]] = defaultdict(set)
         lidarr_files: list[tuple[int, int]] = []
         for start in range(0, len(version_ids), 500):
-            for file_id, version_id, source_file_id in db.execute(
-                select(TrackFile.id, TrackFile.version_id, TrackFile.source_file_id).where(
+            for file_id, version_id, source_file_id, track_id in db.execute(
+                select(TrackFile.id, TrackFile.version_id, TrackFile.source_file_id, TrackFile.track_id).where(
                     TrackFile.version_id.in_(version_ids[start : start + 500])
                 )
             ).tuples():
-                files_of[version_id].add(file_id)
+                files_of[version_id].add((file_id, track_id))
                 if source_file_id is not None:
                     lidarr_files.append((file_id, version_id))
         kept: list[dict[str, Any]] = []
@@ -542,12 +566,12 @@ def save(
                 gone.append(file_id)
             else:
                 kept.append({"file_id": file_id, "relative": placed[0], "file_size": placed[1]})
-        # A version whose files changed after ``_prepare`` counts again below, from the rows.
+        # A version whose ``_inputs`` changed after ``_prepare`` counts again below, from the rows.
         again = [
             version_id
-            for version_id in version_ids
+            for version_id, _title_id, target, monitored, cutoff in facts
             if version_id not in prepared.counted
-            or prepared.counted[version_id].files != frozenset(files_of[version_id])
+            or prepared.counted[version_id].inputs != _inputs(target, monitored, cutoff, files_of[version_id])
         ]
         rows: list[dict[str, Any]] = []
         for version_id in version_ids:
@@ -570,6 +594,8 @@ def save(
             rows.append(values)
         if rows:
             db.execute(update(Version), rows)
+            # ⚠️ A plain insert: the listener of ``api_v1.events`` on a new history line (``after_insert``) does not
+            # run for it. Right only while ``taken_over`` is no event of ``events.FROM_HISTORY`` (a test holds that).
             db.execute(
                 insert(HistoryEntry),
                 [

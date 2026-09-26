@@ -579,8 +579,6 @@ class Outcome:
     versions_total: int = 0
     versions_removed: int = 0
     removed_title_ids: list[int] = field(default_factory=list)
-    #: The ``release.nex`` entries of owner's versions this run took over, removed after the commit.
-    companion_removals: list[companions.Removal] = field(default_factory=list)
 
 
 def _upgrade_target(profile: QualityProfile) -> str | None:

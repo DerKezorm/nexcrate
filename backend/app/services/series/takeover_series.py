@@ -505,21 +505,24 @@ class _Placed:
 
 def _place_files(
     db: OrmSession,
-    definition_id: int,
+    rules: dict[str, Any] | None,
     file_ids: list[int],
     found: dict[int, takeover.Found],
     places: dict[int, tuple[str, str, bool]],
 ) -> dict[int, _Placed | None]:
-    """Per Sonarr file of the takeover where it lies, or None when it goes (not found, or not in its series folder).
+    """Per Sonarr file of the takeover where it lies, or None when it goes (not found, or not in its series folder),
+    judged by ``rules``. Only reads.
 
-    Only reads: the takeover runs it before its transaction. ⚠️ Judging the files is what held the write lock of a
-    takeover of 10,000 episode files for 13.7 s (measured 26.09.2026); nothing another writer does meanwhile changes
-    what it reads, the connection is claimed and no import feeds it.
+    ``save`` runs it before its transaction: judging the files under the write lock held it for 13.7 s with 10,000
+    episode files (measured 26.09.2026). What it read may change until the transaction: the rules (the owner saves the
+    profile) and the files. ``save`` compares the rules and places everything again inside when they differ, and places
+    a file it did not see inside as well. The rows themselves are not compared: what a file is judged by (release name,
+    quality, languages, its episodes, the series' type and language) comes from the connection's import, and the
+    connection is claimed.
     """
     placed: dict[int, _Placed | None] = {}
     if not file_ids:
         return placed
-    rules = _rules(db, definition_id)
     for start in range(0, len(file_ids), 500):
         chunk = file_ids[start : start + 500]
         rows = list(db.scalars(select(EpisodeFile).where(EpisodeFile.id.in_(chunk))))
@@ -612,7 +615,8 @@ def save(
     with SessionLocal() as db:
         definition_id = db.scalar(select(Source.version_id).where(Source.id == source_id))
         fed = list(db.scalars(select(Version.id).where(Version.source_id == source_id)))
-        prepared = _place_files(db, definition_id or 0, _sonarr_files(db, fed), found, places)
+        judged_by = _rules(db, definition_id or 0)
+        prepared = _place_files(db, judged_by, _sonarr_files(db, fed), found, places)
     with SessionLocal() as db:
         db.execute(update(Source).where(Source.id == source_id).values(updated_at=moment))
         source = db.get(Source, source_id)
@@ -635,10 +639,14 @@ def save(
         versions = list(db.scalars(select(Version).where(Version.source_id == source.id).order_by(Version.id)))
         version_ids = [version.id for version in versions]
         file_ids = _sonarr_files(db, version_ids)
+        rules = _rules(db, definition.id)
+        if rules != judged_by:
+            # The profile changed since the files were judged: judged again by the rules that count now.
+            prepared = _place_files(db, rules, file_ids, found, places)
         late = [file_id for file_id in file_ids if file_id not in prepared]
         if late:
             # Nothing adds files while the connection is claimed; should one come all the same, it is placed here.
-            prepared.update(_place_files(db, definition.id, late, found, places))
+            prepared.update(_place_files(db, rules, late, found, places))
         name = source.name[:1024]
         for version in versions:
             place = places.get(version.id)
@@ -674,6 +682,8 @@ def save(
                 execution_options={"synchronize_session": False},
             )
         if versions:
+            # ⚠️ A plain insert: the listener of ``api_v1.events`` on a new history line (``after_insert``) does not
+            # run for it. Right only while ``taken_over`` is no event of ``events.FROM_HISTORY`` (a test holds that).
             db.execute(
                 insert(HistoryEntry),
                 [
