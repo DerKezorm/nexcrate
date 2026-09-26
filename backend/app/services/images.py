@@ -7,7 +7,12 @@ browser only talks to nexcrate; the Content-Security-Policy allows images from o
 nothing else.
 
 A poster of a taken-over source is served from the cache as before; nexcrate never asks that source
-again. When it is not cached any more, TMDB's poster of the title takes its place.
+again. When the source cannot deliver a poster at all (an error, or an answer that is not an image,
+found 25./26.09.2026: a Radarr/Sonarr behind forms login answers a redirect instead of the file),
+TMDB's poster of the title takes its place, while a TMDB token exists; otherwise the interface shows
+its placeholder, honestly. A movie fed by a live source never had its TMDB poster file looked up
+before (the TMDB refresh only runs for titles no source feeds), so the fallback looks it up once by
+the title's TMDB id and keeps it in ``titles.tmdb_poster_path`` for next time.
 
 The file name carries the cache key (source id and ``lastWrite``): ``<title>-poster-<key>.jpg``.
 A new ``lastWrite`` means a new file, and the old ones of the title are removed. The address the
@@ -28,7 +33,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from .. import crypto
 from ..config import get_settings
@@ -200,6 +205,45 @@ async def fetch_poster(radarr: RadarrClient, relative_url: str) -> Image:
     return await radarr.image(relative_url)
 
 
+def _store_tmdb_poster_path(title_id: int, poster_file: str) -> None:
+    with SessionLocal() as db:
+        db.execute(update(Title).where(Title.id == title_id).values(tmdb_poster_path=poster_file))
+        db.commit()
+
+
+async def _looked_up_tmdb_file(title_id: int) -> str | None:
+    """A TMDB poster file looked up on demand for a movie a source feeds, and kept for next time.
+
+    A source-fed title never has ``tmdb_poster_path`` from the refresh job (it only refreshes titles no
+    source feeds), so the fallback for it has to ask TMDB itself, once. None without a TMDB id, without
+    a stored token, or when TMDB knows no poster either.
+    """
+    with SessionLocal() as db:
+        row = db.execute(select(Title.kind, Title.tmdb_id).where(Title.id == title_id)).first()
+    if row is None or row.kind != "movie" or not row.tmdb_id:
+        return None
+    stored, token = await asyncio.to_thread(tmdb.token_state)
+    if not stored or not token:
+        return None
+    try:
+        data = await tmdb.fetch_movie(token, row.tmdb_id, tmdb.FALLBACK_LOCALE)
+    except tmdb.TmdbError as exc:
+        logger.info("Could not look up a fallback TMDB poster for title %d: %s", title_id, exc)
+        return None
+    if not data.poster_file:
+        return None
+    await asyncio.to_thread(_store_tmdb_poster_path, title_id, data.poster_file)
+    return data.poster_file
+
+
+async def _fallback_poster(title_id: int, found: PosterReference) -> tuple[Path, str] | None:
+    """TMDB's poster in the source's place, while a TMDB token exists; None for an honest placeholder."""
+    fallback_file = found.fallback_tmdb_file or await _looked_up_tmdb_file(title_id)
+    if fallback_file is None:
+        return None
+    return await tmdb.poster(TMDB_POSTER_SIZE, fallback_file)
+
+
 async def poster(title_id: int) -> tuple[Path, str] | None:
     """The cached poster file and its type, fetched from the source when needed. None if there is none."""
     found = await asyncio.to_thread(reference, title_id)
@@ -214,15 +258,13 @@ async def poster(title_id: int) -> tuple[Path, str] | None:
         return hit
     if found.taken_over:
         # ⚠️ A taken-over source is never asked again; TMDB's poster takes the place of the copy that is gone.
-        if found.fallback_tmdb_file is None:
-            return None
-        return await tmdb.poster(TMDB_POSTER_SIZE, found.fallback_tmdb_file)
+        return await _fallback_poster(title_id, found)
     api_key = await asyncio.to_thread(crypto.decrypt, found.stored_api_key)
     try:
         async with RadarrClient(found.source_url, api_key) as radarr:
             image = await fetch_poster(radarr, found.relative_url)
     except (ImageUnavailable, RadarrError, SourceUrlInvalid) as exc:
         logger.info("Poster of title %d is not available: %s", title_id, exc)
-        return None
+        return await _fallback_poster(title_id, found)
     path = await asyncio.to_thread(store, found.title_id, found.key, image)
     return path, image.content_type
