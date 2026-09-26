@@ -323,12 +323,35 @@ def _edition_notes(parsed: ParsedAlbum, target: TargetInfo | None) -> list[dict[
     if target is None:
         return []
     notes: list[dict[str, Any]] = []
-    other = [edition for edition in parsed.editions if edition in ("deluxe", "expanded", "box", "complete", "bonus")]
+    named_editions = ("deluxe", "expanded", "box", "collection", "complete", "bonus")
+    other = [edition for edition in parsed.editions if edition in named_editions]
     other_media = bool(parsed.media_count and target.media_count and parsed.media_count != target.media_count)
     named = {word for key in schreibweisen.keys(target.name) for word in key.split(" ")}
     if other_media or (other and not set(other) & named):
         notes.append({"code": "other_edition", "editions": other, "media": parsed.media_count})
     return notes
+
+
+#: Editions naming a whole extra collection, not a bigger studio album (E1, "Deluxe ja, Box nein" of ``music.target``,
+#: applied here to a found release instead of the target release): rejected outright, unlike a deluxe or expanded
+#: edition, which stays a hint (decision 14). Found on the owner's library, 25.09.2026: the automatic loaded whole
+#: box sets for single-disc albums, and 33 of their tracks did not fit on import.
+BOX_EDITIONS = frozenset({"box", "complete", "collection"})
+#: More media than the target's own, past one likely bonus disc, counts as a box too, even without one of the words
+#: above ("10CD"): the same brake ``music.target`` uses for its own choice among an album's releases.
+BOX_MEDIA_OVER = 1
+
+
+def _box_rejection(parsed: ParsedAlbum, target: TargetInfo | None) -> dict[str, Any] | None:
+    """Whether a release is a bundle of extra discs and not the studio album itself. Never rejected when the
+    album's own target release already spans that many media: then a release like it is what was asked for."""
+    if target is None or not target.media_count or target.media_count > 1 + BOX_MEDIA_OVER:
+        return None
+    named = sorted(set(parsed.editions) & BOX_EDITIONS)
+    extra_media = bool(parsed.media_count and parsed.media_count > target.media_count + BOX_MEDIA_OVER)
+    if not named and not extra_media:
+        return None
+    return {"code": "box_for_album", "editions": named, "media": parsed.media_count}
 
 
 def _age_hours(published: datetime | None, moment: datetime) -> float | None:
@@ -448,6 +471,9 @@ def _verdict(
         rejections.append(too_small)
     notes.extend(size_notes)
     notes.extend(_edition_notes(parsed, album.target))
+    box = _box_rejection(parsed, album.target)
+    if box is not None:
+        rejections.append(box)
     if album.rules is None:
         # Without a profile only what nexcrate never takes (decision 3): no step is judged.
         fixed = [{"code": "cue_single_file"}] if "cue" in parsed.warnings else []

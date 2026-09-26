@@ -152,6 +152,7 @@ EDITIONS = {
     "collectors": "collectors",
     "boxset": "box",
     "box": "box",
+    "collection": "collection",
     "retail": "retail",
     "digipak": "digipak",
     "complete": "complete",
