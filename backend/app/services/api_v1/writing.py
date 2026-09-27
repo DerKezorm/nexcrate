@@ -873,6 +873,8 @@ def _apply_withdraw(plan: Plan, scope: SeriesScope | None, delete_files: bool, c
             recycle_bin.undo(result.moves)
             raise
     recycle_bin.tell_media_servers(result.folders)
+    # The entries of the files that went into the bin, then those of the versions that went.
+    removals = result.companions + removals
     if removals:
         companions.remove(removals)
     if title_removed:

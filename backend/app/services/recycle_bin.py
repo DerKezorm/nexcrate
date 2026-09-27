@@ -53,7 +53,7 @@ from ..models import (
     VersionDefinition,
     utcnow,
 )
-from . import folders
+from . import companions, folders
 from .downloads import files
 
 if TYPE_CHECKING:
@@ -149,6 +149,9 @@ class Result:
     #: The folders that lost a file, for the media servers after the commit: ``(kind, folder)``.
     folders: list[tuple[str, str]] = field(default_factory=list)
     moves: list[Move] = field(default_factory=list)
+    #: The ``release.nex`` entries of movie files that went, for ``companions.remove`` after the commit: the entry
+    #: named a file in the bin.
+    companions: list[companions.Removal] = field(default_factory=list)
 
     @property
     def files(self) -> int:
@@ -444,6 +447,9 @@ def _delete_movie(db: OrmSession, title: Title, version: Version, label: str, ac
     subtitles = list(
         db.scalars(select(ExtraFile).where(ExtraFile.version_id == version.id, ExtraFile.episode_file_id.is_(None)))
     )
+    if companions.enabled(db):
+        result.companions.extend(companions.plan_removal(db, [version]))
+        companions.clear_state(version)
     if root is None or path is None or not path.is_file():
         # The file is gone already: the record goes, nothing moves.
         done.missing = 1
@@ -731,6 +737,8 @@ def delete(title_id: int, scope: Scope, actor: Actor = OWNER) -> Result:
             undo(result.moves)
             raise
     tell_media_servers(result.folders)
+    if result.companions:
+        companions.remove(result.companions)
     logger.info("Title %d: %d files went into the recycle bin (%s)", title_id, result.files, actor.kind)
     return result
 
@@ -1060,8 +1068,12 @@ def restore(entry_id: int, actor: Actor = OWNER, fetched: Fetched | None = None)
             "version_definition_id": version.version_definition_id,
             "created": created,
         }
+        restored_version = version.id
     if reading:
         folder_read.enqueue(reading)
+    if answer["kind"] == "movie":
+        # release.nex names the file that came back (it named the file that went, or nothing).
+        companions.write_version(restored_version)
     tell_media_servers([(answer["kind"], str(target.parent))])
     logger.info("Recycle entry %d restored for title %d (%s)", entry_id, answer["title_id"], actor.kind)
     return answer
