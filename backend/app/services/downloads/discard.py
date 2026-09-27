@@ -260,7 +260,9 @@ def shared(download_id: int, folder: Path) -> bool:
             continue
         mappings, category = clients[client_id]
         other = _followed(reported, mappings, category)
-        if other is not None and files.resolved(other) == target:
+        # A path that names the folder but cannot be followed into the category folder may still mean it: the folder
+        # stays, since a folder kept too long costs space and one deleted too early costs a download.
+        if other is None or files.resolved(other) == target:
             return True
     return False
 
