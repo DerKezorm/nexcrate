@@ -301,7 +301,8 @@ async def _start(
                     imdb_id=movie.imdb_id,
                     original_language=movie.original_language,
                     runtime_min=movie.runtime,
-                    alternative_titles=movie.other_titles,
+                    # TMDB's alternative and translated titles count only with the year (``search.matching``).
+                    other_titles=movie.other_titles,
                 )
                 wanted = [item["definition_id"] for item in versions if item["definition_id"] is not None]
                 search_id = jobs.start_preview(jobs.load_preview(info, wanted))

@@ -23,17 +23,22 @@ the release name and the video's name the same way before anything moves (``down
 
 A name fits when, with the spelling keys (umlauts, accents, "&"), a leading article left aside, number words and Roman
 numbers as digits, and without a trailing edition or release tag ("Extended", "Director's Cut", "REPACK", "Dubbed",
-"HDR", "Criterion Collection"), it
+"HDR", "Criterion Collection", "3D HOU", "HSBS"), it
 
-* equals a title, the original title, an alternative title of any country, a translated title or an alias,
+* equals a title or the original title,
+* or equals an alternative or translated title from TMDB (stored as keys, without their language) or from Radarr (whose
+  alternative titles come from TMDB; nexcrate keeps no alias of the owner's own for a movie), but only with a year in
+  the name that fits the movie's: TMDB lists the name of a whole series as a translation of its first movie (the
+  owner's decision of 27.09.2026),
 * or one part of such a title split at a colon, a dash, a slash or a bracket ("Example Hunters – Die Beispieljäger" is
   "Example Hunters" and "Die Beispieljäger"), but only with a year in the name that fits the movie's (at most one
   off, as for the number): a part alone is often the name of another movie of the series (the owner's decision of
   26.09.2026),
 * or such a title with one number put in or left out inside it ("Examplezilla 2 King of the Examples" for
   "Examplezilla: King of the Examples"), never at its end: "Example 2" is not "Example",
-* or such a title of at least two words followed by more words (a subtitle the title lacks), and never by fewer words:
-  "The Example" is not "The Example Circle",
+* or such a title of at least two words followed by more words (a subtitle the title lacks), but only with a year in
+  the name that fits the movie's, as the name of a series with the subtitle of another of its movies looks the same
+  (the owner's decision of 27.09.2026); never by fewer words: "The Example" is not "The Example Circle",
 * or such a title followed by the part number 1 ("Example Harry 1", "Example Harry I", "Example Harry Part 1"),
 * or the movie's names one after the other, each whole or as a part, each with or without a leading article: an
   original title followed by the German one, "Zehn - Ten - T3n", or "Examplia Preis der Beispiele" for "Examplia -
@@ -113,6 +118,10 @@ _TAGS = (
     r"|READ[ ._-]?NFO|PROPER|REPACK|RERiP|LiMiTED|INTERNAL|Dubbed|Rated|Hybrid|SDR|HDR|DV|Colorized|Kinoversion|FS|WS"
     # "Special Extended Version" read without a language: the parser stops at the edition and keeps "Special".
     r"|Special"
+    # 3D releases: half side by side, over and under, the Blu-ray 3D stream. "3D" only with one of them: "Example 3D"
+    # alone may be the title of another movie.
+    r"|3D[ ._-]+(?:Half[ ._-]SBS|Half[ ._-]OU|H[ ._-]?SBS|H[ ._-]?OU|SBS|OU|MVC)"
+    r"|Half[ ._-]SBS|Half[ ._-]OU|H[ ._-]?SBS|H[ ._-]?OU|SBS|OU|MVC"
 )
 #: What may trail a title read without a year: a release tag, an edition, a German cut, a documentary tag, a resolution.
 _TRAILING = re.compile(
@@ -180,26 +189,41 @@ def _parts(text: str) -> list[str]:
 
 
 def _a_part_number(text: str) -> bool:
-    """Whether a text is only a part number from 2 on: "Part 2", "Teil II", "Vol. 3", "Zwei", "2"."""
+    """Whether a text is only a part number from 2 on: "Part 2", "Teil II", "Vol. 3", "Zwei", "2". A year is none
+    ("Example (1998)")."""
     for key in schreibweisen.keys(text):
         words = _words(key)
-        if len(words) == 1 and words[0].isdigit() and int(words[0]) >= 2:
+        if len(words) == 1 and words[0].isdigit() and int(words[0]) >= 2 and not _YEAR.fullmatch(words[0]):
             return True
     return False
 
 
 @lru_cache(maxsize=256)
 def whole_forms(title: TitleInfo) -> frozenset[Words]:
-    """The forms of the movie's names as they are: each text whole, and every key (TMDB's are stored as keys)."""
-    found = _forms(title.texts, year=title.year)
+    """The forms of the movie's names as they are: each text whole, and every key (TMDB's are stored as keys). A name
+    as written ends in the movie's year now and then ("Example 1998"): its form without it counts too."""
+    found = _forms((*title.texts, *title.other_texts), year=title.year)
     found |= {words for key in title.keys if (words := _words(key))}
     return frozenset(found)
 
 
 @lru_cache(maxsize=256)
+def own_forms(title: TitleInfo) -> frozenset[Words]:
+    """The movie's own whole names: the title, the original title, and aliases of the owner's (none for a movie)."""
+    return frozenset(_forms(title.texts, year=title.year))
+
+
+@lru_cache(maxsize=256)
+def tmdb_forms(title: TitleInfo) -> frozenset[Words]:
+    """The whole names from TMDB or Radarr, alternative or translated titles of any language: they need the year."""
+    return whole_forms(title) - own_forms(title)
+
+
+@lru_cache(maxsize=256)
 def part_forms(title: TitleInfo) -> frozenset[Words]:
     """The forms of the parts of the movie's names that are not a whole name of it too."""
-    found = _forms((part for text in title.texts for part in _parts(text)), year=title.year)
+    texts = (*title.texts, *title.other_texts)
+    found = _forms((part for text in texts for part in _parts(text)), year=title.year)
     return frozenset(found - whole_forms(title))
 
 
@@ -216,9 +240,9 @@ def _known_joined(title: TitleInfo) -> frozenset[str]:
 
 
 @lru_cache(maxsize=256)
-def _whole_joined(title: TitleInfo) -> frozenset[str]:
-    """The movie's whole names with their words written together."""
-    return frozenset("".join(form) for form in whole_forms(title))
+def _own_joined(title: TitleInfo) -> frozenset[str]:
+    """The movie's own whole names with their words written together."""
+    return frozenset("".join(form) for form in own_forms(title))
 
 
 @lru_cache(maxsize=256)
@@ -283,19 +307,32 @@ def _has_range(words: Words) -> bool:
     return False
 
 
-def _fits(read: Words, known: Words) -> bool:
+#: How a name fits one of the movie's names (``_fit``): as it is, as the first part, or with more words after it.
+AS_IT_IS, FIRST_PART, WITH_MORE = "as_it_is", "first_part", "with_more"
+
+
+def _fit(read: Words, known: Words) -> str | None:
+    """How ``read`` fits ``known``: ``AS_IT_IS`` (also written together, or with one number put in or left out),
+    ``FIRST_PART`` (followed by the part number 1 alone), ``WITH_MORE`` (followed by the part number 1 and more words,
+    or by a subtitle after a title of at least two words); None when it does not."""
     if read == known or "".join(read) == "".join(known):
-        return True
+        return AS_IT_IS
     if _one_number_more(read, known) or _one_number_more(known, read):
-        return True
+        return AS_IT_IS
     more = read[len(known) :]
     if read[: len(known)] != known or not more:
-        return False
+        return None
     number = _part_number(more)
     if number is not None:
         # The first part fits, alone or before a subtitle of a longer title; a part from 2 on is a sequel.
-        return number == "1" and (len(more) <= 2 or len(known) >= 2)
-    return len(known) >= 2
+        if number != "1" or (len(more) > 2 and len(known) < 2):
+            return None
+        return FIRST_PART if len(more) == 1 else WITH_MORE
+    return WITH_MORE if len(known) >= 2 else None
+
+
+def _fits(read: Words, known: Words) -> bool:
+    return _fit(read, known) is not None
 
 
 def _known_run(words: Words, known: frozenset[Words], joined: frozenset[str]) -> bool:
@@ -311,10 +348,10 @@ WHOLE_ROW, PARTS_ROW = "whole", "parts"
 
 
 def _names_in_a_row(read: Words, title: TitleInfo) -> str | None:
-    """Whether the name is the movie's names one after the other: ``WHOLE_ROW`` when one of them is a whole name,
-    ``PARTS_ROW`` when all are parts, None otherwise. A row of one name is what ``_fits`` judged already."""
+    """Whether the name is the movie's names one after the other: ``WHOLE_ROW`` when one of them is a whole name of its
+    own (not one only TMDB knows), ``PARTS_ROW`` when all are parts or TMDB's names, None otherwise."""
     known, joined = known_forms(title), _known_joined(title)
-    whole, whole_joined = whole_forms(title), _whole_joined(title)
+    whole, whole_joined = own_forms(title), _own_joined(title)
     # rows[i]: for the rows that make up read[:i], whether one of them has a whole name among its names.
     rows: list[set[bool]] = [{False}] + [set() for _ in read]
     for end in range(1, len(read) + 1):
@@ -378,13 +415,17 @@ def title_fits(title: TitleInfo, parsed_title: str | None, name: str | None = No
         return False
     for longer in _read_past_a_year(name, parsed_title):
         read |= read_forms(longer)
-    if any(_fits(words, form) for words in read for form in whole_forms(title)):
+    year = _year_fits(title, name)
+    # Without the year only the movie's own names, as they are or with the first part number.
+    fits = {_fit(words, form) for words in read for form in own_forms(title)}
+    if AS_IT_IS in fits or FIRST_PART in fits or (year and WITH_MORE in fits):
         return True
-    parts = part_forms(title)
-    if parts and _year_fits(title, name) and any(_fits(words, form) for words in read for form in parts):
+    # With the year also TMDB's names and the parts of a title.
+    others = tmdb_forms(title) | part_forms(title)
+    if year and any(_fits(words, form) for words in read for form in others):
         return True
     rows = {_names_in_a_row(words, title) for words in read}
-    return WHOLE_ROW in rows or (PARTS_ROW in rows and _year_fits(title, name))
+    return WHOLE_ROW in rows or (PARTS_ROW in rows and year)
 
 
 def name_fits(title: TitleInfo, names: Iterable[str | None]) -> bool | None:

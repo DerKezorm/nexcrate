@@ -457,7 +457,8 @@ def _load(download_id: int) -> Context | None:
                 tmdb_id=title.tmdb_id,
                 imdb_id=title.imdb_id,
                 runtime_min=title.runtime,
-                alternative_titles=list(alternatives),
+                # Radarr's alternative titles count only with the year, as TMDB's (search.matching).
+                other_titles=list(alternatives),
                 stored_keys=[title.search_keys, title.tmdb_search_keys],
             )
         return Context(

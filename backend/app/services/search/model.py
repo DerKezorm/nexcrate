@@ -43,6 +43,9 @@ class TitleInfo:
     #: The title, the original title and the alternative titles as written: ``matching.title_fits`` splits them into
     #: their parts, which the keys cannot.
     texts: tuple[str, ...] = ()
+    #: Names from TMDB or Radarr as written (Radarr's alternative titles come from TMDB): in the keys too, and split
+    #: like ``texts``, but ``matching.title_fits`` takes them only with the movie's year.
+    other_texts: tuple[str, ...] = ()
 
 
 def title_info(
@@ -57,8 +60,10 @@ def title_info(
     runtime_min: int | None = None,
     alternative_titles: Iterable[str | None] = (),
     stored_keys: Iterable[str | None] = (),
+    other_titles: Iterable[str | None] = (),
 ) -> TitleInfo:
-    """A title with its keys: those of its texts, and stored ``|key|key|`` strings (TMDB keeps only keys)."""
+    """A title with its keys: those of its texts, and stored ``|key|key|`` strings (TMDB keeps only keys).
+    ``other_titles`` are names from TMDB or Radarr as written, which count only with the year."""
     keys: set[str] = set()
     texts: list[str] = []
     for text in (title, original_title, *alternative_titles):
@@ -67,6 +72,11 @@ def title_info(
             texts.append(text)
     for stored in stored_keys:
         keys.update(key for key in (stored or "").split(schreibweisen.SEPARATOR) if key)
+    others: list[str] = []
+    for text in other_titles:
+        keys.update(schreibweisen.keys(text))
+        if text and text not in texts and text not in others:
+            others.append(text)
     return TitleInfo(
         title_id=title_id,
         title=title,
@@ -78,6 +88,7 @@ def title_info(
         runtime_min=runtime_min,
         keys=frozenset(keys),
         texts=tuple(texts),
+        other_texts=tuple(others),
     )
 
 

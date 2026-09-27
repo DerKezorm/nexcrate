@@ -798,7 +798,8 @@ def load(
             imdb_id=title.imdb_id,
             original_language=title.original_language,
             runtime_min=title.runtime,
-            alternative_titles=alternatives,
+            # Radarr's alternative titles come from TMDB: they count only with the year, as TMDB's (search.matching).
+            other_titles=alternatives,
             stored_keys=[title.search_keys, title.tmdb_search_keys],
         )
         rows = (
