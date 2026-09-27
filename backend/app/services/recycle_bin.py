@@ -783,43 +783,50 @@ def _track_slot_taken(db: OrmSession, version: Version, track_id: int | None) ->
     )
 
 
-def place_taken(db: OrmSession, entry: RecycleEntry, title: Title | None, version: Version | None) -> bool:
-    """Whether a restore would refuse the file for its place: something lies where it was, a source feeds the version,
-    or the version has another file there by now. Reads only; ``restore`` checks the same inside its transaction."""
+#: Why a restore would refuse a file for its place: something lies where it was, the version has another file there
+#: by now, or a Radarr, Sonarr or Lidarr connection feeds the version.
+PLACES_TAKEN = ("path", "version", "source")
+
+
+def place_taken(db: OrmSession, entry: RecycleEntry, title: Title | None, version: Version | None) -> str | None:
+    """Why a restore would refuse the file for its place (one of ``PLACES_TAKEN``), or None when it is free. Reads
+    only; ``restore`` checks the same inside its transaction."""
     from . import recycle_again
 
     root = _root(entry.root_folder)
     if root is not None:
         target = below(root, entry.relative_path)
         if target is None or os.path.lexists(target):
-            return True
+            return "path"
     if title is None or version is None:
         # The restore adds them again: nothing can be in the way.
-        return False
+        return None
     if version.source_id is not None:
-        return True
+        return "source"
     if entry.kind == "movie":
-        return bool(version.has_file)
+        return "version" if version.has_file else None
     facts = {name: _load(value) for name, value in (entry.file_facts or {}).items()}
     if entry.kind == "album":
         track_id, _tracks = recycle_again.track_ids(db, entry, title, facts.get("track_id"), facts.get("track_ids"))
         same_path = select(TrackFile.id).where(
             TrackFile.version_id == version.id, TrackFile.relative_path == facts.get("relative_path")
         )
-        return _track_slot_taken(db, version, track_id) or db.scalar(same_path.limit(1)) is not None
+        taken = _track_slot_taken(db, version, track_id) or db.scalar(same_path.limit(1)) is not None
+        return "version" if taken else None
     stored = [int(value) for value in facts.get("episode_ids", [])]
     episode_ids, found_again = recycle_again.episode_ids(db, entry, title, stored)
     second = facts.get("part") == 2 and (bool(episode_ids) or not found_again)
     same_path = select(EpisodeFile.id).where(
         EpisodeFile.version_id == version.id, EpisodeFile.relative_path == facts.get("relative_path")
     )
-    return _episode_slot_taken(db, version, episode_ids, second) or db.scalar(same_path.limit(1)) is not None
+    taken = _episode_slot_taken(db, version, episode_ids, second) or db.scalar(same_path.limit(1)) is not None
+    return "version" if taken else None
 
 
 def listed(db: OrmSession, kind: str | None = None) -> list[dict[str, Any]]:
     """The bin, newest first. ``present`` says whether the file is still there (a share not mounted says no);
     ``can_add`` whether a restore could add title and version again when they left the library; ``place_taken``
-    whether a restore would refuse it for where it goes."""
+    why a restore would refuse it for where it goes, or None."""
     from . import recycle_again
 
     query = select(RecycleEntry).order_by(RecycleEntry.deleted_at.desc(), RecycleEntry.id.desc())

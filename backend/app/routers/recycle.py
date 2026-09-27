@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -96,6 +97,12 @@ class BinEntry(BaseModel):
         "file there by now, and its title and version are in the library or can be added again (the version still "
         "exists and the entry knows the title)."
     )
+    place_taken: Literal["path", "version", "source"] | None = Field(
+        default=None,
+        description="Why the file cannot come back to its place: path (something lies where it was), version (the "
+        "version has another file there by now) or source (a Radarr, Sonarr or Lidarr connection feeds the version). "
+        "Null when the place is free.",
+    )
 
 
 class BinList(BaseModel):
@@ -135,7 +142,8 @@ def list_bin(db: DbSession) -> BinList:
             deleted_by_name=item["deleted_by_name"],
             present=item["present"],
             in_library=in_library[item["id"]],
-            restorable=item["present"] and not item["place_taken"] and (in_library[item["id"]] or item["can_add"]),
+            restorable=item["present"] and item["place_taken"] is None and (in_library[item["id"]] or item["can_add"]),
+            place_taken=item["place_taken"],
         )
         for item in listed
     ]
