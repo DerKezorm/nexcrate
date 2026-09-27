@@ -507,6 +507,11 @@
       "gone": "The file is gone, or its disk cannot be seen right now.",
       "notInLibrary": "The title or its version is no longer in the library. It cannot go back.",
       "addedAgain": "The title or its version is no longer in the library. Taking it back adds them again, unwatched.",
+      "taken": {
+        "path": "Another file lies where it was by now. It comes back once the place is free.",
+        "version": "The version has another file by now. This one comes back once that one is in the recycle bin.",
+        "source": "A Radarr, Sonarr or Lidarr connection feeds the version. It can only come back without one."
+      },
       "restore": "Take back",
       "restoreLabel": "Take {{file}} back",
       "restored": "{{file}} is back.",

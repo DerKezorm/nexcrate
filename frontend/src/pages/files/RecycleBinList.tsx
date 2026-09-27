@@ -186,7 +186,9 @@ function BinRow({ entry, busy, blocked, onRestore, onPurge }: { entry: RecycleBi
               : t('settings.files.bin.byOwner', { date })}
         </span>
         {!entry.present && <span className="text-xs text-bad-500">{t('settings.files.bin.gone')}</span>}
-        {entry.present && !entry.in_library && (
+        {/* Ist der Platz belegt, ist das der Grund, auch fuer einen Titel ausserhalb der Bibliothek. */}
+        {entry.present && entry.place_taken && <span className="text-xs text-mist-500">{t(`settings.files.bin.taken.${entry.place_taken}`)}</span>}
+        {entry.present && !entry.place_taken && !entry.in_library && (
           <span className="text-xs text-mist-500">{entry.restorable ? t('settings.files.bin.addedAgain') : t('settings.files.bin.notInLibrary')}</span>
         )}
       </div>

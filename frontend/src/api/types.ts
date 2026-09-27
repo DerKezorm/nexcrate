@@ -1887,6 +1887,8 @@ export type RecycleBinEntry = {
   in_library: boolean
   /** Die Datei ist da, und Titel und Fassung stehen in der Bibliothek oder lassen sich wieder anlegen. */
   restorable: boolean
+  /** Warum die Datei nicht an ihren Platz zurueck kann: dort liegt etwas (`path`), die Fassung hat eine andere Datei (`version`), eine Verbindung speist sie (`source`). */
+  place_taken?: 'path' | 'version' | 'source' | null
 }
 
 export type RecycleBin = { items: RecycleBinEntry[]; size_bytes: number }
