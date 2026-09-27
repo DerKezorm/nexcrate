@@ -23,10 +23,11 @@ the design notes, C1, C4, C6, C8, decisions 1, 6 to 10, 13 and 14.
    left out, until the first stop point ends. Without any indexer for automatic search the titles stay due. **A
    replacement goes first in the budget** (the owner's decision of 27.09.2026): at an indexer without a known limit it
    waits for no bucket, only for the stop points; its requests are taken below zero, so the planned searches after it
-   wait for them. At an indexer with a known limit (its ``apiMax`` or the owner's daily limit) it borrows ahead only
-   down to the bucket's floor and then waits too: the limit holds. Programs' wishes and "search automatically now"
-   spend the buckets too, and a failure waited for them for an hour. A step after the search that fails still counts
-   the search (``_searched_anyway``): otherwise the replacement would be due again every minute.
+   wait for them. At an indexer with a known limit (its ``apiMax`` or the owner's daily limit) it never goes below
+   zero: it takes first what the bucket holds, and while it waits, the planned searches wait behind it. Programs'
+   wishes and "search automatically now" spend the buckets too, and a failure waited for them for an hour. A step
+   after the search that fails still counts the search (``_searched_anyway``): otherwise the replacement would be due
+   again every minute.
 
 **After the search,** in its thread: the requests really sent are charged. Then, per version that wants something, the
 release it would take, as the owner's search answer shows it with the blocklist, is loaded through ``loading.grab``
@@ -387,7 +388,7 @@ def reserve(title_id: int, candidates: list[Planned], now: datetime, *, first: b
     """Take the planned requests of every indexer that is not stopped, or make the title wait (decision 19). Returns
     the requests taken per indexer, or None when the title waits. A plan larger than a bucket can hold takes what it
     holds: paging is charged afterwards anyway (S5, decision 12). ``first``: a replacement, which goes ahead of the
-    buckets (``budget.take_first``)."""
+    planned searches (``budget.take_first``)."""
     asked: list[Planned] = []
     ends: list[datetime] = []
     for indexer_id, standing, cost in candidates:
@@ -406,10 +407,11 @@ def reserve(title_id: int, candidates: list[Planned], now: datetime, *, first: b
             "Title %d waits: all %d indexers are paused, stopped or have no allowance", title_id, len(candidates)
         )
         return None
-    short = take_all(asked, now, first=first)
+    if first:
+        return _reserve_first(title_id, asked, now)
+    short = take_all(asked, now)
     if short:
-        ready = budget.ready_first_at if first else budget.ready_at
-        until = max(ready(standing, cost, now) for _indexer_id, standing, cost in short)
+        until = max(budget.ready_at(standing, cost, now) for _indexer_id, standing, cost in short)
         _wait_for_limit(title_id, until)
         logger.info("Title %d waits for the budget of %d of %d indexers", title_id, len(short), len(asked))
         return None
@@ -427,15 +429,37 @@ def give_back(candidates: list[Planned], chosen: dict[int, int], now: datetime) 
 Planned = tuple[int, budget.Standing, int]
 
 
-def take_all(asked: list[Planned], now: datetime, *, first: bool = False) -> list[Planned]:
+def _reserve_first(title_id: int, asked: list[Planned], now: datetime) -> dict[int, int] | None:
+    """``reserve`` for a replacement (``budget.take_first``): all or none, and what each indexer really gave, so that
+    giving back and the charge afterwards count the same."""
+    taken: dict[int, int] = {}
+    short: list[Planned] = []
+    for indexer_id, standing, cost in asked:
+        got = budget.take_first(standing, cost, now)
+        if got is None:
+            short.append((indexer_id, standing, cost))
+        else:
+            taken[indexer_id] = got
+    if not short:
+        return taken
+    for indexer_id, standing, _cost in asked:
+        if indexer_id in taken:
+            budget.charge(standing, -taken[indexer_id], now)
+    # The bucket is held for the replacement until HOLD_GRACE after this time: it is due first.
+    until = max(budget.ready_at(standing, cost, now) - budget.HOLD_GRACE for _indexer_id, standing, cost in short)
+    _wait_for_limit(title_id, until)
+    logger.info("Title %d: its replacement waits for the budget of %d of %d indexers", title_id, len(short), len(asked))
+    return None
+
+
+def take_all(asked: list[Planned], now: datetime) -> list[Planned]:
     """Take the planned requests of every indexer, or of none (decision 19). Returns the indexers whose bucket is short;
-    when there is one, what was taken from the others is given back.
-    ``first``: a replacement (``budget.take_first``)."""
+    when there is one, what was taken from the others is given back."""
     taken: list[Planned] = []
     short: list[Planned] = []
     for planned in asked:
         _indexer_id, standing, cost = planned
-        if (budget.take_first if first else budget.take)(standing, cost, now):
+        if budget.take(standing, cost, now):
             taken.append(planned)
         else:
             short.append(planned)

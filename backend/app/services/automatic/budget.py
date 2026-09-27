@@ -156,6 +156,10 @@ class _Bucket:
 
 _lock = threading.Lock()
 _buckets: dict[int, _Bucket] = {}
+#: Per indexer with a known limit: until when a waiting replacement goes ahead, so planned searches wait behind it.
+_held: dict[int, datetime] = {}
+#: How long past its time a waiting replacement keeps the bucket: the round after that time starts it.
+HOLD_GRACE = timedelta(minutes=5)
 _started_at: datetime | None = None
 
 
@@ -163,6 +167,7 @@ def reset() -> None:
     """Every bucket empty again: after a restart, and when the switch goes on."""
     with _lock:
         _buckets.clear()
+        _held.clear()
 
 
 def mark_started(moment: datetime | None) -> None:
@@ -197,9 +202,20 @@ def tokens(standing: Standing, now: datetime) -> float:
         return _refilled(standing, now).tokens
 
 
+def _hold(standing: Standing, now: datetime) -> datetime | None:
+    """Until when a waiting replacement keeps the bucket; None when none does. Call with ``_lock`` held."""
+    until = _held.get(standing.indexer_id)
+    if until is not None and until <= now:
+        del _held[standing.indexer_id]
+        return None
+    return until
+
+
 def take(standing: Standing, cost: int, now: datetime) -> bool:
-    """Take ``cost`` requests when the bucket holds them."""
+    """Take ``cost`` requests when the bucket holds them and no waiting replacement goes ahead."""
     with _lock:
+        if _hold(standing, now) is not None:
+            return False
         bucket = _refilled(standing, now)
         if cost > bucket.tokens + TOLERANCE:
             return False
@@ -222,45 +238,49 @@ def charge(standing: Standing, amount: float, now: datetime) -> None:
         bucket.tokens = min(room, max(floor(standing), bucket.tokens - amount))
 
 
-def take_first(standing: Standing, cost: int, now: datetime) -> bool:
-    """Take ``cost`` requests for a replacement, which goes ahead of the planned searches (the owner's decision of
-    27.09.2026). Without a known limit it always may, down to ``floor``. With a known limit, the indexer's or the
-    owner's, only while the bucket stays above ``floor``: the limit still holds, a replacement only borrows ahead."""
+def take_first(standing: Standing, cost: int, now: datetime) -> int | None:
+    """Take requests for a replacement, which goes ahead of the planned searches (the owner's decision of 27.09.2026).
+    Returns how many it took, or None when it has to wait.
+
+    Without a known limit it never waits: it takes ``cost``, below zero down to ``floor``, and at the floor only what
+    fits (paging is charged afterwards anyway). With a known limit, the indexer's ``apiMax`` or the owner's daily
+    limit, it takes only what the bucket holds, never below zero: going past the limit can cost the account at a
+    private indexer. When it is short, it keeps the bucket until it is due (``HOLD_GRACE`` after that time): the
+    planned searches wait behind it.
+    """
     with _lock:
         bucket = _refilled(standing, now)
-        low = floor(standing)
         if known_limit(standing) is None:
-            bucket.tokens = max(low, bucket.tokens - cost)
-            return True
-        if bucket.tokens - cost < low - TOLERANCE:
-            return False
+            taken = max(0, min(cost, math.floor(bucket.tokens - floor(standing) + TOLERANCE)))
+            bucket.tokens -= taken
+            return taken
+        if cost > bucket.tokens + TOLERANCE:
+            _held[standing.indexer_id] = _ready(standing, cost, now) + HOLD_GRACE
+            return None
         bucket.tokens -= cost
-        return True
+        _held.pop(standing.indexer_id, None)
+        return cost
 
 
-def ready_first_at(standing: Standing, cost: int, now: datetime) -> datetime:
-    """When ``take_first`` succeeds for ``cost``; a day from now when it never will."""
+def _ready(standing: Standing, cost: int, now: datetime) -> datetime:
+    """When the bucket holds ``cost``; a day from now when it never will. Call with ``_lock`` held."""
     rate = per_day(standing)
-    with _lock:
-        missing = cost + floor(standing) - _refilled(standing, now).tokens
-    if missing <= 0:
-        return now
-    if rate <= 0:
-        return now + UNKNOWN_NEXT
-    return now + timedelta(microseconds=math.ceil(missing * DAY_SECONDS / rate * 1_000_000))
-
-
-def ready_at(standing: Standing, cost: int, now: datetime) -> datetime:
-    """When the bucket will hold ``cost`` requests; a day from now when it never will."""
-    rate = per_day(standing)
-    with _lock:
-        missing = cost - _refilled(standing, now).tokens
+    missing = cost - _refilled(standing, now).tokens
     if missing <= 0:
         return now
     if rate <= 0 or cost > capacity(rate):
         return now + UNKNOWN_NEXT
     # Up to the microsecond: a timedelta rounds to the nearest one, and rounding down names a time the bucket is short.
     return now + timedelta(microseconds=math.ceil(missing * DAY_SECONDS / rate * 1_000_000))
+
+
+def ready_at(standing: Standing, cost: int, now: datetime) -> datetime:
+    """When ``take`` succeeds for ``cost``: the bucket holds it and no waiting replacement goes ahead of it; a day from
+    now when it never will."""
+    with _lock:
+        ready = _ready(standing, cost, now)
+        held = _hold(standing, now)
+    return max(ready, held) if held is not None else ready
 
 
 # --- Stop points ------------------------------------------------------------------------------------------------- #
