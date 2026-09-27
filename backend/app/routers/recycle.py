@@ -92,8 +92,9 @@ class BinEntry(BaseModel):
         description="False when the title or its version left the library; restoring adds them again, unwatched."
     )
     restorable: bool = Field(
-        description="Whether the file can come back: it is there, and its title and version are in the library or "
-        "can be added again (the version still exists and the entry knows the title)."
+        description="Whether the file can come back: it is there, nothing lies where it was, its version has no other "
+        "file there by now, and its title and version are in the library or can be added again (the version still "
+        "exists and the entry knows the title)."
     )
 
 
@@ -134,7 +135,7 @@ def list_bin(db: DbSession) -> BinList:
             deleted_by_name=item["deleted_by_name"],
             present=item["present"],
             in_library=in_library[item["id"]],
-            restorable=item["present"] and (in_library[item["id"]] or item["can_add"]),
+            restorable=item["present"] and not item["place_taken"] and (in_library[item["id"]] or item["can_add"]),
         )
         for item in listed
     ]

@@ -749,9 +749,69 @@ def bin_file(entry: RecycleEntry) -> tuple[Path, Path] | None:
     return root, path
 
 
+def _episode_slot_taken(db: OrmSession, version: Version, episode_ids: list[int], second: bool) -> bool:
+    """Whether an episode of the file has another file by now. A second half needs its episode, and no second half
+    there by now; the first half may well be there."""
+    links = [db.get(EpisodeVersion, (episode_id, version.id)) for episode_id in episode_ids]
+    if second:
+        taken = db.scalar(
+            select(EpisodeFile.id).where(
+                EpisodeFile.version_id == version.id,
+                EpisodeFile.part == 2,
+                EpisodeFile.part_of_episode_id.in_(episode_ids),
+            )
+        )
+        return not links or any(link is None for link in links) or taken is not None
+    # Without episodes the file comes back as it went: unclear or left out.
+    return any(link is None or link.episode_file_id is not None for link in links)
+
+
+def _track_slot_taken(db: OrmSession, version: Version, track_id: int | None) -> bool:
+    return track_id is not None and (
+        db.scalar(
+            select(TrackFile.id).where(TrackFile.version_id == version.id, TrackFile.track_id == track_id).limit(1)
+        )
+        is not None
+    )
+
+
+def place_taken(db: OrmSession, entry: RecycleEntry, title: Title | None, version: Version | None) -> bool:
+    """Whether a restore would refuse the file for its place: something lies where it was, a source feeds the version,
+    or the version has another file there by now. Reads only; ``restore`` checks the same inside its transaction."""
+    from . import recycle_again
+
+    root = _root(entry.root_folder)
+    if root is not None:
+        target = below(root, entry.relative_path)
+        if target is None or os.path.lexists(target):
+            return True
+    if title is None or version is None:
+        # The restore adds them again: nothing can be in the way.
+        return False
+    if version.source_id is not None:
+        return True
+    if entry.kind == "movie":
+        return bool(version.has_file)
+    facts = {name: _load(value) for name, value in (entry.file_facts or {}).items()}
+    if entry.kind == "album":
+        track_id, _tracks = recycle_again.track_ids(db, entry, title, facts.get("track_id"), facts.get("track_ids"))
+        same_path = select(TrackFile.id).where(
+            TrackFile.version_id == version.id, TrackFile.relative_path == facts.get("relative_path")
+        )
+        return _track_slot_taken(db, version, track_id) or db.scalar(same_path.limit(1)) is not None
+    stored = [int(value) for value in facts.get("episode_ids", [])]
+    episode_ids, found_again = recycle_again.episode_ids(db, entry, title, stored)
+    second = facts.get("part") == 2 and (bool(episode_ids) or not found_again)
+    same_path = select(EpisodeFile.id).where(
+        EpisodeFile.version_id == version.id, EpisodeFile.relative_path == facts.get("relative_path")
+    )
+    return _episode_slot_taken(db, version, episode_ids, second) or db.scalar(same_path.limit(1)) is not None
+
+
 def listed(db: OrmSession, kind: str | None = None) -> list[dict[str, Any]]:
     """The bin, newest first. ``present`` says whether the file is still there (a share not mounted says no);
-    ``can_add`` whether a restore could add title and version again when they left the library."""
+    ``can_add`` whether a restore could add title and version again when they left the library; ``place_taken``
+    whether a restore would refuse it for where it goes."""
     from . import recycle_again
 
     query = select(RecycleEntry).order_by(RecycleEntry.deleted_at.desc(), RecycleEntry.id.desc())
@@ -763,6 +823,7 @@ def listed(db: OrmSession, kind: str | None = None) -> list[dict[str, Any]]:
         definition = definitions.get(entry.version_definition_id) if entry.version_definition_id else None
         # The title the file goes back into: its own, or one of the same reference added again since.
         title = recycle_again.find_title(db, entry)
+        version = recycle_again.find_version(db, entry, title) if title is not None else None
         out.append(
             {
                 "id": entry.id,
@@ -784,6 +845,7 @@ def listed(db: OrmSession, kind: str | None = None) -> list[dict[str, Any]]:
                 "size": entry.size,
                 "present": bin_file(entry) is not None,
                 "can_add": recycle_again.can_add(db, entry, title is not None),
+                "place_taken": place_taken(db, entry, title, version),
                 "album_mbid": recycle_again.ref_of(entry) if entry.kind == "album" else None,
                 "track_mbid": recycle_again.kept(entry).get("track") if entry.kind == "album" else None,
             }
@@ -861,23 +923,11 @@ def _restore_episode(db: OrmSession, entry: RecycleEntry, title: Title, version:
         # The title was added again: the second half names its episode's new row, or is a whole file without one.
         facts["part_of_episode_id"] = episode_ids[0] if episode_ids else None
         facts["part"] = 2 if episode_ids else None
-    links = [db.get(EpisodeVersion, (episode_id, version.id)) for episode_id in episode_ids]
     second = facts.get("part") == 2
-    if second:
-        # A second half needs its episode, and no second half there by now; the first half may well be there.
-        taken = db.scalar(
-            select(EpisodeFile.id).where(
-                EpisodeFile.version_id == version.id,
-                EpisodeFile.part == 2,
-                EpisodeFile.part_of_episode_id.in_(episode_ids),
-            )
-        )
-        if not links or any(link is None for link in links) or taken is not None:
-            raise error("recycle_slot_taken", "An episode of the file has another file by now.", 409)
-        links = []
-    elif any(link is None or link.episode_file_id is not None for link in links):
-        # Without episodes the file comes back as it went: unclear or left out.
+    if _episode_slot_taken(db, version, episode_ids, second):
         raise error("recycle_slot_taken", "An episode of the file has another file by now.", 409)
+    # A second half links to no episode of its own.
+    links = [] if second else [db.get(EpisodeVersion, (episode_id, version.id)) for episode_id in episode_ids]
     columns = {column.key for column in EpisodeFile.__table__.columns} - _EPISODE_FILE_SKIP
     values = {name: value for name, value in facts.items() if name in columns}
     if db.scalar(
@@ -920,9 +970,7 @@ def _restore_track(db: OrmSession, entry: RecycleEntry, title: Title, version: V
     track_id = values["track_id"]
     if track_id is None:
         values["unclear"] = True
-    if track_id is not None and db.scalar(
-        select(TrackFile.id).where(TrackFile.version_id == version.id, TrackFile.track_id == track_id).limit(1)
-    ):
+    if _track_slot_taken(db, version, track_id):
         raise error("recycle_slot_taken", "The track has another file by now.", 409)
     if db.scalar(
         select(TrackFile.id).where(
