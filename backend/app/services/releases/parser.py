@@ -229,6 +229,9 @@ def parse_group(masked: str) -> str | None:
             continue
         if value.casefold() in _NOT_A_GROUP or _NO_GROUP_SHAPE.fullmatch(value):
             continue
+        if _RESOLUTION_TAG.fullmatch(value):
+            # Radarr's default file naming ends in its quality, "Bluray-1080p": the resolution is no group.
+            continue
         if value.casefold() == "bit" and previous_word.isdigit():
             continue
         found = value
