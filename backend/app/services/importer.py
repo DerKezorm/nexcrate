@@ -934,6 +934,11 @@ def _merge_title(
     (``carried``): a German title of the owner's would otherwise turn into Radarr's English one, in its release.nex
     too. Its names then only become searchable (``_merge_alternates``)."""
     changed = False
+    if carried and title.meta_source_id == source_id:
+        # An import before this rule took the data of a title nexcrate carries: it gives them back, and the next
+        # TMDB refresh brings them in the account's language again.
+        title.meta_source_id, title.tmdb_refreshed_at = None, None
+        changed = True
     if title.meta_source_id is None and not carried:
         title.meta_source_id = source_id
     if title.meta_source_id == source_id:
