@@ -43,7 +43,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session as OrmSession
 
 from ... import crypto
@@ -210,27 +210,45 @@ async def from_client(left: Leftover) -> None:
         await client.remove(left.client_download_id, delete_files=True)
 
 
+def _followed(reported: str, mappings: Iterable[Mapping[str, str]], category: str) -> Path | None:
+    """The direct child of the category folder a reported path lies in, however deep: only to compare with, never to
+    delete. None when the path has a ``.`` or ``..`` part or no folder named like the category."""
+    if not _plain(reported):
+        return None
+    mapped = files.map_remote(reported, [dict(mapping) for mapping in mappings])
+    wanted = category.casefold()
+    for candidate in ([mapped] if mapped is not None else []) + [Path(reported)]:
+        raw = Path(candidate)
+        child = next((part for part in (raw, *raw.parents) if part.parent.name.casefold() == wanted), None)
+        if child is None or child.name in _ODD_NAMES:
+            continue
+        category_folder = folders.visible_path(child.parent)
+        if category_folder is not None and category_folder.is_dir():
+            return category_folder / child.name
+    return None
+
+
 def shared(download_id: int, folder: Path) -> bool:
-    """Whether another download still in the works, or a foreign job, points at the same folder. Only rows whose
-    reported path holds the folder's name are looked at closely."""
+    """Whether another download still in the works, or a foreign job, points at the same folder, or at a file anywhere
+    in it. Rows whose reported path holds the folder's name, case ignored, are looked at closely; the resolved paths
+    decide."""
     target = files.resolved(folder)
     if target is None:
         return True
+    name = folder.name.casefold()
     with SessionLocal() as db:
         others = list(
             db.execute(
                 select(Download.client_id, Download.reported_path).where(
                     Download.id != download_id,
                     Download.state.in_(store.UNFINISHED_STATES),
-                    func.instr(Download.reported_path, folder.name) > 0,
+                    Download.reported_path.is_not(None),
                 )
             ).tuples()
         )
         others += list(
             db.execute(
-                select(ForeignJob.client_id, ForeignJob.reported_path).where(
-                    func.instr(ForeignJob.reported_path, folder.name) > 0
-                )
+                select(ForeignJob.client_id, ForeignJob.reported_path).where(ForeignJob.reported_path.is_not(None))
             ).tuples()
         )
         clients = {
@@ -238,10 +256,10 @@ def shared(download_id: int, folder: Path) -> bool:
             for client in db.scalars(select(DownloadClient))
         }
     for client_id, reported in others:
-        if client_id not in clients:
+        if client_id not in clients or not reported or name not in reported.casefold():
             continue
         mappings, category = clients[client_id]
-        other = job_folder(reported, mappings, category)
+        other = _followed(reported, mappings, category)
         if other is not None and files.resolved(other) == target:
             return True
     return False
