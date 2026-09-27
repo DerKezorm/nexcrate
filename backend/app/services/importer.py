@@ -641,6 +641,19 @@ def merge(
             )
         )
     }
+    # Titles nexcrate carries itself: an own version no source feeds, in another definition than this source's (one in
+    # its definition the import takes over below). Their data stays TMDB's, in the account's language.
+    carried = set(
+        db.scalars(
+            select(Version.title_id)
+            .where(
+                Version.source_id.is_(None),
+                Version.version_definition_id != definition.id,
+                Version.title_id.in_(title_ids),
+            )
+            .distinct()
+        )
+    )
     # A poster of a taken-over source gives way to the poster of a source nexcrate still reads.
     taken_over = set(db.scalars(select(Source.id).where(Source.taken_over_at.is_not(None))))
     alternates: dict[int, dict[str, AlternateTitle]] = defaultdict(dict)
@@ -670,7 +683,7 @@ def merge(
             db.flush()
             titles[movie.tmdb_id] = title
             outcome.titles_new += 1
-        changed = _merge_title(title, movie, source.id, taken_over)
+        changed = _merge_title(title, movie, source.id, taken_over, carried=title.id in carried)
         if fetched.tags is not None:
             tag_names[title.id] = [fetched.tags[tag_id] for tag_id in movie.tags if tag_id in fetched.tags]
         changed = _merge_alternates(db, title, movie, source.id, alternates.pop(title.id, {})) or changed
@@ -914,9 +927,14 @@ def _set(target: object, values: dict[str, object]) -> bool:
     return changed
 
 
-def _merge_title(title: Title, movie: Movie, source_id: int, taken_over: set[int] | None = None) -> bool:
+def _merge_title(
+    title: Title, movie: Movie, source_id: int, taken_over: set[int] | None = None, *, carried: bool = False
+) -> bool:
+    """A source takes over the descriptive fields of a title no source owns, unless nexcrate carries the title itself
+    (``carried``): a German title of the owner's would otherwise turn into Radarr's English one, in its release.nex
+    too. Its names then only become searchable (``_merge_alternates``)."""
     changed = False
-    if title.meta_source_id is None:
+    if title.meta_source_id is None and not carried:
         title.meta_source_id = source_id
     if title.meta_source_id == source_id:
         changed = _set(

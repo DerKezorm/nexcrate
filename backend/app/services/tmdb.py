@@ -862,16 +862,18 @@ async def poster(size: str, file: str) -> tuple[Path, str] | None:
 
 
 def _due_titles(limit: int) -> list[tuple[int, int]]:
-    """Titles no source feeds whose TMDB data is missing or older than 30 days, oldest first."""
+    """Titles no source owns whose TMDB data is missing or older than 30 days, oldest first: those no source feeds, and
+    those nexcrate carries with an own version next to a source's (``importer._merge_title``)."""
     cutoff = now() - REFRESH_AFTER
     fed = exists().where(Version.title_id == Title.id, Version.source_id.is_not(None))
+    carried = exists().where(Version.title_id == Title.id, Version.source_id.is_(None))
     with SessionLocal() as db:
         rows = db.execute(
             select(Title.id, Title.tmdb_id)
             .where(
                 Title.kind == "movie",
                 Title.meta_source_id.is_(None),
-                ~fed,
+                or_(~fed, carried),
                 or_(Title.tmdb_refreshed_at.is_(None), Title.tmdb_refreshed_at < cutoff),
             )
             .order_by(Title.tmdb_refreshed_at.asc().nulls_first(), Title.id)
@@ -887,7 +889,9 @@ def _apply_refresh(title_id: int, data: MovieData | None) -> bool:
         title = db.get(Title, title_id)
         if title is None or title.meta_source_id is not None:
             return False
-        if db.scalar(select(Version.id).where(Version.title_id == title_id, Version.source_id.is_not(None)).limit(1)):
+        sources = set(db.scalars(select(Version.source_id).where(Version.title_id == title_id)))
+        if sources and None not in sources:
+            # Every version follows a source: the next import owns the data.
             return False
         if data is None:
             title.tmdb_refreshed_at = moment
