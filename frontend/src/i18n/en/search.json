@@ -189,7 +189,10 @@
       "series": "Search: whole series",
       "season": "Search: season {{season}}",
       "specials": "Search: specials",
-      "episode": "Search: {{code}}"
+      "episode": "Search: {{code}}",
+      "automatic": "Automatic search",
+      "automaticTargets": "Automatic search: {{codes}}",
+      "rss": "From the RSS feed"
     },
     "summaryReleases_one": "{{value}} release of this series",
     "summaryReleases_other": "{{value}} releases of this series",

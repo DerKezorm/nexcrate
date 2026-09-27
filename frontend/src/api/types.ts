@@ -1113,9 +1113,13 @@ export type SeriesTake = {
 /** Die Folgen, die ein Release in einer Suche meint. `episodes` sind die Nummern wie auf der Seite der Serie. */
 export type SearchMatch = Pick<SeriesMatch, 'via' | 'ambiguous' | 'other' | 'missing' | 'notes'> & { episodes: string[] }
 
-/** Wofuer eine Suche nach einer Serie laeuft. `code` ist `S02` oder die Nummer der Folge. */
+/**
+ * Wofuer eine Suche nach einer Serie laeuft. `code` ist `S02` oder die Nummer der Folge. `planned` ist eine Suche der
+ * Automatik (was sie fragt, steht in `targets`), `rss` das, was RSS gefunden hat. Beide sieht die Seite, wenn sie einer
+ * laufenden Suche der Automatik folgt.
+ */
 export type SearchScope = {
-  kind: 'series' | 'season' | 'episode'
+  kind: 'series' | 'season' | 'episode' | 'planned' | 'rss'
   season?: number | null
   episode_id?: number | null
   code?: string | null

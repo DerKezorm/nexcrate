@@ -13,10 +13,19 @@ export function isSeriesSearch(search: Search): boolean {
   return search.kind === 'series'
 }
 
-/** Der Kopf einer Suche nach einer Serie: ganze Serie, eine Staffel oder eine Folge. null ohne Umfang. */
-export function scopeText(t: TFunction, search: Search): string | null {
+/**
+ * Der Kopf einer Suche nach einer Serie: ganze Serie, eine Staffel oder eine Folge. null ohne Umfang. Eine Suche der
+ * Automatik nennt, was sie fragt.
+ */
+export function scopeText(t: TFunction, search: Search, language: string): string | null {
   const scope = search.scope
   if (!scope) return null
+  if (scope.kind === 'planned') {
+    const targets = search.targets ?? []
+    if (targets.length === 0) return t('search.series.scope.automatic')
+    return t('search.series.scope.automaticTargets', { codes: episodeCodesText(t, targets, language) })
+  }
+  if (scope.kind === 'rss') return t('search.series.scope.rss')
   if (scope.kind === 'episode') return t('search.series.scope.episode', { code: scope.code ?? '' })
   if (scope.kind === 'season') {
     if (scope.season === 0) return t('search.series.scope.specials')

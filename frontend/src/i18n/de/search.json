@@ -189,7 +189,10 @@
       "series": "Suche: ganze Serie",
       "season": "Suche: Staffel {{season}}",
       "specials": "Suche: Specials",
-      "episode": "Suche: {{code}}"
+      "episode": "Suche: {{code}}",
+      "automatic": "Suche der Automatik",
+      "automaticTargets": "Suche der Automatik: {{codes}}",
+      "rss": "Aus dem RSS-Feed"
     },
     "summaryReleases_one": "{{value}} Release zu dieser Serie",
     "summaryReleases_other": "{{value}} Releases zu dieser Serie",

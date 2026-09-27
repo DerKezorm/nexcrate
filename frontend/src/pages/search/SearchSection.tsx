@@ -31,8 +31,8 @@ export function SearchSection({
   onLoaded,
   series = false,
 }: Pick<TitleSearch, 'search' | 'starting' | 'problem'> & { onLoaded?: () => void; series?: boolean }) {
-  const { t } = useTranslation()
-  const scope = search !== null && isSeriesSearch(search) ? scopeText(t, search) : null
+  const { t, i18n } = useTranslation()
+  const scope = search !== null && isSeriesSearch(search) ? scopeText(t, search, i18n.language) : null
 
   return (
     <Section title={t('search.title')} intro={t('search.intro')}>

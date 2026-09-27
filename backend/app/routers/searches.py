@@ -175,7 +175,11 @@ class SearchMatch(BaseModel):
 
 
 class SearchScope(BaseModel):
-    kind: Literal["series", "season", "episode"]
+    kind: Literal["series", "season", "episode", "planned", "rss"] = Field(
+        description="series, season or episode for a search the owner started. planned for an automatic search (the "
+        "seasons and episodes it asks stand in targets), rss for the releases RSS found. A search the owner starts "
+        "while an automatic one runs for the title follows that one, so both kinds reach this answer."
+    )
     season: int | None = None
     episode_id: int | None = None
     code: str | None = Field(default=None, description="S02, or the code of the episode.")
