@@ -235,6 +235,11 @@ class TakeoverResult(BaseModel):
     files_found: int = Field(description="Files found, those of another size included.")
     files_missing: int
     files_other_size: int = Field(description="Files found with another size than Radarr's; the size on disk counts.")
+    files_of_other_versions: int | None = Field(
+        default=None,
+        description="Radarr: files found that already belong to another version of nexcrate's own, not counted in "
+        "files_found. They stay with it; the takeover takes their versions over without a file. Null otherwise.",
+    )
     missing_examples: list[str] = Field(description="Up to 20 missing files, relative to their root folder.")
     series: int | None = Field(default=None, description="Sonarr: its series. Null for Radarr.")
     albums: int | None = Field(default=None, description="Lidarr: its albums. Null otherwise.")

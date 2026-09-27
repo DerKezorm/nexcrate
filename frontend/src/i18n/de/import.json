@@ -237,6 +237,8 @@
       "missing": "Fehlen",
       "otherSize_one": "Eine davon hat eine andere Größe als in Radarr. nexcrate nimmt die Größe auf der Platte.",
       "otherSize_other": "{{value}} davon haben eine andere Größe als in Radarr. nexcrate nimmt die Größe auf der Platte.",
+      "otherVersions_one": "Eine Datei gehört schon einer anderen Fassung. Sie bleibt dort, der Film kommt in dieser Fassung ohne Datei.",
+      "otherVersions_other": "{{value}} Dateien gehören schon einer anderen Fassung. Sie bleiben dort, die Filme kommen in dieser Fassung ohne Datei.",
       "missingTitle": "Diese Dateien findet nexcrate nicht",
       "missingMore_one": "Und eine weitere.",
       "missingMore_other": "Und {{value}} weitere."

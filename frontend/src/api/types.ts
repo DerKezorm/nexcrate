@@ -1793,6 +1793,8 @@ export type TakeoverResult = {
   files_found: number
   files_missing: number
   files_other_size: number
+  /** Radarr: gefundene Dateien, die schon einer anderen eigenen Fassung gehoeren; nicht in `files_found`. Sie bleiben dort. */
+  files_of_other_versions?: number | null
   /** Hoechstens 20, relativ zum Stammordner. */
   missing_examples: string[]
   queue: number

@@ -187,6 +187,11 @@ export function TakeoverCheck({
               : t('import.takeover.counts.otherSize', { count: result.files_other_size, value: number(result.files_other_size) })}
           </p>
         )}
+        {(result.files_of_other_versions ?? 0) > 0 && (
+          <p className="text-xs text-mist-500">
+            {t('import.takeover.counts.otherVersions', { count: result.files_of_other_versions ?? 0, value: number(result.files_of_other_versions ?? 0) })}
+          </p>
+        )}
         {examples.length > 0 && (
           <div className="flex flex-col gap-1.5">
             <h4 className="text-xs font-semibold text-mist-400">{t('import.takeover.counts.missingTitle')}</h4>

@@ -21,7 +21,10 @@
   exactly one such folder exists (``derived``); otherwise it has none.
 * **Files:** every file under a mapped root folder is looked at: found (the size on disk is taken, another size is
   counted as well) or missing. Files under an unmapped root folder are not looked at; that root folder blocks when it
-  holds files.
+  holds files. A found file that already belongs to another version of nexcrate's own (the owner read the folders
+  first, then connected Radarr on the same paths to a second version) stays with that version: a file belongs to one
+  version only, or deleting it in one would take it from the other unseen. The check counts such files, the takeover
+  takes their versions over without a file.
 * **The takeover** tests everything again, refuses a blocker the owner did not accept, and writes in one transaction.
   A taken-over version's ``root_folder`` is the mapped root folder (for a movie outside every root folder the folder
   above its movie folder), ``relative_path`` the movie folder below it and Radarr's relative path. A version without a
@@ -629,6 +632,34 @@ class Files:
     found: dict[int, Found] = field(default_factory=dict)
     missing: list[Item] = field(default_factory=list)
     other_size: int = 0
+    #: Versions whose found file belongs to another version of nexcrate's own; they are left out of ``found``.
+    of_other_versions: set[int] = field(default_factory=set)
+
+
+def _file_key(root_folder: str, relative_path: str) -> str:
+    return os.path.normpath(os.path.join(nfc(root_folder), nfc(relative_path)))
+
+
+def leave_files_of_other_versions(looked: Files, items: list[Item]) -> None:
+    """Move every found file that a version of nexcrate's own already has out of ``found``."""
+    title_ids = sorted({item.title_id for item in items if item.version_id in looked.found})
+    owned: set[str] = set()
+    with SessionLocal() as db:
+        for index in range(0, len(title_ids), _CHUNK):
+            rows = db.execute(
+                select(Version.root_folder, Version.relative_path).where(
+                    Version.title_id.in_(title_ids[index : index + _CHUNK]),
+                    Version.source_id.is_(None),
+                    Version.has_file.is_(True),
+                )
+            ).tuples()
+            owned.update(_file_key(root, relative) for root, relative in rows if root and relative)
+    if not owned:
+        return
+    for version_id, located in list(looked.found.items()):
+        if _file_key(located.root_folder, located.relative_path) in owned:
+            del looked.found[version_id]
+            looked.of_other_versions.add(version_id)
 
 
 def look_at_files(job: Job, sight: Sight, items: list[Item], roots: dict[str, RootState]) -> Files:
@@ -833,6 +864,7 @@ def _take_over(job: Job, request: Request, run_id: int) -> dict[str, Any]:
     sight = Sight()
     roots = map_roots(sight, items, request.mappings)
     looked = look_at_files(job, sight, items, roots)
+    leave_files_of_other_versions(looked, items)
     with SessionLocal() as db:
         source = db.get(Source, job.source_id)
         if source is None:
@@ -860,6 +892,7 @@ def _take_over(job: Job, request: Request, run_id: int) -> dict[str, Any]:
         "files_found": len(looked.found),
         "files_missing": len(looked.missing),
         "files_other_size": looked.other_size,
+        "files_of_other_versions": len(looked.of_other_versions),
         "missing_examples": ["/".join(item.below_root) for item in looked.missing if item.locatable][:MISSING_EXAMPLES],
         "queue": queue,
         "version": version,
@@ -870,8 +903,8 @@ def _take_over(job: Job, request: Request, run_id: int) -> dict[str, Any]:
         "companions": None,
     }
     logger.info(
-        "Takeover %s %d of source %d: %s data, %d versions, %d files found, %d missing, %d of other size, %d root "
-        "folders, %d unmapped, %d queue items",
+        "Takeover %s %d of source %d: %s data, %d versions, %d files found, %d missing, %d of other size, %d of other "
+        "versions, %d root folders, %d unmapped, %d queue items",
         job.kind,
         job.id,
         job.source_id,
@@ -880,6 +913,7 @@ def _take_over(job: Job, request: Request, run_id: int) -> dict[str, Any]:
         len(looked.found),
         len(looked.missing),
         looked.other_size,
+        len(looked.of_other_versions),
         len(roots),
         len(unmapped),
         queue,
@@ -906,7 +940,7 @@ def _take_over(job: Job, request: Request, run_id: int) -> dict[str, Any]:
         patterns = (naming_out["movie_folder"], naming_out["movie_file"])
     job.set(phase="saving")
     targets = target_folders(sight, items, roots, looked.found)
-    result["taken"] = save(job.source_id, request, looked.found, patterns, targets)
+    result["taken"] = save(job.source_id, request, looked.found, patterns, targets, looked.of_other_versions)
     result["companions"] = write_companions(job, sorted(looked.found))
     return result
 
@@ -1046,10 +1080,13 @@ def save(
     found: dict[int, Found],
     patterns: tuple[str, str] | None,
     targets: dict[int, str] | None = None,
+    of_other_versions: set[int] | None = None,
 ) -> dict[str, int]:
     """The takeover's one transaction. Returns the counts of ``taken``.
 
     ``targets`` holds the folder a version without a found file keeps as its ``root_folder`` (``target_folders``).
+    ``of_other_versions`` the versions whose file another version of nexcrate's own has: they come without a file and
+    count neither as with a file nor as missing.
     The files are judged before, without the write lock (``_verdicts``).
     """
     targets = targets or {}
@@ -1124,7 +1161,7 @@ def save(
                 )
                 with_file += 1
             else:
-                missing += 1 if had_file else 0
+                missing += 1 if had_file and version_id not in (of_other_versions or set()) else 0
                 # The folder of its root folder when that has one: its next file goes there (finding 13).
                 root = targets.get(version_id)
                 kept += 1 if root else 0
