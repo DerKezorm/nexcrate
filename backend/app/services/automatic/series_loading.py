@@ -140,7 +140,7 @@ def start_planned(title_id: int, now: datetime, left: int) -> int:
         replacing = any(season.reason == "replacement" and season.season in asked.covered for season in plan.seasons)
     if not candidates:
         return 0
-    chosen = scheduler.reserve(title_id, candidates, now)
+    chosen = scheduler.reserve(title_id, candidates, now, first=replacing)
     if chosen is None:
         return 0
     origin = "replacement" if replacing else "search"

@@ -289,7 +289,8 @@
       "waitingLimitSoon": "Ein besseres Release wartet auf das Tageslimit des Indexers. nexcrate lädt es, sobald wieder etwas frei ist.",
       "nothing_found": "Noch nichts Passendes gefunden. nexcrate sucht weiter nach Plan, als Nächstes am {{at}}.",
       "nothingFoundLater": "Noch nichts Passendes gefunden. nexcrate sucht weiter nach Plan.",
-      "searching": "nexcrate sucht gleich ein anderes Release.",
+      "searching": "nexcrate sucht ein anderes Release, noch vor allen geplanten Suchen.",
+      "searchingAt": "Die Indexer haben gerade keine Anfragen frei. nexcrate sucht ab {{at}} ein anderes Release.",
       "schedule": "Heute gab es schon drei Ersatzversuche. nexcrate sucht wieder nach Plan.",
       "owner": "nexcrate sucht nicht selbst weiter. Die Karte unter Probleme sagt, was du tun kannst."
     }

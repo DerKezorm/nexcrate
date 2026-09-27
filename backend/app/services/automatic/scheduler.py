@@ -20,7 +20,10 @@ the design notes, C1, C4, C6, C8, decisions 1, 6 to 10, 13 and 14.
    one whose planned allowance is 0. Every other indexer has to hold the requests the plan needs: an id search 1, else
    its title queries, fresh caps 1 more. Taking is all or none: when one bucket is short, what was taken is given back
    and the title waits, reason ``limit``, until the latest time a short bucket holds its requests; with every indexer
-   left out, until the first stop point ends. Without any indexer for automatic search the titles stay due.
+   left out, until the first stop point ends. Without any indexer for automatic search the titles stay due. **A
+   replacement goes first in the budget** (the owner's decision of 27.09.2026): it waits for no bucket, only for the
+   stop points; its requests are taken below zero, so the planned searches after it wait for them. Programs' wishes and
+   "search automatically now" spend the buckets too, and a failure waited for them for an hour.
 
 **After the search,** in its thread: the requests really sent are charged. Then, per version that wants something, the
 release it would take, as the owner's search answer shows it with the blocklist, is loaded through ``loading.grab``
@@ -349,7 +352,7 @@ def _start_planned(title_id: int, now: datetime, left: int = MAX_STARTS_PER_HOUR
         candidates = [(row.id, budget.Standing.of(row), planned_cost(row, info, now)) for row in rows]
     if not candidates:
         return 0
-    chosen = reserve(title_id, candidates, now)
+    chosen = reserve(title_id, candidates, now, first=plan.reason == "replacement")
     if chosen is None:
         return 0
     origin = "replacement" if plan.reason == "replacement" else "search"
@@ -377,10 +380,11 @@ def only_upgrades(fact: planning.TitleFacts) -> bool:
     return bool(wanting) and all(version.has_file for version in wanting)
 
 
-def reserve(title_id: int, candidates: list[Planned], now: datetime) -> dict[int, int] | None:
+def reserve(title_id: int, candidates: list[Planned], now: datetime, *, first: bool = False) -> dict[int, int] | None:
     """Take the planned requests of every indexer that is not stopped, or make the title wait (decision 19). Returns
     the requests taken per indexer, or None when the title waits. A plan larger than a bucket can hold takes what it
-    holds: paging is charged afterwards anyway (S5, decision 12)."""
+    holds: paging is charged afterwards anyway (S5, decision 12). ``first``: a replacement, which takes its requests
+    whether the buckets hold them or not."""
     asked: list[Planned] = []
     ends: list[datetime] = []
     for indexer_id, standing, cost in candidates:
@@ -399,6 +403,10 @@ def reserve(title_id: int, candidates: list[Planned], now: datetime) -> dict[int
             "Title %d waits: all %d indexers are paused, stopped or have no allowance", title_id, len(candidates)
         )
         return None
+    if first:
+        for _indexer_id, standing, cost in asked:
+            budget.charge(standing, cost, now)
+        return {indexer_id: cost for indexer_id, _standing, cost in asked}
     short = take_all(asked, now)
     if short:
         until = max(budget.ready_at(standing, cost, now) for _indexer_id, standing, cost in short)

@@ -514,7 +514,7 @@ export function aftermathText(t: TFunction, aftermath: DownloadAftermath | null 
     case 'nothing_found':
       return at !== null ? t('downloads.history.aftermath.nothing_found', { at }) : t('downloads.history.aftermath.nothingFoundLater')
     case 'searching':
-      return t('downloads.history.aftermath.searching')
+      return at !== null ? t('downloads.history.aftermath.searchingAt', { at }) : t('downloads.history.aftermath.searching')
     case 'schedule':
       return t('downloads.history.aftermath.schedule')
     case 'owner':

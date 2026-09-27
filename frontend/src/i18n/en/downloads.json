@@ -289,7 +289,8 @@
       "waitingLimitSoon": "A better release waits for the indexer's daily limit. nexcrate loads it as soon as there is room again.",
       "nothing_found": "Nothing fitting found yet. nexcrate keeps searching on schedule, next on {{at}}.",
       "nothingFoundLater": "Nothing fitting found yet. nexcrate keeps searching on schedule.",
-      "searching": "nexcrate searches another release in a moment.",
+      "searching": "nexcrate searches another release, ahead of every planned search.",
+      "searchingAt": "The indexers have no requests to spare right now. nexcrate searches another release from {{at}}.",
       "schedule": "Three replacements were tried today already. nexcrate searches on schedule again.",
       "owner": "nexcrate does not search on by itself. The card under Problems says what you can do."
     }

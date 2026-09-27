@@ -116,7 +116,8 @@ class DownloadAftermath(BaseModel):
     state: str | None = Field(default=None, description="replaced: the state of the later download.")
     at: datetime | None = Field(
         default=None,
-        description="waiting_limit: when the indexer loads again; kept_file and nothing_found: the next search.",
+        description="waiting_limit: when the indexer loads again; kept_file and nothing_found: the next search; "
+        "searching: when the indexers' own limits let the replacement search, null when it searches next.",
     )
 
 

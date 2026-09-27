@@ -260,8 +260,9 @@ def _summary_entry(summary: Any, definition_id: int | None) -> dict[str, Any] | 
 def aftermath_of(db: OrmSession, row: Download, title: Title | None) -> dict[str, Any] | None:
     """What came of a failed download, for the history (the owner's finding of 22.09.2026): ``replaced`` by a later
     download of the version, the file there stays (``kept_file``, the search found nothing better), ``waiting_limit``
-    for the indexer's grab limit, ``nothing_found`` so far, ``searching`` (the replacement is due), ``schedule`` (three
-    replacements in a day), or ``owner`` (nothing happens by itself). None for anything but a failed download."""
+    for the indexer's grab limit, ``nothing_found`` so far, ``searching`` (the replacement is due; ``at`` when an
+    indexer's own limit holds it back), ``schedule`` (three replacements in a day), or ``owner`` (nothing happens by
+    itself). None for anything but a failed download."""
     if row.state != "failed" or title is None:
         return None
     later = db.scalar(
@@ -287,7 +288,10 @@ def aftermath_of(db: OrmSession, row: Download, title: Title | None) -> dict[str
         kind = "kept_file" if version is not None and version.has_file else "nothing_found"
         return {"kind": kind, "release": None, "state": None, "at": title.next_search_at}
     if row.failure_handling == "replacement":
-        return {"kind": "searching", "release": None, "state": None, "at": None}
+        # It goes first, but an indexer's own limit may hold it back: then until when.
+        at = title.next_search_at
+        waiting = title.next_search_reason == "limit" and at is not None and at > now()
+        return {"kind": "searching", "release": None, "state": None, "at": at if waiting else None}
     if row.failure_handling == "owner":
         return {"kind": "owner", "release": None, "state": None, "at": None}
     return None

@@ -67,7 +67,7 @@ def start_planned(title_id: int, now: datetime, left: int = scheduler.MAX_STARTS
         candidates = [(row.id, budget.Standing.of(row), planned_cost(row, album, now)) for row in rows]
     if not candidates:
         return 0
-    chosen = scheduler.reserve(title_id, candidates, now)
+    chosen = scheduler.reserve(title_id, candidates, now, first=plan.reason == "replacement")
     if chosen is None:
         return 0
     origin = "replacement" if plan.reason == "replacement" else "search"
