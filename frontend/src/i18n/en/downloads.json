@@ -291,6 +291,7 @@
       "nothingFoundLater": "Nothing fitting found yet. nexcrate keeps searching on schedule.",
       "searching": "nexcrate searches another release, ahead of every planned search.",
       "searchingAt": "The indexers have no requests to spare right now. nexcrate searches another release from {{at}}.",
+      "no_indexer": "No indexer is set for automatic search. Only then does nexcrate search another release.",
       "schedule": "Three replacements were tried today already. nexcrate searches on schedule again.",
       "owner": "nexcrate does not search on by itself. The card under Problems says what you can do."
     }

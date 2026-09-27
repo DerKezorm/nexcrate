@@ -21,9 +21,12 @@ the design notes, C1, C4, C6, C8, decisions 1, 6 to 10, 13 and 14.
    its title queries, fresh caps 1 more. Taking is all or none: when one bucket is short, what was taken is given back
    and the title waits, reason ``limit``, until the latest time a short bucket holds its requests; with every indexer
    left out, until the first stop point ends. Without any indexer for automatic search the titles stay due. **A
-   replacement goes first in the budget** (the owner's decision of 27.09.2026): it waits for no bucket, only for the
-   stop points; its requests are taken below zero, so the planned searches after it wait for them. Programs' wishes and
-   "search automatically now" spend the buckets too, and a failure waited for them for an hour.
+   replacement goes first in the budget** (the owner's decision of 27.09.2026): at an indexer without a known limit it
+   waits for no bucket, only for the stop points; its requests are taken below zero, so the planned searches after it
+   wait for them. At an indexer with a known limit (its ``apiMax`` or the owner's daily limit) it borrows ahead only
+   down to the bucket's floor and then waits too: the limit holds. Programs' wishes and "search automatically now"
+   spend the buckets too, and a failure waited for them for an hour. A step after the search that fails still counts
+   the search (``_searched_anyway``): otherwise the replacement would be due again every minute.
 
 **After the search,** in its thread: the requests really sent are charged. Then, per version that wants something, the
 release it would take, as the owner's search answer shows it with the blocklist, is loaded through ``loading.grab``
@@ -63,7 +66,7 @@ from collections.abc import Collection, Iterable
 from datetime import datetime, timedelta
 from typing import Any
 
-from sqlalchemy import and_, case, exists, or_, select
+from sqlalchemy import and_, case, exists, or_, select, update
 
 from ...db import SessionLocal, between_parts
 from ...models import Episode, EpisodeVersion, Indexer, Title, Version
@@ -383,8 +386,8 @@ def only_upgrades(fact: planning.TitleFacts) -> bool:
 def reserve(title_id: int, candidates: list[Planned], now: datetime, *, first: bool = False) -> dict[int, int] | None:
     """Take the planned requests of every indexer that is not stopped, or make the title wait (decision 19). Returns
     the requests taken per indexer, or None when the title waits. A plan larger than a bucket can hold takes what it
-    holds: paging is charged afterwards anyway (S5, decision 12). ``first``: a replacement, which takes its requests
-    whether the buckets hold them or not."""
+    holds: paging is charged afterwards anyway (S5, decision 12). ``first``: a replacement, which goes ahead of the
+    buckets (``budget.take_first``)."""
     asked: list[Planned] = []
     ends: list[datetime] = []
     for indexer_id, standing, cost in candidates:
@@ -403,13 +406,10 @@ def reserve(title_id: int, candidates: list[Planned], now: datetime, *, first: b
             "Title %d waits: all %d indexers are paused, stopped or have no allowance", title_id, len(candidates)
         )
         return None
-    if first:
-        for _indexer_id, standing, cost in asked:
-            budget.charge(standing, cost, now)
-        return {indexer_id: cost for indexer_id, _standing, cost in asked}
-    short = take_all(asked, now)
+    short = take_all(asked, now, first=first)
     if short:
-        until = max(budget.ready_at(standing, cost, now) for _indexer_id, standing, cost in short)
+        ready = budget.ready_first_at if first else budget.ready_at
+        until = max(ready(standing, cost, now) for _indexer_id, standing, cost in short)
         _wait_for_limit(title_id, until)
         logger.info("Title %d waits for the budget of %d of %d indexers", title_id, len(short), len(asked))
         return None
@@ -427,14 +427,15 @@ def give_back(candidates: list[Planned], chosen: dict[int, int], now: datetime) 
 Planned = tuple[int, budget.Standing, int]
 
 
-def take_all(asked: list[Planned], now: datetime) -> list[Planned]:
+def take_all(asked: list[Planned], now: datetime, *, first: bool = False) -> list[Planned]:
     """Take the planned requests of every indexer, or of none (decision 19). Returns the indexers whose bucket is short;
-    when there is one, what was taken from the others is given back."""
+    when there is one, what was taken from the others is given back.
+    ``first``: a replacement (``budget.take_first``)."""
     taken: list[Planned] = []
     short: list[Planned] = []
     for planned in asked:
         _indexer_id, standing, cost = planned
-        if budget.take(standing, cost, now):
+        if (budget.take_first if first else budget.take)(standing, cost, now):
             taken.append(planned)
         else:
             short.append(planned)
@@ -824,6 +825,39 @@ def repair_grab_limits(now: datetime) -> int:
 def after_search(search: search_jobs.Search) -> None:
     """The step after an automatic search, in its thread: charge, load, write the summary, plan the title again."""
     now = clock.now()
+    try:
+        _after_search(search, now)
+    except Exception:
+        _searched_anyway(search, now)
+        raise
+
+
+def _searched_anyway(search: search_jobs.Search, now: datetime) -> None:
+    """The search ran, though the step after it failed: it counts as the title's search, so a replacement is not due
+    again at once. Never raises."""
+    try:
+        with SessionLocal() as db:
+            title = db.get(Title, search.title_id)
+            if title is None:
+                return
+            if search.searched:
+                db.execute(
+                    update(Episode)
+                    .where(Episode.title_id == title.id, Episode.id.in_(list(search.searched)))
+                    .values(last_search_at=now),
+                    execution_options={"synchronize_session": False},
+                )
+            title.last_search_at = now
+            db.flush()
+            planning.replan(db, [title.id], now)
+            db.commit()
+    except Exception:
+        logger.exception(
+            "Automatic search %s of title %d: its search time could not be kept", search.search_id, search.title_id
+        )
+
+
+def _after_search(search: search_jobs.Search, now: datetime) -> None:
     states = list(search.indexers)
     sent = {state.info.indexer_id: state.requests for state in states}
     with SessionLocal() as db:

@@ -207,6 +207,11 @@ def take(standing: Standing, cost: int, now: datetime) -> bool:
         return True
 
 
+def floor(standing: Standing) -> float:
+    """How far a bucket may go below zero: an hour of its allowance, at least the largest plan of one search."""
+    return -max(capacity(per_day(standing)), float(LARGEST_PLAN))
+
+
 def charge(standing: Standing, amount: float, now: datetime) -> None:
     """Charge requests sent beyond what was taken, or give back what was taken and not sent (a negative amount)."""
     if not amount:
@@ -214,7 +219,35 @@ def charge(standing: Standing, amount: float, now: datetime) -> None:
     with _lock:
         bucket = _refilled(standing, now)
         room = capacity(per_day(standing))
-        bucket.tokens = min(room, max(-max(room, float(LARGEST_PLAN)), bucket.tokens - amount))
+        bucket.tokens = min(room, max(floor(standing), bucket.tokens - amount))
+
+
+def take_first(standing: Standing, cost: int, now: datetime) -> bool:
+    """Take ``cost`` requests for a replacement, which goes ahead of the planned searches (the owner's decision of
+    27.09.2026). Without a known limit it always may, down to ``floor``. With a known limit, the indexer's or the
+    owner's, only while the bucket stays above ``floor``: the limit still holds, a replacement only borrows ahead."""
+    with _lock:
+        bucket = _refilled(standing, now)
+        low = floor(standing)
+        if known_limit(standing) is None:
+            bucket.tokens = max(low, bucket.tokens - cost)
+            return True
+        if bucket.tokens - cost < low - TOLERANCE:
+            return False
+        bucket.tokens -= cost
+        return True
+
+
+def ready_first_at(standing: Standing, cost: int, now: datetime) -> datetime:
+    """When ``take_first`` succeeds for ``cost``; a day from now when it never will."""
+    rate = per_day(standing)
+    with _lock:
+        missing = cost + floor(standing) - _refilled(standing, now).tokens
+    if missing <= 0:
+        return now
+    if rate <= 0:
+        return now + UNKNOWN_NEXT
+    return now + timedelta(microseconds=math.ceil(missing * DAY_SECONDS / rate * 1_000_000))
 
 
 def ready_at(standing: Standing, cost: int, now: datetime) -> datetime:

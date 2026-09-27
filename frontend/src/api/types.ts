@@ -1649,7 +1649,7 @@ export type FailedDetail = 'repair_failed' | 'incomplete' | 'not_on_server' | 'p
  * die Ersatzsuche steht an, nach Plan, oder niemand kuemmert sich (dann gibt es eine Karte).
  */
 export type DownloadAftermath = {
-  kind: 'replaced' | 'kept_file' | 'waiting_limit' | 'nothing_found' | 'searching' | 'schedule' | 'owner' | string
+  kind: 'replaced' | 'kept_file' | 'waiting_limit' | 'nothing_found' | 'searching' | 'no_indexer' | 'schedule' | 'owner' | string
   release: string | null
   state: string | null
   at: string | null

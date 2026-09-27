@@ -291,6 +291,7 @@
       "nothingFoundLater": "Noch nichts Passendes gefunden. nexcrate sucht weiter nach Plan.",
       "searching": "nexcrate sucht ein anderes Release, noch vor allen geplanten Suchen.",
       "searchingAt": "Die Indexer haben gerade keine Anfragen frei. nexcrate sucht ab {{at}} ein anderes Release.",
+      "no_indexer": "Kein Indexer ist für die automatische Suche eingestellt. Erst dann sucht nexcrate ein anderes Release.",
       "schedule": "Heute gab es schon drei Ersatzversuche. nexcrate sucht wieder nach Plan.",
       "owner": "nexcrate sucht nicht selbst weiter. Die Karte unter Probleme sagt, was du tun kannst."
     }

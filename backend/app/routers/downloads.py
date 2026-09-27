@@ -108,6 +108,7 @@ class DownloadAftermath(BaseModel):
         description="What came of a failed download: replaced (a later download of the version), kept_file (the search "
         "found nothing better, the file there stays), waiting_limit (a better release waits for the indexer's grab "
         "limit), nothing_found (the search found nothing fitting yet), searching (the replacement search is due), "
+        "no_indexer (the replacement would be due, but no enabled indexer is set for automatic search), "
         "schedule (three replacements in a day; the version waits for its plan), owner (nothing happens by itself)."
     )
     release: str | None = Field(

@@ -515,6 +515,8 @@ export function aftermathText(t: TFunction, aftermath: DownloadAftermath | null 
       return at !== null ? t('downloads.history.aftermath.nothing_found', { at }) : t('downloads.history.aftermath.nothingFoundLater')
     case 'searching':
       return at !== null ? t('downloads.history.aftermath.searchingAt', { at }) : t('downloads.history.aftermath.searching')
+    case 'no_indexer':
+      return t('downloads.history.aftermath.no_indexer')
     case 'schedule':
       return t('downloads.history.aftermath.schedule')
     case 'owner':
