@@ -50,6 +50,11 @@ function textOf(t: TFunction, target: DeleteTarget): string {
   }
 }
 
+/** Der Weg zum Papierkorb mit den Namen, die Reiter und Unterpunkt in den Einstellungen tragen. */
+function binWay(t: TFunction): { settings: string; tab: string; topic: string } {
+  return { settings: t('settings.title'), tab: t('settings.tabs.files'), topic: t('settings.files.topics.recycle') }
+}
+
 /**
  * "In den Papierkorb?" (Antwort 2). Sagt, was geht, wie lange es im Papierkorb bleibt und dass die
  * Ueberwachung bleibt. Die Tage kommen vom Server; ohne Antwort fehlt nur dieser Satz.
@@ -111,7 +116,7 @@ export function DeleteFilesDialog({ titleId, target, onClose, onDeleted }: { tit
     >
       <div className="flex flex-col gap-3">
         <p className="text-sm wrap-anywhere text-mist-300">{text}</p>
-        {days !== null && <p className="text-sm text-mist-400">{t('title.deleteFiles.days', { count: days, value: formatNumber(days, i18n.language) })}</p>}
+        {days !== null && <p className="text-sm text-mist-400">{t('title.deleteFiles.days', { count: days, value: formatNumber(days, i18n.language), ...binWay(t) })}</p>}
         {/* Eine Datei ohne Folge laesst keine Folge leer, also gibt es zur Ueberwachung nichts zu sagen. */}
         {target.kind !== 'unclear' && (
           <p className="text-sm text-mist-400">
