@@ -35,6 +35,43 @@
         "TheXEM wird nur noch nach Serien gefragt, die es kennt, und nach einem Fehler sechs Stunden gar nicht.",
         "Eine beim Import übernommene Datei zählt im Protokoll jetzt als abgelegt."
       ]
+    },
+    "0.3.0": {
+      "lead": "Diese Version schützt vor dem falschen Film unter der richtigen Nummer, sagt, warum nichts geladen wurde, und hält die Datenbank frei, während große Importe laufen.",
+      "sections": [
+        {
+          "title": "Der falsche Film unter der richtigen Nummer",
+          "body": "Manche Indexer führen ein Release unter der TMDB- oder IMDb-Nummer eines anderen Films. nexcrate liest jetzt auch den Namen: Ein Release, dessen Name zu keinem Titel des Films passt, wird nie automatisch genommen, nie abgelegt und nie als Ersatz verwendet. Es bleibt mit Warnung in der Release-Liste, und ein fertiger Download hält mit dem Problem „Titel passt nicht zum Film“ an, wo du ihn trotzdem ablegen kannst. Ein ganzer Titel mit angehängten Wörtern und ein Name, den nur TMDB oder Radarr als Übersetzung oder Alternativtitel kennen, zählen nur mit dem Jahr des Films im Namen.",
+          "where": "Titelseite › Suche, und Downloads › Probleme"
+        },
+        {
+          "title": "Warum nichts geladen wurde",
+          "body": "Nach einer automatischen Suche sagt jede Fassung, wie viele Releases passen und aus welchem Grund der Rest abgelehnt wurde. Genauso für Staffeln und Alben, auch im Protokoll.",
+          "where": "Titelseite › Automatische Suche"
+        },
+        {
+          "title": "Ersetzte Dateien im Papierkorb",
+          "body": "Eine Datei, die ein Upgrade ersetzt, steht jetzt wie eine gelöschte im Papierkorb und kommt mit einem Klick zurück. Hat ihr Titel den Bestand inzwischen verlassen, legt das Zurückholen ihn wieder an, unüberwacht. Kann eine Datei nicht an ihren Platz zurück, sagt die Zeile warum: Dort liegt etwas, die Fassung hat inzwischen eine andere Datei, oder eine Radarr-, Sonarr- oder Lidarr-Verbindung speist die Fassung.",
+          "where": "Einstellungen › Ordner und Benennung › Papierkorb"
+        },
+        {
+          "title": "Ein kaputtes Archiv gilt als Fehlschlag",
+          "body": "Fehlen einem fertigen Download Bände des Archivs oder will es ein Passwort, behandelt nexcrate ihn wie einen Download, den sein Programm aufgegeben hat: Das Release wird gesperrt, die Dateien werden weggeworfen, und es wird Ersatz gesucht. Wer einen fertigen, nie abgelegten Download entfernt, löscht jetzt auch seinen Auftragsordner, und nur diesen.",
+          "where": "Downloads › Verlauf"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Große Importe, Übernahmen und neue Künstler werden in Teilen geschrieben, andere Programme warten nicht mehr minutenlang auf die Datenbank. Ist sie trotzdem belegt, bekommen sie 503 mit Retry-After.",
+        "Ein Ersatz nach einem Fehlschlag hat im Anfragebudget der Indexer Vorrang, aber nie über ein Limit hinaus, das ein Indexer bekannt gemacht hat.",
+        "Eine Fassung nennt das Release, aus dem ihre Datei stammt.",
+        "Poster kommen von TMDB, wenn die Quelle keins liefern kann.",
+        "Beim Speichern der Größen-Tabelle steht da, welche Qualität und welches Feld nicht stimmt.",
+        "Die automatische Suche nimmt für ein Studioalbum keine Box-Sets mehr; Deluxe- und Expanded-Ausgaben passen weiter.",
+        "Titel in deiner Sprache bleiben, wenn ein Radarr-Import läuft.",
+        "Eine Übernahme gibt eine Datei, die schon einer Fassung gehört, keiner zweiten mehr.",
+        "release.nex folgt einer Datei in den Papierkorb und wieder zurück."
+      ]
     }
   }
 }

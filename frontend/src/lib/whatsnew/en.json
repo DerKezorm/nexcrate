@@ -35,6 +35,43 @@
         "TheXEM is only asked about series it knows, and not at all for six hours after a failure.",
         "A file taken over during an import now counts as filed in the log."
       ]
+    },
+    "0.3.0": {
+      "lead": "This version guards against the wrong movie under the right number, says why nothing was loaded, and keeps the database free while large imports run.",
+      "sections": [
+        {
+          "title": "The wrong movie under the right number",
+          "body": "Some indexers list a release under another movie's TMDB or IMDb number. nexcrate now also reads the name: a release whose name fits none of the movie's titles is never taken automatically, never filed and never used as a replacement. It stays in the release list with a warning, and a finished download stops with the problem \"The title does not fit the movie\", where you can file it anyway. A whole title with more words after it, and a name only TMDB or Radarr know as a translation or alternative title, count only with the movie's year in the name.",
+          "where": "Title page › Search, and Downloads › Problems"
+        },
+        {
+          "title": "Why nothing was loaded",
+          "body": "After an automatic search each version says how many releases fit and, by reason, why the rest were refused. The same for series seasons and albums, in the log too.",
+          "where": "Title page › Automatic search"
+        },
+        {
+          "title": "Replaced files in the recycle bin",
+          "body": "A file an upgrade replaces now stands in the recycle bin like a deleted one and comes back with one click. If its title has left the library since, restoring adds the title again, unwatched. When a file cannot go back to its place, the row says why: something lies there, the version has another file by now, or a Radarr, Sonarr or Lidarr connection feeds the version.",
+          "where": "Settings › Folders and naming › Recycle folder"
+        },
+        {
+          "title": "A broken archive counts as a failed download",
+          "body": "When a finished download misses archive volumes or wants a password, nexcrate treats it like a download its client gave up on: the release is blocked, its files are thrown away, and a replacement is searched. Removing a finished download that was never filed now deletes its job folder too, and only that folder.",
+          "where": "Downloads › History"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Large imports, takeovers and new artists are written in parts, so other programs no longer wait minutes for the database. If it is busy all the same, they get 503 with a Retry-After.",
+        "A replacement after a failure goes first in the indexers' request budget, but never past a limit an indexer has made known.",
+        "A version shows the release its file came from.",
+        "Posters come from TMDB when the source cannot deliver one.",
+        "Saving the size table names the quality and the field that is wrong.",
+        "The automatic search no longer takes box sets for a studio album; deluxe and expanded editions still fit.",
+        "Titles in your language stay when a Radarr import runs.",
+        "A takeover no longer gives a file that already belongs to one version to a second one.",
+        "release.nex follows a file into the recycle bin and back."
+      ]
     }
   }
 }
