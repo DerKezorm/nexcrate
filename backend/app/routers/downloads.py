@@ -188,21 +188,28 @@ class DownloadPage(BaseModel):
     counts: DownloadCounts
 
 
+#: What confirms loading a refused release: the short form, or the code the refusal answered with.
+Confirmation = Literal[
+    "not_fitting", "blocklisted", "no_gain", "release_not_fitting", "release_blocklisted", "release_no_gain"
+]
+
+
 class LoadIn(BaseModel):
     search_id: str = Field(max_length=64, description="A search of the title, kept for 30 minutes after it finished.")
     release_key: str = Field(max_length=64, description="A release of that search that belongs to the title.")
     version_id: int = Field(description="The version definition, as everywhere in the API.")
-    confirm: list[Literal["not_fitting", "blocklisted", "no_gain"]] = Field(
+    confirm: list[Confirmation] = Field(
         default_factory=list,
-        max_length=3,
-        description="Load although the release does not fit, is blocked, or (series) fills and replaces nothing.",
+        max_length=6,
+        description="Load although the release does not fit, is blocked, or (series) fills and replaces nothing. The "
+        "code of the refusal confirms as well: release_not_fitting as not_fitting.",
     )
 
 
 class TakesIn(BaseModel):
     search_id: str = Field(max_length=64, description="A series search, kept for 30 minutes after it finished.")
     version_id: int = Field(description="The series version definition.")
-    confirm: list[Literal["not_fitting", "blocklisted", "no_gain"]] = Field(default_factory=list, max_length=3)
+    confirm: list[Confirmation] = Field(default_factory=list, max_length=6)
 
 
 class TakeError(BaseModel):

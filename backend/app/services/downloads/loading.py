@@ -71,6 +71,9 @@ LOAD_CODES = (
     "episodes_downloading",
 )
 CONFIRMABLE = ("not_fitting", "blocklisted", "no_gain")
+#: A refusal's code confirms as its short form does: a client may send back the code it was refused with. Every
+#: refusal names its short form as ``confirm``.
+CONFIRMED_BY_CODE = {f"release_{value}": value for value in CONFIRMABLE}
 #: Stored with ``not_fitting`` when the release the owner confirmed had a name that fits none of the movie's titles:
 #: the import then files it without asking again (the owner's decision of 26.09.2026).
 TITLE_MISMATCH = "title_mismatch"
@@ -563,6 +566,16 @@ def _record(
         return row.id
 
 
+def confirmations(confirm: Collection[str]) -> list[str]:
+    """What the owner confirmed in the short form, each once: ``release_not_fitting`` counts as ``not_fitting``."""
+    found: list[str] = []
+    for value in confirm:
+        short = CONFIRMED_BY_CODE.get(value, value)
+        if short not in found:
+            found.append(short)
+    return found
+
+
 def _confirmed(found: search_jobs.FoundRelease, confirm: Collection[str]) -> list[str]:
     """What the owner confirmed, and ``title_mismatch`` when that confirmation covered a name of another movie."""
     confirmed = [value for value in CONFIRMABLE if value in confirm]
@@ -599,6 +612,7 @@ async def grab(
     ``only``: the codes of the episodes a series release is loaded for, as a set took it; its other episodes stay with
     the release of the set that covers them.
     """
+    confirm = confirmations(confirm)
     try:
         found = search_jobs.find_release(search_id, release_key)
     except search_jobs.SearchGone as exc:
@@ -633,7 +647,8 @@ async def grab(
                 episodes = {item: action for item, action in episodes.items() if codes_of.get(item) in only}
             if not episodes:
                 codes = "release_no_gain" if load_episodes(result, ("no_gain",)) else "release_no_episodes"
-                raise LoadError(meldung(codes, _SERIES_MESSAGES[codes]), 409)
+                shorter = {"confirm": "no_gain"} if codes == "release_no_gain" else {}
+                raise LoadError(meldung(codes, _SERIES_MESSAGES[codes], **shorter), 409)
             held = prepared.facts.downloading.get(definition_id, frozenset()) & set(episodes)
             if held:
                 raise LoadError(
@@ -645,7 +660,7 @@ async def grab(
                     409,
                 )
         if not result.get("accepted") and "not_fitting" not in confirm:
-            raise LoadError(meldung("release_not_fitting", "This release does not fit the version's profile."), 409)
+            raise _not_fitting()
         upgrade = await _check_upgrade(found.title_id, definition_id, episodes, found.origin)
         blocked = store.is_blocked(
             prepared.facts.blocklist,
@@ -772,7 +787,7 @@ async def _grab_album(found: search_jobs.FoundRelease, definition_id: int, confi
         if code is not None:
             raise load_error(code)
         if not verdict.get("accepted") and "not_fitting" not in confirm:
-            raise LoadError(meldung("release_not_fitting", "This release does not fit the version's profile."), 409)
+            raise _not_fitting()
         upgrade = await _check_upgrade(found.title_id, definition_id, None, found.origin)
         blocked = store.is_blocked(
             prepared.facts.blocklist,
@@ -875,7 +890,15 @@ async def grab_takes(search_id: str, definition_id: int, confirm: list[str]) -> 
 
 
 def _blocklisted() -> LoadError:
-    return LoadError(meldung("release_blocklisted", "This release is on the blocklist of the title."), 409)
+    return LoadError(
+        meldung("release_blocklisted", "This release is on the blocklist of the title.", confirm="blocklisted"), 409
+    )
+
+
+def _not_fitting() -> LoadError:
+    return LoadError(
+        meldung("release_not_fitting", "This release does not fit the version's profile.", confirm="not_fitting"), 409
+    )
 
 
 ERRORS = (
