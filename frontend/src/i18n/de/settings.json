@@ -360,7 +360,7 @@
       "savedOn": "nexcrate schreibt jetzt Begleitdateien.",
       "savedOff": "nexcrate schreibt jetzt keine Begleitdateien mehr.",
       "check": "Prüfen",
-      "checkHint": "Prüfen ändert nichts.",
+      "checkHint": "Prüfen bringt nur veraltete release.nex von nexcrate auf den Stand.",
       "backfill": "Nachtragen",
       "backfillHint": "Nachtragen schreibt fehlende und veraltete release.nex.",
       "backfillOff": "Nachtragen geht erst, wenn Begleitdateien schreiben an ist.",

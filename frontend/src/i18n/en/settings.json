@@ -360,7 +360,7 @@
       "savedOn": "nexcrate now writes companion files.",
       "savedOff": "nexcrate no longer writes companion files.",
       "check": "Check",
-      "checkHint": "Checking changes nothing.",
+      "checkHint": "Checking only brings outdated release.nex files of nexcrate's up to date.",
       "backfill": "Fill in",
       "backfillHint": "Filling in writes missing and outdated release.nex files.",
       "backfillOff": "Filling in works once Write companion files is on.",

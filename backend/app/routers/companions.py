@@ -139,8 +139,9 @@ def _start(kind: str) -> CompanionJob:
     description=(
         "Starts a check in the background and answers at once with the running job; follow it with "
         "`GET /api/companions/job`. Per version nexcrate owns with a file it reads the folder's release.nex, compares "
-        "it with what nexcrate would write and stores the state on the version. Nothing on disk is written. One job at "
-        "a time, and none while a takeover writes its companion files."
+        "it with what nexcrate would write and stores the state on the version. Nothing on disk is written, but an "
+        "outdated release.nex of nexcrate's own, unchanged since written, is brought up to date when the switch is on; "
+        "it counts as written. One job at a time, and none while a takeover writes its companion files."
     ),
     responses=error_responses(*_JOB_ERRORS),
 )

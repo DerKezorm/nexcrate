@@ -1,8 +1,10 @@
 """The backfill of ``release.nex`` (L3): the check, the run, and "replace".
 
 * **The check** looks at every version nexcrate owns with a file, classifies its ``release.nex`` and stores the state on
-  the version. Nothing on disk is written. Since S6 (P4) every season folder of a series version
-  of nexcrate's own counts the same way.
+  the version. Nothing on disk is written, but for a movie's ``outdated`` file with the switch on: nexcrate's own, of
+  this installation and unchanged since written, it only lags behind the database, and the check brings it up to date.
+  Since S6 (P4) every season folder of a series version of nexcrate's own counts the same way; season folders are only
+  classified.
 * **The run** does the check's work and writes the files that are ``missing`` or ``outdated``. One version after
   another, a pause after each write to spare a NAS and the media servers' folder watchers.
 * **One job at a time**, and none while a takeover writes its companion files. Imports go on meanwhile: the folder lock
@@ -317,6 +319,9 @@ def _work(job: Job) -> dict[str, Any]:
                 wrote = state == "written"
             else:
                 state = companions.check_version(db, version, installation)
+                if state == "outdated" and companions.enabled(db):
+                    state = companions.write_version(version_id, db)
+                    wrote = state == "written"
             folder = companions.folder_name_of(version)
             title_id = version.title_id
             db.commit()
