@@ -305,7 +305,8 @@ export function LibraryPage() {
               {listing !== null && listing.kind === kind && t('library.count', { count: listing.total, value: formatNumber(listing.total, language) })}
               {loading === 'first' && <Spinner className="h-3.5 w-3.5" />}
             </p>
-            <div className="flex shrink-0 flex-wrap items-center gap-3">
+            {/* Darf schrumpfen und umbrechen: mit shrink-0 war die Leiste auf 390 px 528 px breit (28.09.2026). */}
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
               {/* Rueckmeldung 20.09.2026: markieren, dann handeln. Die Leiste darueber zeigt, was gilt. */}
               {!selection.on && (
                 <Button variant="ghost" size="sm" onClick={selection.start}>
