@@ -294,5 +294,6 @@
   "notify_code_missing": "There is no code yet. Send a test message first.",
   "notify_code_too_many": "Too many wrong tries. Send a new test message.",
   "folder_rules_not_for_kind": "Music has no library rules, only movies and series do.",
-  "client_address_refused": "The download client refuses nexcrate's address. Add it to rpc-whitelist in Transmission or switch the list off."
+  "client_address_refused": "The download client refuses nexcrate's address. Add it to rpc-whitelist in Transmission or switch the list off.",
+  "mapping_name_differs": "The chosen folder is not named like the download. Choose the folder of the download itself."
 }

@@ -294,5 +294,6 @@
   "notify_code_missing": "Es liegt kein Code vor. Schick erst eine Testnachricht.",
   "notify_code_too_many": "Zu viele Fehlversuche. Schick eine neue Testnachricht.",
   "folder_rules_not_for_kind": "Für Musik gibt es keine Regeln für Mediatheken, nur für Filme und Serien.",
-  "client_address_refused": "Das Download-Programm weist die Adresse von nexcrate ab. Trag sie in Transmission bei rpc-whitelist ein oder schalte die Liste aus."
+  "client_address_refused": "Das Download-Programm weist die Adresse von nexcrate ab. Trag sie in Transmission bei rpc-whitelist ein oder schalte die Liste aus.",
+  "mapping_name_differs": "Der gewählte Ordner heißt anders als der Download. Wähle den Ordner des Downloads selbst."
 }

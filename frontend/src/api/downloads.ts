@@ -38,6 +38,11 @@ export const downloadsApi = {
   clear: (id: number) => api.post<Download>(`/downloads/${id}/clear`),
   /** Uebernimmt die vorgeschlagene Zuordnung ins Programm und versucht es erneut. 409 `mapping_not_proposed`. */
   confirmMapping: (id: number) => api.post<Download>(`/downloads/${id}/mapping`),
+  /**
+   * Seit 28.09.2026: ohne Vorschlag waehlt der Besitzer den Ordner, in dem der Download liegt. Er muss so heissen wie
+   * der gemeldete; nexcrate leitet die Zuordnung daraus ab. 404 `folder_not_visible`, 422 `mapping_name_differs`.
+   */
+  mapFolder: (id: number, local: string) => api.post<Download>(`/downloads/${id}/mapping`, { local }),
   /** Seit S4: laedt, was eine Seriensuche fuer eine Fassung nehmen wuerde, je Release ein Ergebnis. */
   takes: (body: { search_id: string; version_id: number; confirm: LoadConfirmation[] }) => api.post<TakesResult>('/downloads/takes', body),
   /** Seit S4: die Videos eines Downloads und die Folgen der Serie, fuer "Von Hand zuordnen" und "Datei waehlen". */

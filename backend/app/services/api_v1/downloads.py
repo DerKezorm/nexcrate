@@ -117,8 +117,9 @@ def choice(code: str | None, state: str, values: dict[str, Any], scope: str | No
         "several_videos": (("assign", "remove"), ()),
     }
     if code == "path_not_found":
+        # Retry next to a proposal as well: the files may have come where the mapping already points (28.09.2026).
         if isinstance(values.get("proposal"), dict):
-            return Choice(("confirm_mapping", "remove"), ())
+            return Choice(("confirm_mapping", *retry, "remove"), ())
         return Choice((*retry, "remove"), ())
     found_actions, automatic = table.get(code, ((*retry, "remove"), ()))
     return Choice(found_actions, automatic)

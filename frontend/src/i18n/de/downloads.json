@@ -112,7 +112,9 @@
     "choose": "Datei wählen",
     "chooseLabel": "Datei wählen: {{title}}",
     "clear": "Erledigt",
-    "clearLabel": "Erledigt: {{title}}"
+    "clearLabel": "Erledigt: {{title}}",
+    "mapFolder": "Ordner wählen",
+    "mapFolderLabel": "Ordner wählen: {{title}}"
   },
   "problems": {
     "empty": "Kein Download braucht gerade Hilfe.",
@@ -155,7 +157,7 @@
     },
     "why": {
       "pathProposal": "nexcrate und {{client}} sehen denselben Ordner unter verschiedenen Pfaden. nexcrate hat den Download unter seinen eigenen Ordnern gefunden und schlägt eine Zuordnung vor.",
-      "pathNoProposal": "Unter seinen eigenen Ordnern hat nexcrate ihn auch nicht gefunden. Ist der Download-Ordner im Container von nexcrate eingebunden?",
+      "pathNoProposal": "Unter seinen eigenen Ordnern hat nexcrate ihn auch nicht gefunden. Ist der Download-Ordner im Container von nexcrate eingebunden? Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind.",
       "packed": "nexcrate entpackt noch nicht. Entferne den Download und nimm ein anderes Release.",
       "packedReason": {
         "unsupported": "Diese Art Archiv kann nexcrate nicht entpacken.",
@@ -442,5 +444,9 @@
     "proposed": "Vorschlag",
     "noVersion": "Dieser Titel hat noch keine Fassung. Leg zuerst eine an.",
     "seriesHint": "nexcrate legt die Folgen ab, die der Name nennt, bei einem Staffelpaket die ganze Staffel. Was es nicht zuordnen kann, fragt es dich wie gewohnt."
+  },
+  "mapFolder": {
+    "title": "Wo liegt der Download?",
+    "hint": "Öffne den Ordner des Downloads, er heißt wie bei {{client}}, meist wie das Release. nexcrate merkt sich daraus die Zuordnung für {{client}} und legt ihn gleich ab."
   }
 }

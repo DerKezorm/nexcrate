@@ -112,7 +112,9 @@
     "choose": "Choose file",
     "chooseLabel": "Choose file: {{title}}",
     "clear": "Done",
-    "clearLabel": "Done: {{title}}"
+    "clearLabel": "Done: {{title}}",
+    "mapFolder": "Choose the folder",
+    "mapFolderLabel": "Choose the folder: {{title}}"
   },
   "problems": {
     "empty": "No download needs help right now.",
@@ -155,7 +157,7 @@
     },
     "why": {
       "pathProposal": "nexcrate and {{client}} see the same folder under different paths. nexcrate found the download under its own folders and suggests a mapping.",
-      "pathNoProposal": "nexcrate did not find it under its own folders either. Is the download folder mounted in the nexcrate container?",
+      "pathNoProposal": "nexcrate did not find it under its own folders either. Is the download folder mounted in the nexcrate container? When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete.",
       "packed": "nexcrate does not unpack yet. Remove the download and take another release.",
       "packedReason": {
         "unsupported": "nexcrate cannot unpack this kind of archive.",
@@ -442,5 +444,9 @@
     "proposed": "Proposal",
     "noVersion": "This title has no version yet. Add one first.",
     "seriesHint": "nexcrate files the episodes the name names, for a season pack the whole season. What it cannot place, it asks you as usual."
+  },
+  "mapFolder": {
+    "title": "Where is the download?",
+    "hint": "Open the folder of the download. It is named as in {{client}}, usually like the release. nexcrate derives the mapping for {{client}} from it and files the download right away."
   }
 }

@@ -115,6 +115,7 @@ from .services.automatic import rss as automatic_rss
 from .services.automatic import scheduler as automatic_scheduler
 from .services.automatic import waiting as automatic_waiting
 from .services.automatic import wishes as automatic_wishes
+from .services.downloads import arrival as download_arrival
 from .services.downloads import importing as download_importing
 from .services.downloads import retention as download_retention
 from .services.downloads import store as download_store
@@ -250,6 +251,13 @@ jobs.register(
 )
 # how long the Usenet clients' news servers keep articles, read again when they changed or hourly.
 jobs.register(download_retention.JOB_NAME, download_retention.INTERVAL_SECONDS, download_retention.run_job)
+# Files a sync brings after the client finished (issue #3): looked for again for two days, filed once they stand still.
+jobs.register(
+    download_arrival.JOB_NAME,
+    download_arrival.INTERVAL_SECONDS,
+    download_arrival.run_job,
+    ready=download_tracking.ready,
+)
 # After a takeover: TMDB's data for the taken-over titles, 50 titles and then a minute's pause.
 jobs.register(tmdb.FILL_JOB, tmdb.FILL_INTERVAL_SECONDS, tmdb.fill_job)
 # The automatic's four rounds come as often as its clock runs fast; only a test bench sets that (clock.py).

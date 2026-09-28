@@ -28,8 +28,10 @@ export function problemActions(code: string, state: string, hasProposal: boolean
     // nimmt ihn von den Problemen, im Verlauf bleibt er stehen.
     case 'download_failed':
       return ['toTitle', 'clear']
+    // Seit 28.09.2026 (Issue #3): Erneut versuchen auch neben einem Vorschlag, und ohne Vorschlag den Ordner selbst
+    // waehlen. Bei einer Seedbox kommen die Dateien erst spaeter.
     case 'path_not_found':
-      return hasProposal ? ['mapping', 'remove'] : [...retry, 'remove']
+      return hasProposal ? ['mapping', ...retry, 'remove'] : [...retry, 'mapFolder', 'remove']
     case 'packed':
     case 'no_video':
       return ['removeAndBlock', 'toTitle']

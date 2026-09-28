@@ -11,6 +11,7 @@ import { Symbol } from '../../components/Symbol'
 import { Badge, Button, FormMessage, ProgressBar } from '../../components/ui'
 import { formatNumber } from '../../lib/format'
 import { percentOf } from '../../lib/states'
+import { FolderPicker } from '../files/FolderPicker'
 import { CLIENTS_TAB_PATH } from '../settings/tabs'
 import { AlbumAssignDialog } from './AlbumAssignDialog'
 import { AssignDialog } from './AssignDialog'
@@ -72,7 +73,7 @@ function Group({ urgent, title, intro, items, onChanged }: { urgent: boolean; ti
   )
 }
 
-type OpenDialog = 'mapping' | 'remove' | 'removeAndBlock' | 'assign' | 'assignAlbum' | 'choose' | 'finish' | null
+type OpenDialog = 'mapping' | 'mapFolder' | 'remove' | 'removeAndBlock' | 'assign' | 'assignAlbum' | 'choose' | 'finish' | null
 
 
 /**
@@ -181,6 +182,12 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
         {t('downloads.actions.mapping')}
       </Button>
     ),
+    mapFolder: (
+      <Button variant="ghost" size="sm" onClick={() => setDialog('mapFolder')} aria-label={t('downloads.actions.mapFolderLabel', { title })}>
+        <Symbol name="folder" />
+        {t('downloads.actions.mapFolder')}
+      </Button>
+    ),
     toClients: (
       <Link to={CLIENTS_TAB_PATH} className={buttonClasses('ghost', 'sm')}>
         <Symbol name="server" />
@@ -251,6 +258,19 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
           mapping={proposal}
           onClose={() => setDialog(null)}
           onDone={() => {
+            setDialog(null)
+            onChanged(t('downloads.mapping.done'))
+          }}
+        />
+      )}
+      {dialog === 'mapFolder' && (
+        <FolderPicker
+          title={t('downloads.mapFolder.title')}
+          hint={t('downloads.mapFolder.hint', { client })}
+          start={null}
+          onClose={() => setDialog(null)}
+          onTake={async (path) => {
+            await downloadsApi.mapFolder(download.id, path)
             setDialog(null)
             onChanged(t('downloads.mapping.done'))
           }}

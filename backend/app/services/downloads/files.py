@@ -198,7 +198,24 @@ def propose(reported: str, mounts: list[Path]) -> dict[str, str] | None:
                     stack.append((path, depth + 1))
     if len(matches) != 1:
         return None
-    local_parts = list(matches[0].parts)
+    return _pair(root, names, list(matches[0].parts))
+
+
+def mapping_for(reported: str, local: Path) -> dict[str, str] | None:
+    """The mapping that turns a reported path into a folder the owner chose, or None.
+
+    Only when the chosen folder carries the reported name: a mapping swaps the front of a path and keeps its end, so a
+    folder with another name would be a mapping for this one download only, and wrong for every later one.
+    """
+    parts = remote_parts(reported)
+    local_parts = list(local.parts)
+    if parts is None or not parts[1] or not local_parts or parts[1][-1] != local_parts[-1]:
+        return None
+    return _pair(parts[0], parts[1], local_parts)
+
+
+def _pair(root: str, names: list[str], local_parts: list[str]) -> dict[str, str]:
+    """The longest pair of prefixes that differ, with at least one name left in the remote one."""
     same = 0
     while (
         same < len(names) - 1

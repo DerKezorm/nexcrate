@@ -7,7 +7,9 @@
   to the client (tracking asks again soon); any other goes back to the import. With ``title_mismatch`` confirmed the
   import files a movie whose names fit none of its titles ("file it anyway").
 * **Confirming a mapping** stores the proposal of a ``path_not_found`` problem on the client, once, and imports again.
-  ⚠️ The local side must still be a visible folder.
+  ⚠️ The local side must still be a visible folder. Without a proposal the owner chooses the folder the download lies
+  in (``local``); it must carry the reported name, and the mapping is derived from both paths (28.09.2026, a Movie
+  download had no way to be filed when nothing was proposed).
 * **Removing** a download that is not finished: with ``remove_from_client`` the client drops the job with its files
   (SABnzbd from queue and history, qBittorrent with ``deleteFiles``), then the download is ``removed``. A Usenet job
   the client finished keeps its folder there; nexcrate deletes it once the download is ``removed`` (``discard``). An
@@ -165,7 +167,8 @@ def retry(download_id: int, confirm: list[str] | None = None) -> dict[str, Any]:
     return read(download_id)
 
 
-def confirm_mapping(download_id: int) -> dict[str, Any]:
+def confirm_mapping(download_id: int, local_folder: str | None = None) -> dict[str, Any]:
+    """``local_folder``: the folder the owner chose as the one the download lies in, instead of the proposal."""
     moment = store.now()
     refused = ActionError(
         meldung("mapping_not_proposed", "There is no proposed path for this download to confirm."), 409
@@ -174,9 +177,14 @@ def confirm_mapping(download_id: int) -> dict[str, Any]:
         row = db.get(Download, download_id)
         if row is None:
             raise not_found()
+        waiting = row.state == "problem" and row.problem_code == "path_not_found"
         values = row.problem_values or {}
-        proposal = values.get("proposal") if row.state == "problem" and row.problem_code == "path_not_found" else None
+        proposal = values.get("proposal") if waiting else None
         client = db.get(DownloadClient, row.client_id) if row.client_id is not None else None
+        if local_folder is not None:
+            if not waiting or client is None or not row.reported_path:
+                raise refused
+            proposal = _chosen_mapping(row.reported_path, local_folder)
         if not isinstance(proposal, dict) or client is None:
             raise refused
         remote, local = str(proposal.get("remote") or ""), str(proposal.get("local") or "")
@@ -197,6 +205,25 @@ def confirm_mapping(download_id: int) -> dict[str, Any]:
     logger.info("Download %d: a path mapping of download client %d is confirmed", download_id, client_id)
     importing.request(download_id)
     return read(download_id)
+
+
+def _chosen_mapping(reported: str, local_folder: str) -> dict[str, str]:
+    chosen = folders.visible_path(local_folder)
+    if chosen is None:
+        raise ActionError(
+            meldung("folder_not_visible", "nexcrate does not see this folder. Only mounted folders can be chosen."),
+            404,
+        )
+    mapping = files.mapping_for(reported, chosen)
+    if mapping is None:
+        raise ActionError(
+            meldung(
+                "mapping_name_differs",
+                "The chosen folder is not named like the download. Choose the folder of the download itself.",
+            ),
+            422,
+        )
+    return mapping
 
 
 @dataclass(frozen=True)

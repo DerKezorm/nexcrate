@@ -316,6 +316,15 @@ class ChooseIn(BaseModel):
     key: int
 
 
+class MappingIn(BaseModel):
+    local: str | None = Field(
+        default=None,
+        max_length=4096,
+        description="The folder the download lies in, chosen by the owner when nothing was proposed. It must be "
+        "visible to nexcrate and carry the name the client reports; the mapping is derived from both paths.",
+    )
+
+
 class RetryIn(BaseModel):
     confirm: list[Literal["title_mismatch"]] = Field(
         default_factory=list,
@@ -671,12 +680,18 @@ def clear_download(download_id: int) -> Download:
     response_model=Download,
     summary="Confirm a proposed path mapping",
     description=(
-        "Stores the proposal of a `path_not_found` problem on the download's client and files the download away again."
+        "Stores the proposal of a `path_not_found` problem on the download's client and files the download away again. "
+        "With `local` the owner names the folder the download lies in instead, also when nothing was proposed."
     ),
-    responses=error_responses((404, "download_not_found"), (409, "mapping_not_proposed")),
+    responses=error_responses(
+        (404, "download_not_found"),
+        (404, "folder_not_visible"),
+        (409, "mapping_not_proposed"),
+        (422, "mapping_name_differs"),
+    ),
 )
-def confirm_mapping(download_id: int) -> Download:
+def confirm_mapping(download_id: int, payload: MappingIn | None = None) -> Download:
     try:
-        return _download(actions.confirm_mapping(download_id))
+        return _download(actions.confirm_mapping(download_id, payload.local if payload is not None else None))
     except actions.ActionError as exc:
         raise exc.http() from exc
