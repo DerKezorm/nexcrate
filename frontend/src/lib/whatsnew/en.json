@@ -72,6 +72,26 @@
         "A takeover no longer gives a file that already belongs to one version to a second one.",
         "release.nex follows a file into the recycle bin and back."
       ]
+    },
+    "0.3.1": {
+      "lead": "This version files downloads whose files arrive later, from a seedbox for example, and fits the library on a phone.",
+      "sections": [
+        {
+          "title": "Files that arrive later",
+          "body": "When a sync brings the files to the server only after the download finished, from a seedbox for example, the download used to stay behind as a problem because nexcrate could not find the files. nexcrate now looks again every few minutes for two days and files it once the folder is complete and no longer changes.",
+          "where": "Downloads › Problems"
+        },
+        {
+          "title": "Choose the folder yourself",
+          "body": "When nexcrate cannot find a download and has nothing to propose, you can now choose its folder yourself, for movies too. nexcrate derives the mapping for the download client from it and files the download right away. \"Try again\" is now also offered beside a proposal.",
+          "where": "Downloads › Problems › Choose the folder"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The library is no longer wider than the screen on a phone.",
+        "Searching while the automatic searches the same series now shows that search instead of an error."
+      ]
     }
   }
 }

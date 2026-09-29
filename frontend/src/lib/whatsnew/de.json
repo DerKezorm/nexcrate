@@ -72,6 +72,26 @@
         "Eine Übernahme gibt eine Datei, die schon einer Fassung gehört, keiner zweiten mehr.",
         "release.nex folgt einer Datei in den Papierkorb und wieder zurück."
       ]
+    },
+    "0.3.1": {
+      "lead": "Diese Version legt Downloads ab, deren Dateien erst später ankommen, etwa von einer Seedbox, und passt die Bibliothek aufs Handy.",
+      "sections": [
+        {
+          "title": "Dateien, die später ankommen",
+          "body": "Holt ein Sync die Dateien erst nach dem Ende des Downloads auf den Server, etwa von einer Seedbox, blieb der Download bisher als Problem stehen, weil nexcrate die Dateien nicht fand. nexcrate sieht jetzt zwei Tage lang alle paar Minuten selbst nach und legt ihn ab, sobald der Ordner vollständig da ist und sich nicht mehr ändert.",
+          "where": "Downloads › Probleme"
+        },
+        {
+          "title": "Den Ordner selbst wählen",
+          "body": "Findet nexcrate einen Download nicht und hat keinen Vorschlag, kannst du seinen Ordner jetzt selbst wählen, auch für Filme. nexcrate merkt sich daraus die Zuordnung für das Download-Programm und legt ihn gleich ab. „Erneut versuchen“ gibt es jetzt auch neben einem Vorschlag.",
+          "where": "Downloads › Probleme › Ordner wählen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Bibliothek ist auf dem Handy nicht mehr breiter als der Bildschirm.",
+        "Suchen, während die Automatik dieselbe Serie sucht, zeigt jetzt deren Suche statt eines Fehlers."
+      ]
     }
   }
 }
