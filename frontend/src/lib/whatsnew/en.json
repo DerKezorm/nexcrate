@@ -92,6 +92,21 @@
         "The library is no longer wider than the screen on a phone.",
         "Searching while the automatic searches the same series now shows that search instead of an error."
       ]
+    },
+    "0.3.2": {
+      "lead": "This version assigns more music files by itself and lets you choose tracks only the target release of an album has.",
+      "sections": [
+        {
+          "title": "Tracks only the target release has",
+          "body": "Once files of a download lie in the album folder, its release is fixed. A bonus track only the album's target release has could then not be assigned. \"Assign by hand\" now offers such tracks in a group of their own, and the file is named after the target release.",
+          "where": "Downloads › Problems › Assign by hand"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Scene style file names like \"01-artist_name-title\" are read without the artist, so the title fits.",
+        "Credits like \"(Produced By …)\" or \"(ft. …)\" in a title no longer get in the way of the assignment."
+      ]
     }
   }
 }

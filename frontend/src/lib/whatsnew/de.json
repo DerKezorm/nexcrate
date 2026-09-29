@@ -92,6 +92,21 @@
         "Die Bibliothek ist auf dem Handy nicht mehr breiter als der Bildschirm.",
         "Suchen, während die Automatik dieselbe Serie sucht, zeigt jetzt deren Suche statt eines Fehlers."
       ]
+    },
+    "0.3.2": {
+      "lead": "Diese Version ordnet mehr Musikdateien selbst zu und lässt Titel wählen, die nur die Zielausgabe eines Albums hat.",
+      "sections": [
+        {
+          "title": "Titel nur der Zielausgabe",
+          "body": "Liegen Dateien eines Downloads schon im Albumordner, steht seine Ausgabe fest. Ein Bonustitel, den nur die Zielausgabe des Albums hat, ließ sich dann nicht mehr zuordnen. „Von Hand zuordnen“ bietet solche Titel jetzt in einer eigenen Gruppe an, und die Datei wird nach der Zielausgabe benannt.",
+          "where": "Downloads › Probleme › Von Hand zuordnen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Dateinamen im Stil der Szene wie „01-kuenstler_name-titel“ werden ohne den Künstler gelesen, damit der Titel passt.",
+        "Zusätze wie „(Produced By …)“ oder „(ft. …)“ im Titel stören die Zuordnung nicht mehr."
+      ]
     }
   }
 }
