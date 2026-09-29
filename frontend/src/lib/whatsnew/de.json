@@ -107,6 +107,20 @@
         "Dateinamen im Stil der Szene wie „01-kuenstler_name-titel“ werden ohne den Künstler gelesen, damit der Titel passt.",
         "Zusätze wie „(Produced By …)“ oder „(ft. …)“ im Titel stören die Zuordnung nicht mehr."
       ]
+    },
+    "0.3.3": {
+      "lead": "Diese Version wartet auf Downloads, deren Ordner ein Sync anlegt, bevor die Dateien darin liegen.",
+      "sections": [
+        {
+          "title": "Downloads von einer Seedbox, zweiter Teil",
+          "body": "Ein Sync-Programm wie Resilio oder Syncthing legt oft zuerst den Ordner an und hält unfertige Dateien unter einem vorläufigen Namen. nexcrate fand dann einen Ordner ohne Video oder Musik und gab endgültig auf. Jetzt sieht es zwei Tage lang weiter nach, wie schon bei einem fehlenden Ordner, und legt den Download ab, sobald die Dateien da sind und sich der Ordner nicht mehr ändert. Die Karte bietet außerdem „Erneut versuchen“ an.",
+          "where": "Downloads › Probleme"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Karte eines Downloads ohne Video oder Musik sagt jetzt, dass nexcrate weiter nachsieht, statt nur zum Entfernen zu raten."
+      ]
     }
   }
 }

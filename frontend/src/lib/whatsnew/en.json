@@ -107,6 +107,20 @@
         "Scene style file names like \"01-artist_name-title\" are read without the artist, so the title fits.",
         "Credits like \"(Produced By …)\" or \"(ft. …)\" in a title no longer get in the way of the assignment."
       ]
+    },
+    "0.3.3": {
+      "lead": "This version waits for downloads whose folder a sync creates before the files are in it.",
+      "sections": [
+        {
+          "title": "Downloads from a seedbox, second part",
+          "body": "A sync tool like Resilio or Syncthing often creates the folder first and keeps unfinished files under a temporary name. nexcrate then met a folder without a video or music and stopped for good. It now keeps looking for two days, as it already did for a missing folder, and files the download once the files are there and the folder has stopped changing. The card offers \"Try again\" as well.",
+          "where": "Downloads › Problems"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The card of a download without video or music now says that nexcrate keeps looking, instead of only telling you to remove it."
+      ]
     }
   }
 }
