@@ -47,7 +47,7 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
   }, [download.id, releaseId])
 
   const severalMedia = useMemo(() => new Set((data?.tracks ?? []).map((track) => track.medium)).size > 1, [data])
-  const trackById = useMemo(() => new Map((data?.tracks ?? []).map((track) => [track.id, track])), [data])
+  const trackById = useMemo(() => new Map([...(data?.tracks ?? []), ...(data?.target_tracks ?? [])].map((track) => [track.id, track])), [data])
   const editable = (data?.files ?? []).filter((file) => !file.placed && EDITABLE.includes(file.decision))
   const placed = (data?.files ?? []).filter((file) => file.placed)
   const doubles = data !== null ? doubleTracks(data, choices) : new Set<number>()
@@ -193,6 +193,7 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
                   key={file.key}
                   file={file}
                   tracks={data.tracks}
+                  targetTracks={data.target_tracks}
                   severalMedia={severalMedia}
                   choice={choices[file.key] ?? { kind: 'none' }}
                   doubles={doubles}
@@ -213,21 +214,13 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
             </ul>
             <section aria-label={t('downloads.albumAssign.tracksTitle')} className="flex flex-col gap-2 border-t border-ink-700 pt-4">
               <h3 className="text-sm font-semibold text-mist-200">{t('downloads.albumAssign.tracksTitle')}</h3>
-              <ol className="flex flex-col gap-1">
-                {data.tracks.map((track) => {
-                  const state = track.held !== null ? 'held' : chosen.has(track.id) ? 'chosen' : 'missing'
-                  return (
-                    <li key={track.id} className="flex min-w-0 items-baseline gap-2 text-sm">
-                      <span className="w-12 shrink-0 font-mono text-xs text-mist-500 tabular-nums">{trackCode(track, severalMedia)}</span>
-                      <span className="min-w-0 flex-1 wrap-anywhere text-mist-100">{track.name}</span>
-                      <span className="shrink-0 text-xs text-mist-500 tabular-nums">{durationText(track.length_ms)}</span>
-                      <Badge tone={state === 'held' ? 'ok' : state === 'chosen' ? 'accent' : 'bad'}>
-                        {state === 'held' ? t('downloads.albumAssign.held') : state === 'chosen' ? t('downloads.albumAssign.chosen') : t('downloads.albumAssign.gap')}
-                      </Badge>
-                    </li>
-                  )
-                })}
-              </ol>
+              <TrackList tracks={data.tracks} chosen={chosen} severalMedia={severalMedia} />
+              {data.target_tracks.length > 0 && (
+                <>
+                  <h4 className="pt-2 text-xs font-semibold text-mist-400">{t('downloads.albumAssign.targetOnly')}</h4>
+                  <TrackList tracks={data.target_tracks} chosen={chosen} severalMedia={severalMedia} />
+                </>
+              )}
             </section>
             <p className="text-xs text-mist-500">{t('downloads.albumAssign.onlyThis')}</p>
           </>
@@ -255,9 +248,35 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
   )
 }
 
+function TrackList({ tracks, chosen, severalMedia }: { tracks: AlbumTrackChoice[]; chosen: Set<number>; severalMedia: boolean }) {
+  const { t } = useTranslation()
+  return (
+    <ol className="flex flex-col gap-1">
+      {tracks.map((track) => {
+        const state = track.held !== null ? 'held' : chosen.has(track.id) ? 'chosen' : 'missing'
+        return (
+          <li key={track.id} className="flex min-w-0 items-baseline gap-2 text-sm">
+            <span className="w-12 shrink-0 font-mono text-xs text-mist-500 tabular-nums">{trackCode(track, severalMedia)}</span>
+            <span className="min-w-0 flex-1 wrap-anywhere text-mist-100">{track.name}</span>
+            <span className="shrink-0 text-xs text-mist-500 tabular-nums">{durationText(track.length_ms)}</span>
+            <Badge tone={state === 'held' ? 'ok' : state === 'chosen' ? 'accent' : 'bad'}>
+              {state === 'held' ? t('downloads.albumAssign.held') : state === 'chosen' ? t('downloads.albumAssign.chosen') : t('downloads.albumAssign.gap')}
+            </Badge>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+function trackLabel(track: AlbumTrackChoice, severalMedia: boolean): string {
+  return `${trackCode(track, severalMedia)} ${track.name}` + (durationText(track.length_ms) ? ` (${durationText(track.length_ms)})` : '')
+}
+
 function FileRow({
   file,
   tracks,
+  targetTracks,
   severalMedia,
   choice,
   doubles,
@@ -266,6 +285,7 @@ function FileRow({
 }: {
   file: AlbumAudioFile
   tracks: AlbumTrackChoice[]
+  targetTracks: AlbumTrackChoice[]
   severalMedia: boolean
   choice: AlbumChoice
   doubles: Set<number>
@@ -308,9 +328,18 @@ function FileRow({
           <option value={LOOSE}>{t('downloads.albumAssign.loose')}</option>
           {tracks.map((track) => (
             <option key={track.id} value={track.id}>
-              {`${trackCode(track, severalMedia)} ${track.name}` + (durationText(track.length_ms) ? ` (${durationText(track.length_ms)})` : '')}
+              {trackLabel(track, severalMedia)}
             </option>
           ))}
+          {targetTracks.length > 0 && (
+            <optgroup label={t('downloads.albumAssign.targetOnly')}>
+              {targetTracks.map((track) => (
+                <option key={track.id} value={track.id}>
+                  {trackLabel(track, severalMedia)}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
         {choice.kind === 'none' && proposal !== undefined && (
           <p className="text-xs text-mist-500">{t('downloads.albumAssign.proposal', { track: `${trackCode(proposal, severalMedia)} ${proposal.name}` })}</p>

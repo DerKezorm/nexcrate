@@ -645,6 +645,7 @@ def with_fingerprints(context: Context, found: Found, result: fm.Result) -> tupl
         chosen_id=edition.edition_id,
         others=context.others,
         album_name=context.album.album_title,
+        artist_name=context.album.artist_name,
     )
     if again.edition is None:
         return result, outcome.states
@@ -784,9 +785,12 @@ def target_tracks(context: Context, edition: fm.Edition) -> tuple[fm.Edition | N
 def named_after(
     edition: fm.Edition, target: fm.Edition | None, mapping: dict[int, int], track_id: int | None
 ) -> tuple[fm.Edition, int | None]:
-    """The edition and track a file is named and tagged after: the target when it has this song, else its own."""
+    """The edition and track a file is named and tagged after: the target when it has this song, else its own. A track
+    of the target itself (the owner chose one the edition lacks) is named after the target."""
     if target is not None and track_id is not None and track_id in mapping:
         return target, mapping[track_id]
+    if target is not None and track_id is not None and any(track.id == track_id for track in target.tracks):
+        return target, track_id
     return edition, track_id
 
 
@@ -1226,6 +1230,7 @@ def _decide(context: Context, found: Found, manual: Manual | None) -> fm.Result:
             chosen_id=manual.release_id or context.download_release_id,
             others=context.others,
             album_name=context.album.album_title,
+            artist_name=context.album.artist_name,
         )
     chosen = context.download_release_id if any(row.placed for row in context.stored) else None
     return fm.match(
@@ -1235,6 +1240,7 @@ def _decide(context: Context, found: Found, manual: Manual | None) -> fm.Result:
         chosen_id=chosen,
         others=context.others,
         album_name=context.album.album_title,
+        artist_name=context.album.artist_name,
         cue_sheet=found.cue_sheet,
     )
 
@@ -1295,7 +1301,10 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
     # download that fills an empty album keeps the names of its own release (decision of M4).
     own = {row.track_file_id for row in context.stored if row.track_file_id is not None}
     current = [item for item in context.current if item.id not in own]
-    target, same_songs = target_tracks(context, edition) if current else (None, {})
+    # The owner may choose a track only the target has (the dialog offers them once the release is fixed).
+    own_tracks = {track.id for track in edition.tracks}
+    elsewhere = any(item.track_id is not None and item.track_id not in own_tracks for item in planned)
+    target, same_songs = target_tracks(context, edition) if current or elsewhere else (None, {})
     with SessionLocal() as db:
         release = db.get(Release, edition.id)
         title = db.get(Title, context.title_id)
@@ -1323,6 +1332,8 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
         """The track row and the album tags a file gets: the target's when it has this song."""
         if target is not None and track_id is not None and track_id in same_songs:
             return target_tracks_by_id.get(same_songs[track_id]), target_album
+        if target is not None and track_id is not None and track_id not in tracks and track_id in target_tracks_by_id:
+            return target_tracks_by_id[track_id], target_album
         return (tracks.get(track_id) if track_id is not None else None), album
 
     def wanted_of(track_id: int | None) -> dict[str, list[str]] | None:

@@ -392,6 +392,7 @@
     "placedAs": "Lies in the album folder as {{code}}.",
     "placedLoose": "Lies in the album folder without a track.",
     "tracksTitle": "Track list",
+    "targetOnly": "Only in the target release",
     "held": "there",
     "chosen": "chosen",
     "gap": "missing",

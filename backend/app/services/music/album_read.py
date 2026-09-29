@@ -23,7 +23,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ...db import SessionLocal
-from ...models import Release, ReleaseTrack, Title, TrackFile, Version, utcnow
+from ...models import Artist, Release, ReleaseTrack, Title, TrackFile, Version, utcnow
 from .. import folders
 from ..downloads import files
 from . import album_quality, paths, same_song, store, tags
@@ -131,12 +131,14 @@ def read_version(version_id: int) -> dict[str, int]:
             )
         decisions: dict[int, fm.Decision] = {}
         if audio and editions:
+            artist = db.get(Artist, title.artist_id) if title.artist_id is not None else None
             result = fm.match(
                 audio,
                 editions,
                 target_id=version.target_release_id,
                 chosen_id=version.actual_release_id,
                 album_name=title.title,
+                artist_name=artist.name if artist is not None else None,
             )
             if result.edition is not None:
                 decisions = {decision.key: decision for decision in result.edition.decisions}

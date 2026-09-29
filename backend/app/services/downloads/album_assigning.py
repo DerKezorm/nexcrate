@@ -2,11 +2,14 @@
 
 * ``files_of`` is the dialog "Von Hand zuordnen": the audio files with what nexcrate read and proposes, the releases of
   the album with loaded tracks, the tracks of one release with what the album holds for each (decision 31). Files are
-  named by a number (``key``), never by a path the browser could send back.
+  named by a number (``key``), never by a path the browser could send back. Tracks of the album's target release
+  whose song that release lacks are offered as well (``target_tracks``, the owner's answer of 29.09.2026): once files
+  lie in the album folder the release cannot change, and a bonus track of the target would stay out for good.
 * ``assign`` files what the owner chose: a track, "fits no track, file anyway" (``loose``, decision 32), or nothing.
-  Each track once, only tracks of the chosen release. The release can be changed only while no file of the download
-  lies in the album folder. ``confirm: ["not_better"]`` replaces an album whose files are not worse (decision 20). The
-  choice holds for this download only; the target release stays as it is (decision 33).
+  Each track once, only tracks of the chosen release or tracks only its target has. The release can be changed only
+  while no file of the download lies in the album folder. ``confirm: ["not_better"]`` replaces an album whose files
+  are not worse (decision 20). The choice holds for this download only; the target release stays as it is
+  (decision 33).
 * ``finish`` is "Rest nicht ablegen" (decision 34): the download is ``imported`` with what is filed; afterwards
   SABnzbd's job folder goes. A torrent keeps its files.
 """
@@ -31,6 +34,7 @@ from ...models import (
     TrackFile,
 )
 from ..music import file_matching as fm
+from ..music import same_song
 from . import album_import, importing, store
 from .actions import ActionError, not_found, read
 
@@ -66,6 +70,43 @@ def _album_row(db: Any, download_id: int) -> Download:
     return row
 
 
+def _target_only(db: Any, release_id: int | None, target_id: int | None) -> list[ReleaseTrack]:
+    """Tracks of the target release whose song the release lacks; empty when the release is the target."""
+    if release_id is None or target_id is None or release_id == target_id:
+        return []
+    target = db.get(Release, target_id)
+    if target is None or not target.tracks_loaded:
+        return []
+    own = list(db.scalars(select(ReleaseTrack).where(ReleaseTrack.release_id == release_id)))
+    theirs = list(db.scalars(select(ReleaseTrack).where(ReleaseTrack.release_id == target_id)))
+    keys = same_song.keys_by_track([own, theirs])
+    songs = same_song.union(keys, (track.id for track in own))
+    return [track for track in theirs if not keys.get(track.id, frozenset()) & songs]
+
+
+def _choices(db: Any, tracks: list[ReleaseTrack], held: dict[int, dict[str, Any]]) -> list[dict[str, Any]]:
+    media = {
+        item.id: item
+        for item in db.scalars(select(ReleaseMedium).where(ReleaseMedium.id.in_({track.medium_id for track in tracks})))
+    }
+    found = []
+    for track in tracks:
+        medium = media.get(track.medium_id)
+        found.append(
+            {
+                "id": track.id,
+                "medium": medium.position if medium is not None else 1,
+                "position": track.position,
+                "number": track.number,
+                "name": track.name,
+                "length_ms": track.length_ms,
+                "held": held.get(track.id),
+            }
+        )
+    found.sort(key=lambda item: (item["medium"], item["position"]))
+    return found
+
+
 def files_of(download_id: int, release_id: int | None = None) -> dict[str, Any]:
     """``GET /api/downloads/{id}/album-files``; ``release_id`` shows the tracks of another release of the album."""
     with SessionLocal() as db:
@@ -96,29 +137,16 @@ def files_of(download_id: int, release_id: int | None = None) -> dict[str, Any]:
             )
         }
         tracks: list[dict[str, Any]] = []
+        target_tracks: list[dict[str, Any]] = []
         if shown is not None:
-            media = {
-                item.id: item for item in db.scalars(select(ReleaseMedium).where(ReleaseMedium.release_id == shown))
-            }
             held: dict[int, dict[str, Any]] = {}
             if version is not None:
                 for item in db.scalars(select(TrackFile).where(TrackFile.version_id == version.id)):
                     for track_id in item.track_ids or []:
                         held[track_id] = {"quality": item.quality, "file": item.relative_path.rsplit("/", 1)[-1]}
-            for track in db.scalars(select(ReleaseTrack).where(ReleaseTrack.release_id == shown)):
-                medium = media.get(track.medium_id)
-                tracks.append(
-                    {
-                        "id": track.id,
-                        "medium": medium.position if medium is not None else 1,
-                        "position": track.position,
-                        "number": track.number,
-                        "name": track.name,
-                        "length_ms": track.length_ms,
-                        "held": held.get(track.id),
-                    }
-                )
-            tracks.sort(key=lambda item: (item["medium"], item["position"]))
+            tracks = _choices(db, list(db.scalars(select(ReleaseTrack).where(ReleaseTrack.release_id == shown))), held)
+            target_id = version.target_release_id if version is not None else None
+            target_tracks = _choices(db, _target_only(db, shown, target_id), held)
         placed_any = any(item.track_file_id is not None for item in rows)
         return {
             "download_id": row.id,
@@ -147,6 +175,7 @@ def files_of(download_id: int, release_id: int | None = None) -> dict[str, Any]:
                 for item in releases
             ],
             "tracks": tracks,
+            "target_tracks": target_tracks,
             "files": [
                 {
                     "key": item.id,
@@ -204,6 +233,9 @@ def assign(
                 "release_fixed", "Files of this download lie in the album folder already; the release stays."
             )
         tracks = set(db.scalars(select(ReleaseTrack.id).where(ReleaseTrack.release_id == release)))
+        version = store.version_of(db, row.title_id, row.version_definition_id)
+        target_id = version.target_release_id if version is not None else None
+        tracks |= {track.id for track in _target_only(db, release, target_id)}
         held = {item.track_id for item in placed if item.track_id is not None}
         seen: set[int] = set()
         mapping: dict[int, int | str | None] = {}

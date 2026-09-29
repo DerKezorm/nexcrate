@@ -1467,6 +1467,8 @@ export type AlbumFiles = {
   release_fixed: boolean
   releases: AlbumReleaseChoice[]
   tracks: AlbumTrackChoice[]
+  /** Titel der Zielausgabe, deren Song die gezeigte Ausgabe nicht hat; waehlbar wie die anderen (29.09.2026). */
+  target_tracks: AlbumTrackChoice[]
   files: AlbumAudioFile[]
 }
 

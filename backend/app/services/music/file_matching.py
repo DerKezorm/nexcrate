@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import os
 import re
+import unicodedata
 from collections import Counter, defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -54,6 +55,10 @@ _NAME_NUMBER = re.compile(r"^\s*\(?(\d{1,3})\)?(?=[\s._)\-]|$)")
 _NAME_INNER_NUMBER = re.compile(r"\s-\s(\d{1,3})\s*[-.]\s")
 _LEADING_JUNK = re.compile(r"^[\s._\-()\[\]]+")
 _FEAT = re.compile(r"\s*[(\[]?\s*(?:feat\.?|ft\.?|featuring)\s.*$", re.IGNORECASE)
+#: A credit in brackets anywhere in a title: "(Produced By …)", "[prod. …]", "(ft. …)".
+_CREDIT = re.compile(
+    r"\s*[(\[]\s*(?:feat\.?|ft\.?|featuring|produced\s+by|prod\.?(?:\s+by)?)\s[^)\]]*[)\]]", re.IGNORECASE
+)
 
 
 # --- Input -------------------------------------------------------------------------------------------------------- #
@@ -123,8 +128,35 @@ def _parts(path: str) -> tuple[list[str], str]:
     return parts[:-1], os.path.splitext(parts[-1])[0] if parts else ""
 
 
-def _title_from_name(stem: str, number_end: int) -> str | None:
+def _folded(text: str) -> str:
+    """Letters and digits only, lower case, without accents: how a scene name spells an artist."""
+    plain = unicodedata.normalize("NFKD", text)
+    return "".join(char for char in plain.casefold() if char.isalnum())
+
+
+def _without_artist(rest: str, artist: str | None) -> str:
+    """A scene name ``artist_name-title_name`` without its artist: the known artist when the name starts with it,
+    else the part after the only hyphen of a name with underscores."""
+    # "Die Kältefront" is "die_kaeltefront" in a scene name: every spelling of ``schreibweisen`` counts.
+    wanted = {_folded(form) for form in schreibweisen.keys(artist)} | {_folded(artist or "")}
+    wanted.discard("")
+    seen = ""
+    for index, char in enumerate(rest if wanted else ""):
+        seen += _folded(char)
+        if seen in wanted and rest[index + 1 : index + 2] == "-":
+            return rest[index + 2 :]
+        if not any(form.startswith(seen) for form in wanted):
+            break
+    if "_" in rest and rest.count("-") == 1:
+        return rest.split("-", 1)[1]
+    return rest
+
+
+def _title_from_name(stem: str, number_end: int, artist: str | None = None) -> str | None:
     rest = _LEADING_JUNK.sub("", stem[number_end:])
+    if " " not in stem:
+        # A scene name: "01-artist_name-title_name".
+        rest = _without_artist(rest, artist).replace("_", " ")
     # "Artist - Title" after the number: the last part is the title.
     if " - " in rest:
         rest = rest.rsplit(" - ", 1)[1]
@@ -132,8 +164,9 @@ def _title_from_name(stem: str, number_end: int) -> str | None:
     return rest or None
 
 
-def read(file: AudioFile, several_media: bool) -> Reading:
-    """Medium, position and title of a file: tags first, then the folder, then the name."""
+def read(file: AudioFile, several_media: bool, artist: str | None = None) -> Reading:
+    """Medium, position and title of a file: tags first, then the folder, then the name. ``artist`` is cut from the
+    front of a scene name."""
     tags = file.tags
     folders, stem = _parts(file.path)
     folder_medium: int | None = None
@@ -150,17 +183,17 @@ def read(file: AudioFile, several_media: bool) -> Reading:
         # A tag without the medium: the folder says it, or the name when it names the same track.
         if medium is None:
             medium = folder_medium or (name_medium if name_position == position else None)
-        return Reading(medium, position, "tag", tag_title or _name_title(stem))
+        return Reading(medium, position, "tag", tag_title or _name_title(stem, artist))
     if name_position is None:
         return Reading(folder_medium, None, None, tag_title or stem.strip() or None)
     source = "folder" if folder_medium is not None else "name"
-    title = tag_title or _title_from_name(stem, end)
+    title = tag_title or _title_from_name(stem, end, artist)
     return Reading(folder_medium or name_medium, name_position, source, title)
 
 
-def _name_title(stem: str) -> str | None:
+def _name_title(stem: str, artist: str | None = None) -> str | None:
     _medium, _position, end = _numbers_of_name(stem, False)
-    return _title_from_name(stem, end) if end else (stem.strip() or None)
+    return _title_from_name(stem, end, artist) if end else (stem.strip() or None)
 
 
 def _numbers_of_name(stem: str, several_media: bool) -> tuple[int | None, int | None, int]:
@@ -186,7 +219,7 @@ def _numbers_of_name(stem: str, several_media: bool) -> tuple[int | None, int | 
 def title_keys(text: str | None) -> frozenset[str]:
     if not text:
         return frozenset()
-    plain = _FEAT.sub("", text)
+    plain = _FEAT.sub("", _CREDIT.sub("", text))
     return frozenset(schreibweisen.keys(plain)) | frozenset(schreibweisen.keys(text))
 
 
@@ -329,10 +362,11 @@ def match_edition(
     edition: Edition,
     others: Sequence[OtherAlbum] = (),
     album_name: str | None = None,
+    artist_name: str | None = None,
 ) -> EditionResult:
     """Every file against one release."""
     several = edition.media > 1
-    readings = {file.key: read(file, several) for file in files}
+    readings = {file.key: read(file, several, artist_name) for file in files}
     own_keys = title_keys(album_name)
     fits: dict[int, tuple[set[int], str | None]] = {}
     for file in files:
@@ -433,6 +467,7 @@ def match(
     chosen_id: int | None = None,
     others: Sequence[OtherAlbum] = (),
     album_name: str | None = None,
+    artist_name: str | None = None,
     cue_sheet: bool = False,
 ) -> Result:
     """The release that came and the decision for every file. ``chosen_id``: the owner's release in the dialog."""
@@ -442,13 +477,13 @@ def match(
     if chosen_id is not None:
         chosen = next((edition for edition in usable if edition.id == chosen_id), None)
         if chosen is not None:
-            return Result(match_edition(files, chosen, others, album_name), {"code": "owner"})
+            return Result(match_edition(files, chosen, others, album_name, artist_name), {"code": "owner"})
     if single_file(files, usable, cue_sheet):
         return Result(None, {"code": "single_file"}, single_file=True)
     named = _named_edition(files, usable)
     if named is not None:
-        return Result(match_edition(files, named, others, album_name), {"code": "by_tags"})
-    results = [(edition, match_edition(files, edition, others, album_name)) for edition in usable]
+        return Result(match_edition(files, named, others, album_name, artist_name), {"code": "by_tags"})
+    results = [(edition, match_edition(files, edition, others, album_name, artist_name)) for edition in usable]
 
     def score(item: tuple[Edition, EditionResult]) -> tuple[int, int, int, int, int]:
         edition, result = item

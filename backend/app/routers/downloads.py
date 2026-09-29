@@ -400,6 +400,9 @@ class AlbumFilesOut(BaseModel):
     release_fixed: bool = Field(description="Files lie in the album folder already: the release cannot change.")
     releases: list[AlbumReleaseChoice]
     tracks: list[AlbumTrackChoice]
+    target_tracks: list[AlbumTrackChoice] = Field(
+        description="Tracks of the target release whose song the listed release lacks; they may be chosen as well."
+    )
     files: list[AlbumAudioFile]
 
 
