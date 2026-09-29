@@ -17,8 +17,9 @@ export function problemActions(code: string, state: string, hasProposal: boolean
       case 'import_failed':
       case 'import_stalled':
         return [...retry, 'finish', 'remove']
+      // Seit 29.09.2026 (Issue #3): kommt die Musik erst per Sync, legt "Erneut versuchen" sie ab.
       case 'no_audio':
-        return ['removeAndBlock', 'toTitle']
+        return ['removeAndBlock', ...retry, 'toTitle']
       case 'album_single_file':
         return ['toTitle', 'remove']
     }
@@ -33,8 +34,10 @@ export function problemActions(code: string, state: string, hasProposal: boolean
     case 'path_not_found':
       return hasProposal ? ['mapping', ...retry, 'remove'] : [...retry, 'mapFolder', 'remove']
     case 'packed':
-    case 'no_video':
       return ['removeAndBlock', 'toTitle']
+    // Seit 29.09.2026 (Issue #3): kommt das Video erst per Sync, legt "Erneut versuchen" es ab.
+    case 'no_video':
+      return ['removeAndBlock', ...retry, 'toTitle']
     // Seit 24.09.2026: bei einer Serie sind die anderen Folgen schon abgelegt, "Rest nicht ablegen" beendet ihn.
     case 'file_truncated':
       return series ? ['finish', 'removeAndBlock'] : ['removeAndBlock', 'toTitle']

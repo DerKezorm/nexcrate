@@ -168,7 +168,7 @@
         "too_large": "Das Archiv würde zu viele oder zu große Dateien ergeben."
       },
       "encrypted": "nexcrate hat das Release gesperrt. Entferne den Download.",
-      "no_video": "Vermutlich ist das Release unvollständig. Entferne den Download und nimm ein anderes Release.",
+      "no_video": "Vermutlich ist das Release unvollständig. Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind. Sonst entferne den Download und nimm ein anderes Release.",
       "no_space": "Mach Platz frei und versuch es dann noch einmal.",
       "gone_from_client": "Vielleicht wurde er dort gelöscht. Entferne ihn hier und nimm ein anderes Release.",
       "client_error": "Das liegt oft nicht am Release, etwa bei einer vollen Platte. Schau nach, was {{client}} dazu meldet, und entferne den Download, wenn er nicht weiterkommt.",
@@ -201,7 +201,7 @@
         "transfer_failed": "Die Datei ließ sich weder verschieben noch kopieren noch verlinken. Einzelheiten stehen im Protokoll. Du kannst es noch einmal versuchen.",
         "database_busy": "Die Datenbank war eine halbe Stunde lang belegt, nexcrate hat es immer wieder versucht. Versuch es noch einmal; bleibt es so, hilft ein Neustart von nexcrate."
       },
-      "no_audio": "Weder Audiodateien noch Archive mit Musik. nexcrate hat nichts abgelegt; entferne den Download und such neu.",
+      "no_audio": "Weder Audiodateien noch Archive mit Musik. Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind. Sonst entferne den Download und such neu.",
       "album_single_file": "Solche Alben schneidet nexcrate noch nicht in Titel. Das Release ist gesperrt, such ein anderes.",
       "album_not_better": "nexcrate ersetzt ein Album nur, wenn weder Qualität noch Titelzahl schlechter werden. Nichts wurde angefasst; du kannst trotzdem ersetzen oder den Rest nicht ablegen.",
       "album_tracks_missing": "Ohne die Titellisten von MusicBrainz ordnet nexcrate keine Datei zu. Einen Tag lang hat es gewartet.",

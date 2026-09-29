@@ -168,7 +168,7 @@
         "too_large": "The archive would give too many or too large files."
       },
       "encrypted": "nexcrate blocked the release. Remove the download.",
-      "no_video": "The release is probably incomplete. Remove the download and take another release.",
+      "no_video": "The release is probably incomplete. When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete. Otherwise remove the download and take another release.",
       "no_space": "Free up some space and then try again.",
       "gone_from_client": "Maybe it was deleted there. Remove it here and take another release.",
       "client_error": "This is often not the release's fault, for example with a full disk. Check what {{client}} says about it and remove the download if it does not move on.",
@@ -201,7 +201,7 @@
         "transfer_failed": "The file could not be moved, copied or linked. The log has the details. You can try again.",
         "database_busy": "The database was busy for half an hour; nexcrate tried again and again. Try once more; if it stays like this, restarting nexcrate helps."
       },
-      "no_audio": "Neither audio files nor archives with music. nexcrate filed nothing; remove the download and search again.",
+      "no_audio": "Neither audio files nor archives with music. When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete. Otherwise remove the download and search again.",
       "album_single_file": "nexcrate does not cut such albums into tracks yet. The release is blocked; search for another one.",
       "album_not_better": "nexcrate replaces an album only when neither quality nor the count of tracks gets worse. Nothing was touched; you can replace anyway or file nothing more.",
       "album_tracks_missing": "Without MusicBrainz's track lists nexcrate maps no file. It waited for a day.",
