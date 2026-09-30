@@ -158,7 +158,10 @@ class ProfileOut(BaseModel):
 
 
 class PreviewIn(BaseModel):
-    version_id: int
+    version_id: int = Field(default=0, description="The version the answers are meant for; 0 with a kind of its own.")
+    kind: str | None = Field(
+        default=None, description="The kind to build for, for a profile that belongs to no version."
+    )
     answers: dict[str, Any] = Field(
         default_factory=dict, description="Answers by question id; missing ones take defaults."
     )
@@ -300,8 +303,8 @@ def read_questions(
     response_model=PreviewOut,
     summary="Preview a profile",
     description=(
-        "Normalizes the answers for the kind of the version and builds the rules with the TRaSH Guides state in "
-        "use, then answers with the normalized answers and the summary. Nothing is saved."
+        "Normalizes the answers for the kind of the version, or the kind named outright, and builds the rules with "
+        "the TRaSH Guides state in use, then answers with the normalized answers and the summary. Nothing is saved."
     ),
     responses=error_responses(
         (404, "not_found"),
@@ -311,8 +314,9 @@ def read_questions(
     ),
 )
 def preview(payload: PreviewIn, db: DbSession) -> PreviewOut:
-    definition = _definition(db, payload.version_id)
-    built = _build(definition.kind, payload.answers)
+    # Like the import: the wizard on a profile of its own has no version to name (issue #6).
+    kind = payload.kind if payload.kind is not None else _definition(db, payload.version_id).kind
+    built = _build(kind, payload.answers)
     return PreviewOut(answers=built.answers, summary=SummaryOut.model_validate(built.summary))
 
 

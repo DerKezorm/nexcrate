@@ -131,7 +131,9 @@ export function ProfileWizard({ target, onClose, onDone }: { target: WizardTarge
   useEffect(() => {
     if (!onSummary || effective === null || preview?.key === key) return
     const run = ++generation.current
-    profilesApi.preview({ version_id: target.versionId ?? 0, answers: effective }).then(
+    // Am Profil selbst gibt es keine Fassung: dann baut der Server nach der Art.
+    const on = target.versionId !== undefined ? { version_id: target.versionId } : { kind: target.kind }
+    profilesApi.preview({ ...on, answers: effective }).then(
       (data) => {
         if (run === generation.current) setPreview({ key, data })
       },
@@ -139,7 +141,7 @@ export function ProfileWizard({ target, onClose, onDone }: { target: WizardTarge
         if (run === generation.current) setPreview({ key, error })
       },
     )
-  }, [onSummary, effective, key, preview, target.versionId])
+  }, [onSummary, effective, key, preview, target.versionId, target.kind])
 
   // Eine neue Seite beginnt oben, auch wenn die vorige weit gescrollt war.
   useEffect(() => {

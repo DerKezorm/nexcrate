@@ -833,7 +833,8 @@ export type ProfileBrief = {
   updated_at: string
 }
 
-export type ProfilePreviewRequest = { version_id: number; answers: ProfileAnswers }
+/** Eine Fassung oder, fuer ein Profil ohne Fassung, die Art (Issue #6: mit Fassung 0 kam 404). */
+export type ProfilePreviewRequest = { version_id?: number; kind?: MediaKind; answers: ProfileAnswers }
 
 /** `POST /api/profiles/preview`: die Antworten, wie der Server sie speichern wuerde, und die Zusammenfassung. */
 export type ProfilePreview = { answers: ProfileAnswers; summary: ProfileSummary }
