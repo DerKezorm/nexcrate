@@ -121,6 +121,25 @@
       "small": [
         "The card of a download without video or music now says that nexcrate keeps looking, instead of only telling you to remove it."
       ]
+    },
+    "0.3.4": {
+      "lead": "This version lets the assistant create a profile again, and reads series folders that were added on the movie side.",
+      "sections": [
+        {
+          "title": "Profiles from the assistant",
+          "body": "On the last page, the assistant showed \"This does not exist, or not any more\" for a new profile under Profiles, and Save stayed locked. It built its overview for a version, and such a profile belongs to none yet. It now builds the overview for the kind of the profile, and you can save it.",
+          "where": "Settings › Quality › Profiles"
+        },
+        {
+          "title": "Series folders on the movie side",
+          "body": "A folder of series added under Movies was read as movies: every season folder became a movie of its own and stayed unknown. The folder now says when it holds season folders, and a folder you added can be read as a series folder with one click.",
+          "where": "Settings › Import and Read folders"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When TMDB stops answering during a scan, the job says so with the reason, instead of leaving the rest unknown without a word."
+      ]
     }
   }
 }

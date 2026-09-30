@@ -121,6 +121,25 @@
       "small": [
         "Die Karte eines Downloads ohne Video oder Musik sagt jetzt, dass nexcrate weiter nachsieht, statt nur zum Entfernen zu raten."
       ]
+    },
+    "0.3.4": {
+      "lead": "Diese Version lässt den Assistenten wieder Profile anlegen und liest Serienordner, die bei den Filmen hinzugefügt wurden.",
+      "sections": [
+        {
+          "title": "Profile aus dem Assistenten",
+          "body": "Auf der letzten Seite zeigte der Assistent bei einem neuen Profil unter „Profile“ die Meldung „Das gibt es nicht oder nicht mehr.“, und Speichern blieb gesperrt. Er baute seine Übersicht für eine Fassung, und so ein Profil gehört noch zu keiner. Jetzt baut er sie für die Art des Profils, und es lässt sich speichern.",
+          "where": "Einstellungen › Qualität › Profile"
+        },
+        {
+          "title": "Serienordner bei den Filmen",
+          "body": "Ein Ordner mit Serien, der unter Filme hinzugefügt wurde, wurde als Filme gelesen: Jeder Staffelordner wurde ein eigener Film und blieb unbekannt. Jetzt sagt der Ordner, wenn er Staffelordner enthält, und ein selbst hinzugefügter Ordner lässt sich mit einem Klick als Serienordner einlesen.",
+          "where": "Einstellungen › Import und Ordner einlesen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Hört TMDB beim Einlesen auf zu antworten, sagt der Job das samt Grund, statt den Rest wortlos unbekannt zu lassen."
+      ]
     }
   }
 }
