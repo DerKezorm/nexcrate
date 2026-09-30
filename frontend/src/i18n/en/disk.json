@@ -29,7 +29,13 @@
     "added": "{{path}} is now read too.",
     "remove": "Remove from the list",
     "removeLabel": "Remove from the list: {{path}}",
-    "removed": "{{path}} is no longer read."
+    "removed": "{{path}} is no longer read.",
+    "seriesLike_one": "{{names}} holds season folders. That looks like a series: the movie reading takes each season as a movie of its own, and a movie can never be matched to a series.",
+    "seriesLike_other": "{{count}} folders hold season folders, for example {{names}}. That looks like series: the movie reading takes each season as a movie of its own, and a movie can never be matched to a series.",
+    "asSeries": "Read as series folder",
+    "asSeriesLabel": "Read as series folder: {{path}}",
+    "asSeriesStarted": "{{path}} is now read as a series folder.",
+    "seriesLikeFixed": "This folder belongs to a movie version. Series need a folder of their own: choose it for a series version under Folders and naming."
   },
   "job": {
     "scan": "nexcrate is reading",
@@ -67,7 +73,9 @@
       "roots": "Folders read"
     },
     "conflictsHint": "What did not work is listed under Conflicts.",
-    "dismiss": "Hide"
+    "dismiss": "Hide",
+    "tmdbStopped_one": "TMDB stopped answering. One folder is still without proposals, read again later.",
+    "tmdbStopped_other": "TMDB stopped answering. {{count}} folders are still without proposals, read again later."
   },
   "tabs": {
     "label": "Folders by state",

@@ -251,6 +251,20 @@ export function DiskPage() {
     }
   }
 
+  // Als Filme eingelesene Serien: die Wurzel wird Serienwurzel, gleich neu eingelesen, und die Seite zeigt Serien.
+  async function readAsSeries(root: DiskRoot) {
+    try {
+      await diskApi.setRootKind(root.id, 'series')
+    } catch (problem) {
+      fail(problem)
+      return
+    }
+    changeKind('series')
+    reload()
+    setVersion((count) => count + 1)
+    await startJob(() => diskApi.scan([root.id]), t('disk.roots.asSeriesStarted', { path: root.path }))
+  }
+
   if (error !== null && overview === null) {
     return (
       <div className="flex flex-col items-start gap-4">
@@ -301,6 +315,7 @@ export function DiskPage() {
         onScan={(root) => void startJob(() => diskApi.scan(root ? [root.id] : roots.map((entry) => entry.id)), null)}
         onAdd={() => setDialog({ kind: 'picker' })}
         onRemove={(root) => void removeRoot(root)}
+        onAsSeries={(root) => void readAsSeries(root)}
       />
 
       <section className="flex flex-col gap-4" aria-label={t('disk.tabs.label')}>

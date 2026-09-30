@@ -139,6 +139,7 @@
   "nothing_wanted": "Für diesen Titel gibt es gerade nichts zu suchen.",
   "root_exists": "Diesen Ordner liest nexcrate schon ein.",
   "root_not_removable": "Diesen Ordner kannst du nicht entfernen: Er gehört zu einer Fassung. Entfernbar sind nur Ordner, die du selbst hinzugefügt hast.",
+  "root_kind_fixed": "Dieser Ordner gehört zu einer Fassung, und deren Art bestimmt, wie er eingelesen wird. Ändere stattdessen den Ordner der Fassung.",
   "disk_job_running": "nexcrate liest gerade Ordner ein oder holt Filme zurück. Warte, bis das fertig ist.",
   "folder_changed": "Der Ordner ist nicht mehr so, wie nexcrate ihn eingelesen hat. Lies den Ordner neu ein.",
   "folder_known": "Dieser Ordner gehört inzwischen zu einem Film in der Bibliothek oder zu Radarr.",

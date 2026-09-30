@@ -75,6 +75,12 @@ class DiskRootOut(BaseModel):
         "folders stay unknown until mapped."
     )
     error_code: str | None = Field(description="`folder_not_visible` when the last scan could not see the folder.")
+    series_folders: int = Field(
+        default=0,
+        description="Movie roots only: folders the last scan split into season folders (`Show/Season 01`). The movie "
+        "scan reads each season as a movie; such a folder belongs below a series root.",
+    )
+    series_examples: list[str] = Field(default_factory=list, description="Up to 5 of those folders, by name.")
 
 
 class Progress(BaseModel):
@@ -96,7 +102,9 @@ class DiskJobOut(BaseModel):
     error_code: str | None = Field(description="Null unless failed; what was committed before stays.")
     result: dict[str, Any] | None = Field(
         description="Null unless done. Every kind carries `counts` per outcome. scan: `roots`, `skipped`, `truncated`, "
-        "`counts` per state, `missing_files`, `tmdb_ready`, `tmdb_pending`, `tmdb_asked`. restore: `counts` with "
+        "`counts` per state, `missing_files`, `tmdb_ready`, `tmdb_pending`, `tmdb_asked`, `tmdb_error` (the TMDB code "
+        "that stopped the phase, else null); with series roots also `series_tmdb_pending`, `series_tmdb_asked`, "
+        "`series_tmdb_error`. restore: `counts` with "
         "restored, conflict, no_definition, skipped, failed (also at the top level), `conflicts` (up to 20 folder "
         "ids), `reasons`, `folders`. assign: `counts` with assigned, skipped, conflict, failed (also at the top "
         "level), `conflicts`, `folders`."
@@ -272,8 +280,11 @@ def _job_out(snapshot: dict[str, Any] | None) -> DiskJobOut | None:
     return DiskJobOut.model_validate(snapshot) if snapshot is not None else None
 
 
-def _root_out(root: DiskRoot, definitions: list[VersionDefinition]) -> DiskRootOut:
+def _root_out(
+    root: DiskRoot, definitions: list[VersionDefinition], series_like: tuple[int, list[str]] | None = None
+) -> DiskRootOut:
     counts = dict(root.last_counts or {})
+    series_count, series_names = series_like or (0, [])
     return DiskRootOut(
         id=root.id,
         path=root.path,
@@ -286,6 +297,8 @@ def _root_out(root: DiskRoot, definitions: list[VersionDefinition]) -> DiskRootO
         missing_examples=[str(item) for item in counts.get("missing_examples") or []],
         radarr_unmapped=[str(item) for item in counts.get("radarr_unmapped") or []],
         error_code=root.last_error_code,
+        series_folders=series_count,
+        series_examples=series_names,
     )
 
 
@@ -294,10 +307,10 @@ def _overview(kind: str | None = None) -> DiskOverview:
         roots = root_service.sync(db)
         db.commit()
         wanted = root_service.derived(db)
+        shown = [root for root in roots if kind is None or (root.kind or "movie") == kind]
+        series_like = root_service.series_like(db, [root.id for root in shown if (root.kind or "movie") == "movie"])
         outs = [
-            _root_out(root, root_service.definitions_of(db, root, wanted))
-            for root in roots
-            if kind is None or (root.kind or "movie") == kind
+            _root_out(root, root_service.definitions_of(db, root, wanted), series_like.get(root.id)) for root in shown
         ]
     return DiskOverview(roots=outs, job=_job_out(disk_jobs.latest()), tmdb_ready=scanning.tmdb_ready())
 
@@ -438,6 +451,45 @@ def remove_root(root_id: int) -> None:
                 409,
             ) from exc
         db.commit()
+
+
+class RootKindIn(BaseModel):
+    kind: RootKind = Field(description="What the folder holds from now on.")
+
+
+@router.put(
+    "/roots/{root_id}/kind",
+    response_model=DiskRootOut,
+    summary="Scan a folder the owner added as another kind",
+    description=(
+        "For a folder added as the wrong kind, most often a folder of series added as a movie folder. Its scan rows "
+        "go, they belong to the old kind; scan it again with POST /api/disk/scan. Nothing on disk changes. A root that "
+        "belongs to a version definition or to versions nexcrate owns takes their kind: 409 `root_kind_fixed`. While "
+        "a job runs: 409 `disk_job_running`."
+    ),
+    responses=error_responses(
+        (404, "not_found"), (409, "root_kind_fixed"), (409, "disk_job_running"), (422, "invalid_input")
+    ),
+)
+def set_root_kind(root_id: int, payload: RootKindIn) -> DiskRootOut:
+    if disk_jobs.is_running():
+        raise _running()
+    with SessionLocal() as db:
+        root_service.sync(db)
+        root = db.get(DiskRoot, root_id)
+        if root is None:
+            raise error("not_found", "This does not exist, or not any more.", 404)
+        try:
+            root_service.set_kind(db, root, payload.kind)
+        except root_service.KindFixed as exc:
+            raise error(
+                "root_kind_fixed",
+                "This folder belongs to a version, and the kind of that version decides how it is scanned. Change the "
+                "folder of the version instead.",
+                409,
+            ) from exc
+        db.commit()
+        return _root_out(root, root_service.definitions_of(db, root))
 
 
 @router.post(

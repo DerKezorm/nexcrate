@@ -2153,6 +2153,10 @@ export type DiskRoot = {
   radarr_unmapped: string[]
   /** `folder_not_visible` for a root that is gone, else null. */
   error_code: string | null
+  /** Movie roots: folders the last scan split into season folders, they look like series. */
+  series_folders?: number
+  /** Up to 5 of those folders by name. */
+  series_examples?: string[]
 }
 
 export type DiskJobKind = 'scan' | 'restore' | 'assign'

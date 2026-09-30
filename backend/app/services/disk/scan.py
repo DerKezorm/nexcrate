@@ -629,7 +629,14 @@ def _pending_rows(db: OrmSession, root_ids: list[int]) -> list[int]:
         )
         .order_by(DiskFolder.id)
     )
-    return [row.id for row in rows if isinstance(row.numbers, dict) and not row.numbers.get("tmdb_asked", True)]
+    # A season folder of a series in a movie root is no movie: asking TMDB for "Season 01" only brings wrong proposals.
+    return [
+        row.id
+        for row in rows
+        if isinstance(row.numbers, dict)
+        and not row.numbers.get("tmdb_asked", True)
+        and not root_service.is_season_row(row.relative_path)
+    ]
 
 
 async def _ask(token: str, locale: str, library: proposing.Library, row: DiskFolder) -> None:

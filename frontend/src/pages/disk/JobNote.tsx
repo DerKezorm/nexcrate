@@ -44,6 +44,7 @@ export function JobNote({ job, lost, error, onDismiss, kind = 'movie' }: { job: 
 
   const outcomes = jobOutcomes(t, job)
   const failed = job.state === 'failed'
+  const stopped = failed ? null : tmdbStopped(job)
   const conflicts = outcomes.some((row) => (row.key === 'conflict' || row.key === 'conflicts') && row.value > 0)
   return (
     <section aria-label={title} className={'flex flex-col gap-3 rounded-2xl border p-4 ' + (failed ? 'border-bad-500/40 bg-bad-500/10' : 'border-ok-500/40 bg-ok-500/5')}>
@@ -65,6 +66,31 @@ export function JobNote({ job, lost, error, onDismiss, kind = 'movie' }: { job: 
         </dl>
       )}
       {conflicts && <p className="text-xs text-mist-400">{t('disk.job.conflictsHint')}</p>}
+      {stopped !== null && (
+        <div className="flex flex-col gap-1 text-sm text-mist-200" role="status">
+          <p>{t('disk.job.tmdbStopped', { count: stopped.pending })}</p>
+          <p className="text-xs text-mist-400">{errorText(t, new ApiError(200, stopped.code))}</p>
+        </div>
+      )}
     </section>
   )
+}
+
+/** Hat TMDB beim Einlesen aufgehoert zu antworten (Filme oder Serien), der Code und wie viele Ordner noch warten. */
+function tmdbStopped(job: DiskJob): { code: string; pending: number } | null {
+  const result = job.result
+  if (job.kind !== 'scan' || !result) return null
+  let code: string | null = null
+  let pending = 0
+  for (const [codeKey, pendingKey] of [
+    ['tmdb_error', 'tmdb_pending'],
+    ['series_tmdb_error', 'series_tmdb_pending'],
+  ] as const) {
+    const found = result[codeKey]
+    const waiting = result[pendingKey]
+    if (typeof found !== 'string' || found === '') continue
+    code = code ?? found
+    if (typeof waiting === 'number' && waiting > 0) pending += waiting
+  }
+  return code !== null && pending > 0 ? { code, pending } : null
 }

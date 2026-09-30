@@ -139,6 +139,7 @@
   "nothing_wanted": "There is nothing to search for this title right now.",
   "root_exists": "nexcrate already scans this folder.",
   "root_not_removable": "This folder cannot be removed: it belongs to a version. Only folders you added yourself can be removed.",
+  "root_kind_fixed": "This folder belongs to a version, and the kind of that version decides how it is scanned. Change the folder of the version instead.",
   "disk_job_running": "nexcrate is scanning folders or restoring movies right now. Wait until that has finished.",
   "folder_changed": "The folder is no longer as nexcrate scanned it. Scan the folder again.",
   "folder_known": "This folder now belongs to a movie in the library or to Radarr.",

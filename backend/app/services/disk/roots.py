@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session as OrmSession
 
 from ...models import DiskFolder, DiskRoot, Version, VersionDefinition
 from .. import folders
+from ..series import folder_read
 
 logger = logging.getLogger("nexcrate.disk")
 
@@ -148,6 +149,51 @@ def remove(db: OrmSession, root: DiskRoot) -> None:
     db.delete(root)
     db.flush()
     logger.info("Scanned folder %d removed by the owner", root.id)
+
+
+class KindFixed(Exception):
+    """The root belongs to a definition or a version: their kind decides what is scanned there."""
+
+
+def set_kind(db: OrmSession, root: DiskRoot, kind: str) -> None:
+    """Scan a root the owner added as another kind from now on. Its rows go, they belong to the old kind; the next
+    scan brings them back. Raises ``KindFixed``. Stages; the caller commits."""
+    if not root.added_by_owner or root.path in derived(db).paths:
+        raise KindFixed
+    if root.kind == kind:
+        return
+    db.execute(delete(DiskFolder).where(DiskFolder.root_id == root.id))
+    root.kind = kind
+    root.last_counts, root.last_scan_at, root.last_error_code = None, None, None
+    db.flush()
+    logger.info("Scanned folder %d is scanned as %s from now on", root.id, kind)
+
+
+def series_like(db: OrmSession, root_ids: list[int], examples: int = 5) -> dict[int, tuple[int, list[str]]]:
+    """Per movie root, the folders the last scan split into season folders: the movie scan reads a series folder's
+    ``Season 01`` as a movie of its own. Count and a few names per root; roots without any are left out."""
+    if not root_ids:
+        return {}
+    found: dict[int, list[str]] = {}
+    rows = db.execute(
+        select(DiskFolder.root_id, DiskFolder.relative_path).where(
+            DiskFolder.root_id.in_(root_ids), DiskFolder.relative_path.contains("/")
+        )
+    )
+    for root_id, relative_path in rows:
+        if not is_season_row(relative_path):
+            continue
+        parent = relative_path.split("/", 1)[0]
+        names = found.setdefault(root_id, [])
+        if parent not in names:
+            names.append(parent)
+    return {root_id: (len(names), sorted(names)[:examples]) for root_id, names in found.items()}
+
+
+def is_season_row(relative_path: str) -> bool:
+    """A movie row one level below a folder whose name is a season folder's (``Show/Season 01``)."""
+    parts = relative_path.split("/")
+    return len(parts) == 2 and folder_read.season_of_folder(parts[1]) is not None
 
 
 def visible_path(root: DiskRoot) -> Path | None:

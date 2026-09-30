@@ -29,7 +29,13 @@
     "added": "{{path}} wird jetzt mit eingelesen.",
     "remove": "Aus der Liste nehmen",
     "removeLabel": "Aus der Liste nehmen: {{path}}",
-    "removed": "{{path}} wird nicht mehr eingelesen."
+    "removed": "{{path}} wird nicht mehr eingelesen.",
+    "seriesLike_one": "{{names}} enthält Staffelordner. Das sieht nach einer Serie aus: Das Einlesen als Filme nimmt jede Staffel als eigenen Film, und einem Film lässt sich keine Serie zuordnen.",
+    "seriesLike_other": "{{count}} Ordner enthalten Staffelordner, zum Beispiel {{names}}. Das sieht nach Serien aus: Das Einlesen als Filme nimmt jede Staffel als eigenen Film, und einem Film lässt sich keine Serie zuordnen.",
+    "asSeries": "Als Serienordner einlesen",
+    "asSeriesLabel": "Als Serienordner einlesen: {{path}}",
+    "asSeriesStarted": "{{path}} wird jetzt als Serienordner eingelesen.",
+    "seriesLikeFixed": "Dieser Ordner gehört zu einer Filmfassung. Serien brauchen einen eigenen Ordner: Wähl ihn für eine Serienfassung unter Ordner und Benennung."
   },
   "job": {
     "scan": "nexcrate liest ein",
@@ -67,7 +73,9 @@
       "roots": "Ordner eingelesen"
     },
     "conflictsHint": "Was nicht ging, steht unter Konflikte.",
-    "dismiss": "Ausblenden"
+    "dismiss": "Ausblenden",
+    "tmdbStopped_one": "TMDB hat aufgehört zu antworten. Ein Ordner ist noch ohne Vorschläge, lies später noch einmal ein.",
+    "tmdbStopped_other": "TMDB hat aufgehört zu antworten. {{count}} Ordner sind noch ohne Vorschläge, lies später noch einmal ein."
   },
   "tabs": {
     "label": "Ordner nach Zustand",

@@ -15,6 +15,9 @@ import { shownCounts, stateLabel } from './diskText'
  * folder through the folder picker; a folder the owner added can leave the list again.
  *
  * Gezeigt werden nur die Wurzeln der gewaehlten Art (S6): unter einer Serienwurzel liegen Serienordner.
+ *
+ * Findet das Einlesen als Filme Staffelordner, steht das an der Wurzel; eine selbst hinzugefuegte laesst sich dann als
+ * Serienordner einlesen.
  */
 export function RootList({
   roots,
@@ -22,6 +25,7 @@ export function RootList({
   onScan,
   onAdd,
   onRemove,
+  onAsSeries,
   kind = 'movie',
 }: {
   roots: DiskRoot[]
@@ -30,6 +34,8 @@ export function RootList({
   onScan: (root: DiskRoot | null) => void
   onAdd: () => void
   onRemove: (root: DiskRoot) => void
+  /** Eine Filmwurzel mit Staffelordnern soll kuenftig als Serienwurzel gelesen werden. */
+  onAsSeries?: (root: DiskRoot) => void
   kind?: DiskRootKind
 }) {
   const { t } = useTranslation()
@@ -69,7 +75,13 @@ export function RootList({
         <ul aria-label={t('disk.roots.title')} className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[repeat(2,minmax(0,1fr))]">
           {roots.map((root) => (
             <li key={root.id} className="min-w-0">
-              <RootCard root={root} busy={busy} onScan={() => onScan(root)} onRemove={() => onRemove(root)} />
+              <RootCard
+                root={root}
+                busy={busy}
+                onScan={() => onScan(root)}
+                onRemove={() => onRemove(root)}
+                onAsSeries={kind === 'movie' && onAsSeries ? () => onAsSeries(root) : null}
+              />
             </li>
           ))}
         </ul>
@@ -78,7 +90,19 @@ export function RootList({
   )
 }
 
-function RootCard({ root, busy, onScan, onRemove }: { root: DiskRoot; busy: boolean; onScan: () => void; onRemove: () => void }) {
+function RootCard({
+  root,
+  busy,
+  onScan,
+  onRemove,
+  onAsSeries,
+}: {
+  root: DiskRoot
+  busy: boolean
+  onScan: () => void
+  onRemove: () => void
+  onAsSeries: (() => void) | null
+}) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const labels = root.versions.map((version) => version.label)
@@ -86,6 +110,10 @@ function RootCard({ root, busy, onScan, onRemove }: { root: DiskRoot; busy: bool
   const invisible = root.error_code !== null
   const missing = typeof root.missing_files === 'number' ? root.missing_files : 0
   const unmapped = Array.isArray(root.radarr_unmapped) ? root.radarr_unmapped.filter((name) => typeof name === 'string' && name !== '') : []
+  const seriesLike = onAsSeries !== null && typeof root.series_folders === 'number' ? root.series_folders : 0
+  const seriesNames = Array.isArray(root.series_examples) ? root.series_examples.filter((name) => typeof name === 'string' && name !== '') : []
+  // Eine Wurzel, die eine Fassung stellt, hat deren Art; nur eigene lassen sich umstellen.
+  const switchable = root.added_by_owner && root.versions.length === 0
 
   return (
     <article className="flex h-full min-w-0 flex-col gap-2.5 rounded-xl border border-ink-700 bg-ink-900/60 p-4">
@@ -116,6 +144,21 @@ function RootCard({ root, busy, onScan, onRemove }: { root: DiskRoot; busy: bool
           <Symbol name="info" className="mt-0.5 h-4 w-4 shrink-0 text-info-500" />
           <span className="min-w-0">{t('disk.roots.radarrUnmapped', { names: formatList(unmapped, language) })}</span>
         </p>
+      )}
+      {seriesLike > 0 && (
+        <div className="flex flex-col gap-2 rounded-lg border border-info-500/30 bg-info-500/5 p-3 text-sm text-mist-200">
+          <p className="flex items-start gap-2">
+            <Symbol name="info" className="mt-0.5 h-4 w-4 shrink-0 text-info-500" />
+            <span className="min-w-0">{t('disk.roots.seriesLike', { count: seriesLike, names: formatList(seriesNames, language) })}</span>
+          </p>
+          {switchable ? (
+            <Button size="sm" className="w-fit" onClick={onAsSeries ?? undefined} disabled={busy} aria-label={t('disk.roots.asSeriesLabel', { path: root.path })}>
+              {t('disk.roots.asSeries')}
+            </Button>
+          ) : (
+            <p className="text-mist-400">{t('disk.roots.seriesLikeFixed')}</p>
+          )}
+        </div>
       )}
       {invisible && (
         <p className="flex items-start gap-2 text-sm text-bad-500">

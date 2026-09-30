@@ -69,6 +69,8 @@ export const diskApi = {
   addRoot: (path: string, kind: DiskRootKind = 'movie') => api.post<DiskRoot>('/disk/roots', { path, kind }),
   /** 204. 409 `root_not_removable` for a root that is not the owner's. */
   removeRoot: (id: number) => api.delete<void>(`/disk/roots/${id}`),
+  /** Its rows go; read it again afterwards. 409 `root_kind_fixed` for a root a version gives, `disk_job_running`. */
+  setRootKind: (id: number, kind: DiskRootKind) => api.put<DiskRoot>(`/disk/roots/${id}/kind`, { kind }),
   /** 202 with a `DiskJob` of kind `scan`. Without ids every root is scanned. */
   scan: (rootIds?: number[]) => api.post<DiskJob>('/disk/scan', rootIds && rootIds.length > 0 ? { root_ids: rootIds } : {}),
   /** The newest job of the last 30 minutes, else 404 `not_found`. */

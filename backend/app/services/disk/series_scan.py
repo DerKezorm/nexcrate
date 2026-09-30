@@ -530,4 +530,4 @@ def tmdb_phase(job: DiskJob, root_ids: list[int]) -> dict[str, Any]:
         if error is not None:
             logger.warning("The TMDB phase of the series scan stopped after %d folders: %s", asked, error)
             break
-    return {"series_tmdb_pending": len(pending) - asked, "series_tmdb_asked": asked}
+    return {"series_tmdb_pending": len(pending) - asked, "series_tmdb_asked": asked, "series_tmdb_error": error}
