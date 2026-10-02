@@ -28,7 +28,8 @@ the day.
 
 **The title** takes the earliest next time of its wanting versions, with that version's reason and anchor. A stored
 ``limit`` stays while its time lies after the plan's: the budget moved it. Nothing wanted: no next time, reason
-``nothing_wanted``, and the general anchor.
+``nothing_wanted``, and the general anchor; ``no_folder`` instead when a version would want something once its
+definition has a default folder.
 """
 
 from __future__ import annotations
@@ -37,7 +38,7 @@ import hashlib
 import logging
 from collections import defaultdict
 from collections.abc import Collection
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -62,6 +63,8 @@ REASONS = (
     "replacement_limit",
     "no_date",
     "nothing_wanted",
+    # Nothing is wanted only because a version has no default folder (issue of 02.10.2026).
+    "no_folder",
     "off",
     # A program's search wish searches at once (22.09.2026); only in what the title page and /api/v1 show.
     "wish",
@@ -108,6 +111,16 @@ class VersionFacts:
         if not (self.own and self.monitored and self.rules is not None and self.has_folder and not self.blocked):
             return False
         return not self.has_file or self.cutoff_not_met
+
+    @property
+    def wants_but_a_folder(self) -> bool:
+        """It would want something, if its definition had a default folder."""
+        return not self.has_folder and replace(self, has_folder=True).wants
+
+
+def idle_reason(versions: Collection[VersionFacts]) -> str:
+    """The reason of a title that wants nothing: ``no_folder`` when a missing folder is all that holds a version."""
+    return "no_folder" if any(version.wants_but_a_folder for version in versions) else "nothing_wanted"
 
 
 @dataclass(frozen=True)
@@ -258,7 +271,8 @@ def title_plan(title: TitleFacts, now: datetime) -> Plan:
     general = anchors.anchor_for(title.release_dates, year=title.year)
     wanting = [version for version in title.versions if version.wants] if title.kind == "movie" else []
     if not wanting:
-        return Plan(wanted=False, next_at=None, reason="nothing_wanted", anchor=general)
+        idle = idle_reason(title.versions) if title.kind == "movie" else "nothing_wanted"
+        return Plan(wanted=False, next_at=None, reason=idle, anchor=general)
     planned = [version_plan(title, version, now) for version in wanting]
     next_at, reason, anchor = min(planned, key=lambda item: (item[0], _PRIORITY[item[1]]))
     next_at, reason = grab_limit_plan(next_at, reason, title.grab_free_at)

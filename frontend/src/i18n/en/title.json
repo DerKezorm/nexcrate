@@ -59,6 +59,7 @@
       "replacement_limit": "Three downloads failed in the last 24 hours. nexcrate only searches again on schedule.",
       "no_date": "Without a date nexcrate searches less often and checks whether one turns up.",
       "nothing_wanted": "No version is waiting for a release right now, for example because everything is here or still downloading.",
+      "no_folder": "A version has no default folder yet. Without one nexcrate neither searches nor downloads for it. Choose one under Settings, Folders and naming.",
       "off": "Automation is off, so nexcrate does not search by itself.",
       "unknown": "Reason: {{code}}",
       "wish": "Another program asked for a search. nexcrate searches at once, also with the automatic off."

@@ -43,7 +43,7 @@ from __future__ import annotations
 import hashlib
 from collections import defaultdict
 from collections.abc import Collection
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -129,6 +129,14 @@ class VersionFacts:
         if episode.whole_file:
             return episode.cutoff_not_met
         return self.missing_from is None or (episode.air_date is not None and episode.air_date >= self.missing_from)
+
+    @property
+    def wants_but_a_folder(self) -> bool:
+        """It would want an episode, if its definition had a default folder (without one its folder is never read)."""
+        if self.has_folder:
+            return False
+        with_folder = replace(self, has_folder=True, files_read=True)
+        return any(map(with_folder.wants, self.episodes))
 
 
 @dataclass(frozen=True)
@@ -310,7 +318,8 @@ def _replacement_limit(series: SeriesFacts, season: int, season_last: datetime |
 def title_plan(series: SeriesFacts, now: datetime) -> Plan:
     seasons = season_plans(series, now)
     if not seasons:
-        return Plan(wanted=False, next_at=None, reason="nothing_wanted")
+        idle = "no_folder" if any(version.wants_but_a_folder for version in series.versions) else "nothing_wanted"
+        return Plan(wanted=False, next_at=None, reason=idle)
     timed = [plan for plan in seasons if plan.next_at is not None]
     if not timed:
         return Plan(wanted=True, next_at=None, reason="no_date", seasons=tuple(seasons))

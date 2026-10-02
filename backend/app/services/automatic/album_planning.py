@@ -178,7 +178,8 @@ def title_plan(fact: AlbumFacts, now: datetime) -> planning.Plan:
     title = fact.facts
     wanting = [version for version in title.versions if version.wants]
     if not wanting:
-        return planning.Plan(wanted=False, next_at=None, reason="nothing_wanted", anchor=fact.anchor)
+        idle = planning.idle_reason(title.versions)
+        return planning.Plan(wanted=False, next_at=None, reason=idle, anchor=fact.anchor)
     planned = [planning.version_plan(title, version, now, anchor=fact.anchor) for version in wanting]
     next_at, reason, anchor = min(planned, key=lambda item: (item[0], planning._PRIORITY[item[1]]))
     next_at, reason = planning.grab_limit_plan(next_at, reason, title.grab_free_at)

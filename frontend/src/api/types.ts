@@ -2040,7 +2040,7 @@ export type IndexerRss = { last_at: string | null; newest_at: string | null; gap
 export type DownloadOrigin = 'manual' | 'search' | 'rss' | 'replacement'
 
 /** Warum die naechste Suche eines Titels dann kommt, oder warum keine. Die Seite hat fuer jeden einen Satz. */
-export type SearchPlanReason = 'anchor' | 'air_date' | 'schedule' | 'limit' | 'replacement' | 'replacement_limit' | 'no_date' | 'nothing_wanted' | 'off' | 'wish'
+export type SearchPlanReason = 'anchor' | 'air_date' | 'schedule' | 'limit' | 'replacement' | 'replacement_limit' | 'no_date' | 'nothing_wanted' | 'no_folder' | 'off' | 'wish'
 
 /** Womit der Plan rechnet: digitale oder physische Veroeffentlichung, Kinostart plus 90 Tage, nur das Jahr, nichts. */
 export type SearchAnchorKind = 'digital' | 'physical' | 'theatrical' | 'year' | 'none' | 'release'

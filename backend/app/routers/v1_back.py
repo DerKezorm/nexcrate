@@ -382,8 +382,9 @@ class WhyOut(_KindBlocks):
     last_search_at: datetime | None
     next_search_at: datetime | None
     next_search_reason: str | None = Field(
-        description="anchor, schedule, limit, replacement, replacement_limit, no_date, nothing_wanted, off, or wish "
-        "(a program's search wish searches at once, since 22.09.2026)."
+        description="anchor, schedule, limit, replacement, replacement_limit, no_date, nothing_wanted, no_folder "
+        "(nothing is wanted only because a version has no default folder), off, or wish (a program's search wish "
+        "searches at once, since 22.09.2026)."
     )
     release: ReleaseOut | None = Field(description="A movie: the day its search waits for. Null for a series.")
     versions: list[WhyVersionOut]

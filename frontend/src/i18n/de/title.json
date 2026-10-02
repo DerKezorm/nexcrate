@@ -59,6 +59,7 @@
       "replacement_limit": "In den letzten 24 Stunden sind drei Downloads fehlgeschlagen. nexcrate sucht erst wieder nach Plan.",
       "no_date": "Ohne Datum sucht nexcrate seltener und schaut, ob eins dazukommt.",
       "nothing_wanted": "Keine Fassung wartet gerade auf ein Release, etwa weil alles da ist oder noch lädt.",
+      "no_folder": "Eine Fassung hat noch keinen Standardordner. Ohne ihn sucht und lädt nexcrate für sie nichts. Wähl einen unter Einstellungen, Ordner und Benennung.",
       "off": "Die Automatik ist aus, deshalb sucht nexcrate nicht von selbst.",
       "unknown": "Grund: {{code}}",
       "wish": "Ein anderes Programm hat die Suche angefragt. nexcrate sucht sofort, auch wenn die Automatik aus ist."
