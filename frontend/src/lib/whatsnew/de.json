@@ -166,6 +166,20 @@
         "Ein in Prowlarr abgeschalteter Indexer meldet sich in der Suche als abgeschaltet statt mit einem Fehler.",
         "Mindest-Seeder gehen jetzt bis 1000."
       ]
+    },
+    "0.4.1": {
+      "lead": "Diese Version sagt, warum eine Fassung ohne Standardordner nichts lädt. Bisher blieb sie stumm.",
+      "sections": [
+        {
+          "title": "Fassungen ohne Ordner",
+          "body": "Eine Fassung ohne Standardordner sucht und lädt nie von selbst, und nexcrate sagte das nicht: Eine Serie zeigte passende Releases und lud keins, ein Titel stand auf „nichts gewollt“. Jetzt nennt die Titelseite den fehlenden Ordner, und bei Serien steht es in der Zeile der Staffel neben den passenden Releases.",
+          "where": "Einstellungen › Ordner und Benennung"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Der Satz zum fehlenden Ordner spricht bei Serien nicht mehr vom Film."
+      ]
     }
   }
 }

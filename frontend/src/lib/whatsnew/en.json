@@ -166,6 +166,20 @@
         "An indexer switched off in Prowlarr shows as switched off in a search instead of failing.",
         "Minimum seeders now go up to 1000."
       ]
+    },
+    "0.4.1": {
+      "lead": "This version says why a version without a default folder loads nothing. Until now it stayed silent.",
+      "sections": [
+        {
+          "title": "Versions without a folder",
+          "body": "A version without a default folder never searches or downloads by itself, and nexcrate did not say so: a series showed fitting releases and loaded none of them, and a title read \"nothing wanted\". The title page now names the missing folder, and for a series the season line says it beside the fitting releases.",
+          "where": "Settings › Folders and naming"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The sentence about a missing folder no longer speaks of a movie when it is about a series."
+      ]
     }
   }
 }
