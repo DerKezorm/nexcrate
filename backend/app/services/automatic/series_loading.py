@@ -57,7 +57,9 @@ RELEASE_CODES = scheduler.RELEASE_CODES | {
     "no_client_for_protocol",
     scheduler.GRAB_STOPPED,
 }
-_CODE = re.compile(r"^S(\d+)E\d+$")
+#: What the owner has yet to set up at a version before the automatic loads for it.
+SETUP_BLOCKS = frozenset({"version_no_profile", "version_no_folder"})
+_CODE =re.compile(r"^S(\d+)E\d+$")
 
 
 # --- Starting ------------------------------------------------------------------------------------------------------- #
@@ -302,6 +304,14 @@ def load(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> tup
     formed_again = False
     for version_id in [entry["version_id"] for entry in body.get("versions") or []]:
         if version_id not in wanting:
+            # A version that cannot want for want of a profile or a folder says so on its season line; else its fitting
+            # releases stand there and nothing tells why none of them loads.
+            block = next(
+                (entry.get("load_block") for entry in body.get("versions") or [] if entry["version_id"] == version_id),
+                None,
+            )
+            if block in SETUP_BLOCKS:
+                outcomes[version_id] = Outcome(code=block)
             continue
         outcome = outcomes[version_id] = Outcome()
         if not enabled:

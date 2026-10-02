@@ -16,7 +16,7 @@
     "block": {
       "version_fed_by_source": "A connection feeds {{label}}. nexcrate only downloads for versions without a connection.",
       "version_no_profile": "{{label}} has no profile yet.",
-      "version_no_folder": "{{label}} has no default folder yet. Without one nexcrate does not know where the movie should go.",
+      "version_no_folder": "{{label}} has no default folder yet. Without one nexcrate does not know where the files should go.",
       "noClientUsenet": "No download client for Usenet is switched on.",
       "noClientTorrent": "No download client for torrents is switched on.",
       "download_active": "A download for {{label}} is already running. A second one only works once it is filed away or removed.",

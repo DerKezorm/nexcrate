@@ -16,7 +16,7 @@
     "block": {
       "version_fed_by_source": "{{label}} wird von einer Verbindung gefüllt. nexcrate lädt nur für Fassungen ohne Verbindung.",
       "version_no_profile": "{{label}} hat noch kein Profil.",
-      "version_no_folder": "{{label}} hat noch keinen Standardordner. Ohne ihn weiß nexcrate nicht, wohin der Film soll.",
+      "version_no_folder": "{{label}} hat noch keinen Standardordner. Ohne ihn weiß nexcrate nicht, wohin die Dateien sollen.",
       "noClientUsenet": "Für Usenet ist kein Download-Programm eingeschaltet.",
       "noClientTorrent": "Für Torrents ist kein Download-Programm eingeschaltet.",
       "download_active": "Für {{label}} läuft schon ein Download. Ein zweiter geht erst, wenn er abgelegt oder entfernt ist.",
