@@ -122,6 +122,9 @@ class IndexerInfo:
     remove_year: bool = False
     #: Set when the indexer cannot be asked at all (its stored key cannot be read): it fails with this code.
     error_code: str | None = None
+    #: An indexer of a Prowlarr connection: its requests get the longer time of ``indexers.SLOW_TIMEOUT``, and without
+    #: movie categories it is not asked for movies (its other kinds are what Prowlarr gave it).
+    prowlarr: bool = False
 
     @property
     def protocol(self) -> str:

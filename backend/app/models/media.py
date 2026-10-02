@@ -553,6 +553,21 @@ class Indexer(Base):
     # ⚠️ From migration 12 (S5.0); a change needs a new migration.
     #: What the last RSS sync asked for: ``movie``, ``series`` or ``both``. A sync of another form reads one page.
     rss_form: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    # The columns below come from the missing-column upkeep (Prowlarr, 02.10.2026), no migration.
+    #: The Prowlarr connection the indexer belongs to (``prowlarr_connections.id``). ⚠️ No reference: deleting the
+    #: connection takes care of its indexers itself, and the table's autoincrement never hands out an old id again.
+    prowlarr_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    #: The indexer's own id in that Prowlarr: the ``{id}`` of ``/{id}/api``.
+    prowlarr_indexer_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Torznab only: the seed goal a torrent of this indexer gets in the download client. A ratio, and minutes of
+    #: seeding; null leaves the client's own default. ``pack_seed_time`` is for a season pack or a discography; null
+    #: means the normal seed time.
+    seed_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    seed_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pack_seed_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Requests a day from Prowlarr's query limit (an hourly limit times 24); set, it stands in for ``daily_limit``,
+    #: which cannot be edited in nexcrate then.
+    prowlarr_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class Profile(Base):

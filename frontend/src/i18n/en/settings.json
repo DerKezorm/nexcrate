@@ -87,7 +87,10 @@
       "retentionDays_one": "{{value}} day, says the news server",
       "retentionDays_other": "{{value}} days, says the news server",
       "retentionUnlimited": "Unlimited, says the news server",
-      "retentionUnknown": "Could not be read, so nexcrate sets no limit"
+      "retentionUnknown": "Could not be read, so nexcrate sets no limit",
+      "removeCompleted": "Finished torrents",
+      "removeCompletedOn": "are removed after their seed goal",
+      "removeCompletedOff": "stay in the client"
     },
     "lastError": {
       "label": "Last error: {{text}}",
@@ -161,7 +164,9 @@
       "categoryHintTransmission": "Transmission puts downloads into a subfolder with this name and, from version 4 on, gives them the label too. nexcrate creates nothing there.",
       "urlHintDeluge": "The address you open Deluge's web interface at, with the port, such as http://deluge.example.com:8112.",
       "passwordHintDeluge": "The password of Deluge's web interface. It has no user name.",
-      "categoryHintDeluge": "Deluge keeps categories as labels. nexcrate switches on the Label plugin that comes with it and adds the label when it is missing."
+      "categoryHintDeluge": "Deluge keeps categories as labels. nexcrate switches on the Label plugin that comes with it and adds the label when it is missing.",
+      "removeCompleted": "Remove finished torrents",
+      "removeCompletedHint": "Once an imported torrent reached its seed goal, nexcrate removes it from the client with its files in the download folder; the file in the library stays. Private trackers count how long you seed: the goal is set at the indexer."
     },
     "remove": {
       "title": "Remove download client?",
@@ -178,6 +183,10 @@
       "pick": "Take over",
       "pickLabel": "Take over: {{name}}",
       "added": "{{name}} is now a download client."
+    },
+    "selfRemoval": {
+      "removes": "This qBittorrent removes torrents itself at its limit (Settings, BitTorrent, Seeding Limits). A torrent can be gone before nexcrate imported it. Set the action in qBittorrent to \"Stop torrent\" and let nexcrate remove them.",
+      "held": "qBittorrent would remove torrents itself at its limit. nexcrate stops its own instead, so the import loses nothing; they stay while \"Remove finished torrents\" is off."
     }
   },
   "automatic": {

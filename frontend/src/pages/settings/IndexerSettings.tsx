@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -11,6 +12,7 @@ import { formatNumber } from '../../lib/format'
 import { IndexerDialog } from '../indexers/IndexerDialog'
 import { IndexerSearch } from '../indexers/IndexerSearch'
 import { kindText, lastErrorText, momentText, pausedUntil } from '../indexers/indexerText'
+import { ProwlarrSection } from '../indexers/ProwlarrSection'
 import { useIndexers } from '../indexers/useIndexers'
 import { CardTags } from './CardTags'
 import { useSwitchSetting } from './useSwitchSetting'
@@ -18,6 +20,8 @@ import { useSwitchSetting } from './useSwitchSetting'
 /**
  * Reiter "Indexer": Newznab und Torznab eintragen, pruefen, aendern, entfernen, dazu eine
  * Testsuche. Die Suche je Film steht seit Schritt 2c auf der Titelseite; das sagt der Reiter auch.
+ * Oben die Prowlarr-Verbindungen: Ihre Indexer stehen darunter mit dem Abzeichen "aus Prowlarr" und lassen sich hier
+ * nicht entfernen.
  */
 export function IndexerSettings() {
   const { t } = useTranslation()
@@ -29,6 +33,7 @@ export function IndexerSettings() {
 
   return (
     <div className="flex flex-col gap-4">
+      <ProwlarrSection onChanged={reload} />
       <Section
         title={t('indexers.title')}
         intro={t('indexers.intro')}
@@ -105,6 +110,18 @@ export function IndexerSettings() {
   )
 }
 
+/** Das Seed-Ziel eines Torznab-Indexers fuer sein Abzeichen, oder null ohne Ziel. */
+function seedText(t: TFunction, indexer: Indexer, language: string): string | null {
+  const parts: string[] = []
+  // Eine Ratio hat Nachkommastellen (1,5), formatNumber ohne Stellen rundete sie auf 2.
+  if (typeof indexer.seed_ratio === 'number') {
+    const value = new Intl.NumberFormat(language, { maximumFractionDigits: 3 }).format(indexer.seed_ratio)
+    parts.push(t('indexers.state.seedRatio', { value }))
+  }
+  if (typeof indexer.seed_time === 'number') parts.push(t('indexers.state.seedTime', { value: formatNumber(indexer.seed_time, language) }))
+  return parts.length > 0 ? t('indexers.state.seedGoal', { text: parts.join(', ') }) : null
+}
+
 function IndexerCard({ indexer, onEdit, onRemove, onTested }: { indexer: Indexer; onEdit: () => void; onRemove: () => void; onTested: () => void }) {
   const { t, i18n } = useTranslation()
   const [testing, setTesting] = useState(false)
@@ -112,6 +129,7 @@ function IndexerCard({ indexer, onEdit, onRemove, onTested }: { indexer: Indexer
   const [testProblem, setTestProblem] = useState<unknown>(null)
   const paused = pausedUntil(indexer)
   const failed = paused === null && indexer.last_error_code !== null
+  const seed = seedText(t, indexer, i18n.language)
 
   async function test() {
     setTesting(true)
@@ -169,11 +187,19 @@ function IndexerCard({ indexer, onEdit, onRemove, onTested }: { indexer: Indexer
         {indexer.priority !== undefined && <Badge>{t('indexers.state.priority', { value: indexer.priority })}</Badge>}
         {typeof indexer.daily_limit === 'number' && <Badge>{t('indexers.state.dailyLimit', { value: formatNumber(indexer.daily_limit, i18n.language) })}</Badge>}
         {!indexer.has_api_key && <Badge>{t('indexers.state.noKey')}</Badge>}
-        {indexer.from_source && (
+        {seed !== null && <Badge>{seed}</Badge>}
+        {indexer.prowlarr ? (
           <Badge tone="accent">
-            <Symbol name="import" className="h-3.5 w-3.5" />
-            {t('indexers.state.fromSource', { name: indexer.from_source.name })}
+            <Symbol name="refresh" className="h-3.5 w-3.5" />
+            {t('indexers.state.fromProwlarr', { name: indexer.prowlarr.name })}
           </Badge>
+        ) : (
+          indexer.from_source && (
+            <Badge tone="accent">
+              <Symbol name="import" className="h-3.5 w-3.5" />
+              {t('indexers.state.fromSource', { name: indexer.from_source.name })}
+            </Badge>
+          )
         )}
       </div>
       {failed && indexer.last_error_code !== null && (
@@ -206,9 +232,12 @@ function IndexerCard({ indexer, onEdit, onRemove, onTested }: { indexer: Indexer
         <Button variant="ghost" size="sm" onClick={onEdit} aria-label={t('indexers.actions.editLabel', { name: indexer.name })}>
           {t('common.actions.edit')}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onRemove} aria-label={t('indexers.actions.removeLabel', { name: indexer.name })}>
-          {t('common.actions.remove')}
-        </Button>
+        {/* Ein Indexer aus Prowlarr kaeme mit dem naechsten Abgleich wieder: entfernt wird er in Prowlarr. */}
+        {!indexer.prowlarr && (
+          <Button variant="ghost" size="sm" onClick={onRemove} aria-label={t('indexers.actions.removeLabel', { name: indexer.name })}>
+            {t('common.actions.remove')}
+          </Button>
+        )}
       </div>
     </div>
   )

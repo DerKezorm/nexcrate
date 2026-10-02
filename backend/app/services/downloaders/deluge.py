@@ -22,6 +22,12 @@ read in Radarr's source:
   and Queued with ``is_finished``; Error is the problem client_error; a size of 0 is a magnet without its metadata,
   queued. ``eta`` 0 is unknown. The finished path is ``save_path`` plus ``name``.
 * **Removing**: ``core.remove_torrent`` with ``remove_data``; an unknown hash is the error ``not in session``.
+
+Seed goals (measured on 2.2.0, 02.10.2026): every torrent goes in with ``remove_at_ratio`` false, as in Radarr: with
+the global "remove at ratio" on, a torrent without the option was out of Deluge 4 s after it was done, one with it was
+only paused. A ratio goes with ``core.set_torrent_options`` (``stop_ratio``, ``stop_at_ratio``) and pauses the finished
+torrent within 5 s (``Paused``, ``is_auto_managed`` stays true). Deluge has no seed time: nexcrate counts
+``seeding_time`` itself and pauses the torrent with ``core.pause_torrent``.
 """
 
 from __future__ import annotations
@@ -42,6 +48,8 @@ from .base import (
     DuplicateTorrent,
     HandOverUnsure,
     Job,
+    SeedGoal,
+    Seeding,
     auth_failed,
     category_failed,
     number,
@@ -60,6 +68,10 @@ UNKNOWN_METHOD = 2
 LABEL_PLUGIN = "Label"
 QUEUED_STATES = frozenset({"queued", "checking", "allocating", "moving"})
 KEYS = ("hash", "name", "state", "progress", "eta", "total_wanted", "total_size", "save_path", "label", "is_finished")
+#: What the seed goal reads of a finished torrent.
+SEED_KEYS = (
+    "hash", "name", "state", "ratio", "seeding_time", "is_finished", "stop_at_ratio", "stop_ratio", "save_path",
+)  # fmt: skip
 _VERSION = re.compile(r"^(\d+(?:\.\d+){0,3})")
 _HASH = re.compile(r"^[0-9a-f]{40}$")
 
@@ -155,9 +167,17 @@ class Deluge(ClientBase):
                 raise category_failed(self.target.category) from exc
 
     async def add_torrent(
-        self, *, content: bytes | None, magnet: str | None, file_name: str, info_hash: str, urgent: bool | None = None
+        self,
+        *,
+        content: bytes | None,
+        magnet: str | None,
+        file_name: str,
+        info_hash: str,
+        urgent: bool | None = None,
+        seed: SeedGoal | None = None,
     ) -> str:
-        options = {"add_paused": False}
+        # ⚠️ Never removed by Deluge itself: a global "remove at ratio" would take it before the import.
+        options = {"add_paused": False, "remove_at_ratio": False}
         try:
             if content is not None:
                 added = await self._rpc(
@@ -188,6 +208,15 @@ class Deluge(ClientBase):
             logger.warning("Deluge did not label torrent %s; it is removed again", found[:8])
             await self._rpc("core.remove_torrent", found, True)
             raise category_failed(self.target.category) from exc
+        if seed is not None and seed.ratio is not None:
+            try:
+                await self._rpc(
+                    "core.set_torrent_options",
+                    [found],
+                    {"stop_ratio": seed.ratio, "stop_at_ratio": True, "remove_at_ratio": False},
+                )
+            except DelugeError:
+                logger.info("Deluge did not take the seed ratio of torrent %s", found[:8])
         if urgent:
             try:
                 await self._rpc("core.queue_top", [found])
@@ -270,3 +299,39 @@ class Deluge(ClientBase):
             if "not in session" not in exc.deluge_message:
                 raise
             logger.info("Deluge did not have torrent %s any more", download_id[:8])
+
+    async def seeding(self, download_ids: list[str]) -> dict[str, Seeding]:
+        wanted = sorted({download_id.lower() for download_id in download_ids if download_id})
+        if not wanted:
+            return {}
+        wanted_filter = {"label": self.target.category, "id": wanted}
+        status = await self._rpc("core.get_torrents_status", wanted_filter, list(SEED_KEYS))
+        if not isinstance(status, dict):
+            raise wrong_kind()
+        found: dict[str, Seeding] = {}
+        for item in status.values():
+            if not isinstance(item, dict):
+                continue
+            download_id = text(item.get("hash"), 64).lower()
+            if download_id not in wanted:
+                continue
+            done = item.get("is_finished") is True
+            stopped = done and text(item.get("state"), 64).casefold() == "paused"
+            ratio = number(item.get("ratio"))
+            stop_ratio = number(item.get("stop_ratio"))
+            at_ratio = item.get("stop_at_ratio") is True and ratio is not None and stop_ratio is not None
+            folder, name = text(item.get("save_path")), text(item.get("name"), 1024)
+            separator = "\\" if "\\" in folder and "/" not in folder else "/"
+            found[download_id] = Seeding(
+                download_id=download_id,
+                done=done,
+                stopped=stopped,
+                goal_reached=stopped and at_ratio and ratio >= stop_ratio,
+                seeding_seconds=whole(item.get("seeding_time")),
+                ratio=ratio,
+                path=folder.rstrip("/\\") + separator + name if folder and name else None,
+            )
+        return found
+
+    async def stop(self, download_id: str) -> None:
+        await self._rpc("core.pause_torrent", [download_id.lower()])

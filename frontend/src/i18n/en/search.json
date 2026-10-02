@@ -79,7 +79,8 @@
     "skippedMusicCategories": "Skipped: no categories for music",
     "skippedOther": "Skipped: {{text}}",
     "skippedLink": "Go to indexers",
-    "skippedTitle": "Not every indexer was asked"
+    "skippedTitle": "Not every indexer was asked",
+    "skippedMovieCategories": "Skipped: no categories for movies"
   },
   "outcome": {
     "wouldTake": "Would take",

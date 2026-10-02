@@ -776,6 +776,7 @@ def _indexer_info(row: Indexer, moment: datetime) -> IndexerInfo:
         multi_languages=tuple(row.multi_languages or []),
         remove_year=bool(row.remove_year),
         error_code=error_code,
+        prowlarr=row.prowlarr_id is not None,
     )
 
 

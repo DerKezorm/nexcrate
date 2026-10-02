@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Literal
 
@@ -30,10 +30,13 @@ from .. import crypto
 from ..db import SessionLocal
 from ..deps import DbSession
 from ..meldungen import error, error_responses
-from ..models import media, utcnow
+from ..models import ProwlarrConnection, media, utcnow
 from ..services import indexers, tags
 from ..services.lidarr import ERRORS as LIDARR_ERRORS
 from ..services.lidarr import LidarrClient
+from ..services.prowlarr import sync as prowlarr_sync
+from ..services.prowlarr.client import ERRORS as PROWLARR_ERRORS
+from ..services.prowlarr.client import ProwlarrError
 from ..services.radarr import RadarrClient, RadarrError, RadarrIndexer, SourceUrlInvalid
 from ..services.releases import languages as lang
 from ..services.schreibweisen import nfc
@@ -63,11 +66,25 @@ _ANIME_EMPTY_TEXT = (
     "Save although one request in the chosen anime categories found nothing (B4). Chosen "
     "anime categories are asked once when they change or the address or key changes; the default is never asked."
 )
+_SEED_RATIO_TEXT = (
+    "Torznab only: the ratio a torrent of this indexer should reach before it stops seeding, 0 to 1000; null leaves "
+    "the download client's own default. Handed to the client with the torrent; private trackers count it."
+)
+_SEED_TIME_TEXT = (
+    "Torznab only: minutes a torrent of this indexer should seed before it stops, 0 to 525600; null leaves the "
+    "client's own default. qBittorrent enforces it itself, nexcrate does for Transmission and Deluge."
+)
+_PACK_SEED_TIME_TEXT = (
+    "Torznab only: the seed time of a season pack or a discography, in minutes; null: the normal seed time."
+)
 SEEDERS_MAX = 1000
 #: Radarr's default for torrents.
 SEEDERS_DEFAULT = 1
 MULTI_LANGUAGES_MAX = 100
 DAILY_LIMIT_MIN, DAILY_LIMIT_MAX = 1, 100_000
+#: Seed goals: a ratio up to 1000 and minutes up to a year, as the apps take any.
+SEED_RATIO_MAX = prowlarr_sync.SEED_RATIO_MAX
+SEED_TIME_MAX = prowlarr_sync.SEED_TIME_MAX
 Kind = Literal["newznab", "torznab"]
 
 
@@ -99,6 +116,17 @@ class Caps(BaseModel):
 class FromSource(BaseModel):
     source_id: int
     name: str
+
+
+class ProwlarrLink(BaseModel):
+    connection_id: int
+    name: str = Field(description="The connection's name.")
+    sync_level: str = Field(description="full or add_remove, see `/api/prowlarr`.")
+    indexer_id: int | None = Field(description="The indexer's id in Prowlarr.")
+    locked: list[str] = Field(
+        description="The fields Prowlarr decides: a change answers 409 `indexer_from_prowlarr`; change them in "
+        "Prowlarr."
+    )
 
 
 class IndexerUsage(BaseModel):
@@ -164,6 +192,10 @@ class Indexer(BaseModel):
     paused_until: datetime | None = Field(description="UTC. Set while a request limit pauses the indexer.")
     last_error_code: str | None = Field(description="The code of the last failed request, null after a success.")
     from_source: FromSource | None = Field(description="The Radarr connection it was fetched from, if any.")
+    prowlarr: ProwlarrLink | None = Field(default=None, description="The Prowlarr connection it belongs to, if any.")
+    seed_ratio: float | None = Field(default=None, description=_SEED_RATIO_TEXT)
+    seed_time: int | None = Field(default=None, description=_SEED_TIME_TEXT)
+    pack_seed_time: int | None = Field(default=None, description=_PACK_SEED_TIME_TEXT)
     daily_limit: int | None = Field(
         description=f"Requests a day you allow, {DAILY_LIMIT_MIN} to {DAILY_LIMIT_MAX}; null when unknown. The "
         "indexer's own `newznab:apilimits` win when it sends them."
@@ -177,6 +209,7 @@ class Indexer(BaseModel):
 
 
 _PRIORITY_TEXT = f"{PRIORITY_MIN} to {PRIORITY_MAX}; left out: {PRIORITY_DEFAULT} for a new indexer, else unchanged."
+_SEED_LEFT_OUT = "Torznab only; left out: none for a new indexer, else unchanged; null: none."
 _SEEDERS_TEXT = (
     f"Torznab only, 0 to {SEEDERS_MAX}; left out: {SEEDERS_DEFAULT} for a new Torznab indexer, else unchanged. "
     "Left out or null for Newznab."
@@ -228,6 +261,11 @@ class IndexerIn(BaseModel):
     multi_languages: list[str] | None = Field(default=None, max_length=MULTI_LANGUAGES_MAX, description=_LANGUAGES_TEXT)
     remove_year: bool | None = Field(default=None, strict=True, description="Left out: false for a new indexer.")
     daily_limit: int | None = Field(default=None, strict=True, description=_DAILY_LIMIT_TEXT)
+    seed_ratio: float | None = Field(default=None, description=_SEED_LEFT_OUT + " " + _SEED_RATIO_TEXT)
+    seed_time: int | None = Field(default=None, strict=True, description=_SEED_LEFT_OUT + " " + _SEED_TIME_TEXT)
+    pack_seed_time: int | None = Field(
+        default=None, strict=True, description=_SEED_LEFT_OUT + " " + _PACK_SEED_TIME_TEXT
+    )
 
 
 class IndexerPatch(BaseModel):
@@ -272,6 +310,11 @@ class IndexerPatch(BaseModel):
     multi_languages: list[str] | None = Field(default=None, max_length=MULTI_LANGUAGES_MAX, description=_LANGUAGES_TEXT)
     remove_year: bool | None = Field(default=None, strict=True, description="Left out: unchanged.")
     daily_limit: int | None = Field(default=None, strict=True, description=_DAILY_LIMIT_TEXT)
+    seed_ratio: float | None = Field(default=None, description=_SEED_LEFT_OUT + " " + _SEED_RATIO_TEXT)
+    seed_time: int | None = Field(default=None, strict=True, description=_SEED_LEFT_OUT + " " + _SEED_TIME_TEXT)
+    pack_seed_time: int | None = Field(
+        default=None, strict=True, description=_SEED_LEFT_OUT + " " + _PACK_SEED_TIME_TEXT
+    )
 
 
 class IndexerTestIn(BaseModel):
@@ -462,6 +505,17 @@ def _clean_settings(payload: IndexerIn | IndexerPatch, kind: str, stored: _Store
     elif stored is None:
         values["daily_limit"] = None
 
+    seed_limits = (("seed_ratio", SEED_RATIO_MAX), ("seed_time", SEED_TIME_MAX), ("pack_seed_time", SEED_TIME_MAX))
+    for name, maximum in seed_limits:
+        value = getattr(payload, name)
+        if name in given and value is not None:
+            if kind != "torznab" or isinstance(value, bool) or not 0 <= value <= maximum:
+                failed.append(name)
+                continue
+            values[name] = round(float(value), 3) if name == "seed_ratio" else value
+        elif name in given or stored is None or kind != "torznab":
+            values[name] = None
+
     if kind == "torznab":
         if "minimum_seeders" in given:
             if payload.minimum_seeders is None or not 0 <= payload.minimum_seeders <= SEEDERS_MAX:
@@ -509,12 +563,19 @@ def _settings_from_radarr(found: RadarrIndexer, kind: str) -> dict[str, Any]:
             continue
         if code not in codes:
             codes.append(code)
+    seed: dict[str, Any] = {"seed_ratio": None, "seed_time": None, "pack_seed_time": None}
+    if kind == "torznab":
+        ratio = found.seed_ratio
+        seed["seed_ratio"] = round(ratio, 3) if ratio is not None and 0 <= ratio <= SEED_RATIO_MAX else None
+        for name, value in (("seed_time", found.seed_time), ("pack_seed_time", found.pack_seed_time)):
+            seed[name] = value if value is not None and 0 <= value <= SEED_TIME_MAX else None
     return {
         "priority": priority,
         "minimum_seeders": minimum,
         "multi_languages": codes,
         "remove_year": found.remove_year,
         "automatic_search": found.automatic_search,
+        **seed,
     }
 
 
@@ -550,6 +611,10 @@ class _Stored:
     series_categories: list[int] | None = None
     #: None: the default from the caps; a list: the owner's choice.
     anime_categories: list[int] | None = None
+    #: The Prowlarr connection, and the fields it decides with their values now (``_locked``).
+    prowlarr_id: int | None = None
+    locked: tuple[str, ...] = ()
+    current: dict[str, Any] = field(default_factory=dict)
 
 
 def _load(indexer_id: int) -> _Stored | None:
@@ -569,6 +634,9 @@ def _load(indexer_id: int) -> _Stored | None:
             minimum_seeders=row.minimum_seeders,
             series_categories=list(row.series_categories or []),
             anime_categories=list(row.anime_categories) if row.anime_categories is not None else None,
+            prowlarr_id=row.prowlarr_id,
+            locked=tuple(_locked(db, row)),
+            current={name: getattr(row, name) for name in _LOCKABLE_COLUMNS},
         )
 
 
@@ -585,6 +653,38 @@ def _tag(indexer_id: int, labels: list[str]) -> None:
     with SessionLocal() as db:
         tags.set_indexer(db, indexer_id, labels)
         db.commit()
+
+
+#: The columns behind the fields a Prowlarr connection can lock, apart from address and key.
+_LOCKABLE_COLUMNS = (*prowlarr_sync.OWNED_FIELDS, "daily_limit")
+
+
+def _locked(db: Any, row: media.Indexer) -> list[str]:
+    """The fields of the indexer its Prowlarr connection decides, by their names in the API."""
+    if row.prowlarr_id is None:
+        return []
+    level = db.scalar(select(ProwlarrConnection.sync_level).where(ProwlarrConnection.id == row.prowlarr_id))
+    locked = ["url", "api_key"]
+    if level == "full":
+        locked.extend(name for name in prowlarr_sync.OWNED_FIELDS if name not in ("automatic_search", "prowlarr_limit"))
+        if row.prowlarr_limit is not None:
+            locked.append("daily_limit")
+    return locked
+
+
+def _prowlarr_link(db: Any, row: media.Indexer) -> ProwlarrLink | None:
+    if row.prowlarr_id is None:
+        return None
+    connection = db.get(ProwlarrConnection, row.prowlarr_id)
+    if connection is None:
+        return None
+    return ProwlarrLink(
+        connection_id=connection.id,
+        name=connection.name,
+        sync_level=connection.sync_level,
+        indexer_id=row.prowlarr_indexer_id,
+        locked=_locked(db, row),
+    )
 
 
 def indexer_out(db: Any, row: media.Indexer) -> Indexer:
@@ -641,6 +741,10 @@ def indexer_out(db: Any, row: media.Indexer) -> Indexer:
         paused_until=paused,
         last_error_code=row.last_error_code,
         from_source=from_source,
+        prowlarr=_prowlarr_link(db, row),
+        seed_ratio=row.seed_ratio if row.kind == "torznab" else None,
+        seed_time=row.seed_time if row.kind == "torznab" else None,
+        pack_seed_time=row.pack_seed_time if row.kind == "torznab" else None,
         daily_limit=row.daily_limit,
         usage=usage,
         escalation_level=row.escalation_level or 0,
@@ -853,7 +957,8 @@ async def check_indexer(payload: IndexerTestIn) -> IndexerTestOut:
             else None
         )
         paused_until = None
-    target = indexers.Target(url=url, kind=kind, api_key=key, paused_until=paused_until)
+    slow = stored is not None and stored.prowlarr_id is not None
+    target = indexers.Target(url=url, kind=kind, api_key=key, paused_until=paused_until, slow=slow)
     music_categories = _clean_categories(payload.music_categories, required=False, field="music_categories")
     try:
         # Series are probed only when the dialog sends its series categories (S3); an empty list means off.
@@ -950,6 +1055,40 @@ async def create_indexer(payload: IndexerIn) -> Indexer:
     return await asyncio.to_thread(_out, indexer_id)
 
 
+def _from_prowlarr(fields: list[str]) -> HTTPException:
+    return error(
+        "indexer_from_prowlarr",
+        "This indexer comes from Prowlarr. Change these fields in Prowlarr; the next sync brings them here.",
+        409,
+        fields=fields,
+    )
+
+
+def _refuse_locked(
+    stored: _Stored, changes: dict[str, Any], *, url: str, key_given: bool, categories: list[int]
+) -> None:
+    """A change of a field the Prowlarr connection decides is refused; the same value sent again is no change."""
+    attempted: list[str] = []
+    for name in stored.locked:
+        if name == "url":
+            changed = url != stored.url
+        elif name == "api_key":
+            changed = key_given
+        elif name == "categories":
+            changed = sorted(categories) != sorted(stored.categories)
+        elif name not in changes:
+            changed = False
+        else:
+            value, current = changes[name], stored.current.get(name)
+            # A list of categories in another order is the same choice.
+            both_lists = isinstance(value, list) and isinstance(current, list)
+            changed = sorted(value) != sorted(current) if both_lists else value != current
+        if changed:
+            attempted.append(name)
+    if attempted:
+        raise _from_prowlarr(attempted)
+
+
 def _apply_patch(indexer_id: int, changes: dict[str, Any], key: str | None, reset_state: bool) -> None:
     with SessionLocal() as db:
         row = db.get(media.Indexer, indexer_id)
@@ -977,7 +1116,9 @@ def _apply_patch(indexer_id: int, changes: dict[str, Any], key: str | None, rese
         "key or new categories are tested before anything is stored; an empty feed answers 409 "
         "`indexer_categories_empty` unless `confirm_empty` is true. The search settings (`priority`, "
         "`minimum_seeders` for Torznab, `multi_languages`, `remove_year`) and `daily_limit` (1 to 100000, or null) "
-        "are checked first and send nothing to the indexer; a Newznab indexer has no minimum seeders."
+        "are checked first and send nothing to the indexer; a Newznab indexer has no minimum seeders. An indexer of a "
+        "Prowlarr connection refuses a change of the fields Prowlarr decides (`prowlarr.locked`) with 409 "
+        "`indexer_from_prowlarr`; sending their present values is no change."
     ),
     responses=error_responses(
         (404, "not_found"),
@@ -987,6 +1128,7 @@ def _apply_patch(indexer_id: int, changes: dict[str, Any], key: str | None, rese
         (422, "indexer_key_missing"),
         (409, "indexer_categories_empty"),
         (409, "indexer_anime_categories_empty"),
+        (409, "indexer_from_prowlarr"),
         *indexers.ERRORS,
     ),
 )
@@ -1031,13 +1173,17 @@ async def update_indexer(indexer_id: int, payload: IndexerPatch) -> Indexer:
         changes["anime_categories"] = _clean_categories(
             payload.anime_categories, required=False, field="anime_categories"
         )
+    if stored.locked:
+        _refuse_locked(stored, changes, url=url, key_given=bool(new_key), categories=categories)
     connection_changed = url != stored.url or bool(new_key)
     caps = stored.caps
     target: indexers.Target | None = None
     if connection_changed or categories != stored.categories:
         key = new_key or await asyncio.to_thread(_decrypted_key, stored)
         paused_until = stored.paused_until if url == stored.url and not new_key else None
-        target = indexers.Target(url=url, kind=kind, api_key=key, paused_until=paused_until)
+        target = indexers.Target(
+            url=url, kind=kind, api_key=key, paused_until=paused_until, slow=stored.prowlarr_id is not None
+        )
         result = await _test(target, categories)
         if result.feed_items == 0 and not payload.confirm_empty:
             raise _categories_empty()
@@ -1056,7 +1202,9 @@ async def update_indexer(indexer_id: int, payload: IndexerPatch) -> Indexer:
     if anime and (anime_changed or connection_changed) and not payload.confirm_anime_empty:
         if target is None:
             key = await asyncio.to_thread(_decrypted_key, stored)
-            target = indexers.Target(url=url, kind=kind, api_key=key, paused_until=stored.paused_until)
+            target = indexers.Target(
+                url=url, kind=kind, api_key=key, paused_until=stored.paused_until, slow=stored.prowlarr_id is not None
+            )
         await _check_anime(target, anime, caps)
     await asyncio.to_thread(_apply_patch, indexer_id, changes, new_key or None, connection_changed)
     if payload.tags is not None:
@@ -1069,13 +1217,19 @@ async def update_indexer(indexer_id: int, payload: IndexerPatch) -> Indexer:
     status_code=204,
     response_model=None,
     summary="Delete an indexer",
-    description="Removes the indexer and its stored key. The indexer itself is not contacted.",
-    responses=error_responses((404, "not_found")),
+    description=(
+        "Removes the indexer and its stored key. The indexer itself is not contacted. An indexer of a Prowlarr "
+        "connection answers 409 `indexer_from_prowlarr`: the next sync would bring it back; remove it in Prowlarr, or "
+        "leave it out with the connection's tags."
+    ),
+    responses=error_responses((404, "not_found"), (409, "indexer_from_prowlarr")),
 )
 def delete_indexer(indexer_id: int, db: DbSession) -> None:
     row = db.get(media.Indexer, indexer_id)
     if row is None:
         raise error("not_found", "This does not exist, or not any more.", 404)
+    if row.prowlarr_id is not None:
+        raise _from_prowlarr(["id"])
     db.delete(row)
     db.commit()
     logger.info("Indexer %d deleted", indexer_id)
@@ -1099,7 +1253,13 @@ async def search_indexer(indexer_id: int, payload: SearchIn) -> SearchOut:
     if stored is None:
         raise error("not_found", "This does not exist, or not any more.", 404)
     key = await asyncio.to_thread(_decrypted_key, stored)
-    target = indexers.Target(url=stored.url, kind=stored.kind, api_key=key, paused_until=stored.paused_until)
+    target = indexers.Target(
+        url=stored.url,
+        kind=stored.kind,
+        api_key=key,
+        paused_until=stored.paused_until,
+        slow=stored.prowlarr_id is not None,
+    )
     stale = stored.caps_checked_at is None or stored.caps_checked_at < indexers.now() - indexers.CAPS_MAX_AGE
     caps = stored.caps
     try:
@@ -1181,6 +1341,50 @@ def _add_music_categories(indexer_id: int, categories: list[int]) -> None:
         db.commit()
 
 
+def _prowlarr_for(url: str) -> tuple[int, int] | None:
+    """The connection and Prowlarr's indexer id when the address is an endpoint of a connected Prowlarr."""
+    with SessionLocal() as db:
+        for row in db.scalars(select(ProwlarrConnection).order_by(ProwlarrConnection.id)):
+            prowlarr_indexer_id = prowlarr_sync.indexer_of(url, row.url)
+            if prowlarr_indexer_id is not None:
+                return row.id, prowlarr_indexer_id
+    return None
+
+
+def _connection_indexer(connection_id: int, prowlarr_indexer_id: int) -> int | None:
+    with SessionLocal() as db:
+        return db.scalar(
+            select(media.Indexer.id).where(
+                media.Indexer.prowlarr_id == connection_id, media.Indexer.prowlarr_indexer_id == prowlarr_indexer_id
+            )
+        )
+
+
+async def _through_prowlarr(connection_id: int, prowlarr_indexer_id: int, source_id: int) -> Indexer:
+    """An indexer an app got from a connected Prowlarr joins the connection: the connection syncs, and its indexer
+    is the answer. Nothing is fetched from the app itself."""
+    try:
+        await prowlarr_sync.sync(connection_id)
+    except prowlarr_sync.SyncBusy:
+        # The sync that runs does the same.
+        pass
+    except LookupError as exc:
+        raise error("not_found", "This does not exist, or not any more.", 404) from exc
+    except ProwlarrError as exc:
+        raise exc.http() from exc
+    indexer_id = await asyncio.to_thread(_connection_indexer, connection_id, prowlarr_indexer_id)
+    if indexer_id is None:
+        raise error(
+            "indexer_prowlarr_left_out",
+            "This indexer comes from a connected Prowlarr, and its sync leaves it out: switched off there, without a "
+            "fitting category, or without one of the connection's tags.",
+            409,
+            connection_id=connection_id,
+        )
+    logger.info("Source %d: its indexer belongs to Prowlarr connection %d, nothing fetched", source_id, connection_id)
+    return await asyncio.to_thread(_out, indexer_id)
+
+
 def _indexer_with_url(url: str) -> int | None:
     with SessionLocal() as db:
         return db.scalar(select(media.Indexer.id).where(media.Indexer.url == url).limit(1))
@@ -1210,20 +1414,27 @@ async def _tag_names(client: Any) -> dict[int, str]:
         "categories without 3020 and 3030 become the music categories and the feed is probed there (`t=music`, or "
         "`t=search`); an indexer "
         "with the same address gets them added to its music categories. A taken-over connection is read for this "
-        "all the same: its key stays stored, and only the indexer list is asked."
+        "all the same: its key stays stored, and only the indexer list is asked. The seed goals come along "
+        "(`seedCriteria`; for packs Sonarr's season pack or Lidarr's discography seed time). An indexer whose address "
+        "is an endpoint of a connected Prowlarr joins that connection instead: the connection syncs and its indexer "
+        "is the answer, or 409 `indexer_prowlarr_left_out` when the sync leaves it out."
     ),
     responses=error_responses(
         (404, "not_found"),
         (409, "indexer_exists"),
         (409, "indexer_categories_empty"),
+        (409, "indexer_prowlarr_left_out"),
         (409, "source_app_unsupported"),
         (422, "indexer_unsupported"),
         (422, "indexer_url_invalid"),
         (422, "source_key_missing"),
         (422, "source_url_invalid"),
+        (422, "prowlarr_key_missing"),
+        (422, "prowlarr_tag_missing"),
         *RADARR_ERRORS,
         *LIDARR_ERRORS,
         *indexers.ERRORS,
+        *PROWLARR_ERRORS,
     ),
 )
 async def create_from_source(payload: FromSourceIn) -> Indexer:
@@ -1270,6 +1481,9 @@ async def create_from_source(payload: FromSourceIn) -> Indexer:
         raise error("indexer_unsupported", "This indexer is neither Newznab nor Torznab.", 422)
     # Radarr's endpoint already carries its path as Radarr builds it; an empty apiPath there means the root.
     url = _clean_url(found.endpoint, add_api_path=False)
+    connected = await asyncio.to_thread(_prowlarr_for, url)
+    if connected is not None:
+        return await _through_prowlarr(*connected, payload.source_id)
     existing = await asyncio.to_thread(_indexer_with_url, url)
     categories = [category for category in found.categories if 1 <= category <= CATEGORY_MAX_ID]
     if source.app == "lidarr":

@@ -559,6 +559,11 @@ class RadarrIndexer:
     remove_year: bool = False
     #: Sonarr's ``animeCategories`` (A3); Radarr and Lidarr have none.
     anime_categories: list[int] = field(default_factory=list)
+    #: Torznab's seed goal (``seedCriteria``): a ratio and minutes; for packs Sonarr's ``seasonPackSeedTime`` or
+    #: Lidarr's ``discographySeedTime``. None when the app sends no value.
+    seed_ratio: float | None = None
+    seed_time: int | None = None
+    pack_seed_time: int | None = None
 
     @property
     def enabled(self) -> bool:
@@ -608,6 +613,10 @@ INDEXER_FIELDS = (
     "minimumSeeders",
     "multiLanguages",
     "removeYear",
+    "seedCriteria.seedRatio",
+    "seedCriteria.seedTime",
+    "seedCriteria.seasonPackSeedTime",
+    "seedCriteria.discographySeedTime",
 )
 
 
@@ -641,6 +650,11 @@ def parse_indexer(value: Any) -> RadarrIndexer | None:
         multi_languages=tuple(_ints(fields.get("multiLanguages"))),
         remove_year=_bool(fields.get("removeYear")) is True,
         anime_categories=_ints(fields.get("animeCategories")),
+        seed_ratio=_number(fields.get("seedCriteria.seedRatio")),
+        seed_time=_int(fields.get("seedCriteria.seedTime")),
+        pack_seed_time=_int(
+            fields.get("seedCriteria.seasonPackSeedTime", fields.get("seedCriteria.discographySeedTime"))
+        ),
     )
 
 

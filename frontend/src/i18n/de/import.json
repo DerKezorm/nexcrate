@@ -133,6 +133,13 @@
       "addCategoriesLabel": "Musik-Kategorien ergänzen: {{name}}",
       "addCategoriesHint": "Diesen Indexer hat nexcrate schon. Die Kategorien aus Lidarr kommen zu seinen Musik-Kategorien dazu.",
       "categoriesAdded": "{{name}} hat jetzt die Musik-Kategorien aus Lidarr."
+    },
+    "prowlarr": {
+      "hint": "Kommt aus Prowlarr. Besser: Prowlarr unter Einstellungen, Indexer verbinden; dann hält nexcrate alle Indexer daraus selbst aktuell.",
+      "connectedHint": "Kommt aus einem verbundenen Prowlarr: Zuordnen holt ihn über die Verbindung, ohne Schlüssel.",
+      "join": "Zuordnen",
+      "joinLabel": "{{name}} der Prowlarr-Verbindung zuordnen",
+      "joined": "{{name}} gehört jetzt zur Prowlarr-Verbindung."
     }
   },
   "clients": {

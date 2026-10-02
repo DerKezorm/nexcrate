@@ -230,6 +230,38 @@ class Job:
 
 
 @dataclass(frozen=True)
+class SeedGoal:
+    """The seed goal a torrent gets: a ratio and minutes of seeding; None for either leaves the client's default."""
+
+    ratio: float | None = None
+    time: int | None = None
+
+    @property
+    def empty(self) -> bool:
+        return self.ratio is None and self.time is None
+
+
+@dataclass(frozen=True)
+class Seeding:
+    """A finished torrent as the client reports it after the import, for its seed goal (02.10.2026)."""
+
+    download_id: str
+    #: The download is complete.
+    done: bool
+    #: The client has the torrent stopped (qBittorrent stoppedUP, Transmission status 0, Deluge Paused).
+    stopped: bool
+    #: The client stopped it at a goal: one of its resolved share limits (qBittorrent), ``isFinished`` (Transmission),
+    #: or the stop ratio (Deluge).
+    goal_reached: bool
+    #: Started by force (qBittorrent): never counted as at its goal.
+    forced: bool = False
+    seeding_seconds: int | None = None
+    ratio: float | None = None
+    #: The torrent's files as the client names them: ``content_path``, or the folder plus the name.
+    path: str | None = None
+
+
+@dataclass(frozen=True)
 class CategoryJob:
     """A job in nexcrate's category with the client's name of it (the owner's findings 1 and 2 of 22.09.2026)."""
 
@@ -370,8 +402,16 @@ class ClientBase:
         raise refused()
 
     async def add_torrent(
-        self, *, content: bytes | None, magnet: str | None, file_name: str, info_hash: str, urgent: bool | None = None
+        self,
+        *,
+        content: bytes | None,
+        magnet: str | None,
+        file_name: str,
+        info_hash: str,
+        urgent: bool | None = None,
+        seed: SeedGoal | None = None,
     ) -> str:
+        """``seed``: the indexer's seed goal, handed to the client with the torrent where it can take it."""
         raise refused()
 
     async def jobs(self, download_ids: list[str]) -> dict[str, Job]:
@@ -383,7 +423,20 @@ class ClientBase:
         raise NotImplementedError
 
     async def remove_imported(self, download_id: str) -> None:
-        """After a successful import. SABnzbd forgets the job; a torrent stays and seeds."""
+        """After a successful import. SABnzbd forgets the job; a torrent stays and seeds, until its seed goal
+        (``services/downloads/seeding.py``)."""
+
+    async def seeding(self, download_ids: list[str]) -> dict[str, Seeding]:
+        """The finished torrents among ``download_ids`` in nexcrate's category, by download id; nothing for Usenet."""
+        return {}
+
+    async def stop(self, download_id: str) -> None:
+        """Stop a torrent that reached its seed time (Transmission and Deluge, which have no seed time of their own)."""
+        raise refused()
+
+    async def self_removal(self) -> str | None:
+        """Whether the client removes torrents itself at its share limit (``models.downloads.SELF_REMOVALS``)."""
+        return None
 
     async def category_jobs(self) -> list[CategoryJob]:
         """Every job in nexcrate's category, whoever put it there."""

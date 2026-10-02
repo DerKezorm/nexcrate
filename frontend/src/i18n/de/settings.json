@@ -87,7 +87,10 @@
       "retentionDays_one": "{{value}} Tag laut Newsserver",
       "retentionDays_other": "{{value}} Tage laut Newsserver",
       "retentionUnlimited": "Unbegrenzt laut Newsserver",
-      "retentionUnknown": "Nicht lesbar, nexcrate begrenzt deshalb nichts"
+      "retentionUnknown": "Nicht lesbar, nexcrate begrenzt deshalb nichts",
+      "removeCompleted": "Fertige Torrents",
+      "removeCompletedOn": "werden nach dem Seed-Ziel entfernt",
+      "removeCompletedOff": "bleiben im Programm"
     },
     "lastError": {
       "label": "Letzter Fehler: {{text}}",
@@ -161,7 +164,9 @@
       "categoryHintTransmission": "Transmission legt die Downloads in einen Unterordner mit diesem Namen und gibt ihnen ab Version 4 das Label dazu. Anlegen muss nexcrate dort nichts.",
       "urlHintDeluge": "Die Adresse, unter der du die Weboberfläche von Deluge öffnest, mit Port, etwa http://deluge.example.com:8112.",
       "passwordHintDeluge": "Das Passwort der Weboberfläche von Deluge. Einen Benutzernamen kennt sie nicht.",
-      "categoryHintDeluge": "Deluge führt Kategorien als Label. nexcrate schaltet dafür das mitgelieferte Plugin Label ein und legt das Label an, falls es fehlt."
+      "categoryHintDeluge": "Deluge führt Kategorien als Label. nexcrate schaltet dafür das mitgelieferte Plugin Label ein und legt das Label an, falls es fehlt.",
+      "removeCompleted": "Fertige Torrents entfernen",
+      "removeCompletedHint": "Hat ein importierter Torrent sein Seed-Ziel erreicht, entfernt nexcrate ihn samt Dateien im Download-Ordner aus dem Programm; die Datei in der Bibliothek bleibt. Private Tracker zählen, wie lange du seedest: Das Ziel steht am Indexer."
     },
     "remove": {
       "title": "Download-Programm entfernen?",
@@ -178,6 +183,10 @@
       "pick": "Übernehmen",
       "pickLabel": "Übernehmen: {{name}}",
       "added": "{{name}} ist jetzt als Download-Programm eingetragen."
+    },
+    "selfRemoval": {
+      "removes": "Dieses qBittorrent entfernt Torrents an seinem Limit selbst (Einstellungen, BitTorrent, Grenzwerte beim Seeden). Ein Torrent kann dann weg sein, bevor nexcrate ihn importiert hat. Stell die Aktion in qBittorrent auf „Torrent anhalten“ und lass nexcrate wegräumen.",
+      "held": "qBittorrent würde Torrents an seinem Limit selbst entfernen. nexcrate hält seine eigenen stattdessen an, damit der Import nichts verliert; sie bleiben stehen, solange „Fertige Torrents entfernen“ aus ist."
     }
   },
   "automatic": {

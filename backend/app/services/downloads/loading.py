@@ -52,9 +52,10 @@ from ...models import (
     VersionDefinition,
 )
 from ...models.downloads import ORIGINS, PROTOCOL_OF_KIND
-from .. import downloaders, naming, trash
+from .. import downloaders, naming, releases, trash
 from .. import tags as tag_store
 from ..profiles import store as profile_store
+from ..releases.music_parser import parse_album
 from ..search import jobs as search_jobs
 from ..search import report as search_report
 from . import fetch, store, tracking
@@ -353,6 +354,8 @@ class Prepared:
     rename_formats: list[str]
     #: True when clients for the protocol exist but none may load for this title's tags.
     by_tags: bool = False
+    #: A torrent's seed goal from its indexer, for the client and kept on the download; None without one.
+    seed: downloaders.SeedGoal | None = None
 
 
 def _rename_formats(rules: dict[str, Any] | None, matched: list[dict[str, Any]], kind: str = "movie") -> list[str]:
@@ -371,11 +374,41 @@ def _rename_formats(rules: dict[str, Any] | None, matched: list[dict[str, Any]],
     return names
 
 
+#: A series release that is a whole season or several takes the pack seed time, as Sonarr's "full season"; a part of a
+#: season does not.
+PACK_SCOPES = frozenset({"season", "seasons", "series"})
+
+
+def is_pack(found: search_jobs.FoundRelease) -> bool:
+    """A season pack (series) or a discography (music): the indexer's pack seed time holds for it."""
+    title = str(found.release.get("title") or "")
+    if found.album:
+        return parse_album(title).several_albums
+    if found.scope is not None:
+        return releases.parse_series(title).series.pack_scope in PACK_SCOPES
+    return False
+
+
+def seed_goal(db: Any, found: search_jobs.FoundRelease) -> downloaders.SeedGoal | None:
+    """The seed goal of the release's indexer as it stands now; None for Usenet, a gone indexer or no goal."""
+    if found.protocol != "torrent":
+        return None
+    indexer = db.get(Indexer, found.indexer_id)
+    if indexer is None or indexer.kind != "torznab":
+        return None
+    minutes = indexer.seed_time
+    if indexer.pack_seed_time is not None and is_pack(found):
+        minutes = indexer.pack_seed_time
+    goal = downloaders.SeedGoal(ratio=indexer.seed_ratio, time=minutes)
+    return None if goal.empty else goal
+
+
 def _prepare(found: search_jobs.FoundRelease, definition_id: int, matched: list[dict[str, Any]]) -> Prepared:
     kinds = [kind for kind, protocol in PROTOCOL_OF_KIND.items() if protocol == found.protocol]
     trash_kind = "series" if found.scope is not None else "movie"
     with SessionLocal() as db:
         facts = title_facts(db, found.title_id)
+        seed = seed_goal(db, found)
         candidates = list(
             db.scalars(
                 select(DownloadClient)
@@ -402,7 +435,7 @@ def _prepare(found: search_jobs.FoundRelease, definition_id: int, matched: list[
         ]
     version = facts.versions.get(definition_id)
     rename_formats = _rename_formats(version.rules if version else None, matched, trash_kind)
-    return Prepared(facts=facts, clients=clients, rename_formats=rename_formats, by_tags=by_tags)
+    return Prepared(facts=facts, clients=clients, rename_formats=rename_formats, by_tags=by_tags, seed=seed)
 
 
 def _follows(client_id: int, download_id: str) -> bool:
@@ -441,6 +474,7 @@ async def _hand_over(
                         file_name=f"{stem}.torrent",
                         info_hash=fetched.info_hash or "",
                         urgent=urgent,
+                        seed=prepared.seed,
                     )
         except downloaders.DuplicateTorrent as exc:
             # qBittorrent has the torrent already. In nexcrate's category and followed by no download, nexcrate follows
@@ -541,6 +575,8 @@ def _record(
             grabbed_at=moment,
             updated_at=moment,
             handed_unsure_at=moment if unsure else None,
+            seed_ratio=prepared.seed.ratio if prepared.seed is not None else None,
+            seed_time=prepared.seed.time if prepared.seed is not None else None,
         )
         if episodes is not None:
             _series_fields(db, row, found, episodes)

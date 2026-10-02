@@ -23,10 +23,12 @@ and made-up releases.
   for anime, double episodes, specials.
 - **Music** from MusicBrainz: artists, albums and the release that fits best, files matched to
   tracks by tags, names and AcoustID fingerprints, tags written on filing.
-- **Search** over Newznab and Torznab indexers, with the decision per version and the reason for
+- **Search** over Newznab and Torznab indexers, entered by hand, read from Radarr, Sonarr or
+  Lidarr, or kept up to date from **Prowlarr**, with the decision per version and the reason for
   every release.
 - **Downloads** through SABnzbd, NZBGet, qBittorrent, Transmission or Deluge. Torrents are
-  hardlinked and keep seeding, Usenet downloads are moved, failed ones are replaced.
+  hardlinked and seed until their indexer's goal (ratio, seed time), then leave the download
+  client while the library file stays; Usenet downloads are moved, failed ones are replaced.
 - **Automatic search**, RSS and delay rules per version, with a daily limit and a pause for
   upgrades.
 - **Switching over** from Radarr, Sonarr and Lidarr: read their library, indexers, download
@@ -106,6 +108,20 @@ there is no path to type. Mount the folder that holds your downloads and your me
   than the longest retention is left out. There is nothing to enter.
 - **Indexer keys stay inside nexcrate.** nexcrate fetches the NZB or torrent file itself and hands
   the file over; no download client ever sees an indexer key.
+- **Prowlarr:** Settings, Indexers, "Prowlarr". Enter its address and API key once; nexcrate
+  reads Prowlarr's indexers on saving, on "Sync now" and every 15 minutes, keeps one indexer per
+  Prowlarr indexer and searches through Prowlarr. Nothing to set up in Prowlarr, no app entry.
+  Prowlarr 1.8.6 or newer. An indexer from Prowlarr is changed in Prowlarr; nexcrate keeps its
+  own fields such as the automatic search.
+- **Seeding goals:** a torrent indexer can carry a ratio, a seed time and a seed time for season
+  packs, taken from Prowlarr, from Radarr, Sonarr or Lidarr, or entered by hand. qBittorrent gets
+  them with the torrent; Transmission and Deluge get the ratio, and nexcrate stops them itself
+  once the seed time is reached. Without a goal a torrent keeps seeding.
+- **Removing finished torrents:** once a torrent is imported and has reached its goal, nexcrate
+  removes it from the download client together with its files in the download folder. The
+  hardlinked file in the library stays, and nothing inside a media folder is ever removed. A
+  switch per download client, on for new clients. Should qBittorrent remove torrents by its own
+  share limit rule, the client card says so.
 - **Different paths:** when a download client sees the folder under another path, for example
   `/data` instead of `/media`, nexcrate finds the finished download and asks once to confirm the
   mapping.

@@ -296,5 +296,19 @@
   "notify_code_too_many": "Zu viele Fehlversuche. Schick eine neue Testnachricht.",
   "folder_rules_not_for_kind": "Für Musik gibt es keine Regeln für Mediatheken, nur für Filme und Serien.",
   "client_address_refused": "Das Download-Programm weist die Adresse von nexcrate ab. Trag sie in Transmission bei rpc-whitelist ein oder schalte die Liste aus.",
-  "mapping_name_differs": "Der gewählte Ordner heißt anders als der Download. Wähle den Ordner des Downloads selbst."
+  "mapping_name_differs": "Der gewählte Ordner heißt anders als der Download. Wähle den Ordner des Downloads selbst.",
+  "prowlarr_unreachable": "Prowlarr ist unter {{url}} nicht erreichbar. Stimmen Adresse und Port?",
+  "prowlarr_timeout": "Prowlarr hat nicht rechtzeitig geantwortet.",
+  "prowlarr_key_rejected": "Prowlarr hat den API-Schlüssel nicht angenommen.",
+  "prowlarr_not_prowlarr": "Unter dieser Adresse antwortet etwas, aber nicht Prowlarr. Hat Prowlarr eine URL-Basis, gehört sie in die Adresse.",
+  "prowlarr_too_old": "Dieses Prowlarr hat die Version {{version}}. nexcrate braucht 1.8.6 oder neuer.",
+  "prowlarr_http_error": "Prowlarr meldet einen Fehler (HTTP {{status}}).",
+  "prowlarr_url_invalid": "Mit dieser Adresse geht es nicht. Sie muss mit http:// oder https:// beginnen und darf weder Benutzername und Passwort noch den Schlüssel enthalten.",
+  "prowlarr_key_missing": "Der gespeicherte API-Schlüssel dieses Prowlarr lässt sich nicht lesen. Trag ihn bitte neu ein.",
+  "prowlarr_tag_missing": "Prowlarr kennt diesen Tag nicht (mehr). Wähl die Tags neu.",
+  "prowlarr_sync_running": "Ein Abgleich dieser Verbindung läuft gerade.",
+  "indexer_from_prowlarr": "Dieser Indexer kommt aus Prowlarr. Ändere ihn dort, der nächste Abgleich bringt es hierher.",
+  "indexer_prowlarr_left_out": "Dieser Indexer kommt aus einem verbundenen Prowlarr, und dessen Abgleich lässt ihn aus: dort abgeschaltet, ohne passende Kategorie oder ohne einen der Tags der Verbindung.",
+  "indexer_switched_off": "Der Indexer ist dort abgeschaltet, wo er herkommt (Prowlarr antwortet 410). Schalte ihn dort ein oder warte auf den nächsten Abgleich.",
+  "indexer_no_movie_categories": "Dieser Indexer hat keine Kategorien für Filme."
 }

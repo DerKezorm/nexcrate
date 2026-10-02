@@ -14,6 +14,8 @@
 * Failed (SABnzbd only): the release goes on the title's blocklist, a history entry ``failed``, and the job leaves
   SABnzbd with its files. A ``_FAILED_`` folder SABnzbd leaves anyway goes a minute later (``leftovers``).
 * Completed downloads are handed to ``importing`` after each round, also those a folder ``_UNPACK_`` held back before.
+* Once a minute imported torrents are looked at for their seed goal, and removed after it when the client says so
+  (``seeding``).
 * Only a problem that needs the owner makes a version ``problem``; everything else keeps it ``downloading``.
 """
 
@@ -33,7 +35,7 @@ from ...models import Download, DownloadClient
 from ...models.downloads import CLIENT_STATES, FAILED_DETAILS, FAILED_REASONS
 from .. import downloaders
 from ..automatic import replacement
-from . import foreign, importing, leftovers, store
+from . import foreign, importing, leftovers, seeding, store
 
 logger = logging.getLogger("nexcrate.downloads")
 
@@ -68,6 +70,7 @@ def reset() -> None:
         _soon_at = None
     leftovers.reset()
     foreign.reset()
+    seeding.reset()
 
 
 def due() -> bool:
@@ -259,3 +262,6 @@ async def run_round() -> None:
         await foreign.look()
     if leftovers.due():
         await leftovers.sweep()
+    # Imported torrents: their seed goals, and removing them from the client afterwards.
+    if seeding.due():
+        await seeding.look()

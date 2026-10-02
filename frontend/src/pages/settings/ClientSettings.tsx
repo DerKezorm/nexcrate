@@ -238,7 +238,25 @@ function ClientCard({ client, onEdit, onRemove, onChanged }: { client: DownloadC
             <dd className="text-mist-200">{retentionText(t, client, i18n.language)}</dd>
           </Fragment>
         )}
+        {typeof client.remove_completed === 'boolean' && (
+          <Fragment>
+            <dt className="text-mist-500">{t('settings.clients.details.removeCompleted')}</dt>
+            <dd className="text-mist-200">{client.remove_completed ? t('settings.clients.details.removeCompletedOn') : t('settings.clients.details.removeCompletedOff')}</dd>
+          </Fragment>
+        )}
       </dl>
+      {client.self_removal === 'qbittorrent_removes' && (
+        <p className="flex items-start gap-2 text-sm text-bad-500">
+          <Symbol name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="min-w-0">{t('settings.clients.selfRemoval.removes')}</span>
+        </p>
+      )}
+      {client.self_removal === 'qbittorrent_rule_held' && client.remove_completed === false && (
+        <p className="flex items-start gap-2 text-sm text-mist-400">
+          <Symbol name="info" className="mt-0.5 h-4 w-4 shrink-0 text-info-500" />
+          <span className="min-w-0">{t('settings.clients.selfRemoval.held')}</span>
+        </p>
+      )}
       {client.tags !== undefined && (
         <CardTags
           id={client.id}

@@ -79,7 +79,8 @@
     "skippedMusicCategories": "Übersprungen: keine Kategorien für Musik",
     "skippedOther": "Übersprungen: {{text}}",
     "skippedLink": "Zu den Indexern",
-    "skippedTitle": "Nicht jeder Indexer wurde gefragt"
+    "skippedTitle": "Nicht jeder Indexer wurde gefragt",
+    "skippedMovieCategories": "Übersprungen: keine Kategorien für Filme"
   },
   "outcome": {
     "wouldTake": "Würde nehmen",

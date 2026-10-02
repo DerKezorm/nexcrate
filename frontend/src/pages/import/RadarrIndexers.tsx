@@ -29,6 +29,9 @@ import { Tile } from '../settings/parts'
  *
  * Bei Lidarr (Musik-Abschluss) ebenso mit Musik-Kategorien. Eine uebernommene Verbindung gibt ihre Einstellungen
  * weiter heraus, nur ihre Bibliothek liest nexcrate nicht mehr.
+ *
+ * Einen Indexer, den das Programm aus Prowlarr hat, ordnet ein Klick der Prowlarr-Verbindung zu, wenn es eine fuer diese
+ * Adresse gibt (ohne Schluessel). Sonst sagt ein Satz, dass eine Prowlarr-Verbindung ihn selbst aktuell hielte.
  */
 export function RadarrIndexerDialog({ source, onClose }: { source: Source; onClose: () => void }) {
   const { t } = useTranslation()
@@ -108,6 +111,22 @@ export function RadarrIndexerDialog({ source, onClose }: { source: Source; onClo
       setTestProblem(errorText(t, error))
     } finally {
       setTesting(false)
+    }
+  }
+
+  /** Ein Indexer aus einem verbundenen Prowlarr: Der Server gleicht die Verbindung ab und antwortet mit ihrem Indexer. */
+  async function join(item: RadarrIndexer) {
+    if (merging !== null) return
+    setMerging(item.radarr_indexer_id)
+    setMergeProblem(null)
+    try {
+      const saved = await indexersApi.fromSource({ source_id: source.id, radarr_indexer_id: item.radarr_indexer_id, api_key: '' })
+      notify(t('import.indexers.prowlarr.joined', { name: saved.name }))
+      setToken((count) => count + 1)
+    } catch (error) {
+      setMergeProblem(errorText(t, error))
+    } finally {
+      setMerging(null)
     }
   }
 
@@ -280,6 +299,16 @@ export function RadarrIndexerDialog({ source, onClose }: { source: Source; onClo
                             </Button>
                           )}
                         </div>
+                      ) : typeof item.prowlarr_connection_id === 'number' ? (
+                        <Button
+                          size="sm"
+                          onClick={() => void join(item)}
+                          loading={merging === item.radarr_indexer_id}
+                          disabled={merging !== null}
+                          aria-label={t('import.indexers.prowlarr.joinLabel', { name: item.name })}
+                        >
+                          {t('import.indexers.prowlarr.join')}
+                        </Button>
                       ) : (
                         <Button size="sm" onClick={() => pick(item)} aria-label={t('import.indexers.pickLabel', { name: item.name })}>
                           {t('import.indexers.pick')}
@@ -292,6 +321,14 @@ export function RadarrIndexerDialog({ source, onClose }: { source: Source; onClo
                       <span className="text-xs text-mist-500">{categoriesText(item)}</span>
                     </div>
                     {canMerge && <p className="text-xs text-mist-500">{music ? t('import.indexers.music.addCategoriesHint') : t('import.indexers.series.addCategoriesHint')}</p>}
+                    {item.prowlarr && !item.already_added && (
+                      <p className="flex items-start gap-2 text-xs text-mist-400">
+                        <Symbol name="info" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-info-500" />
+                        <span className="min-w-0">
+                          {typeof item.prowlarr_connection_id === 'number' ? t('import.indexers.prowlarr.connectedHint') : t('import.indexers.prowlarr.hint')}
+                        </span>
+                      </p>
+                    )}
                   </Tile>
                 </li>
               )

@@ -71,6 +71,7 @@ from .routers import numbering as numbering_router
 from .routers import open as open_router
 from .routers import pairings as pairings_router
 from .routers import profiles as profiles_router
+from .routers import prowlarr as prowlarr_router
 from .routers import ratings as ratings_router
 from .routers import recycle as recycle_router
 from .routers import release_calendar as calendar_router
@@ -123,6 +124,7 @@ from .services.downloads import tracking as download_tracking
 from .services.music import loading as music_loading
 from .services.notify import outbox as notify_outbox
 from .services.profiles import expert as profile_expert
+from .services.prowlarr import sync as prowlarr_sync
 from .services.rename import apply as rename_apply
 from .services.series import folder_read as series_folder_read
 from .services.series import halves as series_halves
@@ -229,6 +231,7 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
     (backups_router.router, None),
     (whats_new_router.router, None),
     (notifications_router.router, None),
+    (prowlarr_router.router, None),
 ]
 
 # Background jobs, started in the lifespan. The first one takes an expired deep log mode back.
@@ -237,6 +240,8 @@ jobs.register("session_cleanup", 3600, sessions.purge_expired)
 jobs.register(backups.JOB_NAME, backups.INTERVAL_SECONDS, backups.run_job)
 jobs.register(auto_tags.JOB_NAME, auto_tags.INTERVAL_SECONDS, auto_tags.run_job)
 jobs.register(importer.JOB_NAME, importer.INTERVAL_SECONDS, importer.import_all_sources)
+# The Prowlarr connections: Prowlarr's indexers as nexcrate's own, every 15 minutes.
+jobs.register(prowlarr_sync.JOB_NAME, prowlarr_sync.INTERVAL_SECONDS, prowlarr_sync.run_job)
 jobs.register(tmdb.JOB_NAME, tmdb.REFRESH_INTERVAL_SECONDS, tmdb.refresh_job)
 jobs.register(trash.CHECK_JOB, trash.CHECK_INTERVAL_SECONDS, trash.check_job)
 # ⚠️ ``ready`` holds it back while the start judges every stored file again; the reason is in the tracking module.
@@ -309,6 +314,10 @@ OPENAPI_TAGS = [
     {"name": "images", "description": "Posters, loaded through the source or from TMDB and cached."},
     {"name": "tmdb", "description": "The TMDB token and the search for movies to add."},
     {"name": "indexers", "description": "Newznab and Torznab indexers: connect, test, a test search, search settings."},
+    {
+        "name": "prowlarr",
+        "description": "Prowlarr connections: Prowlarr's indexers as nexcrate's own, kept up to date by a sync.",
+    },
     {"name": "profiles", "description": "One profile per version: the wizard's questions, preview, save, YAML files."},
     {"name": "releases", "description": "The release checker: a release name against the profile of every version."},
     {"name": "trash", "description": "The TRaSH Guides state the profiles are built with, its check and update."},

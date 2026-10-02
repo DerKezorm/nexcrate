@@ -30,6 +30,8 @@ from .model import IndexerInfo, TitleInfo
 logger = logging.getLogger("nexcrate.search")
 
 SEARCH_TIMEOUT_SECONDS = 180.0
+#: A movie search skips an indexer without movie categories.
+MOVIE_SKIPPED_CODE = "indexer_no_movie_categories"
 #: The code of an indexer that ran out of the search's time.
 TIMEOUT_CODE = "indexer_timeout"
 #: The code of an indexer whose run broke on something unexpected; the log has the details.
@@ -211,7 +213,15 @@ async def run_indexer(
             with lock:
                 state.state, state.error_code = "skipped", album_search.SKIPPED_CODE
             return
-        target = indexers.Target(url=info.url, kind=info.kind, api_key=info.api_key, paused_until=info.paused_until)
+        if series is None and album is None and info.prowlarr and not info.categories:
+            # An indexer of a Prowlarr connection without movie categories (one for series only) is not asked for
+            # movies: without categories it would answer with everything it has. Other indexers always have some.
+            with lock:
+                state.state, state.error_code = "skipped", MOVIE_SKIPPED_CODE
+            return
+        target = indexers.Target(
+            url=info.url, kind=info.kind, api_key=info.api_key, paused_until=info.paused_until, slow=info.prowlarr
+        )
         async with indexers.IndexerClient(target) as client:
             caps = info.caps
             if (

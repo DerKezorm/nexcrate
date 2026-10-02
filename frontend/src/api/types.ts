@@ -601,6 +601,29 @@ export type Indexer = {
   rss?: IndexerRss | null
   /** Seit T2: mit Tags nur fuer Titel mit einem davon. Ein Server von davor schickt keine. */
   tags?: string[]
+  /** Seit der Prowlarr-Verbindung: aus welcher Verbindung der Indexer kommt, sonst null. Ein Server von davor schickt nichts. */
+  prowlarr?: IndexerProwlarr | null
+  /** Nur Torznab: das Seed-Ziel, Ratio und Minuten; null laesst die Vorgabe des Download-Programms. */
+  seed_ratio?: number | null
+  seed_time?: number | null
+  /** Nur Torznab: Seed-Zeit fuer Staffelpakete und Diskografien in Minuten; null heisst die normale Seed-Zeit. */
+  pack_seed_time?: number | null
+}
+
+/** Woher ein Indexer aus Prowlarr kommt. `locked` nennt die Felder, die Prowlarr bestimmt (Namen wie in der API). */
+export type IndexerProwlarr = {
+  connection_id: number
+  name: string
+  sync_level: ProwlarrSyncLevel
+  indexer_id: number | null
+  locked: string[]
+}
+
+/** Das Seed-Ziel eines Torznab-Indexers, wie `PATCH /api/indexers/{id}` es nimmt. */
+export type IndexerSeedGoal = {
+  seed_ratio: number | null
+  seed_time: number | null
+  pack_seed_time: number | null
 }
 
 export type IndexerCreate = {
@@ -631,7 +654,8 @@ export type IndexerCreate = {
   daily_limit?: number | null
   /** Seit T2: alle Tags, nach Namen. */
   tags?: string[]
-} & Partial<IndexerSearchSettings>
+} & Partial<IndexerSearchSettings> &
+  Partial<IndexerSeedGoal>
 
 /** Jedes Feld darf fehlen. Ohne `api_key` bleibt der gespeicherte Schluessel. Ohne `kind`: Die Art aendert sich nie (422 `indexer_kind_locked`). */
 export type IndexerUpdate = Partial<Omit<IndexerCreate, 'kind'>>
@@ -698,7 +722,66 @@ export type RadarrIndexer = {
   /** true, sobald Radarr den Indexer fuer irgendetwas nutzt. */
   enabled: boolean
   already_added: boolean
+  /** Das Programm hat den Indexer aus Prowlarr (Adresse /{id}/api oder Name mit "(Prowlarr)"). */
+  prowlarr?: boolean
+  /** Die Prowlarr-Verbindung in nexcrate, deren Adresse das ist; Holen ordnet ihn dann ihr zu. */
+  prowlarr_connection_id?: number | null
 }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Prowlarr als Verbindung (02.10.2026).                                                       */
+/* ------------------------------------------------------------------------------------------ */
+
+/** `full`: Prowlarr bestimmt seine Felder bei jedem Abgleich. `add_remove`: nur beim Anlegen, danach editierbar. */
+export type ProwlarrSyncLevel = 'full' | 'add_remove'
+
+export type ProwlarrTag = { id: number; label: string }
+
+export type ProwlarrCounts = {
+  total: number
+  added: number
+  updated: number
+  removed: number
+  adopted: number
+  skipped_categories: number
+  skipped_disabled: number
+  skipped_tags: number
+  skipped_unsupported: number
+  kept_blocked: number
+}
+
+/** Eine Prowlarr-Verbindung. Den Schluessel gibt der Server nie heraus, nur `has_api_key`. */
+export type ProwlarrConnection = {
+  id: number
+  name: string
+  url: string
+  has_api_key: boolean
+  enabled: boolean
+  sync_level: ProwlarrSyncLevel
+  tags: ProwlarrTag[]
+  version: string | null
+  indexer_count: number
+  last_sync_at: string | null
+  last_error_code: string | null
+  last_counts: ProwlarrCounts | null
+}
+
+export type ProwlarrCreate = {
+  name: string
+  url: string
+  api_key: string
+  enabled: boolean
+  sync_level: ProwlarrSyncLevel
+  /** Prowlarrs Tag-Nummern; leer heisst alle Indexer. */
+  tags: number[]
+}
+
+/** Jedes Feld darf fehlen. Ohne `api_key` bleibt der gespeicherte Schluessel. */
+export type ProwlarrUpdate = Partial<ProwlarrCreate>
+
+export type ProwlarrTest = { id?: number; url?: string; api_key?: string }
+
+export type ProwlarrTestResult = { version: string; indexer_count: number; tags: ProwlarrTag[] }
 
 export type IndexerFromSource = {
   source_id: number
@@ -1250,7 +1333,17 @@ export type DownloadClient = {
   /** Usenet: wie lange die Newsserver Artikel halten, aus dem Programm gelesen. null bei Torrents und vor dem ersten Lesen. */
   retention?: 'days' | 'unlimited' | 'unknown' | null
   retention_days?: number | null
+  /** Torrents: fertige Torrents nach ihrem Seed-Ziel entfernen. null bei Usenet; ein Server von davor schickt nichts. */
+  remove_completed?: boolean | null
+  /** Torrents: ob das Programm Torrents selbst entfernt (siehe `SelfRemoval`). */
+  self_removal?: SelfRemoval | null
 }
+
+/**
+ * `qbittorrent_removes`: qBittorrent vor 5.0 entfernt Torrents an seinem Limit selbst, ein Torrent kann vor dem Import weg
+ * sein. `qbittorrent_rule_held`: qBittorrent 5 hat so eine Regel, nexcrate haelt seine Torrents stattdessen an.
+ */
+export type SelfRemoval = 'qbittorrent_removes' | 'qbittorrent_rule_held'
 
 export type DownloadClientCreate = {
   name: string
@@ -1267,6 +1360,8 @@ export type DownloadClientCreate = {
   from?: { source_id: number; radarr_id: number }
   /** Seit T2: alle Tags, nach Namen. */
   tags?: string[]
+  /** Nur Torrents: fertige Torrents nach dem Seed-Ziel entfernen. Fehlt es beim Anlegen, ist es an. */
+  remove_completed?: boolean
 }
 
 /** Jedes Feld darf fehlen. Ohne `secret` bleibt das gespeicherte. `path_mappings` darf nur kuerzer werden. */

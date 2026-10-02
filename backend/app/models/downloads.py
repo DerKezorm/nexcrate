@@ -15,7 +15,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, BigInteger, Boolean, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, BigInteger, Boolean, Float, ForeignKey, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, utcnow
@@ -69,6 +69,11 @@ SCOPES = ("episode", "season", "series", "album")
 EPISODE_ACTIONS = ("fills", "replaces", "confirmed")
 #: Where an episode of a download stands.
 EPISODE_STATES = ("expected", "filed", "skipped_not_better", "missing", "not_filed")
+#: What a seed goal led to after the import: removed from the client, or kept because its files lie in the library.
+SEED_DONE = ("removed", "kept")
+#: A client that removes torrents itself at its share limit: qBittorrent's action "Remove" or "Remove with content"
+#: while a limit is on, where nexcrate cannot set its own action (before qBittorrent 5).
+SELF_REMOVALS = ("qbittorrent_removes",)
 #: What became of a video file of a download; ``candidate`` is a video of a movie download with several.
 FILE_DECISIONS = ("filed", "open", "sample", "extra", "duplicate", "not_needed", "not_filed", "candidate")
 #: Who started a download: the owner, a planned search or "search automatically now", RSS, or a replacement after a
@@ -108,6 +113,15 @@ class DownloadClient(Base):
     radarr_client_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(default=utcnow)
+    # The columns below come from the missing-column upkeep (02.10.2026), no migration.
+    #: Torrent clients: remove an imported torrent with its files in the download folder once it reached its seed goal,
+    #: as Radarr's "Remove Completed". On for a client added from now on; a client that was there before the update
+    #: keeps it off (the server default) until the owner switches it on.
+    remove_completed: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("0"))
+    #: What the last check found about the client removing torrents itself before an import could happen
+    #: (``SELF_REMOVALS``); null when it does not, or nothing was checked.
+    self_removal: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    self_removal_checked_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
 
 class Download(Base):
@@ -196,6 +210,18 @@ class Download(Base):
     # ⚠️ From migration 16; a change needs a new migration.
     #: For an album download: the release the files turned out to be (decision 9); null until they were read.
     release_id: Mapped[int | None] = mapped_column(ForeignKey("releases.id", ondelete="SET NULL"), nullable=True)
+    # The columns below come from the missing-column upkeep (seed goals, 02.10.2026), no migration.
+    #: The seed goal of the indexer when the torrent was loaded, kept here: the indexer may change or go later. A
+    #: ratio and minutes of seeding; null for none (the client's own default holds).
+    seed_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    seed_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: When nexcrate stopped the torrent because its seed time was reached (Transmission and Deluge have no seed time
+    #: of their own). Never stopped twice: an owner who starts it again keeps it seeding.
+    seed_stopped_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    #: When nexcrate dealt with the finished torrent after its goal: ``removed`` from the client with its files in the
+    #: download folder, or ``kept`` because its files lie in a library folder. The state stays ``imported``.
+    seed_done_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    seed_done: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
 
 class ExtraFile(Base):

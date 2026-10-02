@@ -27,12 +27,15 @@ import { kindText } from './indexerText'
 import {
   hasSearchSettings,
   initialSearchSettings,
+  initialSeedGoal,
   languageOptions,
   MINIMUM_SEEDERS_MAX,
+  minutesText,
   PRIORITY_MAX,
   PRIORITY_MIN,
   readDailyLimit,
   readSearchSettings,
+  readSeedGoal,
 } from './searchSettings'
 
 /** Die Kategorien als ein Text, unabhaengig von der Reihenfolge der Klicks. */
@@ -83,6 +86,10 @@ async function settleAfterCreate(saved: Indexer, settings: IndexerSearchSettings
  *
  * Seit Schritt 3c das Tageslimit: 1 bis 100000 oder leer. Es geht nur hinaus, wenn es sich geaendert hat; ein Server
  * von davor kennt es nicht und bekommt es so nie zu sehen.
+ *
+ * Seit der Prowlarr-Verbindung das Seed-Ziel im Torznab-Teil (Ratio, Seed-Zeit, Seed-Zeit fuer Pakete). Bei einem
+ * Indexer aus Prowlarr sind die Felder gesperrt, die Prowlarr bestimmt (`prowlarr.locked`); ein Satz oben sagt, dass
+ * man sie dort aendert. Gesendet wird wie immer, der Server nimmt die unveraenderten Werte an.
  *
  * Seit S3 eine zweite Liste "Kategorien für Serien" wie bei Sonarr (Entscheidung 5). Nach dem ersten Test steht die
  * Vorgabe des Servers da, Anime gesperrt. Der Test prueft beide Listen und warnt, wenn die Serienkategorien leer sind,
@@ -136,6 +143,13 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
   const [multiLanguages, setMultiLanguages] = useState<string[]>(initial.multiLanguages)
   const [removeYear, setRemoveYear] = useState(initial.removeYear)
   const [dailyLimit, setDailyLimit] = useState(() => (typeof indexer?.daily_limit === 'number' ? String(indexer.daily_limit) : ''))
+  const [initialSeed] = useState(() => initialSeedGoal(indexer))
+  const [seedRatio, setSeedRatio] = useState(initialSeed.ratio)
+  const [seedTime, setSeedTime] = useState(initialSeed.time)
+  const [packSeedTime, setPackSeedTime] = useState(initialSeed.packTime)
+  // Was Prowlarr bestimmt, steht gesperrt da; man aendert es dort.
+  const locked = new Set(indexer?.prowlarr?.locked ?? [])
+  const isLocked = (field: string) => locked.has(field)
 
   /** Art, Adresse oder Schluessel geaendert: Der alte Test gilt nicht mehr. */
   function resetTest() {
@@ -214,6 +228,10 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
     if (settings === 'minimumSeeders') return setProblem(t('indexers.form.minimumSeedersInvalid'))
     const limit = readDailyLimit(dailyLimit)
     if (limit === 'invalid') return setProblem(t('indexers.form.dailyLimitInvalid'))
+    const seed = readSeedGoal({ ratio: seedRatio, time: seedTime, packTime: packSeedTime })
+    if (kind === 'torznab' && seed === 'seedRatio') return setProblem(t('indexers.form.seedRatioInvalid'))
+    if (kind === 'torznab' && (seed === 'seedTime' || seed === 'packSeedTime')) return setProblem(t('indexers.form.seedTimeInvalid'))
+    const goal = kind === 'torznab' && typeof seed === 'object' ? seed : null
     const sorted = [...categories].sort((a, b) => a - b)
     const cleanSeries = cleanSeriesCategories(caps, seriesCategories)
 
@@ -236,6 +254,10 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
           enabled,
           ...settings,
           ...(limit !== null ? { daily_limit: limit } : {}),
+          // Nur ein gesetztes Ziel geht hinaus; ein Server von davor bekommt so keine fremden Felder.
+          ...(goal !== null && goal.seed_ratio !== null ? { seed_ratio: goal.seed_ratio } : {}),
+          ...(goal !== null && goal.seed_time !== null ? { seed_time: goal.seed_time } : {}),
+          ...(goal !== null && goal.pack_seed_time !== null ? { pack_seed_time: goal.pack_seed_time } : {}),
           ...(confirmEmpty ? { confirm_empty: true } : {}),
           ...(confirmAnime ? { confirm_anime_empty: true } : {}),
         })
@@ -261,6 +283,11 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
           if (!indexer.anime_categories_chosen || categoriesKey(cleanAnime) !== categoriesKey(indexer.anime_categories ?? [])) change.anime_categories = cleanAnime
         } else if (!animeChosen && indexer.anime_categories_chosen) {
           change.anime_categories_default = true
+        }
+        if (goal !== null) {
+          if (goal.seed_ratio !== (indexer.seed_ratio ?? null)) change.seed_ratio = goal.seed_ratio
+          if (goal.seed_time !== (indexer.seed_time ?? null)) change.seed_time = goal.seed_time
+          if (goal.pack_seed_time !== (indexer.pack_seed_time ?? null)) change.pack_seed_time = goal.pack_seed_time
         }
         if (confirmEmpty) change.confirm_empty = true
         if (confirmAnime) change.confirm_anime_empty = true
@@ -358,6 +385,12 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
       }
     >
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        {indexer?.prowlarr && (
+          <FormMessage tone="info">
+            {t('indexers.prowlarr.dialogNote', { name: indexer.prowlarr.name })}{' '}
+            {indexer.prowlarr.sync_level === 'full' ? t('indexers.prowlarr.dialogLocked') : t('indexers.prowlarr.dialogAddRemove')}
+          </FormMessage>
+        )}
         <div className="flex flex-col gap-1.5">
           <p className="text-sm font-medium text-mist-300">{t('indexers.kind.label')}</p>
           {indexer === null ? (
@@ -383,7 +416,9 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
           onChange={(event) => setName(event.target.value)}
           maxLength={100}
           autoComplete="off"
-          autoFocus
+          autoFocus={!isLocked('name')}
+          disabled={isLocked('name')}
+          className="disabled:cursor-not-allowed disabled:opacity-60"
         />
         <Field
           label={t('indexers.form.url')}
@@ -397,7 +432,8 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
           maxLength={2048}
           autoComplete="off"
           spellCheck={false}
-          className="w-full min-w-0"
+          disabled={isLocked('url')}
+          className="w-full min-w-0 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <PasswordField
           label={t('indexers.form.apiKey')}
@@ -409,6 +445,8 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
           }}
           autoComplete="new-password"
           maxLength={200}
+          disabled={isLocked('api_key')}
+          className="disabled:cursor-not-allowed disabled:opacity-60"
         />
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => void test()} loading={testing}>
@@ -460,6 +498,7 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
                           type="checkbox"
                           className="mt-0.5 h-4 w-4 shrink-0 accent-accent-500"
                           checked={checked}
+                          disabled={isLocked('categories')}
                           onChange={(event) => toggleCategory(option.id, event.target.checked)}
                         />
                         <span className="min-w-0 flex-1 wrap-anywhere">
@@ -507,7 +546,7 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
                             type="checkbox"
                             className="mt-0.5 h-4 w-4 shrink-0 accent-accent-500"
                             checked={checked}
-                            disabled={option.anime}
+                            disabled={option.anime || isLocked('series_categories')}
                             onChange={(event) => toggleSeriesCategory(option.id, event.target.checked)}
                           />
                           <span className="min-w-0 flex-1 wrap-anywhere">
@@ -552,6 +591,7 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
                           type="checkbox"
                           className="mt-0.5 h-4 w-4 shrink-0 accent-accent-500"
                           checked={checked}
+                          disabled={isLocked('anime_categories')}
                           onChange={(event) => toggleAnimeCategory(option.id, event.target.checked)}
                         />
                         <span className="min-w-0 flex-1 wrap-anywhere">
@@ -562,7 +602,7 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
                   )
                 })}
               </ul>
-              {animeChosen && (
+              {animeChosen && !isLocked('anime_categories') && (
                 <div>
                   <Button variant="ghost" size="sm" onClick={animeToDefault}>
                     {t('indexers.form.animeCategoriesToDefault')}
@@ -609,7 +649,7 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
                           type="checkbox"
                           className="mt-0.5 h-4 w-4 shrink-0 accent-accent-500"
                           checked={checked}
-                          disabled={option.leftOut}
+                          disabled={option.leftOut || isLocked('music_categories')}
                           onChange={(event) => toggleMusicCategory(option.id, event.target.checked)}
                         />
                         <span className="min-w-0 flex-1 wrap-anywhere">
@@ -621,7 +661,7 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
                   )
                 })}
               </ul>
-              {musicChosen && (
+              {musicChosen && !isLocked('music_categories') && (
                 <div>
                   <Button variant="ghost" size="sm" onClick={musicToDefault}>
                     {t('indexers.form.musicCategoriesToDefault')}
@@ -644,7 +684,8 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
             step={1}
             value={priority}
             onChange={(event) => setPriority(event.target.value)}
-            className="w-28 tabular-nums"
+            disabled={isLocked('priority')}
+            className="w-28 tabular-nums disabled:cursor-not-allowed disabled:opacity-60"
           />
           <Field
             label={t('indexers.form.dailyLimit')}
@@ -656,7 +697,8 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
             step={1}
             value={dailyLimit}
             onChange={(event) => setDailyLimit(event.target.value)}
-            className="w-36 tabular-nums"
+            disabled={isLocked('daily_limit')}
+            className="w-36 tabular-nums disabled:cursor-not-allowed disabled:opacity-60"
           />
           {kind === 'torznab' && (
             <Field
@@ -669,8 +711,50 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
               step={1}
               value={minimumSeeders}
               onChange={(event) => setMinimumSeeders(event.target.value)}
-              className="w-28 tabular-nums"
+              disabled={isLocked('minimum_seeders')}
+              className="w-28 tabular-nums disabled:cursor-not-allowed disabled:opacity-60"
             />
+          )}
+          {kind === 'torznab' && (
+            <fieldset className="flex min-w-0 flex-col gap-3">
+              <legend className="mb-1.5 text-sm font-medium text-mist-300">{t('indexers.form.seedTitle')}</legend>
+              <p className="text-xs text-mist-500">{t('indexers.form.seedHint')}</p>
+              <div className="flex flex-wrap gap-4">
+                <Field
+                  label={t('indexers.form.seedRatio')}
+                  hint={t('indexers.form.seedRatioHint')}
+                  inputMode="decimal"
+                  value={seedRatio}
+                  onChange={(event) => setSeedRatio(event.target.value)}
+                  disabled={isLocked('seed_ratio')}
+                  className="w-28 tabular-nums disabled:cursor-not-allowed disabled:opacity-60"
+                />
+                <Field
+                  label={t('indexers.form.seedTime')}
+                  hint={minutesText(t, seedTime) ?? t('indexers.form.seedTimeHint')}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={seedTime}
+                  onChange={(event) => setSeedTime(event.target.value)}
+                  disabled={isLocked('seed_time')}
+                  className="w-36 tabular-nums disabled:cursor-not-allowed disabled:opacity-60"
+                />
+                <Field
+                  label={t('indexers.form.packSeedTime')}
+                  hint={minutesText(t, packSeedTime) ?? t('indexers.form.packSeedTimeHint')}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={packSeedTime}
+                  onChange={(event) => setPackSeedTime(event.target.value)}
+                  disabled={isLocked('pack_seed_time')}
+                  className="w-36 tabular-nums disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+            </fieldset>
           )}
           <fieldset className="flex min-w-0 flex-col gap-2">
             <legend className="mb-1.5 text-sm font-medium text-mist-300">{t('indexers.form.multiLanguages')}</legend>
@@ -702,7 +786,7 @@ export function IndexerDialog({ indexer, onClose, onSaved }: { indexer: Indexer 
           <Toggle label={t('indexers.form.removeYear')} hint={t('indexers.form.removeYearHint')} checked={removeYear} onChange={setRemoveYear} />
         </div>
 
-        <Toggle label={t('indexers.form.enabled')} hint={t('indexers.form.enabledHint')} checked={enabled} onChange={setEnabled} />
+        <Toggle label={t('indexers.form.enabled')} hint={t('indexers.form.enabledHint')} checked={enabled} onChange={setEnabled} disabled={isLocked('enabled')} />
         {problem && <FormMessage>{problem}</FormMessage>}
       </form>
     </Dialog>

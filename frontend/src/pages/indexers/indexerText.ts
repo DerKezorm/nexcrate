@@ -20,6 +20,8 @@ export const INDEXER_ERROR_CODES = [
   // Seit 2c stehen Codes auch an einem Indexer der Suche, dort kommen diese beiden dazu.
   'indexer_answer_too_large',
   'indexer_key_missing',
+  // Seit der Prowlarr-Verbindung: Prowlarr hat den Indexer abgeschaltet (410).
+  'indexer_switched_off',
 ] as const
 
 /**
@@ -49,6 +51,8 @@ export function lastErrorText(t: TFunction, code: string): string {
       return t('indexers.lastError.answerTooLarge')
     case 'indexer_key_missing':
       return t('indexers.lastError.keyMissing')
+    case 'indexer_switched_off':
+      return t('indexers.lastError.switchedOff')
     default:
       return t('indexers.lastError.unknown', { code })
   }

@@ -36,6 +36,9 @@ export type ClientTemplate = { source: Pick<Source, 'id' | 'name'>; item: Radarr
  * beim Bearbeiten leer, geht keines hinaus und das gespeicherte bleibt. Nach dem Speichern wird es geleert.
  *
  * Die Kategorie aus Radarr wird bewusst nicht uebernommen: Mit ihr uebernaehme dieses Radarr jeden Download.
+ *
+ * Torrent-Programme haben den Schalter "Fertige Torrents entfernen" (wie Radarrs "Remove Completed"): ein neues ist an,
+ * ein Programm von vor dem Update bleibt aus, bis man ihn einschaltet. Er geht beim Aendern nur mit, wenn er sich aendert.
  */
 export function ClientDialog({
   client,
@@ -57,6 +60,7 @@ export function ClientDialog({
   const [category, setCategory] = useState(client?.category ?? DEFAULT_CATEGORY)
   const [priority, setPriority] = useState(String(client?.priority ?? template?.item.priority ?? CLIENT_PRIORITY_DEFAULT))
   const [enabled, setEnabled] = useState(client?.enabled ?? template?.item.enabled ?? true)
+  const [removeCompleted, setRemoveCompleted] = useState(client?.remove_completed ?? true)
   const [testing, setTesting] = useState(false)
   const [tested, setTested] = useState<{ result: DownloadClientTestResult; category: string } | null>(null)
   const [testProblem, setTestProblem] = useState<string | null>(null)
@@ -117,7 +121,9 @@ export function ClientDialog({
     try {
       let saved: DownloadClient
       if (client === null) {
-        saved = await downloadClientsApi.create(template === null ? body : { ...body, from: { source_id: template.source.id, radarr_id: template.item.radarr_id }, ...(template.item.tags?.length ? { tags: template.item.tags } : {}) })
+        // Der Schalter nur beim Anlegen eines Torrent-Programms und nur, wenn er aus ist: an ist die Vorgabe des Servers.
+        const created = torrent && !removeCompleted ? { ...body, remove_completed: false } : body
+        saved = await downloadClientsApi.create(template === null ? created : { ...created, from: { source_id: template.source.id, radarr_id: template.item.radarr_id }, ...(template.item.tags?.length ? { tags: template.item.tags } : {}) })
       } else {
         // Name, Prioritaet und Schalter gehen immer mit; was eine neue Pruefung ausloest, nur wenn es sich aendert. Das Programm nie.
         const change: DownloadClientUpdate = { name: body.name, priority: body.priority, enabled: body.enabled }
@@ -125,6 +131,7 @@ export function ClientDialog({
         if (body.category !== client.category) change.category = body.category
         if (withUsername && (body.username ?? '') !== (client.username ?? '')) change.username = body.username ?? ''
         if (body.secret !== undefined) change.secret = body.secret
+        if (torrent && typeof client.remove_completed === 'boolean' && removeCompleted !== client.remove_completed) change.remove_completed = removeCompleted
         saved = await downloadClientsApi.update(client.id, change)
       }
       setSecret('')
@@ -273,6 +280,14 @@ export function ClientDialog({
           className="w-28 tabular-nums"
         />
         <Toggle label={t('settings.clients.form.enabled')} hint={t('settings.clients.form.enabledHint')} checked={enabled} onChange={setEnabled} />
+        {torrent && (client === null || typeof client.remove_completed === 'boolean') && (
+          <Toggle
+            label={t('settings.clients.form.removeCompleted')}
+            hint={t('settings.clients.form.removeCompletedHint')}
+            checked={removeCompleted}
+            onChange={setRemoveCompleted}
+          />
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => void test()} loading={testing}>
             {t('common.actions.test')}

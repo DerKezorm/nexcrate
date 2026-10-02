@@ -1,5 +1,19 @@
 import { api } from './client'
-import type { Indexer, IndexerCreate, IndexerFromSource, IndexerKind, IndexerSearch, IndexerTest, IndexerTestResult, IndexerUpdate } from './types'
+import type {
+  Indexer,
+  IndexerCreate,
+  IndexerFromSource,
+  IndexerKind,
+  IndexerSearch,
+  IndexerTest,
+  IndexerTestResult,
+  IndexerUpdate,
+  ProwlarrConnection,
+  ProwlarrCreate,
+  ProwlarrTest,
+  ProwlarrTestResult,
+  ProwlarrUpdate,
+} from './types'
 
 export const INDEXER_KINDS: readonly IndexerKind[] = ['newznab', 'torznab']
 
@@ -49,6 +63,27 @@ export const indexersApi = {
    */
   fromSource: (body: IndexerFromSource) => api.post<Indexer>('/indexers/from-source', body),
 }
+
+/**
+ * Prowlarr als Verbindung: Adresse und Schluessel einmal, nexcrate haelt je Prowlarr-Indexer einen eigenen aktuell. Der
+ * Schluessel geht nur hinaus, Antworten tragen `has_api_key`.
+ */
+export const prowlarrApi = {
+  list: () => api.get<ProwlarrConnection[]>('/prowlarr'),
+  /** Liest Version, Indexer und Tags. Speichert nichts. */
+  test: (body: ProwlarrTest) => api.post<ProwlarrTestResult>('/prowlarr/test', body),
+  /** Prueft, speichert und gleicht gleich ab. */
+  create: (body: ProwlarrCreate) => api.post<ProwlarrConnection>('/prowlarr', body),
+  update: (id: number, body: ProwlarrUpdate) => api.patch<ProwlarrConnection>(`/prowlarr/${id}`, body),
+  /** Ohne `keepIndexers` gehen die Indexer der Verbindung mit. */
+  remove: (id: number, keepIndexers: boolean) => api.delete<void>(`/prowlarr/${id}?keep_indexers=${keepIndexers ? 'true' : 'false'}`),
+  /** 409 `prowlarr_sync_running`, wenn schon einer laeuft. */
+  sync: (id: number) => api.post<ProwlarrConnection>(`/prowlarr/${id}/sync`),
+}
+
+/** Die Grenzen des Seed-Ziels wie auf dem Server: Ratio bis 1000, Minuten bis ein Jahr. */
+export const SEED_RATIO_MAX = 1000
+export const SEED_TIME_MAX = 525_600
 
 /**
  * Seit S3: die Serienkategorien, wenn ein Indexer keine nennt. Sonarrs Vorgabe plus UHD, wie im Plan S3 unter

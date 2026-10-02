@@ -252,7 +252,9 @@ def _anime_categories(row: Indexer) -> tuple[int, ...]:
 
 def form_of(row: Indexer, kinds: Collection[str]) -> str | None:
     """What one sync of the indexer asks for (decision 17; music since M5); None when it has nothing to ask."""
-    movie = MOVIE in kinds
+    # A Prowlarr indexer without movie categories (one for series only) is not read for movies; any other indexer
+    # without them reads its defaults (``feed_categories``).
+    movie = MOVIE in kinds and (bool(row.categories) or row.prowlarr_id is None)
     series = SERIES in kinds and bool(row.series_categories or _anime_categories(row))
     music = ALBUM in kinds and bool(_music_categories(row))
     wanted = frozenset(
@@ -352,7 +354,9 @@ async def read(sync: Sync, deadline: float) -> None:
         if info.error_code is not None:
             state.state, state.error_code = "failed", info.error_code
             return
-        target = indexers.Target(url=info.url, kind=info.kind, api_key=info.api_key, paused_until=info.paused_until)
+        target = indexers.Target(
+            url=info.url, kind=info.kind, api_key=info.api_key, paused_until=info.paused_until, slow=info.prowlarr
+        )
         async with indexers.IndexerClient(target) as client:
             caps = info.caps
             if info.caps_stale:

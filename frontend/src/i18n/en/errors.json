@@ -296,5 +296,19 @@
   "notify_code_too_many": "Too many wrong tries. Send a new test message.",
   "folder_rules_not_for_kind": "Music has no library rules, only movies and series do.",
   "client_address_refused": "The download client refuses nexcrate's address. Add it to rpc-whitelist in Transmission or switch the list off.",
-  "mapping_name_differs": "The chosen folder is not named like the download. Choose the folder of the download itself."
+  "mapping_name_differs": "The chosen folder is not named like the download. Choose the folder of the download itself.",
+  "prowlarr_unreachable": "Prowlarr cannot be reached at {{url}}. Are address and port right?",
+  "prowlarr_timeout": "Prowlarr did not answer in time.",
+  "prowlarr_key_rejected": "Prowlarr did not accept the API key.",
+  "prowlarr_not_prowlarr": "Something answers at this address, but it is not Prowlarr. With a URL base in Prowlarr, the address needs it too.",
+  "prowlarr_too_old": "This Prowlarr is version {{version}}. nexcrate needs 1.8.6 or newer.",
+  "prowlarr_http_error": "Prowlarr reports an error (HTTP {{status}}).",
+  "prowlarr_url_invalid": "This address does not work. It has to start with http:// or https:// and must contain neither a user name and password nor the key.",
+  "prowlarr_key_missing": "The stored API key of this Prowlarr cannot be read. Please enter it again.",
+  "prowlarr_tag_missing": "Prowlarr has no tag with this id (any more). Choose the tags again.",
+  "prowlarr_sync_running": "A sync of this connection runs right now.",
+  "indexer_from_prowlarr": "This indexer comes from Prowlarr. Change it there; the next sync brings it here.",
+  "indexer_prowlarr_left_out": "This indexer comes from a connected Prowlarr, and its sync leaves it out: switched off there, without a fitting category, or without one of the connection's tags.",
+  "indexer_switched_off": "The indexer is switched off where it comes from (Prowlarr answers 410). Switch it on there, or wait for the next sync.",
+  "indexer_no_movie_categories": "No categories for movies at this indexer."
 }

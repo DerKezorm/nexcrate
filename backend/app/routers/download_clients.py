@@ -28,7 +28,7 @@ from ..meldungen import error, error_responses
 from ..models import Download, DownloadClient, Source, utcnow
 from ..models.downloads import PROTOCOL_OF_KIND
 from ..services import downloaders, tags
-from ..services.downloads import retention, store
+from ..services.downloads import retention, seeding, store
 from ..services.lidarr import ERRORS as LIDARR_ERRORS
 from ..services.lidarr import LidarrClient
 from ..services.radarr import RadarrClient, RadarrError, SourceUrlInvalid, normalize_base_url
@@ -60,6 +60,12 @@ class FromSource(BaseModel):
     name: str
 
 
+_REMOVE_TEXT = (
+    "remove an imported torrent with its files in the download folder once it reached its seed goal (Radarr's "
+    "\"Remove Completed\"); the library file stays. Never when its files lie in a library folder."
+)
+
+
 class DownloadClientOut(BaseModel):
     id: int
     name: str
@@ -89,6 +95,16 @@ class DownloadClientOut(BaseModel):
         "and before the first reading. Releases older than the longest retention of all Usenet clients do not fit.",
     )
     retention_days: int | None = Field(default=None, description="The days when retention is `days`.")
+    remove_completed: bool | None = Field(
+        default=None, description="Torrent clients: " + _REMOVE_TEXT + " Null for Usenet clients."
+    )
+    self_removal: str | None = Field(
+        default=None,
+        description="Torrent clients: `qbittorrent_removes` when qBittorrent before 5.0 removes torrents itself at a "
+        "share limit, so a torrent can be gone before its import; `qbittorrent_rule_held` when qBittorrent 5 has "
+        "such a rule and nexcrate holds its own torrents stopped instead. Null when it has none, or before the first "
+        "check (saving, testing, then hourly).",
+    )
 
 
 class FromRadarrIn(BaseModel):
@@ -116,6 +132,9 @@ class ClientIn(BaseModel):
     from_: FromRadarrIn | None = Field(
         default=None, alias="from", description="The Radarr source and its client this one was fetched from."
     )
+    remove_completed: bool | None = Field(
+        default=None, description="Torrent clients: " + _REMOVE_TEXT + " Left out: on, as in Radarr."
+    )
 
 
 class ClientPatch(BaseModel):
@@ -137,6 +156,9 @@ class ClientPatch(BaseModel):
         default=None, max_length=100, description="May only shrink: a mapping is added by confirming a proposal."
     )
     from_: FromRadarrIn | None = Field(default=None, alias="from")
+    remove_completed: bool | None = Field(
+        default=None, description="Torrent clients: " + _REMOVE_TEXT + " Left out: unchanged."
+    )
 
 
 class ClientTestIn(BaseModel):
@@ -317,6 +339,8 @@ def client_out(db: Any, row: DownloadClient) -> DownloadClientOut:
         from_source=from_source,
         active_downloads=_active_count(db, row.id),
         tags=tags.of_clients(db, [row.id]).get(row.id, []),
+        remove_completed=None if downloaders.is_usenet(row.kind) else bool(row.remove_completed),
+        self_removal=None if downloaders.is_usenet(row.kind) else row.self_removal,
         **_retention_of(db, row),
     )
 
@@ -383,7 +407,8 @@ def list_clients(db: DbSession) -> list[DownloadClientOut]:
     description=(
         "Tests the client (reachable, the right kind, credentials, the category created when missing, read back and "
         "usable) and stores it with its secret encrypted. `from` records the Radarr entry it came from, as "
-        "information; nexcrate's own category is used all the same."
+        "information; nexcrate's own category is used all the same. A torrent client removes finished torrents after "
+        "their seed goal unless `remove_completed` is false, and is asked whether it removes torrents itself."
     ),
     responses=error_responses((422, "client_invalid"), (404, "not_found"), *downloaders.ERRORS),
 )
@@ -409,10 +434,14 @@ async def create_client(payload: ClientIn) -> DownloadClientOut:
         "path_mappings": [],
         "source_id": payload.from_.source_id if payload.from_ is not None else None,
         "radarr_client_id": payload.from_.radarr_id if payload.from_ is not None else None,
+        # On for a new client, as in Radarr; clients from before the update keep it off.
+        "remove_completed": payload.remove_completed if payload.remove_completed is not None else True,
     }
     client_id = await asyncio.to_thread(_insert, values, secret)
     if payload.tags:
         await asyncio.to_thread(_tag, client_id, payload.tags)
+    if not downloaders.is_usenet(payload.kind):
+        await seeding.check_self_removal(client_id, target)
     return await asyncio.to_thread(_read, client_id)
 
 
@@ -459,6 +488,8 @@ async def check_client(payload: ClientTestIn) -> ClientTestOut:
         category = _clean_category(payload.category, kind)
     target = downloaders.Target(kind=kind, url=url, username=username or "", secret=secret, category=category)
     checked = await _test(target, create=False, record=record)
+    if record is not None and not downloaders.is_usenet(kind):
+        await seeding.check_self_removal(record, target)
     return ClientTestOut(version=checked.version, category_exists=checked.category_exists)
 
 
@@ -516,6 +547,8 @@ async def update_client(client_id: int, payload: ClientPatch) -> DownloadClientO
         changes["enabled"] = payload.enabled
     if "priority" in given:
         changes["priority"] = _clean_priority(payload.priority)
+    if payload.remove_completed is not None:
+        changes["remove_completed"] = payload.remove_completed
     url = _clean_url(payload.url) if payload.url is not None else stored.url
     category = _clean_category(payload.category if payload.category is not None else stored.category, kind)
     if kind not in downloaders.WITH_USERNAME:
@@ -545,6 +578,8 @@ async def update_client(client_id: int, payload: ClientPatch) -> DownloadClientO
     await asyncio.to_thread(_apply, client_id, changes, new_secret or None, connection_changed)
     if payload.tags is not None:
         await asyncio.to_thread(_tag, client_id, payload.tags)
+    if connection_changed and not downloaders.is_usenet(kind):
+        await seeding.check_self_removal(client_id, target)
     return await asyncio.to_thread(_read, client_id)
 
 

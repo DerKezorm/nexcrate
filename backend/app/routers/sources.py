@@ -21,11 +21,12 @@ from .. import crypto
 from ..db import SessionLocal
 from ..deps import DbSession
 from ..meldungen import error, error_responses
-from ..models import media, utcnow
+from ..models import ProwlarrConnection, media, utcnow
 from ..services import images, importer, indexers, takeover
 from ..services.lidarr import ERRORS as LIDARR_ERRORS
 from ..services.lidarr import LidarrClient
 from ..services.music import lidarr_import
+from ..services.prowlarr import sync as prowlarr_sync
 from ..services.radarr import RadarrClient, RadarrError, SourceUrlInvalid, normalize_base_url
 from ..services.schreibweisen import nfc
 from ..services.search import album as album_search
@@ -126,6 +127,15 @@ class RadarrIndexer(BaseModel):
         "tag; nexcrate ignores tags for now."
     )
     already_added: bool = Field(description="Whether an indexer with the same address exists in nexcrate.")
+    prowlarr: bool = Field(
+        default=False,
+        description="Whether the app got the indexer from Prowlarr (address `/{id}/api` or a name ending in "
+        "\"(Prowlarr)\"). A Prowlarr connection in nexcrate keeps such indexers up to date by itself.",
+    )
+    prowlarr_connection_id: int | None = Field(
+        default=None,
+        description="The Prowlarr connection whose endpoint the address is; fetching it joins that connection.",
+    )
 
 
 # --- Checks -------------------------------------------------------------------- #
@@ -521,6 +531,16 @@ def _indexer_urls() -> set[str]:
         return set(db.scalars(select(media.Indexer.url)))
 
 
+def _prowlarr_urls() -> list[tuple[int, str]]:
+    with SessionLocal() as db:
+        return [
+            (row_id, url)
+            for row_id, url in db.execute(
+                select(ProwlarrConnection.id, ProwlarrConnection.url).order_by(ProwlarrConnection.id)
+            ).tuples()
+        ]
+
+
 @router.get(
     "/{source_id}/indexers",
     response_model=list[RadarrIndexer],
@@ -574,6 +594,7 @@ async def list_source_indexers(source_id: int) -> list[RadarrIndexer]:
             422,
         ) from exc
     known = await asyncio.to_thread(_indexer_urls)
+    connections = await asyncio.to_thread(_prowlarr_urls)
     result: list[RadarrIndexer] = []
     for item in listed:
         kind = indexers.kind_of_implementation(item.implementation)
@@ -593,6 +614,10 @@ async def list_source_indexers(source_id: int) -> list[RadarrIndexer]:
                 enabled=item.enabled,
                 tags=item.tags,
                 already_added=url in known,
+                prowlarr=prowlarr_sync.looks_like_prowlarr(url, item.name),
+                prowlarr_connection_id=next(
+                    (row_id for row_id, base in connections if prowlarr_sync.indexer_of(url, base) is not None), None
+                ),
             )
         )
     logger.info("Source %d lists %d indexers, %d of them Newznab or Torznab", source_id, len(listed), len(result))

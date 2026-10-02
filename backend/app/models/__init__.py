@@ -35,6 +35,7 @@ from .media import (
 from .mediaserver import MediaServer
 from .music import AlbumArtist, Artist, Release, ReleaseMedium, ReleaseTrack, SourceUnmappedFile, TrackFile
 from .notify import NotificationMessage, NotificationTarget
+from .prowlarr import ProwlarrConnection
 from .recycle import RecycleEntry
 from .rename import RenameRun, RenameStep, RenameTitle
 from .series import (
@@ -90,6 +91,7 @@ __all__ = [
     "NotificationTarget",
     "PendingRelease",
     "Profile",
+    "ProwlarrConnection",
     "QualitySize",
     "RecycleEntry",
     "Release",

@@ -37,6 +37,7 @@ export function isSkipped(indexer: SearchIndexer): boolean {
 /** Warum ein Indexer uebersprungen wurde. Ohne Serienkategorien hat es einen eigenen Satz. */
 export function skippedText(t: TFunction, indexer: SearchIndexer): string {
   if (indexer.error_code === 'indexer_no_music_categories') return t('search.indexers.skippedMusicCategories')
+  if (indexer.error_code === 'indexer_no_movie_categories') return t('search.indexers.skippedMovieCategories')
   if (indexer.error_code === null || indexer.error_code === 'indexer_no_series_categories') return t('search.indexers.skippedCategories')
   return t('search.indexers.skippedOther', { text: lastErrorText(t, indexer.error_code) })
 }

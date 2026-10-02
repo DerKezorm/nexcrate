@@ -22,6 +22,12 @@ read in Radarr's source:
   without a size (a magnet still fetching its metadata) is queued, as in Radarr. ``eta`` -1 and -2 are unknown. The
   finished path is ``downloadDir`` plus ``name``.
 * **Removing**: ``torrent-remove`` with ``delete-local-data``. An unknown id is answered with success.
+
+Seed goals (measured on 4.1.3, 02.10.2026): ``torrent-set`` with ``seedRatioLimit`` and ``seedRatioMode`` 1 after the
+add stopped a finished torrent within a second, ``status`` 0 with ``isFinished`` true. Transmission has no seed time,
+only an idle limit; nexcrate counts ``secondsSeeding`` itself (it follows the clock) and stops the torrent with
+``torrent-stop``, which leaves ``isFinished`` false: that stop is told apart by the download's own mark. nexcrate keeps
+the old RPC dialect; 4.1 answers JSON-RPC 2.0 as well.
 """
 
 from __future__ import annotations
@@ -43,6 +49,8 @@ from .base import (
     DuplicateTorrent,
     HandOverUnsure,
     Job,
+    SeedGoal,
+    Seeding,
     address_refused,
     auth_failed,
     number,
@@ -66,6 +74,11 @@ LOCAL_ERROR = 3
 FIELDS = (
     "hashString", "name", "status", "percentDone", "leftUntilDone", "eta", "sizeWhenDone", "totalSize", "downloadDir",
     "labels", "error",
+)  # fmt: skip
+#: What the seed goal reads of a finished torrent.
+SEED_FIELDS = (
+    "hashString", "name", "status", "leftUntilDone", "isFinished", "secondsSeeding", "uploadRatio", "downloadDir",
+    "labels",
 )  # fmt: skip
 _VERSION = re.compile(r"^(\d+(?:\.\d+){0,3})")
 
@@ -155,7 +168,14 @@ class Transmission(ClientBase):
         return _join(folder, self.target.category)
 
     async def add_torrent(
-        self, *, content: bytes | None, magnet: str | None, file_name: str, info_hash: str, urgent: bool | None = None
+        self,
+        *,
+        content: bytes | None,
+        magnet: str | None,
+        file_name: str,
+        info_hash: str,
+        urgent: bool | None = None,
+        seed: SeedGoal | None = None,
     ) -> str:
         arguments: dict[str, Any] = {"paused": False}
         folder = await self.category_folder()
@@ -183,6 +203,12 @@ class Transmission(ClientBase):
         found = text(added.get("hashString"), 64).lower() if isinstance(added, dict) else ""
         if not found:
             raise refused()
+        if seed is not None and seed.ratio is not None:
+            # The seed time is nexcrate's to watch: Transmission's idle limit means something else.
+            try:
+                await self._rpc("torrent-set", {"ids": [found], "seedRatioLimit": seed.ratio, "seedRatioMode": 1})
+            except ClientError as exc:
+                logger.info("Transmission did not take the seed ratio of torrent %s: %s", found[:8], exc.code)
         if urgent:
             try:
                 await self._rpc("queue-move-top", {"ids": [found]})
@@ -263,3 +289,36 @@ class Transmission(ClientBase):
 
     async def remove(self, download_id: str, *, delete_files: bool) -> None:
         await self._rpc("torrent-remove", {"ids": [download_id.lower()], "delete-local-data": delete_files})
+
+    async def seeding(self, download_ids: list[str]) -> dict[str, Seeding]:
+        wanted = sorted({download_id.lower() for download_id in download_ids if download_id})
+        if not wanted:
+            return {}
+        answer = await self._rpc("torrent-get", {"fields": list(SEED_FIELDS), "ids": wanted})
+        torrents = answer.get("torrents")
+        if not isinstance(torrents, list):
+            raise wrong_kind()
+        found: dict[str, Seeding] = {}
+        for item in torrents:
+            if not isinstance(item, dict) or not await self._is_ours(item):
+                continue
+            download_id = text(item.get("hashString"), 64).lower()
+            status = whole(item.get("status"))
+            if download_id not in wanted or status is None:
+                continue
+            done = whole(item.get("leftUntilDone")) == 0
+            stopped = done and status == STOPPED
+            folder, name = text(item.get("downloadDir")), text(item.get("name"), 1024)
+            found[download_id] = Seeding(
+                download_id=download_id,
+                done=done,
+                stopped=stopped,
+                goal_reached=stopped and item.get("isFinished") is True,
+                seeding_seconds=whole(item.get("secondsSeeding")),
+                ratio=number(item.get("uploadRatio")),
+                path=_join(folder, name) if folder and name else None,
+            )
+        return found
+
+    async def stop(self, download_id: str) -> None:
+        await self._rpc("torrent-stop", {"ids": [download_id.lower()]})

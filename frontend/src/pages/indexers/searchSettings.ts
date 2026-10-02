@@ -6,14 +6,15 @@
 
 import type { TFunction } from 'i18next'
 
-import { DAILY_LIMIT_MAX, DAILY_LIMIT_MIN } from '../../api/indexers'
-import type { Indexer, IndexerKind, IndexerSearchSettings } from '../../api/types'
+import { DAILY_LIMIT_MAX, DAILY_LIMIT_MIN, SEED_RATIO_MAX, SEED_TIME_MAX } from '../../api/indexers'
+import type { Indexer, IndexerKind, IndexerSearchSettings, IndexerSeedGoal } from '../../api/types'
 
 export const PRIORITY_MIN = 1
 export const PRIORITY_MAX = 50
 export const DEFAULT_PRIORITY = 25
 export const DEFAULT_MINIMUM_SEEDERS = 1
-export const MINIMUM_SEEDERS_MAX = 10_000
+// Wie der Server (SEEDERS_MAX): vorher stand hier 10000, und 1001 bis 10000 scheiterte erst beim Speichern mit 422.
+export const MINIMUM_SEEDERS_MAX = 1000
 
 /** Die Sprachen zur Auswahl bei MULTi, fest. Gespeichert wird in dieser Reihenfolge. */
 export const MULTI_LANGUAGE_CODES = ['de', 'en', 'fr', 'es', 'it', 'nl', 'pl', 'pt', 'ru', 'tr', 'ja', 'ko', 'zh', 'sv', 'da', 'no', 'fi', 'cs', 'hu'] as const
@@ -127,6 +128,53 @@ export function readSearchSettings(
     if (minimumSeeders === null) return 'minimumSeeders'
   }
   return { priority, minimum_seeders: minimumSeeders, multi_languages: orderLanguages(form.multiLanguages), remove_year: form.removeYear }
+}
+
+/** Das Seed-Ziel im Formular, als Text: leer heisst keins. */
+export type SeedGoalForm = { ratio: string; time: string; packTime: string }
+
+function numberText(value: number | null | undefined): string {
+  return typeof value === 'number' ? String(value) : ''
+}
+
+/** Was im Formular vorbelegt ist; ein Server von davor schickt nichts, dann ist das Ziel leer. */
+export function initialSeedGoal(indexer: Indexer | null): SeedGoalForm {
+  return { ratio: numberText(indexer?.seed_ratio), time: numberText(indexer?.seed_time), packTime: numberText(indexer?.pack_seed_time) }
+}
+
+/** Eine Ratio aus dem Feld: Punkt oder Komma, hoechstens drei Stellen danach, 0 bis 1000. Leer ist null, sonst ungueltig. */
+export function parseRatio(text: string): number | null | 'invalid' {
+  const clean = text.trim().replace(',', '.')
+  if (clean === '') return null
+  if (!/^\d{1,4}(\.\d{1,3})?$/.test(clean)) return 'invalid'
+  const value = Number(clean)
+  return value <= SEED_RATIO_MAX ? value : 'invalid'
+}
+
+/** Das Seed-Ziel aus dem Formular, oder der Name des Feldes, das nicht passt. Minuten ganz, 0 bis ein Jahr. */
+export function readSeedGoal(form: SeedGoalForm): IndexerSeedGoal | 'seedRatio' | 'seedTime' | 'packSeedTime' {
+  const ratio = parseRatio(form.ratio)
+  if (ratio === 'invalid') return 'seedRatio'
+  const minutes = (text: string): number | null | 'invalid' => (text.trim() === '' ? null : (parseWhole(text, 0, SEED_TIME_MAX) ?? 'invalid'))
+  const time = minutes(form.time)
+  if (time === 'invalid') return 'seedTime'
+  const packTime = minutes(form.packTime)
+  if (packTime === 'invalid') return 'packSeedTime'
+  return { seed_ratio: ratio, seed_time: time, pack_seed_time: packTime }
+}
+
+/** Die Minuten in Tagen, Stunden und Minuten, fuer den Hinweis unter dem Feld; null ohne gueltige Zahl. */
+export function minutesText(t: TFunction, text: string): string | null {
+  const value = parseWhole(text, 1, SEED_TIME_MAX)
+  if (value === null) return null
+  const days = Math.floor(value / 1440)
+  const hours = Math.floor((value % 1440) / 60)
+  const rest = value % 60
+  const parts: string[] = []
+  if (days > 0) parts.push(t('indexers.form.seedDays', { count: days }))
+  if (hours > 0) parts.push(t('indexers.form.seedHours', { count: hours }))
+  if (rest > 0) parts.push(t('indexers.form.seedMinutes', { count: rest }))
+  return parts.join(' ')
 }
 
 /** Ob der Server die Einstellungen so gespeichert hat. Fehlt ein Feld in der Antwort, ist es nicht gespeichert. */

@@ -59,6 +59,9 @@ logger = logging.getLogger("nexcrate.indexers")
 
 KINDS = ("newznab", "torznab")
 TIMEOUT = httpx.Timeout(30.0, connect=10.0)
+#: An indexer of a Prowlarr connection answers through Prowlarr, which asks the site first: Internet Archive took 24 to
+#: 44 s a search there (measured 02.10.2026).
+SLOW_TIMEOUT = httpx.Timeout(90.0, connect=10.0)
 MAX_BYTES = 10 * 1024 * 1024
 PACE_SECONDS = 2.0
 DEFAULT_PAUSE_SECONDS = 3600
@@ -152,6 +155,17 @@ def limit_reached(retry_after: int, paused_until: datetime | None = None) -> Ind
     )
 
 
+def switched_off() -> IndexerError:
+    return IndexerError(
+        meldung(
+            "indexer_switched_off",
+            "The indexer is switched off where it comes from (Prowlarr answers 410). Switch it on there, or wait for "
+            "the next sync.",
+        ),
+        502,
+    )
+
+
 def indexer_error(indexer_code: int | str) -> IndexerError:
     return IndexerError(
         meldung("indexer_error", f"The indexer reports error {indexer_code}.", indexer_code=indexer_code), 502
@@ -203,6 +217,7 @@ ERRORS = (
     (502, "indexer_key_rejected"),
     (502, "indexer_limit_reached"),
     (502, "indexer_error"),
+    (502, "indexer_switched_off"),
     (502, "indexer_not_newznab"),
     (502, "indexer_wrong_kind"),
     (502, "indexer_unreachable"),
@@ -301,6 +316,8 @@ class Target:
     api_key: str = ""
     #: A stored pause of a saved indexer.
     paused_until: datetime | None = None
+    #: Behind Prowlarr: the longer ``SLOW_TIMEOUT``.
+    slow: bool = False
 
 
 def paused_seconds(target: Target) -> int:
@@ -813,9 +830,9 @@ async def _read_limited(response: httpx.Response) -> bytes:
 class IndexerClient:
     """Use as ``async with IndexerClient(target) as indexer: ...``."""
 
-    def __init__(self, target: Target, *, timeout: httpx.Timeout | float = TIMEOUT) -> None:
+    def __init__(self, target: Target, *, timeout: httpx.Timeout | float | None = None) -> None:
         self.target = target
-        self._timeout = timeout
+        self._timeout = timeout if timeout is not None else (SLOW_TIMEOUT if target.slow else TIMEOUT)
         self._http: httpx.AsyncClient | None = None
         #: Milliseconds of the last request, without the pacing wait.
         self.took_ms = 0
@@ -889,6 +906,9 @@ class IndexerClient:
                 raise self._limit(headers)
             if status_code in (401, 403):
                 raise key_rejected()
+            # Prowlarr's code is its HTTP status; a code of another indexer at 410 stays that indexer's error.
+            if code == 410:
+                raise switched_off()
             raise indexer_error(code if code is not None else (re.sub(r"[^A-Za-z0-9_.-]", "", raw_code)[:16] or "?"))
         if status_code in (401, 403):
             raise key_rejected()
