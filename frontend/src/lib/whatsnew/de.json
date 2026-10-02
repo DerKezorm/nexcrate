@@ -140,6 +140,32 @@
       "small": [
         "Hört TMDB beim Einlesen auf zu antworten, sagt der Job das samt Grund, statt den Rest wortlos unbekannt zu lassen."
       ]
+    },
+    "0.4.0": {
+      "lead": "Diese Version holt die Indexer aus Prowlarr und hält sie aktuell, gibt jedem Torrent ein Seed-Ziel mit und räumt fertige Torrents aus dem Download-Programm, sobald das Ziel erreicht ist.",
+      "sections": [
+        {
+          "title": "Indexer aus Prowlarr",
+          "body": "Trag Prowlarr einmal mit Adresse und API-Schlüssel ein. nexcrate holt jeden Indexer daraus, sucht über Prowlarr und gleicht beim Speichern, auf Knopfdruck und alle 15 Minuten ab. Was du in Prowlarr änderst, anlegst oder löschst, kommt von selbst an. In Prowlarr ist nichts einzurichten.",
+          "where": "Einstellungen › Indexer › Prowlarr"
+        },
+        {
+          "title": "Seed-Ziele je Indexer",
+          "body": "Jeder Torrent-Indexer kann eine Ratio, eine Seed-Zeit und eine eigene Seed-Zeit für Staffelpakete tragen. Sie kommen aus Prowlarr, beim Übernehmen aus Radarr, Sonarr oder Lidarr mit, oder du trägst sie selbst ein. qBittorrent, Transmission und Deluge bekommen das Ziel beim Hinzufügen.",
+          "where": "Einstellungen › Indexer › Bearbeiten"
+        },
+        {
+          "title": "Fertige Torrents entfernen",
+          "body": "Ist ein Torrent importiert und hat sein Ziel erreicht, entfernt nexcrate ihn samt Dateien im Download-Ordner. Die Datei in der Bibliothek bleibt. Der Schalter ist bei neuen Download-Programmen an und bei vorhandenen nach dem Update aus.",
+          "where": "Einstellungen › Download-Programme › Bearbeiten"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Entfernt qBittorrent Torrents nach einer eigenen Regel, sagt die Karte des Download-Programms das.",
+        "Ein in Prowlarr abgeschalteter Indexer meldet sich in der Suche als abgeschaltet statt mit einem Fehler.",
+        "Mindest-Seeder gehen jetzt bis 1000."
+      ]
     }
   }
 }

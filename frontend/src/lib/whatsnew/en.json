@@ -140,6 +140,32 @@
       "small": [
         "When TMDB stops answering during a scan, the job says so with the reason, instead of leaving the rest unknown without a word."
       ]
+    },
+    "0.4.0": {
+      "lead": "This version takes the indexers from Prowlarr and keeps them up to date, gives every torrent a seeding goal, and clears finished torrents from the download client once the goal is reached.",
+      "sections": [
+        {
+          "title": "Indexers from Prowlarr",
+          "body": "Enter Prowlarr once with its address and API key. nexcrate takes every indexer from it, searches through Prowlarr and syncs on saving, on a click and every 15 minutes. What you change, add or delete in Prowlarr arrives by itself. There is nothing to set up in Prowlarr.",
+          "where": "Settings › Indexers › Prowlarr"
+        },
+        {
+          "title": "Seeding goals per indexer",
+          "body": "Every torrent indexer can carry a ratio, a seed time and a seed time of its own for season packs. They come from Prowlarr, along with an import from Radarr, Sonarr or Lidarr, or from you. qBittorrent, Transmission and Deluge get the goal when the torrent is added.",
+          "where": "Settings › Indexers › Edit"
+        },
+        {
+          "title": "Removing finished torrents",
+          "body": "Once a torrent is imported and has reached its goal, nexcrate removes it together with its files in the download folder. The file in the library stays. The switch is on for new download clients and off for existing ones after the update.",
+          "where": "Settings › Download clients › Edit"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When qBittorrent removes torrents by a rule of its own, the download client's card says so.",
+        "An indexer switched off in Prowlarr shows as switched off in a search instead of failing.",
+        "Minimum seeders now go up to 1000."
+      ]
     }
   }
 }
