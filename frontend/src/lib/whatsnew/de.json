@@ -199,6 +199,25 @@
       "small": [
         "Unter einem Unterpfad (NEXCRATE_URL_BASE) führte eine gelungene Anmeldung zurück auf die Anmeldeseite. Das ist behoben."
       ]
+    },
+    "0.6.0": {
+      "lead": "Diese Version lässt Bazarr nexcrate lesen, als wäre es Radarr und Sonarr, damit Bazarr Untertitel für deine Filme und Serien holt. Noch Beta. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Bazarr (Beta)",
+          "body": "Schalter an, einen Schlüssel nur mit Lesen anlegen und nexcrate in Bazarr zweimal eintragen: unter Radarr mit der Basis-URL /bazarr/radarr, unter Sonarr mit /bazarr/sonarr. Bazarr hält eine Live-Verbindung und erfährt von einer neuen oder ersetzten Datei in Sekunden. Jede Fassung ist in Bazarr ein eigener Eintrag, ihr Name kommt als Tag mit, so bekommt jede Fassung auf Wunsch ihr eigenes Sprachprofil. Ein Update von Bazarr kann die Verbindung brechen, bis nexcrate nachzieht.",
+          "where": "Einstellungen › System › Bazarr"
+        },
+        {
+          "title": "Untertitel gehen mit dem Video",
+          "body": "Untertitel, die Bazarr neben ein Video schreibt, merkt sich nexcrate. Sie werden mit dem Video umbenannt und wandern bei einem Upgrade oder beim Entfernen mit in den Papierkorb. Beim Einschalten sieht nexcrate einmal nach Untertiteln, die schon da liegen.",
+          "where": "Einstellungen › System › Bazarr"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Hängt ein zweites nexcrate am selben authentik, legt der authentik-Knopf eigene Namen an, statt die Anmeldung des ersten zu überschreiben."
+      ]
     }
   }
 }

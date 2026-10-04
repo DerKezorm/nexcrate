@@ -199,6 +199,25 @@
       "small": [
         "Under a sub path (NEXCRATE_URL_BASE) a successful sign-in led back to the sign-in page. That is fixed."
       ]
+    },
+    "0.6.0": {
+      "lead": "This version lets Bazarr read nexcrate as if it were Radarr and Sonarr, so Bazarr fetches subtitles for your movies and series. Still beta. No database change.",
+      "sections": [
+        {
+          "title": "Bazarr (beta)",
+          "body": "Switch it on, make a key with nothing but Read and enter nexcrate in Bazarr twice: under Radarr with the base URL /bazarr/radarr, under Sonarr with /bazarr/sonarr. Bazarr keeps a live connection and hears of a new or replaced file within seconds. Every version is an entry of its own in Bazarr, its name comes along as a tag, so each version can get a language profile of its own. A Bazarr update may break the connection until nexcrate catches up.",
+          "where": "Settings › System › Bazarr"
+        },
+        {
+          "title": "Subtitles go with the video",
+          "body": "nexcrate records the subtitles Bazarr writes next to a video. They are renamed with the video and go into the recycle folder with it on an upgrade or a removal. Switching on looks once for subtitles that are already there.",
+          "where": "Settings › System › Bazarr"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "With a second nexcrate at the same authentik, the authentik button makes names of its own instead of taking over the first one's sign-in."
+      ]
     }
   }
 }
