@@ -24,7 +24,8 @@
     "services": "Online services",
     "webhooks": "Webhooks",
     "tags": "Tags",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "bazarr": "Bazarr"
   },
   "versions": {
     "title": "Versions",

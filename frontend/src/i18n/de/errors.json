@@ -333,5 +333,6 @@
   "totp_off": "Der zweite Faktor ist ausgeschaltet.",
   "totp_pending_missing": "Melde dich noch einmal mit deinem Passwort an.",
   "totp_unreadable": "Der zweite Faktor lässt sich nicht lesen. Das Protokoll nennt den Grund und den Ausweg.",
-  "oidc_throttled": "Zu viele fehlgeschlagene Anmeldungen über den Anbieter. Warte ein paar Minuten."
+  "oidc_throttled": "Zu viele fehlgeschlagene Anmeldungen über den Anbieter. Warte ein paar Minuten.",
+  "bazarr_off": "Die Verbindung für Bazarr ist aus. Einschalten unter Einstellungen, System, Bazarr."
 }

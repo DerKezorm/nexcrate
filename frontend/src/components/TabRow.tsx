@@ -11,6 +11,8 @@ export type Tab<T extends string> = {
   symbol?: SymbolName
   /** Kleine Zahl hinter der Beschriftung, etwa offene Probleme. */
   count?: number
+  /** Kleine Marke hinter der Beschriftung, etwa "Beta". */
+  badge?: string
 }
 
 export function TabRow<T extends string>({
@@ -48,6 +50,13 @@ export function TabRow<T extends string>({
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
               <span className="rounded-full bg-ink-700 px-1.5 text-xs font-semibold text-mist-200 tabular-nums">{tab.count}</span>
+            )}
+            {/* Das Leerzeichen gehoert zum Namen des Reiters: vorgelesen "Bazarr Beta", nicht "BazarrBeta". */}
+            {tab.badge && ' '}
+            {tab.badge && (
+              <span className="rounded-full border border-info-500/40 bg-info-500/10 px-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-info-500">
+                {tab.badge}
+              </span>
             )}
           </button>
         )

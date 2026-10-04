@@ -6,6 +6,7 @@ import { PageTitle } from '../components/ui'
 import { AccountSettings } from './settings/AccountSettings'
 import { ApiKeySettings } from './settings/ApiKeySettings'
 import { AutomaticSettings } from './settings/AutomaticSettings'
+import { BazarrSettings } from './settings/BazarrSettings'
 import { BackupSettings } from './settings/BackupSettings'
 import { ClientSettings } from './settings/ClientSettings'
 import { FileSettings } from './settings/FileSettings'
@@ -95,6 +96,8 @@ export function SettingsPage() {
     // Schluessel fuer andere Programme gehoeren zum Zugang, deshalb neben dem Konto.
     { value: 'apikeys', label: t('settings.tabs.apikeys') },
     { value: 'webhooks', label: t('settings.tabs.webhooks') },
+    // Ein Programm, das nexcrate wie Radarr und Sonarr liest: neben Schluesseln und Webhooks.
+    { value: 'bazarr', label: t('settings.tabs.bazarr'), badge: t('common.beta') },
   ]
   const kindTabs: Tab<KindSection>[] = VERSION_KINDS.map((value) => ({ value, label: kindLabel(value), symbol: KIND_SYMBOL[value] }))
   // Jede App gehoert zu einer Medienart und traegt deren Zeichen.
@@ -146,6 +149,7 @@ export function SettingsPage() {
       {tab === 'backups' && <BackupSettings />}
       {tab === 'apikeys' && <ApiKeySettings />}
       {tab === 'webhooks' && <WebhookSettings />}
+      {tab === 'bazarr' && <BazarrSettings />}
       {/* "Ueber" steht seit der Fusszeile auf einer eigenen Seite; alte Verweise landen dort. */}
       {tab === 'about' && <Navigate to="/ueber" replace />}
     </div>

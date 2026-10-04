@@ -115,12 +115,15 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 /** Ein abgegrenzter Bereich: Ueberschrift, Erklaerung, Inhalt in einer Karte. */
 export function Section({
   title,
+  badge,
   intro,
   actions,
   children,
   className = '',
 }: {
   title: string
+  /** Kleine Marke hinter dem Titel, etwa "Beta". */
+  badge?: ReactNode
   intro?: ReactNode
   actions?: ReactNode
   children: ReactNode
@@ -130,7 +133,10 @@ export function Section({
     <Card className={'flex flex-col gap-4 ' + className}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">{title}</h2>
+          <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+            {title}
+            {badge}
+          </h2>
           {intro && <p className="mt-1 max-w-3xl text-sm text-mist-500">{intro}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

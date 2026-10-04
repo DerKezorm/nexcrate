@@ -50,6 +50,7 @@ from .routers import auth, docs, health, imports, library, setup, sources, versi
 from .routers import auto_tags as auto_tags_router
 from .routers import automatic as automatic_router
 from .routers import backups as backups_router
+from .routers import bazarr as bazarr_router
 from .routers import blocklist as blocklist_router
 from .routers import companions as companions_router
 from .routers import disk as disk_router
@@ -243,6 +244,14 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
         ),
     ),
     (totp_router.router, None),
+    (bazarr_router.settings_router, None),
+    (
+        bazarr_router.router,
+        (
+            "Bazarr reads nexcrate as Radarr and Sonarr below /bazarr: a key with the scope read in the address or a "
+            "header, never the session, and only while the owner has the connection turned on."
+        ),
+    ),
     (totp_router.public_router, "The code step of the sign-in runs between the password and the session."),
 ]
 

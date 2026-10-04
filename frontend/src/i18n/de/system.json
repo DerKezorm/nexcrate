@@ -228,5 +228,32 @@
       "failed": "aufgegeben ({{code}})",
       "pending": "wartet, Versuch {{attempts}}"
     }
+  },
+  "bazarr": {
+    "title": "Bazarr",
+    "intro": "Bazarr sucht Untertitel. Es kennt nur Radarr und Sonarr, darum antwortet nexcrate ihm als beides: Filme als Radarr, Serien als Sonarr.",
+    "switch": "Bazarr antworten",
+    "hint": "Aus, bis du es einschaltest. Eingeschaltet darf Bazarr die Bibliothek mit einem Schlüssel lesen, und nexcrate merkt sich die Untertitel, die Bazarr schreibt, damit sie mit ihrem Video wandern.",
+    "beta": "Beta: gebaut gegen Bazarr 1.6. nexcrate ahmt einen Teil der API von Radarr und Sonarr nach, darum kann ein Update von Bazarr die Verbindung brechen, bis nexcrate nachzieht. Sag uns dann bitte auf GitHub Bescheid.",
+    "savedOn": "nexcrate antwortet jetzt Bazarr.",
+    "savedOff": "nexcrate antwortet Bazarr nicht mehr.",
+    "inBazarr": "In Bazarr",
+    "inBazarrIntro": "In Bazarr unter Einstellungen, Radarr und Einstellungen, Sonarr jeweils einschalten und diese Werte eintragen. Die beiden unterscheiden sich nur in der Basis-URL. Adresse und Port sind die, unter denen diese Seite gerade läuft; läuft Bazarr im selben Docker-Netz, passt oft der Containername besser.",
+    "asRadarr": "Als Radarr (Filme)",
+    "asSonarr": "Als Sonarr (Serien)",
+    "address": "Adresse",
+    "port": "Port",
+    "baseUrl": "Basis-URL",
+    "ssl": "SSL",
+    "yes": "ja",
+    "no": "nein",
+    "live": "live seit {{at}}",
+    "asked": "zuletzt gefragt {{at}}",
+    "notYet": "noch nicht gesehen",
+    "key": "API-Schlüssel: Gib Bazarr einen eigenen, nur mit Lesen, für beide Teile denselben. Bazarr schickt ihn in der Adresse mit, wie an Radarr.",
+    "keyLink": "Schlüssel anlegen",
+    "noteVersions": "Jede Fassung ist in Bazarr ein eigener Eintrag, ein Film in 1080p und in 4K steht dort also zweimal. Der Name der Fassung kommt als Tag mit, und Bazarr kann je Tag ein eigenes Sprachprofil vergeben.",
+    "noteSubtitles": "Untertitel, die Bazarr neben ein Video schreibt, gehen mit dem Video: beim Umbenennen mit, bei einem Upgrade oder beim Entfernen mit in den Papierkorb. Beim Einschalten sieht nexcrate einmal nach Untertiteln, die schon da liegen.",
+    "notePaths": "Sieht Bazarr die Medien unter anderen Pfaden als nexcrate, in Bazarr Pfadzuordnungen eintragen."
   }
 }

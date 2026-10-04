@@ -108,5 +108,6 @@
     "gb": "{{value}} GB",
     "tb": "{{value}} TB",
     "minutes": "{{value}} Min."
-  }
+  },
+  "beta": "Beta"
 }

@@ -1,6 +1,6 @@
 import type { KindSection } from './useKindLabel'
 
-export type SettingsTab = 'versions' | 'quality' | 'services' | 'indexers' | 'clients' | 'files' | 'automatic' | 'servers' | 'notifications' | 'tags' | 'import' | 'logs' | 'account' | 'backups' | 'apikeys' | 'webhooks' | 'about'
+export type SettingsTab = 'versions' | 'quality' | 'services' | 'indexers' | 'clients' | 'files' | 'automatic' | 'servers' | 'notifications' | 'tags' | 'import' | 'logs' | 'account' | 'backups' | 'apikeys' | 'webhooks' | 'bazarr' | 'about'
 
 /** Der Reiter "Import". Die leere Bibliothek und die alte Adresse `/uebernahme` fuehren hierher. */
 export const IMPORT_TAB_PATH = '/einstellungen?reiter=import'
@@ -39,7 +39,7 @@ export const AUTOMATIC_TAB_PATH = '/einstellungen?reiter=automatik'
 export const TMDB_TAB_PATH = '/einstellungen?reiter=dienste'
 
 /** Was unter "System" liegt und deshalb eine zweite Reiterreihe bekommt. */
-export const SYSTEM_TABS: readonly SettingsTab[] = ['logs', 'account', 'backups', 'apikeys', 'webhooks']
+export const SYSTEM_TABS: readonly SettingsTab[] = ['logs', 'account', 'backups', 'apikeys', 'webhooks', 'bazarr']
 
 /**
  * ⚠️ Deutsche Woerter in der Adresse, englische Werte im Code, wie in nexbeat.
@@ -67,6 +67,7 @@ const FROM_ADDRESS: Record<string, SettingsTab> = {
   sicherungen: 'backups',
   schluessel: 'apikeys',
   webhooks: 'webhooks',
+  bazarr: 'bazarr',
   ueber: 'about',
 }
 
@@ -87,6 +88,7 @@ const TO_ADDRESS: Record<SettingsTab, string> = {
   backups: 'sicherungen',
   apikeys: 'schluessel',
   webhooks: 'webhooks',
+  bazarr: 'bazarr',
   about: 'ueber',
 }
 

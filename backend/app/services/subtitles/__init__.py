@@ -7,6 +7,8 @@
   into the recycle folder on an upgrade. No database.
 * ``records``: the table ``extra_files``: what nexcrate placed, what belongs to a version's file, the title page list.
 
-⚠️ nexcrate only ever touches subtitle files it placed itself, recorded in ``extra_files``. A file placed by Radarr or
-the owner is never overwritten, renamed, moved or deleted.
+⚠️ nexcrate only ever touches subtitle files recorded in ``extra_files``. Without the connection for Bazarr those are
+the ones it placed itself, and a file placed by Radarr or the owner is never overwritten, renamed, moved or deleted.
+With it switched on, every subtitle file next to a video and named after it is recorded (``bazarr.rescan``, once when
+switching on and whenever Bazarr says it wrote one) and goes where the video goes.
 """

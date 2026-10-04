@@ -71,6 +71,26 @@ export type Webhook = {
   failed: number
 }
 
+/** Ein Teil der Verbindung fuer Bazarr: als Radarr (Filme) oder als Sonarr (Serien). */
+export type BazarrPart = {
+  live: boolean
+  since: string | null
+  last_request: string | null
+}
+
+export type BazarrSettings = {
+  enabled: boolean
+  url_base: string
+  radarr: BazarrPart
+  sonarr: BazarrPart
+}
+
+/** System, "Bazarr": nexcrate antwortet Bazarr wie Radarr und Sonarr (Issue #8). */
+export const bazarrApi = {
+  get: () => api.get<BazarrSettings>('/bazarr'),
+  save: (enabled: boolean) => api.put<BazarrSettings>('/bazarr', { enabled }),
+}
+
 export const systemSettingsApi = {
   read: () => api.get<SystemSettings>('/system-settings'),
   /** 422 `invalid_input` fuer eine Adresse, die keine ist. */

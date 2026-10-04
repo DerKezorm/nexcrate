@@ -228,5 +228,32 @@
       "failed": "given up ({{code}})",
       "pending": "waiting, try {{attempts}}"
     }
+  },
+  "bazarr": {
+    "title": "Bazarr",
+    "intro": "Bazarr finds subtitles. It only knows Radarr and Sonarr, so nexcrate answers it as both: movies as Radarr, series as Sonarr.",
+    "switch": "Answer Bazarr",
+    "hint": "Off until you switch it on. On, Bazarr may read the library with a key, and nexcrate records the subtitles Bazarr writes so they move with their video.",
+    "beta": "Beta: built against Bazarr 1.6. nexcrate imitates part of Radarr's and Sonarr's API, so a Bazarr update may break the connection until nexcrate catches up. If it does, please tell us on GitHub.",
+    "savedOn": "nexcrate answers Bazarr now.",
+    "savedOff": "nexcrate no longer answers Bazarr.",
+    "inBazarr": "In Bazarr",
+    "inBazarrIntro": "In Bazarr, switch on Settings, Radarr and Settings, Sonarr and enter these values. The two differ only in the base URL. Address and port are the ones this page runs under; when Bazarr runs in the same Docker network, the container name often fits better.",
+    "asRadarr": "As Radarr (movies)",
+    "asSonarr": "As Sonarr (series)",
+    "address": "Address",
+    "port": "Port",
+    "baseUrl": "Base URL",
+    "ssl": "SSL",
+    "yes": "yes",
+    "no": "no",
+    "live": "live since {{at}}",
+    "asked": "last asked {{at}}",
+    "notYet": "not seen yet",
+    "key": "API key: give Bazarr a key of its own with nothing but Read, the same for both parts. Bazarr sends it in the address, as it does to Radarr.",
+    "keyLink": "Make a key",
+    "noteVersions": "Every version is an entry of its own in Bazarr, so a movie in 1080p and in 4K shows up twice. The version's name comes along as a tag, and Bazarr can give each tag a language profile of its own.",
+    "noteSubtitles": "Subtitles Bazarr writes next to a video go where the video goes: renamed with it, into the recycle folder with it on an upgrade or a removal. Switching on looks once for subtitles that are already there.",
+    "notePaths": "If Bazarr sees the media under other paths than nexcrate, enter path mappings in Bazarr."
   }
 }

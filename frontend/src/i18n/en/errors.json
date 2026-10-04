@@ -333,5 +333,6 @@
   "totp_off": "The second factor is off.",
   "totp_pending_missing": "Sign in with your password again.",
   "totp_unreadable": "The second factor cannot be read. The log names the reason and the way out.",
-  "oidc_throttled": "Too many failed sign-ins through the provider. Wait a few minutes."
+  "oidc_throttled": "Too many failed sign-ins through the provider. Wait a few minutes.",
+  "bazarr_off": "The connection for Bazarr is off. Switch it on under Settings, System, Bazarr."
 }

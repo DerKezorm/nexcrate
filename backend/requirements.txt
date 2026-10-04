@@ -1,5 +1,7 @@
 fastapi==0.141.1
 uvicorn==0.52.4
+# WebSockets for uvicorn: Bazarr's live connection (SignalR). Pure Python, on top of h11, which uvicorn has.
+wsproto==1.3.2
 sqlalchemy==2.0.52
 pydantic==2.13.5
 pydantic-settings==2.15.0
