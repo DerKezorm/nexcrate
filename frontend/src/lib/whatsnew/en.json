@@ -180,6 +180,25 @@
       "small": [
         "The sentence about a missing folder no longer speaks of a movie when it is about a series."
       ]
+    },
+    "0.5.0": {
+      "lead": "This version signs you in through authentik if you like, and guards the sign-in with a password with a second factor. No database change.",
+      "sections": [
+        {
+          "title": "Sign-in through authentik",
+          "body": "Enter the address of authentik and an API token, and nexcrate creates the provider and the application in authentik and lets in only the token's account. Then you link your account once. Only that identity opens nexcrate, every other one is turned away. Other providers such as Authelia, Keycloak or Pocket ID work by hand, and without a token there is a blueprint. Once linked, the sign-in with a password can be switched off; NEXCRATE_PASSWORD_LOGIN=1 opens it again in an emergency.",
+          "where": "Settings › System › Account"
+        },
+        {
+          "title": "Second factor",
+          "body": "After the password, nexcrate can ask for a code from an authenticator app. You get eight recovery codes that appear only once. Without the phone and the codes, python -m app.cli reset-second-factor switches the second factor off again.",
+          "where": "Settings › System › Account"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Under a sub path (NEXCRATE_URL_BASE) a successful sign-in led back to the sign-in page. That is fixed."
+      ]
     }
   }
 }

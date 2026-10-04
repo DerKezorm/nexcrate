@@ -62,3 +62,7 @@ services:
       # Fixes the log mode: quiet, normal, detailed or trace. Empty: the mode chosen in the
       # interface. Meant for the case that nexcrate does not start at all.
       NEXCRATE_LOG_LEVEL: ${NEXCRATE_LOG_LEVEL:-}
+
+      # The emergency switch for the sign-in through authentik: 1 opens the sign-in with a
+      # password again, even when it was switched off in the interface. Leave it empty.
+      NEXCRATE_PASSWORD_LOGIN: ${NEXCRATE_PASSWORD_LOGIN:-}

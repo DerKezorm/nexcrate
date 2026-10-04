@@ -180,6 +180,25 @@
       "small": [
         "Der Satz zum fehlenden Ordner spricht bei Serien nicht mehr vom Film."
       ]
+    },
+    "0.5.0": {
+      "lead": "Diese Version meldet dich über authentik an, wenn du willst, und schützt die Anmeldung mit Passwort mit einem zweiten Faktor. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Anmeldung über authentik",
+          "body": "Adresse von authentik und ein API-Token eintragen, dann legt nexcrate in authentik Anbieter und Anwendung an und lässt nur das Konto des Tokens hinein. Danach verknüpfst du dein Konto einmal. Nur diese Identität öffnet nexcrate, jede andere weist nexcrate ab. Andere Anbieter wie Authelia, Keycloak oder Pocket ID gehen von Hand, ohne Token auch über einen Blueprint. Ist verknüpft, lässt sich die Anmeldung mit Passwort ausschalten; NEXCRATE_PASSWORD_LOGIN=1 öffnet sie im Notfall wieder.",
+          "where": "Einstellungen › System › Konto"
+        },
+        {
+          "title": "Zweiter Faktor",
+          "body": "Nach dem Passwort fragt nexcrate auf Wunsch nach einem Code aus einer Authenticator-App. Dazu gibt es acht Wiederherstellungscodes, die nur einmal erscheinen. Ohne Handy und Codes schaltet python -m app.cli reset-second-factor den zweiten Faktor wieder aus.",
+          "where": "Einstellungen › System › Konto"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Unter einem Unterpfad (NEXCRATE_URL_BASE) führte eine gelungene Anmeldung zurück auf die Anmeldeseite. Das ist behoben."
+      ]
     }
   }
 }
