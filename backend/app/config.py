@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     #: A sub path nexcrate answers under behind a proxy, such as ``/nexcrate`` (Arr's "URL Base"). Empty: the root.
     #: Takes effect at the next start. ``/api/health`` answers without it too, for the container's health check.
     url_base: str = ""
+    #: The emergency switch: ``1`` opens the sign-in with a password even when it was switched off for OpenID Connect,
+    #: for the day the provider is gone. Empty or anything else leaves the setting in the interface in charge.
+    password_login: str = ""
 
     _generated_key: str | None = PrivateAttr(default=None)
 

@@ -1,6 +1,7 @@
 """Command line tools for the operator.
 
     python -m app.cli reset-password
+    python -m app.cli reset-second-factor
 
 In the container::
 
@@ -61,6 +62,7 @@ def reset_password(read_password: Callable[[str], str] | None = None, out: TextI
     from .db import SessionLocal
     from .models import ACCOUNT_ID, Account, Session
     from .security import PASSWORD_MIN_LENGTH, hash_password
+    from .services import sign_in
 
     read = read_password or getpass.getpass
     stream = out or sys.stdout
@@ -97,11 +99,52 @@ def reset_password(read_password: Callable[[str], str] | None = None, out: TextI
         account.password_hash = hash_password(password)
         result = db.execute(delete(Session))
         db.commit()
+        password_open = sign_in.password_login_open(db)
 
     ended = int(getattr(result, "rowcount", 0) or 0)
     logger.warning("Password reset from the command line, ended %d sessions", ended)
     say("The password has been changed and every session has been ended. Log in with the new password.")
     say("If logins were throttled, wait up to five minutes or restart nexcrate.")
+    if not password_open:
+        say(
+            "The sign-in with a password is switched off for OpenID Connect. To use it, start nexcrate with "
+            "NEXCRATE_PASSWORD_LOGIN=1 and switch it on again under Settings, System, Account."
+        )
+    return 0
+
+
+def reset_second_factor(out: TextIO | None = None) -> int:
+    """Switch the second factor off, for a lost phone without its recovery codes, or a secret key that changed."""
+    from sqlalchemy.exc import OperationalError
+
+    from .config import get_settings
+    from .db import SessionLocal
+    from .models import ACCOUNT_ID, Account
+    from .services import totp
+
+    stream = out or sys.stdout
+
+    def say(text: str) -> None:
+        print(text, file=stream)
+
+    if not get_settings().database_path.is_file():
+        say(NO_ACCOUNT)
+        return 1
+    with SessionLocal() as db:
+        try:
+            account = db.get(Account, ACCOUNT_ID)
+        except OperationalError:
+            account = None
+        if account is None:
+            say(NO_ACCOUNT)
+            return 1
+        if not totp.enabled(db):
+            say("The second factor is off already. Nothing was changed.")
+            return 0
+        totp.remove(db)
+        db.commit()
+    logger.warning("Second factor switched off from the command line")
+    say("The second factor is off. Log in with your password and switch it on again under Settings, System, Account.")
     return 0
 
 
@@ -113,6 +156,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="set a new password for the account and end every session",
         description="Asks for the new password twice, without showing it, and ends every session.",
     )
+    commands.add_parser(
+        "reset-second-factor",
+        help="switch the second factor off",
+        description="For a lost phone without its recovery codes. The password stays as it is.",
+    )
     arguments = parser.parse_args(argv)
 
     _drop_root()
@@ -121,6 +169,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     logs.setup(console=False)
     if arguments.command == "reset-password":
         return reset_password()
+    if arguments.command == "reset-second-factor":
+        return reset_second_factor()
     return 2
 
 

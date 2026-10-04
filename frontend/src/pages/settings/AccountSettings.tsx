@@ -9,14 +9,18 @@ import { isLanguage, LANGUAGES } from '../../i18n/languages'
 import { formatDate } from '../../lib/format'
 import { Detail } from './parts'
 import { PasswordForm } from './PasswordForm'
+import { SignInSettings } from './SignInSettings'
+import { TwoFactorSection } from './TwoFactorSection'
 
-/** Das eine Konto: Name, Sprache, Passwort, abmelden. */
+/** Das eine Konto: Name, Sprache, Passwort, zweiter Faktor, Anmeldung ueber einen Anbieter, abmelden. */
 export function AccountSettings() {
   const { t, i18n } = useTranslation()
   const { me, setLanguage, logout, logoutAll } = useAuth()
   const [languageProblem, setLanguageProblem] = useState<unknown>(null)
   const [leaving, setLeaving] = useState<'here' | 'everywhere' | null>(null)
   const [leaveProblem, setLeaveProblem] = useState<unknown>(null)
+  // Aus: Passwort und zweiter Faktor gelten nur noch fuer den Notzugang (NEXCRATE_PASSWORD_LOGIN=1).
+  const [passwordLogin, setPasswordLogin] = useState(true)
 
   async function chooseLanguage(value: string) {
     if (!isLanguage(value)) return
@@ -66,7 +70,11 @@ export function AccountSettings() {
         {languageProblem !== null && <FormMessage>{errorText(t, languageProblem)}</FormMessage>}
       </Section>
 
-      <PasswordForm username={me.username} />
+      <PasswordForm username={me.username} emergencyOnly={!passwordLogin} />
+
+      <TwoFactorSection emergencyOnly={!passwordLogin} />
+
+      <SignInSettings onPasswordLogin={setPasswordLogin} />
 
       <Section title={t('system.account.sessions.title')} intro={t('system.account.sessions.intro')}>
         <div className="flex flex-wrap gap-2">

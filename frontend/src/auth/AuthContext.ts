@@ -19,7 +19,9 @@ export type AuthValue = {
   me: Me | null
   /** Startet neu, ohne den aktuellen Bildschirm vorher wegzunehmen. */
   retry: () => Promise<void>
-  login: (username: string, password: string) => Promise<void>
+  /** `second_factor`: das Passwort stimmte, jetzt fehlt der Code (`loginCode`). */
+  login: (username: string, password: string) => Promise<'second_factor' | void>
+  loginCode: (code: string) => Promise<void>
   setup: (username: string, password: string, language: Language) => Promise<void>
   logout: () => Promise<void>
   logoutAll: () => Promise<void>

@@ -68,6 +68,7 @@ from .routers import music_search as music_search_router
 from .routers import naming as naming_router
 from .routers import notifications as notifications_router
 from .routers import numbering as numbering_router
+from .routers import oidc as oidc_router
 from .routers import open as open_router
 from .routers import pairings as pairings_router
 from .routers import profiles as profiles_router
@@ -83,6 +84,7 @@ from .routers import system_settings as system_settings_router
 from .routers import tags as tags_router
 from .routers import takeover as takeover_router
 from .routers import tmdb as tmdb_router
+from .routers import totp as totp_router
 from .routers import trash as trash_router
 from .routers import v1 as v1_router
 from .routers import v1_back as v1_back_router
@@ -232,6 +234,16 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
     (whats_new_router.router, None),
     (notifications_router.router, None),
     (prowlarr_router.router, None),
+    (oidc_router.router, None),
+    (
+        oidc_router.public_router,
+        (
+            "Signing in through OpenID Connect runs before there is a session: what the sign-in page shows, the way "
+            "to the provider and the way back."
+        ),
+    ),
+    (totp_router.router, None),
+    (totp_router.public_router, "The code step of the sign-in runs between the password and the session."),
 ]
 
 # Background jobs, started in the lifespan. The first one takes an expired deep log mode back.

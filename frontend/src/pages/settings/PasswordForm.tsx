@@ -9,7 +9,7 @@ import { PasswordField } from '../../components/PasswordField'
 import { Button, FormMessage, Section } from '../../components/ui'
 
 /** Passwort aendern. Der Server meldet danach alle anderen Geraete ab, dieses bleibt angemeldet. */
-export function PasswordForm({ username }: { username: string }) {
+export function PasswordForm({ username, emergencyOnly = false }: { username: string; emergencyOnly?: boolean }) {
   const { t } = useTranslation()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -52,6 +52,7 @@ export function PasswordForm({ username }: { username: string }) {
 
   return (
     <Section title={t('system.account.password.title')} intro={t('system.account.password.intro')}>
+      {emergencyOnly && <FormMessage tone="info">{t('system.account.emergencyOnly')}</FormMessage>}
       <form onSubmit={(event) => void submit(event)} className="flex max-w-md flex-col gap-4" noValidate>
         {/* Fuer Passwortmanager: Sie ordnen das neue Passwort so dem richtigen Konto zu. */}
         <input type="text" name="username" autoComplete="username" value={username} readOnly hidden />

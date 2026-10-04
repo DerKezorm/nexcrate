@@ -6,6 +6,7 @@ import hmac
 import logging
 import unicodedata
 from datetime import datetime
+from typing import Literal
 
 from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
@@ -15,7 +16,7 @@ from ..deps import CurrentAccount, CurrentSession, DbSession
 from ..meldungen import error, error_responses
 from ..models import ACCOUNT_ID, Account
 from ..security import PASSWORD_MIN_LENGTH, dummy_hash, hash_password, verify_password
-from ..services import anmeldebremse, known_devices, sessions
+from ..services import anmeldebremse, known_devices, sessions, sign_in, totp
 
 logger = logging.getLogger("nexcrate.auth")
 
@@ -36,6 +37,12 @@ class Me(BaseModel):
     username: str = Field(examples=["owner"])
     language: str = Field(description="Language code of the interface.", examples=["en"])
     created_at: datetime = Field(description="When the account was created, UTC.")
+
+
+class SecondFactorOut(BaseModel):
+    """The password was right, and a code from the app is still needed (``POST /api/auth/login/totp``)."""
+
+    second_factor: Literal[True] = True
 
 
 class LoginIn(BaseModel):
@@ -99,18 +106,20 @@ def _same_username(given: str, stored: str) -> bool:
 
 @public_router.post(
     "/login",
-    response_model=Me,
+    response_model=Me | SecondFactorOut,
     summary="Log in with username and password",
     description=(
         "Checks username and password and starts a session: the answer sets the cookie `nexcrate_session`. "
         "A cookie of an earlier session sent along is ended. Three failed attempts are free, after that "
         "the wait grows up to five minutes; the answer then is 429 with `retry_after` and a Retry-After header. "
         "A successful login also sets `nexcrate_device`: a browser that logged in before is braked on its own counter, "
-        "so failures from elsewhere never lock it out."
+        "so failures from elsewhere never lock it out. With the second factor on, a right password answers "
+        "`second_factor: true` and the cookie `nexcrate_pending` instead of a session; the code follows at "
+        "POST /api/auth/login/totp. Switched off for OpenID Connect, the answer is 403 `password_login_off`."
     ),
-    responses=error_responses((401, "login_failed"), (429, "login_throttled")),
+    responses=error_responses((401, "login_failed"), (403, "password_login_off"), (429, "login_throttled")),
 )
-def login(payload: LoginIn, request: Request, response: Response, db: DbSession) -> Me:
+def login(payload: LoginIn, request: Request, response: Response, db: DbSession) -> Me | SecondFactorOut:
     account = db.get(Account, ACCOUNT_ID)
     matches = account is not None and _same_username(payload.username, account.username)
     device = known_devices.known(request) if matches else None
@@ -123,12 +132,23 @@ def login(payload: LoginIn, request: Request, response: Response, db: DbSession)
     if wait:
         logger.warning("Login refused, the brake is on for %d more seconds", wait)
         raise throttled(wait)
+    if not sign_in.password_login_open(db):
+        # Public anyway: the sign-in page shows no password form then (GET /api/oidc/state).
+        logger.info("Login refused, the sign-in with a password is switched off")
+        raise error("password_login_off", "The sign-in with a password is switched off.", 403)
     # A wrong username still costs a bcrypt check, so the answer time tells nothing.
     password_ok = verify_password(payload.password, account.password_hash if account and matches else dummy_hash())
     if account is None or not matches or not password_ok:
         anmeldebremse.failed(key)
         logger.info("Login failed")
         raise error("login_failed", "Username or password is wrong.", 401)
+    if totp.enabled(db):
+        # The brake is reset by the code step, not here: knowing the password is no way around wrong codes.
+        from .totp import set_pending_cookie
+
+        set_pending_cookie(response, request, totp.start_pending(key))
+        logger.info("Password right, waiting for the code of the second factor")
+        return SecondFactorOut()
     anmeldebremse.succeeded(key)
     sessions.end_token(db, request.cookies.get(sessions.COOKIE_NAME))
     sessions.start(db, response, request)

@@ -7,6 +7,32 @@ export type Me = {
   created_at: string
 }
 
+/** Die Antwort der Anmeldung: das Konto, oder mit zweitem Faktor die Bitte um den Code. */
+export type LoginAnswer = Me | { second_factor: true }
+
+export type TotpState = { enabled: boolean; recovery_codes_left: number }
+export type TotpEnrolment = { seed: string; uri: string; qr_svg: string }
+export type RecoveryCodes = { recovery_codes: string[] }
+
+export type OidcState = { enabled: boolean; provider_name: string; password_login: boolean }
+
+export type OidcConfig = {
+  configured: boolean
+  issuer: string
+  client_id: string
+  provider_name: string
+  redirect_uri: string
+  linked: boolean
+  linked_name: string
+  linked_at: string
+  password_login: boolean
+  password_login_open: boolean
+  emergency_switch: boolean
+}
+
+export type AuthentikStep = { key: string; ok: boolean; detail: string }
+export type AuthentikSetup = { ok: boolean; steps: AuthentikStep[]; owner: string; provider: OidcConfig }
+
 export type SetupStatus = {
   setup_required: boolean
   version: string

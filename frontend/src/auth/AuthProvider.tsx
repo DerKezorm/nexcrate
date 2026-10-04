@@ -68,9 +68,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const retry = useCallback(() => boot(true), [boot])
 
   const login = useCallback(
-    async (username: string, password: string) => {
+    async (username: string, password: string): Promise<'second_factor' | void> => {
       const run = ++generation.current
-      const me = await authApi.login(username, password)
+      const answer = await authApi.login(username, password)
+      if ('second_factor' in answer) return 'second_factor'
+      await enter(answer, run)
+    },
+    [enter],
+  )
+
+  const loginCode = useCallback(
+    async (code: string) => {
+      const run = ++generation.current
+      const me = await authApi.loginCode(code)
       await enter(me, run)
     },
     [enter],
@@ -122,12 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       me: state.phase === 'ready' ? state.me : null,
       retry,
       login,
+      loginCode,
       setup,
       logout,
       logoutAll,
       setLanguage,
     }),
-    [state, retry, login, setup, logout, logoutAll, setLanguage],
+    [state, retry, login, loginCode, setup, logout, logoutAll, setLanguage],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
