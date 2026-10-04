@@ -27,8 +27,10 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 from sqlalchemy.orm import Session as OrmSession
@@ -194,11 +196,32 @@ async def _flow(api: _Api, designation: str, preferred: str) -> Any:
     return _pk(results[0], "flow")
 
 
-async def _provider(api: _Api, redirect_uri: str, signing_key: Any, mappings: list[Any]) -> tuple[Any, str, str, str]:
+def _instance_names(redirect_uri: str) -> tuple[str, str]:
+    """Name and slug of this instance when another nexcrate holds the plain names already."""
+    host = urlsplit(redirect_uri).netloc.lower()
+    suffix = re.sub(r"[^a-z0-9]+", "-", host).strip("-")[:40] or "instance"
+    return f"{NAME} ({host})", f"{SLUG}-{suffix}"
+
+
+async def _names(api: _Api, redirect_uri: str) -> tuple[str, str]:
+    """The plain names, unless a provider of that name sends people back to another address: then a second nexcrate is
+    at work at this authentik, and taking the plain names would break the first one's sign-in."""
+    existing = await api.find_one("/providers/oauth2/", {"name": NAME}, "name", NAME)
+    if existing is None:
+        return NAME, SLUG
+    urls = {str(entry.get("url", "")) for entry in existing.get("redirect_uris") or [] if isinstance(entry, dict)}
+    if not urls or redirect_uri in urls:
+        return NAME, SLUG
+    return _instance_names(redirect_uri)
+
+
+async def _provider(
+    api: _Api, redirect_uri: str, signing_key: Any, mappings: list[Any], name: str = NAME
+) -> tuple[Any, str, str, str]:
     authorization = await _flow(api, "authorization", PREFERRED_AUTHORIZATION_FLOW)
     invalidation = await _flow(api, "invalidation", PREFERRED_INVALIDATION_FLOW)
     body = {
-        "name": NAME,
+        "name": name,
         "authorization_flow": authorization,
         "invalidation_flow": invalidation,
         "client_type": "confidential",
@@ -209,13 +232,13 @@ async def _provider(api: _Api, redirect_uri: str, signing_key: Any, mappings: li
         "property_mappings": mappings,
         "include_claims_in_id_token": True,
     }
-    existing = await api.find_one("/providers/oauth2/", {"name": NAME}, "name", NAME)
+    existing = await api.find_one("/providers/oauth2/", {"name": name}, "name", name)
     if existing is None:
         answer = await api.call("POST", "/providers/oauth2/", body=body)
-        note = f"created the provider {NAME!r}"
+        note = f"created the provider {name!r}"
     else:
         answer = await api.call("PATCH", f"/providers/oauth2/{_pk(existing, 'provider')}/", body=body)
-        note = f"updated the existing provider {NAME!r}"
+        note = f"updated the existing provider {name!r}"
     if not isinstance(answer, dict):
         raise StepFailed("the provider call answered without an object")
     client_id = str(answer.get("client_id") or "")
@@ -225,15 +248,15 @@ async def _provider(api: _Api, redirect_uri: str, signing_key: Any, mappings: li
     return _pk(answer, "provider"), client_id, client_secret, note
 
 
-async def _application(api: _Api, provider_pk: Any) -> tuple[Any, str]:
-    body = {"name": NAME, "slug": SLUG, "provider": provider_pk}
-    existing = await api.find_one("/core/applications/", {"slug": SLUG}, "slug", SLUG)
+async def _application(api: _Api, provider_pk: Any, name: str = NAME, slug: str = SLUG) -> tuple[Any, str]:
+    body = {"name": name, "slug": slug, "provider": provider_pk}
+    existing = await api.find_one("/core/applications/", {"slug": slug}, "slug", slug)
     if existing is None:
         answer = await api.call("POST", "/core/applications/", body=body)
-        note = f"created the application {SLUG!r}"
+        note = f"created the application {slug!r}"
     else:
-        answer = await api.call("PATCH", f"/core/applications/{SLUG}/", body=body)
-        note = f"updated the existing application {SLUG!r}"
+        answer = await api.call("PATCH", f"/core/applications/{slug}/", body=body)
+        note = f"updated the existing application {slug!r}"
     if not isinstance(answer, dict):
         raise StepFailed("the application call answered without an object")
     return _pk(answer, "application"), note
@@ -254,8 +277,8 @@ async def _binding(api: _Api, application_pk: Any, user_pk: Any, username: str) 
     return f"the application lets only {username!r} in"
 
 
-def issuer_for(base_url: str) -> str:
-    return f"{base_url.rstrip('/')}/application/o/{SLUG}/"
+def issuer_for(base_url: str, slug: str = SLUG) -> str:
+    return f"{base_url.rstrip('/')}/application/o/{slug}/"
 
 
 async def setup(db: OrmSession, base_url: str, token: str, redirect_uri: str) -> SetupResult:
@@ -268,6 +291,7 @@ async def setup(db: OrmSession, base_url: str, token: str, redirect_uri: str) ->
     provider_pk: Any = None
     application_pk: Any = None
     client_id = client_secret = ""
+    name, slug = NAME, SLUG
     try:
         for key in STEP_KEYS:
             try:
@@ -281,11 +305,13 @@ async def setup(db: OrmSession, base_url: str, token: str, redirect_uri: str) ->
                 elif key == "mappings":
                     mappings, detail = await _mappings(api)
                 elif key == "provider":
+                    name, slug = await _names(api, redirect_uri)
+                    result.issuer = issuer_for(base_url, slug)
                     provider_pk, client_id, client_secret, detail = await _provider(
-                        api, redirect_uri, signing_key, mappings
+                        api, redirect_uri, signing_key, mappings, name
                     )
                 elif key == "application":
-                    application_pk, detail = await _application(api, provider_pk)
+                    application_pk, detail = await _application(api, provider_pk, name, slug)
                 elif key == "binding":
                     detail = await _binding(api, application_pk, user_pk, result.owner)
                 else:
