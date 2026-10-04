@@ -1,8 +1,8 @@
 """Server-side sessions and the cookie that carries them.
 
 The token leaves the backend once, in the cookie ``nexcrate_session`` (HttpOnly,
-SameSite=Strict, path ``/api``). The database stores only its SHA-256 hash: a copy
-of the database opens no session.
+SameSite=Strict, path ``/api``, below the sub path when nexcrate runs under one). The
+database stores only its SHA-256 hash: a copy of the database opens no session.
 
 Sessions last 30 days and are extended on use. The extension is written at most once
 per ``EXTEND_AFTER``, not on every request.
@@ -37,6 +37,16 @@ EXTEND_AFTER = timedelta(hours=1)
 TOKEN_MAX_LENGTH = 256
 
 
+def cookie_path(path: str = COOKIE_PATH) -> str:
+    """The path a cookie is set for, as the browser sees it.
+
+    ⚠️ Under ``NEXCRATE_URL_BASE`` the browser asks for ``/nexcrate/api/...``; the middleware takes the sub path off
+    before any route sees it, but the browser never does. A cookie for ``/api`` then never comes back, and a login that
+    succeeded led straight back to the login page (found 04.10.2026, broken since the sub path came with V4).
+    """
+    return get_settings().url_base + path
+
+
 def cookie_secure(request: Request) -> bool:
     setting = (get_settings().cookie_secure or "auto").strip().lower()
     if setting == "on":
@@ -53,7 +63,7 @@ def set_cookie(response: Response, request: Request, token: str) -> None:
         COOKIE_NAME,
         token,
         max_age=int(LIFETIME.total_seconds()),
-        path=COOKIE_PATH,
+        path=cookie_path(),
         httponly=True,
         samesite="strict",
         secure=cookie_secure(request),
@@ -64,7 +74,7 @@ def clear_cookie(response: Response, request: Request) -> None:
     # Path and flags as when setting it, or the browser keeps the real one.
     response.delete_cookie(
         COOKIE_NAME,
-        path=COOKIE_PATH,
+        path=cookie_path(),
         httponly=True,
         samesite="strict",
         secure=cookie_secure(request),

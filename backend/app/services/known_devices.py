@@ -61,7 +61,7 @@ def remember(response: Response, request: Request) -> None:
         COOKIE_NAME,
         token_for(device_id),
         max_age=DAYS * 24 * 60 * 60,
-        path=COOKIE_PATH,
+        path=sessions.cookie_path(COOKIE_PATH),
         httponly=True,
         samesite="lax",
         secure=sessions.cookie_secure(request),
