@@ -3492,3 +3492,25 @@ export type FolderRuleWhen = 'genre' | 'certification' | 'tag' | 'series_type'
 export type FolderRule = { when: FolderRuleWhen; values: string[]; folder: string }
 /** Ein Titel, den die Regeln woanders haetten (`GET /api/versions/{id}/relocations`). */
 export type Relocation = { title_id: number; name: string; year: number | null; from: string; to: string; folder: string; skip: string | null }
+
+/** Entdecken (05.10.2026): `GET /api/discover`. */
+export type DiscoverState = {
+  tmdb_configured: boolean
+  /** Ab Werk aus. Ohne ListenBrainz gibt es keine Alben-Listen. */
+  listenbrainz_enabled: boolean
+  /** Das Land der Kontosprache, als Vorgabe fuer den Regionsfilter. */
+  region: string | null
+  hidden: { movie: number; series: number; album: number }
+}
+
+/** Ein Film oder eine Serie aus Entdecken: dieselbe Form wie ein Suchtreffer, dazu die Bewertung bei TMDB. */
+export type DiscoverTitle = TmdbResult & { rating: number | null; votes: number }
+
+export type DiscoverTitles = { list: string; items: DiscoverTitle[]; exhausted: boolean }
+
+/** Ein Album aus Entdecken: dieselbe Form wie ein Suchtreffer bei MusicBrainz, dazu Hoerer und Cover. */
+export type DiscoverAlbum = AlbumHit & { listens: number | null; cover_url: string | null }
+
+export type DiscoverAlbums = { list: string; items: DiscoverAlbum[] }
+
+export type DiscoverGenre = { id: number; name: string }

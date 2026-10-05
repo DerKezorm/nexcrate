@@ -35,6 +35,9 @@ and made-up releases.
   clients and profiles, then take the files over; or start from the folders on disk.
 - **Rename** whole libraries with a preview and an undo, **library rules** that pick the target
   folder by genre, certification, tag or kind of series.
+- **Discover:** twenty movies, shows or albums per list that the library lacks yet: new to get,
+  popular, acclaimed, classics. Movies only once they are out on digital or disc, filters for
+  country, genre and language, and "not interested" hides a title for good.
 - **Calendar** with an iCal feed, **notifications** (ntfy, Gotify, Telegram, Discord, webhook,
   Apprise, e-mail), **Plex, Jellyfin and Emby** told about new files, **backups** with an
   encrypted download.
@@ -261,12 +264,13 @@ npm run dev
   entered under Settings, Online services.
 - [TheXEM](https://thexem.info) for the scene numbering of shows and anime.
 - [MusicBrainz](https://musicbrainz.org) and the Cover Art Archive for music,
-  [AcoustID](https://acoustid.org) for recognizing files without usable tags.
+  [AcoustID](https://acoustid.org) for recognizing files without usable tags,
+  [ListenBrainz](https://listenbrainz.org) for the album lists of Discover (off until you switch it on).
 - The [TRaSH Guides](https://trash-guides.info) (MIT) for the rules inside the profiles.
 - IMDb ratings: Information courtesy of IMDb (https://www.imdb.com). Used with permission.
   Rotten Tomatoes and Metacritic with an OMDb key of your own.
 
-TheXEM, MusicBrainz, AcoustID and the IMDb ratings can be switched off under Settings, Online
+TheXEM, MusicBrainz, AcoustID, ListenBrainz and the IMDb ratings can be switched off under Settings, Online
 services. Once a day nexcrate
 asks GitHub for its newest release; nothing but the request itself goes out, and it can be
 switched off on the About page.

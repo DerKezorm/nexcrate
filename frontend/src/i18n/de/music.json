@@ -179,6 +179,10 @@
       "switch": "MusicBrainz",
       "hint": "Ohne MusicBrainz findet nexcrate keine neuen Künstler, Alben oder Ausgaben."
     },
+    "listenbrainz": {
+      "switch": "ListenBrainz",
+      "hint": "Liefert die Alben-Listen unter Entdecken: nexcrate holt dort nur die meistgehörten Alben, ohne Schlüssel und ohne etwas über deine Bibliothek zu senden. Ab Werk aus."
+    },
     "never": "Noch nie geantwortet.",
     "title": "Musik",
     "acoustid": {

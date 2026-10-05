@@ -16,10 +16,10 @@ import { WhatsNewAfterUpdate } from './WhatsNewAfterUpdate'
 type NavItem = { to: string; label: string; symbol: SymbolName; end: boolean; right?: boolean }
 
 function navClass(isActive: boolean, compact = false, right = false): string {
-  // Kompakt (unter lg): auf dem Handy vier gleich breite Spalten, Symbol ueber der Beschriftung; in einer Zeile
+  // Kompakt (unter lg): auf dem Handy fuenf gleich breite Spalten (seit Entdecken, 05.10.2026), Symbol ueber der Beschriftung; in einer Zeile
   // mit Pillen waren es 512 px, "Einstellungen" lag bei 375 px unsichtbar rechts ausserhalb (gemessen 24.09.2026).
   const shape = compact
-    ? 'min-w-0 flex-col gap-0.5 rounded-xl px-1 py-1.5 text-[11px] sm:shrink-0 sm:flex-row sm:gap-2 sm:rounded-full sm:px-3 sm:text-sm ' +
+    ? 'min-w-0 flex-col gap-0.5 rounded-xl px-0.5 py-1.5 text-[10px] sm:shrink-0 sm:flex-row sm:gap-2 sm:rounded-full sm:px-3 sm:text-sm ' +
       (right ? 'sm:ml-auto ' : '')
     : 'gap-2 rounded-full px-3.5 py-1.5 text-sm ' + (right ? 'ml-auto ' : '')
   return (
@@ -58,6 +58,7 @@ export function AppShell() {
 
   const items: NavItem[] = [
     { to: '/', label: t('common.nav.library'), symbol: 'library', end: true },
+    { to: '/entdecken', label: t('common.nav.discover'), symbol: 'compass', end: false },
     { to: '/kalender', label: t('common.nav.calendar'), symbol: 'calendar', end: false },
     { to: '/downloads', label: t('common.nav.downloads'), symbol: 'download', end: false },
     { to: '/einstellungen', label: t('common.nav.settings'), symbol: 'settings', end: false, right: true },
@@ -90,7 +91,7 @@ export function AppShell() {
             </div>
           </div>
           <nav
-            className="grid grid-cols-4 border-t border-ink-700/60 px-1 py-1.5 sm:flex sm:gap-1 sm:overflow-x-auto sm:px-4 sm:py-2 lg:hidden"
+            className="grid grid-cols-5 border-t border-ink-700/60 px-1 py-1.5 sm:flex sm:gap-1 sm:overflow-x-auto sm:px-4 sm:py-2 lg:hidden"
             aria-label={t('common.nav.main')}
           >
             {items.map((item) => renderItem(item, true))}

@@ -178,6 +178,35 @@ async def cover(title_id: int) -> tuple[Path, str] | None:
     return path, media_type
 
 
+def _covers_enabled_now() -> bool:
+    with SessionLocal() as db:
+        return mb.covers_enabled(db)
+
+
+async def release_cover(release_mbid: str) -> tuple[Path, str] | None:
+    """The front cover of one release for Discover, kept on disk under the release's id like an album's. None for no
+    valid id, no cover, or the switch off."""
+    mbid = release_mbid.strip().lower()
+    if not mb.valid_mbid(mbid):
+        return None
+    hit = cached(mbid)
+    if hit is not None:
+        return hit
+    if not await asyncio.to_thread(_covers_enabled_now) or await asyncio.to_thread(_remembered_missing, mbid):
+        return None
+    async with _semaphore():
+        hit = cached(mbid)
+        if hit is not None:
+            return hit
+        fetched = await _fetch(mbid, f"release/{mbid}/{SIZE}")
+    if fetched is None:
+        await asyncio.to_thread(_remember_missing, mbid)
+        return None
+    content, media_type = fetched
+    path = await asyncio.to_thread(_store, mbid, content, media_type)
+    return path, media_type
+
+
 #: The sizes for filed albums (decision 28): embedded in the files, and ``folder.jpg``.
 EMBED_SIZE = "front-500"
 FOLDER_SIZE = "front-1200"

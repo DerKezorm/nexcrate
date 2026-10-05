@@ -1,7 +1,10 @@
 import { withBase } from '../lib/base'
 
-/** Bilder der Bibliothek und Poster aus der TMDB-Suche. Beide liefert der eigene Server, als Pfad ohne Unterpfad. */
-const OWN_IMAGE_PATHS = ['/api/images/', '/api/tmdb/poster/']
+/**
+ * Bilder der Bibliothek, Poster aus der TMDB-Suche und Cover aus Entdecken. Alle liefert der eigene Server, als Pfad
+ * ohne Unterpfad.
+ */
+const OWN_IMAGE_PATHS = ['/api/images/', '/api/tmdb/poster/', '/api/discover/cover/']
 
 /**
  * Poster kommen nur vom eigenen Server, nie direkt von TMDB oder Radarr: nexcrate holt sie

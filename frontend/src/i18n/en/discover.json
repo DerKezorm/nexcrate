@@ -1,0 +1,89 @@
+{
+  "title": "Discover",
+  "sub": "Twenty titles per list that your library does not have yet. One click adds them.",
+  "kindLabel": "Kind",
+  "kinds": {
+    "movie": "Movies",
+    "series": "Series",
+    "album": "Music"
+  },
+  "listLabel": "List",
+  "lists": {
+    "movie": {
+      "fresh": "New to get",
+      "popular": "Popular now",
+      "acclaimed": "New and acclaimed",
+      "classics": "Classics"
+    },
+    "series": {
+      "new": "New series",
+      "popular": "Popular now",
+      "ended": "Finished and good",
+      "classics": "Classics"
+    },
+    "album": {
+      "fresh": "New releases",
+      "trending": "Played a lot now",
+      "classics": "Classics"
+    }
+  },
+  "hints": {
+    "movie": {
+      "fresh": "Movies out on digital or disc in the last four months. Movies only in cinemas are left out.",
+      "popular": "What is in demand on TMDB right now, but only what is out on digital or disc already.",
+      "acclaimed": "Out on digital or disc in the last year, by rating, at least 200 votes.",
+      "classics": "Released before 1996, by rating, at least 1,000 votes."
+    },
+    "series": {
+      "new": "Series whose first episode aired in the last four months, by popularity.",
+      "popular": "What is in demand on TMDB right now. News, talk, reality and soaps are left out.",
+      "ended": "Series that have told their story, by rating: good for watching in one go.",
+      "classics": "Started before 2010, by rating."
+    },
+    "album": {
+      "fresh": "Albums and EPs of the last 60 days that are played a lot this week.",
+      "trending": "The albums played most on ListenBrainz this week.",
+      "classics": "The albums played most on ListenBrainz of all time."
+    }
+  },
+  "filters": {
+    "label": "Filters",
+    "region": "Released in",
+    "anyRegion": "All countries",
+    "regionOff": "Classics are out everywhere, no country counts here.",
+    "genre": "Genre",
+    "anyGenre": "All genres",
+    "language": "Original language",
+    "anyLanguage": "All languages",
+    "country": "Country of origin",
+    "anyCountry": "All countries of origin"
+  },
+  "loading": "Loading the list …",
+  "empty": "Nothing here that you are missing right now. Try another list or fewer filters.",
+  "noMore": "TMDB has no more for this choice.",
+  "added": "\"{{title}}\" is in your library now.",
+  "tmdbNeeded": "For movies and series, Discover needs access to TMDB of your own. It is free for private use.",
+  "card": {
+    "open": "Add {{title}}",
+    "hide": "Not interested",
+    "hideLabel": "Hide {{title}}, not interested",
+    "rating": "★ {{value}}"
+  },
+  "music": {
+    "offTitle": "For music, nexcrate asks ListenBrainz",
+    "offText": "ListenBrainz is MusicBrainz's open listening record. nexcrate only fetches the lists of the most played albums there, without a key and without telling anything about your library. It is off from the factory; you can switch it off again under Settings, Online services.",
+    "switchOn": "Switch on ListenBrainz",
+    "listensWeek_one": "{{value}} listen this week",
+    "listensWeek_other": "{{value}} listens this week",
+    "listensEver_one": "{{value}} listen in total",
+    "listensEver_other": "{{value}} listens in total",
+    "source": "Listening figures from ListenBrainz (MetaBrainz), covers from the Cover Art Archive."
+  },
+  "hidden": {
+    "count_one": "{{value}} title hidden.",
+    "count_other": "{{value}} titles hidden.",
+    "showAll": "Show all again",
+    "reset_one": "{{value}} title is shown again.",
+    "reset_other": "{{value}} titles are shown again."
+  }
+}

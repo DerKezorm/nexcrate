@@ -44,6 +44,17 @@ function StatusLine({ children }: { children: ReactNode }) {
   )
 }
 
+/** Die zuletzt gewaehlten Fassungen, ohne die, die der Film schon hat. Beim ersten Mal ist nichts vorausgewaehlt. */
+function rememberedVersions(result: TmdbResult): number[] {
+  return (readAddChoice() ?? []).filter((id) => !result.version_ids.includes(id))
+}
+
+/** Die letzte Wahl einer Serie mit ihren Regeln. Die Staffel gehoerte zu einer anderen Serie und bleibt offen. */
+function rememberedPicks(result: TmdbResult): Record<number, SeriesPick> {
+  const remembered = (readSeriesChoice() ?? []).filter((choice) => !result.version_ids.includes(choice.version_id))
+  return Object.fromEntries(remembered.map((choice) => [choice.version_id, { on: true, rule: choice.rule, from: null }]))
+}
+
 /**
  * "Hinzufuegen" in zwei Schritten, wie in der abgestimmten Attrappe: erst der Film bei TMDB,
  * dann seine Fassungen. Steht der Film schon in der Bibliothek, sind seine Fassungen abgehakt
@@ -56,8 +67,21 @@ function StatusLine({ children }: { children: ReactNode }) {
  * Mit `kind="series"` derselbe Weg fuer eine Serie: Je Fassung waehlt man dazu die Regel, der Server
  * zaehlt live, was sie ueberwachen wuerde (`SeriesChoices`). Steht die Serie schon da, fuehrt der
  * Dialog zu ihr, weitere Fassungen kommen auf ihrer Seite dazu.
+ *
+ * Aus Entdecken (05.10.2026) kommt `initial`: der Dialog beginnt beim zweiten Schritt, "Zurueck" schliesst ihn.
+ * Mit `onAdded` bleibt die Seite stehen, statt zum neuen Titel zu springen.
  */
-export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; kind?: 'movie' | 'series' }) {
+export function AddDialog({
+  onClose,
+  kind = 'movie',
+  initial,
+  onAdded,
+}: {
+  onClose: () => void
+  kind?: 'movie' | 'series'
+  initial?: TmdbResult
+  onAdded?: (titleId: number) => void
+}) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const navigate = useNavigate()
@@ -77,10 +101,10 @@ export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; ki
   // Nur die neueste Suche zaehlt. Eine langsame alte Antwort ueberschreibt keine neuere.
   const generation = useRef(0)
 
-  const [picked, setPicked] = useState<TmdbResult | null>(null)
-  const [chosen, setChosen] = useState<number[]>([])
+  const [picked, setPicked] = useState<TmdbResult | null>(initial ?? null)
+  const [chosen, setChosen] = useState<number[]>(() => (initial && !series ? rememberedVersions(initial) : []))
   // Serien: je Fassung Haken, Regel und Staffel; `daily` null folgt dem Vorschlag von TMDB.
-  const [picks, setPicks] = useState<Record<number, SeriesPick>>({})
+  const [picks, setPicks] = useState<Record<number, SeriesPick>>(() => (initial && series ? rememberedPicks(initial) : {}))
   const [daily, setDaily] = useState<boolean | null>(null)
   const [busy, setBusy] = useState(false)
   const [tagText, setTagText] = useState('')
@@ -180,14 +204,10 @@ export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; ki
 
   function pick(result: TmdbResult) {
     if (series) {
-      // Die letzte Wahl mit ihren Regeln. Die Staffel gehoerte zu einer anderen Serie und bleibt offen.
-      const remembered = (readSeriesChoice() ?? []).filter((choice) => !result.version_ids.includes(choice.version_id))
-      setPicks(Object.fromEntries(remembered.map((choice) => [choice.version_id, { on: true, rule: choice.rule, from: null }])))
+      setPicks(rememberedPicks(result))
       setDaily(null)
     } else {
-      // Beim ersten Mal steht nichts im Speicher, dann ist nichts vorausgewaehlt.
-      const remembered = readAddChoice() ?? []
-      setChosen(remembered.filter((id) => !result.version_ids.includes(id)))
+      setChosen(rememberedVersions(result))
     }
     setPicked(result)
     setProblem(null)
@@ -210,6 +230,10 @@ export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; ki
 
   function back() {
     if (busy) return
+    if (initial) {
+      onClose()
+      return
+    }
     setPicked(null)
     setProblem(null)
   }
@@ -217,6 +241,14 @@ export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; ki
   function openTitle(id: number) {
     onClose()
     navigate(`/titel/${id}`)
+  }
+
+  /** Nach dem Anlegen: zum Titel, oder mit `onAdded` auf der Seite bleiben. */
+  function added(id: number) {
+    if (onAdded) {
+      onAdded(id)
+      onClose()
+    } else openTitle(id)
   }
 
   /** Seit T1: die Tags des Feldes, nur hinzugefuegt, damit ein Titel, der schon da ist, keinen verliert. */
@@ -240,8 +272,7 @@ export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; ki
         })
         storeSeriesChoice(choices)
         await addTags('series', detail.id)
-        onClose()
-        navigate(`/titel/${detail.id}`)
+        added(detail.id)
         return
       }
       // Steht der Film schon da, kommen nur die fehlenden Fassungen dazu. Ein zweites Anlegen gaebe 409 title_exists.
@@ -251,8 +282,7 @@ export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; ki
           : await libraryApi.add({ kind: 'movie', tmdb_id: picked.tmdb_id, version_ids: selected })
       storeAddChoice([...existing.filter((id) => (versions ?? []).some((version) => version.id === id)), ...selected])
       await addTags('movie', detail.id)
-      onClose()
-      navigate(`/titel/${detail.id}`)
+      added(detail.id)
     } catch (error) {
       setBusy(false)
       const trouble = tokenTrouble(error)
@@ -522,9 +552,16 @@ export function AddDialog({ onClose, kind = 'movie' }: { onClose: () => void; ki
     const leadToTitle = titleId !== null && (series || free.length === 0)
     footer = (
       <>
+        {/* Aus Entdecken gibt es keine Suche, zu der es zurueckginge: der Knopf schliesst. */}
         <Button variant="ghost" onClick={back} disabled={busy}>
-          <Symbol name="back" />
-          {t('library.add.back')}
+          {initial ? (
+            t('common.actions.cancel')
+          ) : (
+            <>
+              <Symbol name="back" />
+              {t('library.add.back')}
+            </>
+          )}
         </Button>
         {versions !== null &&
           versions.length > 0 &&

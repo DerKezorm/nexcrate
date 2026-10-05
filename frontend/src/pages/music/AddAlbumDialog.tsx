@@ -20,8 +20,21 @@ type AlbumKindChoice = (typeof ALBUM_KIND_CHOICES)[number]
  * Filter stehen fremde Singles zuerst, B1), und legt genau dieses Album mit Fassung an. Gehoert es einem Kuenstler,
  * der noch nicht in der Bibliothek steht, legt der Server ihn mit an, ohne weitere Ueberwachung. Derselbe Dialog
  * dient auch fuer eine Single von der Kuenstlerseite (Entscheidung 34, E5).
+ *
+ * Aus Entdecken (05.10.2026) kommt `initial`: gleich die Bestaetigung, "Zurueck" schliesst. Mit `onAdded` bleibt die
+ * Seite stehen, statt zum Album zu springen.
  */
-export function AddAlbumDialog({ onClose, artist }: { onClose: () => void; artist?: { mbid: string; name: string } }) {
+export function AddAlbumDialog({
+  onClose,
+  artist,
+  initial,
+  onAdded,
+}: {
+  onClose: () => void
+  artist?: { mbid: string; name: string }
+  initial?: AlbumHit
+  onAdded?: (titleId: number) => void
+}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -32,7 +45,7 @@ export function AddAlbumDialog({ onClose, artist }: { onClose: () => void; artis
   const [searchError, setSearchError] = useState<unknown>(null)
   const generation = useRef(0)
 
-  const [picked, setPicked] = useState<AlbumHit | null>(null)
+  const [picked, setPicked] = useState<AlbumHit | null>(initial ?? null)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<unknown>(null)
 
@@ -84,6 +97,11 @@ export function AddAlbumDialog({ onClose, artist }: { onClose: () => void; artis
     setProblem(null)
     try {
       const created = await musicApi.addAlbum({ mbid: picked.mbid })
+      if (onAdded) {
+        onAdded(created.id)
+        onClose()
+        return
+      }
       onClose()
       navigate(`/titel/${created.id}`)
     } catch (error) {
@@ -103,9 +121,15 @@ export function AddAlbumDialog({ onClose, artist }: { onClose: () => void; artis
       footer={
         picked !== null ? (
           <>
-            <Button variant="ghost" onClick={() => setPicked(null)} disabled={busy}>
-              <Symbol name="back" />
-              {t('library.add.back')}
+            <Button variant="ghost" onClick={() => (initial ? onClose() : setPicked(null))} disabled={busy}>
+              {initial ? (
+                t('common.actions.cancel')
+              ) : (
+                <>
+                  <Symbol name="back" />
+                  {t('library.add.back')}
+                </>
+              )}
             </Button>
             {picked.in_library !== null ? (
               <Button onClick={() => openTitle(picked.in_library as number)}>

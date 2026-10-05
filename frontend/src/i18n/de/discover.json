@@ -1,0 +1,89 @@
+{
+  "title": "Entdecken",
+  "sub": "Je Liste 20 Titel, die noch nicht in deiner Bibliothek stehen. Ein Klick fügt hinzu.",
+  "kindLabel": "Art",
+  "kinds": {
+    "movie": "Filme",
+    "series": "Serien",
+    "album": "Musik"
+  },
+  "listLabel": "Liste",
+  "lists": {
+    "movie": {
+      "fresh": "Neu zu haben",
+      "popular": "Gerade beliebt",
+      "acclaimed": "Neu und gut bewertet",
+      "classics": "Klassiker"
+    },
+    "series": {
+      "new": "Neue Serien",
+      "popular": "Gerade beliebt",
+      "ended": "Abgeschlossen und gut",
+      "classics": "Klassiker"
+    },
+    "album": {
+      "fresh": "Neu erschienen",
+      "trending": "Gerade viel gehört",
+      "classics": "Klassiker"
+    }
+  },
+  "hints": {
+    "movie": {
+      "fresh": "Filme, die es in den letzten vier Monaten digital oder auf Disc neu gibt. Was nur im Kino läuft, fehlt.",
+      "popular": "Was bei TMDB gerade gefragt ist, aber nur, was digital oder auf Disc schon erschienen ist.",
+      "acclaimed": "Im letzten Jahr digital oder auf Disc erschienen, nach Bewertung, ab 200 Stimmen.",
+      "classics": "Vor 1996 erschienen, nach Bewertung, ab 1.000 Stimmen."
+    },
+    "series": {
+      "new": "Serien, deren erste Folge in den letzten vier Monaten lief, nach Beliebtheit.",
+      "popular": "Was bei TMDB gerade gefragt ist. Nachrichten, Talk, Reality und Soaps fehlen.",
+      "ended": "Fertig erzählte Serien, nach Bewertung: gut am Stück zu schauen.",
+      "classics": "Vor 2010 gestartet, nach Bewertung."
+    },
+    "album": {
+      "fresh": "Alben und EPs der letzten 60 Tage, die diese Woche viel gehört werden.",
+      "trending": "Die Alben, die diese Woche bei ListenBrainz am meisten gehört werden.",
+      "classics": "Die meistgehörten Alben bei ListenBrainz überhaupt."
+    }
+  },
+  "filters": {
+    "label": "Filter",
+    "region": "Erschienen in",
+    "anyRegion": "Alle Länder",
+    "regionOff": "Klassiker gibt es überall, hier zählt kein Land.",
+    "genre": "Genre",
+    "anyGenre": "Alle Genres",
+    "language": "Originalsprache",
+    "anyLanguage": "Alle Sprachen",
+    "country": "Herkunftsland",
+    "anyCountry": "Alle Herkunftsländer"
+  },
+  "loading": "Liste wird geladen …",
+  "empty": "Hier ist gerade nichts, was dir noch fehlt. Probier eine andere Liste oder weniger Filter.",
+  "noMore": "Mehr hat TMDB für diese Auswahl nicht.",
+  "added": "„{{title}}“ steht jetzt in deiner Bibliothek.",
+  "tmdbNeeded": "Für Filme und Serien braucht Entdecken einen eigenen Zugang zu TMDB. Für private Nutzung ist er kostenlos.",
+  "card": {
+    "open": "{{title}} hinzufügen",
+    "hide": "Nicht interessiert",
+    "hideLabel": "{{title}} ausblenden, nicht interessiert",
+    "rating": "★ {{value}}"
+  },
+  "music": {
+    "offTitle": "Für Musik fragt nexcrate ListenBrainz",
+    "offText": "ListenBrainz ist das offene Hörprotokoll von MusicBrainz. nexcrate holt dort nur die Listen der meistgehörten Alben, ohne Schlüssel und ohne etwas über deine Bibliothek zu verraten. Ab Werk ist das aus; ausschalten kannst du es unter Einstellungen, Online-Dienste.",
+    "switchOn": "ListenBrainz einschalten",
+    "listensWeek_one": "{{value}} Wiedergabe diese Woche",
+    "listensWeek_other": "{{value}} Wiedergaben diese Woche",
+    "listensEver_one": "{{value}} Wiedergabe insgesamt",
+    "listensEver_other": "{{value}} Wiedergaben insgesamt",
+    "source": "Wiedergaben von ListenBrainz (MetaBrainz), Cover vom Cover Art Archive."
+  },
+  "hidden": {
+    "count_one": "{{value}} Titel ausgeblendet.",
+    "count_other": "{{value}} Titel ausgeblendet.",
+    "showAll": "Alle wieder zeigen",
+    "reset_one": "{{value}} Titel wird wieder gezeigt.",
+    "reset_other": "{{value}} Titel werden wieder gezeigt."
+  }
+}

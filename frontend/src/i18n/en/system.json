@@ -165,7 +165,7 @@
     "xemTitle": "Scene numbering by TheXEM",
     "xemText": "When releases count a series or an anime differently from TMDB, the mapping of the numbers comes from TheXEM, a community project.",
     "musicTitle": "Music data",
-    "musicText": "Artists, albums and tracks come from MusicBrainz, covers from the Cover Art Archive. Files without usable tags are recognized through AcoustID.",
+    "musicText": "Artists, albums and tracks come from MusicBrainz, covers from the Cover Art Archive. Files without usable tags are recognized through AcoustID. The album lists under Discover come from ListenBrainz.",
     "website": "Website"
   },
   "outside": {

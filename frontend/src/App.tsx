@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthGate } from './auth/AuthGate'
 import { AppShell } from './components/AppShell'
 import { DiskPage } from './pages/disk/DiskPage'
+import { DiscoverPage } from './pages/DiscoverPage'
 import { CalendarPage } from './pages/CalendarPage'
 import { DownloadsPage } from './pages/DownloadsPage'
 import { LibraryPage } from './pages/LibraryPage'
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="titel/:id" element={<TitlePage />} />
           <Route path="kuenstler/:id" element={<ArtistPage />} />
           <Route path="ordner" element={<DiskPage />} />
+          <Route path="entdecken" element={<DiscoverPage />} />
           <Route path="kalender" element={<CalendarPage />} />
           <Route path="downloads" element={<DownloadsPage />} />
           <Route path="ueber" element={<AboutPage />} />

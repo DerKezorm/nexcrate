@@ -165,7 +165,7 @@
     "xemTitle": "Szene-Nummern von TheXEM",
     "xemText": "Zählen Releases eine Serie oder einen Anime anders als TMDB, kommt die Übersetzung der Nummern von TheXEM, einem Gemeinschaftsprojekt.",
     "musicTitle": "Musikdaten",
-    "musicText": "Künstler, Alben und Titel kommen von MusicBrainz, Cover aus dem Cover Art Archive. Dateien ohne brauchbare Tags erkennt nexcrate über AcoustID.",
+    "musicText": "Künstler, Alben und Titel kommen von MusicBrainz, Cover aus dem Cover Art Archive. Dateien ohne brauchbare Tags erkennt nexcrate über AcoustID. Die Alben-Listen unter Entdecken stammen von ListenBrainz.",
     "website": "Projektseite"
   },
   "outside": {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, errorText } from '../../api/client'
+import { discoverApi } from '../../api/discover'
 import { musicApi } from '../../api/music'
 import type { MusicBrainzState } from '../../api/types'
 import { FormMessage, Spinner, Switch } from '../../components/ui'
@@ -12,13 +13,16 @@ import { formatDateTime } from '../../lib/format'
  * `XemNotice.tsx`: ein Weg nach draussen, deshalb abschaltbar, ab Werk beide an. Aus bei MusicBrainz: nichts wird
  * gefragt, Hinzufuegen und Aktualisieren sagen `musicbrainz_disabled`, Gespeichertes bleibt sichtbar. Aus beim
  * Cover Art Archive: nur gespeicherte Cover werden gezeigt.
+ *
+ * Dazu seit Entdecken (05.10.2026) ListenBrainz: liefert die Alben-Listen, ab Werk aus.
  */
 export function MusicBrainzNotice() {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const [state, setState] = useState<MusicBrainzState | null>(null)
   const [loadError, setLoadError] = useState<unknown>(null)
-  const [busy, setBusy] = useState<'musicbrainz' | 'covers' | null>(null)
+  const [busy, setBusy] = useState<'musicbrainz' | 'covers' | 'listenbrainz' | null>(null)
+  const [listenBrainz, setListenBrainz] = useState<boolean | null>(null)
   const [problem, setProblem] = useState<unknown>(null)
 
   useEffect(() => {
@@ -26,6 +30,10 @@ export function MusicBrainzNotice() {
     musicApi.settings().then(
       (result) => current && setState(result),
       (error: unknown) => current && setLoadError(error),
+    )
+    discoverApi.state().then(
+      (result) => current && setListenBrainz(result.listenbrainz_enabled),
+      () => undefined,
     )
     return () => {
       current = false
@@ -37,6 +45,18 @@ export function MusicBrainzNotice() {
     setProblem(null)
     try {
       setState(await musicApi.changeSettings(which === 'musicbrainz' ? { enabled: next } : { covers_enabled: next }))
+    } catch (error) {
+      setProblem(error)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function changeListenBrainz(next: boolean) {
+    setBusy('listenbrainz')
+    setProblem(null)
+    try {
+      setListenBrainz((await discoverApi.switchListenBrainz(next)).listenbrainz_enabled)
     } catch (error) {
       setProblem(error)
     } finally {
@@ -62,6 +82,15 @@ export function MusicBrainzNotice() {
           <p className="text-xs text-mist-500">{state.last_ok_at ? t('music.privacy.lastOk', { time: formatDateTime(state.last_ok_at, language) }) : t('music.privacy.never')}</p>
           {state.last_error_code && <p className="text-xs text-bad-500">{t('music.privacy.lastError', { text: errorText(t, new ApiError(0, state.last_error_code)) })}</p>}
           <Switch label={t('music.privacy.covers.switch')} hint={t('music.privacy.covers.hint')} checked={state.covers_enabled} onChange={(next) => void change('covers', next)} disabled={busy !== null} />
+          {listenBrainz !== null && (
+            <Switch
+              label={t('music.privacy.listenbrainz.switch')}
+              hint={t('music.privacy.listenbrainz.hint')}
+              checked={listenBrainz}
+              onChange={(next) => void changeListenBrainz(next)}
+              disabled={busy !== null}
+            />
+          )}
           {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
         </>
       )}

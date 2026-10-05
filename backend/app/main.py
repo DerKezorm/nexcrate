@@ -53,6 +53,7 @@ from .routers import backups as backups_router
 from .routers import bazarr as bazarr_router
 from .routers import blocklist as blocklist_router
 from .routers import companions as companions_router
+from .routers import discover as discover_router
 from .routers import disk as disk_router
 from .routers import download_clients as download_clients_router
 from .routers import downloads as downloads_router
@@ -253,6 +254,7 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
         ),
     ),
     (totp_router.public_router, "The code step of the sign-in runs between the password and the session."),
+    (discover_router.router, None),
 ]
 
 # Background jobs, started in the lifespan. The first one takes an expired deep log mode back.

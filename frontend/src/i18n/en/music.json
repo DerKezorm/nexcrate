@@ -179,6 +179,10 @@
       "switch": "MusicBrainz",
       "hint": "Without MusicBrainz, nexcrate finds no new artists, albums or releases."
     },
+    "listenbrainz": {
+      "switch": "ListenBrainz",
+      "hint": "Feeds the album lists under Discover: nexcrate only fetches the most played albums there, without a key and without sending anything about your library. Off from the factory."
+    },
     "never": "Never answered yet.",
     "title": "Music",
     "acoustid": {

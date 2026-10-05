@@ -25,6 +25,7 @@ export const REPO_URL = 'https://github.com/DerKezorm/nexcrate'
 export const XEM_URL = 'https://thexem.info'
 export const MUSICBRAINZ_URL = 'https://musicbrainz.org'
 export const ACOUSTID_URL = 'https://acoustid.org'
+export const LISTENBRAINZ_URL = 'https://listenbrainz.org'
 
 function Outside({ href, children }: { href: string; children: string }) {
   return (
@@ -128,6 +129,7 @@ export function AboutSettings() {
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           <Outside href={MUSICBRAINZ_URL}>musicbrainz.org</Outside>
           <Outside href={ACOUSTID_URL}>acoustid.org</Outside>
+          <Outside href={LISTENBRAINZ_URL}>listenbrainz.org</Outside>
         </div>
       </div>
 
