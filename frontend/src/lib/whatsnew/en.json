@@ -218,6 +218,30 @@
       "small": [
         "With a second nexcrate at the same authentik, the authentik button makes names of its own instead of taking over the first one's sign-in."
       ]
+    },
+    "0.7.0": {
+      "lead": "This version brings Discover: twenty movies, series or albums per list that your library does not have yet. For everyone without nexview in front. No database change.",
+      "sections": [
+        {
+          "title": "Discover",
+          "body": "Movies: New to get, Popular now, New and acclaimed, Classics. Only what is out on digital or disc shows up, movies only in cinemas are left out. Series: New series, Popular now, Finished and good, Classics. Filter by country, genre and original language. A click on a card adds the title, and you stay on the page.",
+          "where": "Discover in the bar at the top"
+        },
+        {
+          "title": "Discover music",
+          "body": "New releases, Played a lot now and Classics come from ListenBrainz, MusicBrainz's open listening record. It has a switch of its own, off from the factory: nexcrate only fetches the lists of the most played albums there and tells nothing about your library.",
+          "where": "Discover › Music, or Settings › Online services"
+        },
+        {
+          "title": "Not interested",
+          "body": "The small button on a card hides a title for good, and the list fills up to twenty again. At the bottom of the page you bring all hidden titles back.",
+          "where": "Discover, button at the top right of every card"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "On a phone the bar at the bottom now holds five entries, and \"Settings\" fits in whole."
+      ]
     }
   }
 }

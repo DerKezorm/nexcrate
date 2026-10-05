@@ -218,6 +218,30 @@
       "small": [
         "Hängt ein zweites nexcrate am selben authentik, legt der authentik-Knopf eigene Namen an, statt die Anmeldung des ersten zu überschreiben."
       ]
+    },
+    "0.7.0": {
+      "lead": "Diese Version bringt Entdecken: je Liste 20 Filme, Serien oder Alben, die noch nicht in deiner Bibliothek stehen. Für alle, die kein nexview davor haben. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Entdecken",
+          "body": "Filme: Neu zu haben, Gerade beliebt, Neu und gut bewertet, Klassiker. Es erscheint nur, was digital oder auf Disc schon draußen ist, was nur im Kino läuft, fehlt. Serien: Neue Serien, Gerade beliebt, Abgeschlossen und gut, Klassiker. Filtern kannst du nach Land, Genre und Originalsprache. Ein Klick auf eine Karte fügt den Titel hinzu, du bleibst auf der Seite.",
+          "where": "Entdecken in der Leiste oben"
+        },
+        {
+          "title": "Musik entdecken",
+          "body": "Neu erschienen, Gerade viel gehört und Klassiker kommen von ListenBrainz, dem offenen Hörprotokoll von MusicBrainz. Dafür gibt es einen eigenen Schalter, ab Werk aus: nexcrate holt dort nur die Listen der meistgehörten Alben und verrät nichts über deine Bibliothek.",
+          "where": "Entdecken › Musik, oder Einstellungen › Online-Dienste"
+        },
+        {
+          "title": "Nicht interessiert",
+          "body": "Der kleine Knopf auf einer Karte blendet einen Titel für immer aus, die Liste füllt sich wieder auf 20 auf. Unten auf der Seite holst du alle ausgeblendeten Titel zurück.",
+          "where": "Entdecken, Knopf oben rechts auf jeder Karte"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Auf dem Handy hat die Leiste unten jetzt fünf Einträge, auch „Einstellungen“ passt ganz hinein."
+      ]
     }
   }
 }
