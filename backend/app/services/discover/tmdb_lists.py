@@ -19,7 +19,18 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal
 
-from ..tmdb import GENRE_TTL, _cached, _dict, _int, _list, _text, cache_key, poster_file_of, year_of
+from ..tmdb import (
+    FALLBACK_LOCALE,
+    GENRE_TTL,
+    _cached,
+    _dict,
+    _int,
+    _list,
+    _text,
+    cache_key,
+    poster_file_of,
+    year_of,
+)
 
 Kind = Literal["movie", "series"]
 
@@ -39,6 +50,9 @@ AVAILABLE = "4|5"
 FRESH_DAYS = 120
 #: How far back "acclaimed" reaches.
 ACCLAIMED_DAYS = 365
+#: How old a movie of "fresh" or "acclaimed" may be at most, by its first release anywhere. Without it a new disc of an
+#: old movie counts as new (measured 05.10.2026 against TMDB: a movie of 2001 among the acclaimed ones of the year).
+NEW_MOVIE_DAYS = 730
 #: TMDB's genres News, Reality, Soap and Talk for series.
 SERIES_LEFT_OUT = "10763,10764,10766,10767"
 #: TMDB's series status "Ended".
@@ -102,12 +116,14 @@ def params_for(kind: Kind, name: str, filters: Filters, day: date) -> dict[str, 
             params["region"] = filters.region.upper()
         if name == "fresh":
             params["release_date.gte"] = (day - timedelta(days=FRESH_DAYS)).isoformat()
+            params["primary_release_date.gte"] = (day - timedelta(days=NEW_MOVIE_DAYS)).isoformat()
             params["sort_by"] = "popularity.desc"
         elif name == "popular":
             params["sort_by"] = "popularity.desc"
             params["vote_count.gte"] = 50
         else:  # acclaimed
             params["release_date.gte"] = (day - timedelta(days=ACCLAIMED_DAYS)).isoformat()
+            params["primary_release_date.gte"] = (day - timedelta(days=NEW_MOVIE_DAYS)).isoformat()
             params["vote_count.gte"] = 200
             params["sort_by"] = "vote_average.desc"
         return params
@@ -153,15 +169,52 @@ def _candidate(kind: Kind, item: dict[str, Any]) -> Candidate | None:
     )
 
 
-async def page_of(
-    token: str, kind: Kind, params: dict[str, Any], page: int, locale: str
-) -> tuple[list[Candidate], int]:
-    """One page of a list and how many pages there are. Raises ``tmdb.TmdbError``."""
+def _untranslated(kind: Kind, item: dict[str, Any], locale: str) -> bool:
+    """TMDB has no text in the account language: no overview, or the original title of a title from another language
+    (measured 05.10.2026: a Chinese movie came with its Chinese title under de-DE)."""
+    if not _text(item.get("overview")):
+        return True
+    title = _text(item.get("name" if kind == "series" else "title"))
+    original = _text(item.get("original_name" if kind == "series" else "original_title"))
+    return title == original and _text(item.get("original_language")) != locale.split("-")[0]
+
+
+def _with_english(kind: Kind, item: dict[str, Any], english: dict[str, Any]) -> dict[str, Any]:
+    """The English title where the account language has only the original one, the English overview where it has none,
+    like the search does."""
+    merged = dict(item)
+    field, original_field = ("name", "original_name") if kind == "series" else ("title", "original_title")
+    if _text(item.get(field)) in ("", _text(item.get(original_field))) and _text(english.get(field)):
+        merged[field] = english[field]
+    if not _text(item.get("overview")) and _text(english.get("overview")):
+        merged["overview"] = english["overview"]
+    return merged
+
+
+async def _page_data(token: str, kind: Kind, params: dict[str, Any], page: int, locale: str) -> dict[str, Any]:
     query = {**params, "language": locale, "page": page}
     path = "/discover/tv" if kind == "series" else "/discover/movie"
     key = cache_key("discover", kind, *(f"{name}={query[name]}" for name in sorted(query)))
-    data = _dict(await _cached(token, key, PAGE_TTL, path, query))
-    found = [_candidate(kind, _dict(item)) for item in _list(data.get("results"))]
+    return _dict(await _cached(token, key, PAGE_TTL, path, query))
+
+
+async def page_of(
+    token: str, kind: Kind, params: dict[str, Any], page: int, locale: str
+) -> tuple[list[Candidate], int]:
+    """One page of a list and how many pages there are. Without a text in the account language the English one fills
+    in, from a second call that is cached the same way. Raises ``tmdb.TmdbError``."""
+    data = await _page_data(token, kind, params, page, locale)
+    items = [_dict(item) for item in _list(data.get("results"))]
+    if locale != FALLBACK_LOCALE and any(_untranslated(kind, item, locale) for item in items):
+        fallback = await _page_data(token, kind, params, page, FALLBACK_LOCALE)
+        english = {_int(item.get("id")): item for item in map(_dict, _list(fallback.get("results")))}
+        items = [
+            _with_english(kind, item, english[_int(item.get("id"))])
+            if _untranslated(kind, item, locale) and _int(item.get("id")) in english
+            else item
+            for item in items
+        ]
+    found = [_candidate(kind, item) for item in items]
     return [item for item in found if item is not None], max(0, _int(data.get("total_pages")) or 0)
 
 
