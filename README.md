@@ -9,7 +9,8 @@ Lidarr side by side.
 Website: [nexcrate.nexapps.dev](https://nexcrate.nexapps.dev)
 
 The screenshots show a throwaway instance with public-domain movies, a few shows and artists,
-and made-up releases.
+and made-up releases. On the Discover screenshot the list is a hand-picked set of public-domain
+silent films with their real TMDB data, in place of TMDB's answer of the day.
 
 ## What it does
 
@@ -52,7 +53,8 @@ and made-up releases.
 | ![A movie with a Full HD version on disk and a 4K version wanted](docs/screenshots/movie.png) | ![A search: the decision for the 4K version and the releases that fit](docs/screenshots/search.png) |
 | ![Shows](docs/screenshots/library-series.png) | ![A show with its seasons](docs/screenshots/series.png) |
 | ![Music: artists](docs/screenshots/library-music.png) | ![An artist with its albums](docs/screenshots/artist.png) |
-| ![The calendar](docs/screenshots/calendar.png) | ![Download clients with the retention read from the news servers](docs/screenshots/settings-clients.png) |
+| ![Discover: classics the library does not have yet](docs/screenshots/discover.png) | ![The calendar](docs/screenshots/calendar.png) |
+| ![Download clients with the retention read from the news servers](docs/screenshots/settings-clients.png) | |
 
 ## Running with Docker
 
