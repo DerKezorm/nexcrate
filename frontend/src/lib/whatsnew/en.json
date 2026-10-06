@@ -242,6 +242,25 @@
       "small": [
         "On a phone the bar at the bottom now holds five entries, and \"Settings\" fits in whole."
       ]
+    },
+    "0.7.1": {
+      "lead": "This version cleans up more thoroughly when you remove something: removing a title with its files also takes its finished torrent out of the download client. No database change.",
+      "sections": [
+        {
+          "title": "Remove a title with its files",
+          "body": "\"Remove title\" now has the box \"Move the files into the recycle bin\" that only removing several titles had so far. With it the files go into the recycle bin, a connected Plex, Jellyfin or Emby reads the folders again, and nexview learns that the title is gone.",
+          "where": "Title page › Remove title"
+        },
+        {
+          "title": "Finished torrents go along",
+          "body": "An imported torrent that was still seeding used to stay in the download client for good once its title went. Now it leaves qBittorrent, Transmission or Deluge together with its files in the download folder as soon as the title's files go, even before its seed goal. nexcrate never touches a file of the library doing so. The same holds when nexview deletes the files.",
+          "where": "Remove title with the box, remove a selection with the box, or deleting in nexview"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "If downloads are still running when you remove a title with its files, nexcrate now says so before any file moves."
+      ]
     }
   }
 }

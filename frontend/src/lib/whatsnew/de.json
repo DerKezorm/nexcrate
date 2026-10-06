@@ -242,6 +242,25 @@
       "small": [
         "Auf dem Handy hat die Leiste unten jetzt fünf Einträge, auch „Einstellungen“ passt ganz hinein."
       ]
+    },
+    "0.7.1": {
+      "lead": "Diese Version räumt beim Entfernen gründlicher auf: Wer einen Titel samt Dateien entfernt, bekommt auch den fertigen Torrent aus dem Download-Programm. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Titel samt Dateien entfernen",
+          "body": "„Titel entfernen“ hat jetzt den Haken „Dateien in den Papierkorb“, den bisher nur die Auswahl mehrerer Titel kannte. Mit Haken kommen die Dateien in den Papierkorb, ein verbundener Plex, Jellyfin oder Emby liest die Ordner neu ein, und nexview erfährt, dass der Titel weg ist.",
+          "where": "Titelseite › Titel entfernen"
+        },
+        {
+          "title": "Fertige Torrents gehen mit",
+          "body": "Ein importierter Torrent, der noch seedete, blieb bisher für immer im Download-Programm, wenn der Titel ging. Jetzt verlässt er qBittorrent, Transmission oder Deluge zusammen mit seinen Dateien im Download-Ordner, sobald die Dateien des Titels gehen, auch wenn das Seed-Ziel noch nicht erreicht ist. Eine Datei der Bibliothek fasst nexcrate dabei nie an. Das gilt auch, wenn nexview die Dateien löscht.",
+          "where": "Titel entfernen mit Haken, Auswahl entfernen mit Haken, oder Löschen in nexview"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Laufen beim Entfernen samt Dateien noch Downloads, sagt nexcrate das jetzt, bevor eine Datei bewegt wird."
+      ]
     }
   }
 }
