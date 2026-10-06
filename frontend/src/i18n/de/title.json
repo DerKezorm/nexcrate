@@ -277,7 +277,11 @@
     "removeOwn_other": "Eigene Fassungen entfernen",
     "done": "{{title}} ist entfernt.",
     "ownDone": "Deine Fassungen sind entfernt. Die aus Radarr bleiben.",
-    "companion": "Der Film bleibt auf der Platte. nexcrate nimmt nur seine release.nex weg."
+    "companion": "Der Film bleibt auf der Platte. nexcrate nimmt nur seine release.nex weg.",
+    "confirmWithFiles": "Ja, samt Dateien entfernen",
+    "textWithFiles": "Der Titel verschwindet mit seinen Fassungen aus der Bibliothek, seine Dateien kommen in den Papierkorb.",
+    "files": "Dateien in den Papierkorb",
+    "filesHint": "Die Dateien lassen sich für die eingestellte Zeit aus dem Papierkorb zurückholen. Fertige Torrents gehen dazu aus dem Download-Programm, samt ihren Dateien im Download-Ordner, auch wenn sie noch seeden. Ein verbundener Mediaserver liest die Ordner neu ein."
   },
   "runningDownload": {
     "movie_one": "Für diesen Film läuft gerade ein Download. nexcrate entfernt ihn dabei auch im Download-Programm.",

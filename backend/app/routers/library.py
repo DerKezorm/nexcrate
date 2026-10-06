@@ -40,6 +40,7 @@ from ..services import (
 from ..services.automatic import clock as automatic_clock
 from ..services.automatic import planning as automatic_planning
 from ..services.downloads import actions as download_actions
+from ..services.downloads import seeding as download_seeding
 from ..services.downloads import store as download_store
 from ..services.music import loading as music_loading
 from ..services.music import store as music_store
@@ -1897,6 +1898,25 @@ def _running_of_title(title_id: int) -> list[tuple[int, str]]:
         return [(download.id, download.state) for download in _title_downloads(db, title_id)]
 
 
+def _finished_of_title(title_id: int) -> list[int]:
+    """The imported torrents of the title's own versions that still sit in their clients."""
+    with SessionLocal() as db:
+        own = {
+            version.version_definition_id
+            for version in db.scalars(select(Version).where(Version.title_id == title_id, Version.source_id.is_(None)))
+        }
+        return download_seeding.finished_of(db, title_id, own)
+
+
+async def _remove_finished(title_id: int) -> None:
+    """With the files: the title's finished torrents leave their clients first (Issue #10). A client that fails
+    answers with its error, and the caller then changes nothing more."""
+    try:
+        await download_seeding.remove_finished(await asyncio.to_thread(_finished_of_title, title_id))
+    except downloaders.ClientError as exc:
+        raise exc.http() from exc
+
+
 @dataclass
 class _Change:
     title: Title
@@ -2081,7 +2101,8 @@ class RemoveManyIn(BaseModel):
     delete_files: bool = Field(
         default=False,
         description="Also move the files of your own versions into the recycle bin first; they stay there for the "
-        "recycle time. Without it the files stay where they are.",
+        "recycle time. Their finished torrents leave the clients with the torrents' files in the download folder. "
+        "Without it the files stay where they are.",
     )
 
 
@@ -2144,6 +2165,7 @@ async def remove_many(payload: RemoveManyIn) -> RemoveManyOut:
         try:
             await _remove_downloads(await asyncio.to_thread(_running_of_title, title_id))
             if payload.delete_files:
+                await _remove_finished(title_id)
                 files += await asyncio.to_thread(_recycle_title, title_id)
             await asyncio.to_thread(_remove_title, title_id)
             removed += 1
@@ -2176,7 +2198,9 @@ async def remove_many(payload: RemoveManyIn) -> RemoveManyOut:
         "A download of the title that still runs (queued to importing, or a problem) answers 409 "
         "`title_download_active` with `count`, unless `remove_downloads` is true: then each such download is removed "
         "from its client first, as `DELETE /api/downloads/{id}` does, and a client that fails answers with its error "
-        "while nothing is deleted. Imported files are never deleted."
+        "while nothing is deleted. Imported files stay, unless `delete_files` is true: then the files of your own "
+        "versions go into the recycle bin first, and their finished torrents leave their clients with the torrents' "
+        "files in the download folder, never with a file of the library."
     ),
     responses=error_responses(
         (404, "not_found"),
@@ -2190,10 +2214,34 @@ async def remove_title(
     remove_downloads: Annotated[
         bool, Query(description="Remove the title's running downloads from their clients first.")
     ] = False,
+    delete_files: Annotated[
+        bool,
+        Query(
+            description="Also move the files of your own versions into the recycle bin first, and remove their "
+            "finished torrents from the clients with the torrents' files in the download folder."
+        ),
+    ] = False,
 ) -> None:
-    if remove_downloads:
+    if delete_files:
+        running = await asyncio.to_thread(_running_of_title, title_id)
+        if running and not remove_downloads:
+            # Refused before any file moves, as removing without files refuses it.
+            raise _download_active(len(running))
+        await _remove_downloads(running)
+        await _remove_finished(title_id)
+        await asyncio.to_thread(_recycle_title, title_id)
+    elif remove_downloads:
         await _remove_downloads(await asyncio.to_thread(_running_of_title, title_id))
     await asyncio.to_thread(_remove_title, title_id)
+
+
+def _download_active(count: int) -> HTTPException:
+    return error(
+        "title_download_active",
+        "Downloads of this title are still running. Remove them together with the title, or wait until they are done.",
+        409,
+        count=count,
+    )
 
 
 def _remove_title(title_id: int) -> None:
@@ -2203,13 +2251,7 @@ def _remove_title(title_id: int) -> None:
             raise error("not_found", "This does not exist, or not any more.", 404)
         running = _title_downloads(db, title_id)
         if running:
-            raise error(
-                "title_download_active",
-                "Downloads of this title are still running. Remove them together with the title, or wait until they "
-                "are done.",
-                409,
-                count=len(running),
-            )
+            raise _download_active(len(running))
         rows = (
             db.execute(
                 select(Version, Source.name)

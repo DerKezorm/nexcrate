@@ -29,6 +29,7 @@ import dataclasses
 import logging
 import threading
 import time
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -38,7 +39,7 @@ from sqlalchemy.orm import Session as OrmSession
 
 from ... import crypto
 from ...db import SessionLocal
-from ...models import DiskRoot, Download, DownloadClient, Version, VersionDefinition
+from ...models import DiskRoot, Download, DownloadClient, DownloadEpisode, Version, VersionDefinition
 from ...models.downloads import PROTOCOL_OF_KIND
 from .. import downloaders, folders
 from . import arrival, files, store
@@ -266,6 +267,120 @@ async def _look_at(client: _Client) -> None:
                 "folder; the library file stays",
                 torrent.download_id,
             )
+
+
+# --- With the files of a title (Issue #10, 06.10.2026) --------------------------------------------------------- #
+
+
+def finished_of(
+    db: OrmSession, title_id: int, definition_ids: Collection[int], episode_ids: set[int] | None = None
+) -> list[int]:
+    """The title's imported torrents still in their clients (``seed_done_at`` empty), of the given version definitions;
+    with ``episode_ids`` only those whose episodes all lie in it."""
+    found: list[int] = []
+    rows = db.scalars(
+        select(Download)
+        .where(
+            Download.title_id == title_id,
+            Download.protocol == "torrent",
+            Download.state == "imported",
+            Download.seed_done_at.is_(None),
+            Download.client_download_id != "",
+            Download.client_id.is_not(None),
+        )
+        .order_by(Download.id)
+    )
+    for download in rows:
+        if download.version_definition_id not in definition_ids:
+            continue
+        if episode_ids is not None:
+            episodes = set(
+                db.scalars(select(DownloadEpisode.episode_id).where(DownloadEpisode.download_id == download.id))
+            )
+            if not episodes or not episodes <= episode_ids:
+                continue
+        found.append(download.id)
+    return found
+
+
+def _clients_of(download_ids: list[int]) -> list[_Client]:
+    """The enabled torrent clients holding these downloads, each with its torrents."""
+    by_client: dict[int, list[_Torrent]] = {}
+    found: list[_Client] = []
+    with SessionLocal() as db:
+        for download in db.scalars(select(Download).where(Download.id.in_(download_ids)).order_by(Download.id)):
+            if download.client_id is not None:
+                by_client.setdefault(download.client_id, []).append(
+                    _Torrent(
+                        download_id=download.id,
+                        client_download_id=download.client_download_id.lower(),
+                        seed_time=download.seed_time,
+                        stopped_by_nexcrate=download.seed_stopped_at is not None,
+                    )
+                )
+        for client_id, torrents in by_client.items():
+            row = db.get(DownloadClient, client_id)
+            if row is None or not row.enabled or row.kind not in TORRENT_KINDS or store.login_blocked(row):
+                logger.info(
+                    "Download client %d is switched off or locked out; %d finished torrents stay in it",
+                    client_id,
+                    len(torrents),
+                )
+                continue
+            found.append(
+                _Client(
+                    id=row.id,
+                    kind=row.kind,
+                    remove_completed=bool(row.remove_completed),
+                    target=_target(row),
+                    torrents=tuple(torrents),
+                )
+            )
+    return found
+
+
+_WHY_KEPT = {"library": "its files lie in a library folder", "unseen": "nexcrate does not see its files"}
+
+
+async def remove_finished(download_ids: list[int]) -> int:
+    """The files of their title go: these imported torrents leave their clients with their files in the download
+    folder, whatever their seed goal and whatever ``remove_completed`` says. Returns how many went.
+
+    The owner asked for the files to go, and a hardlinked torrent still holds the space. The safety of the goal holds:
+    never when the torrent's files lie in, hold or are the library, never when nexcrate does not see them. A torrent
+    the client no longer has is skipped. A client that fails raises ``downloaders.ClientError``; torrents removed
+    before stay removed. Runs before the versions go, ``safety`` needs them.
+    """
+    if not download_ids:
+        return 0
+    moment = store.now()
+    removed = 0
+    for client in await asyncio.to_thread(_clients_of, download_ids):
+        async with downloaders.open_client(client.target) as opened:
+            found = await opened.seeding([torrent.client_download_id for torrent in client.torrents])
+            for torrent in client.torrents:
+                seeding = found.get(torrent.client_download_id)
+                if seeding is None:
+                    continue
+                verdict = await asyncio.to_thread(safety, torrent.download_id, client.id, seeding.path)
+                if verdict != "ok":
+                    # Unmarked: the round at the goal decides again, should the title stay.
+                    logger.warning(
+                        "Download %d: its title's files go, but its torrent stays in the client (%s); nothing of it is "
+                        "deleted",
+                        torrent.download_id,
+                        _WHY_KEPT[verdict],
+                    )
+                    continue
+                await opened.remove(torrent.client_download_id, delete_files=True)
+                await asyncio.to_thread(_done, torrent.download_id, "removed", moment)
+                removed += 1
+                logger.info(
+                    "Download %d: its title's files go, so its torrent left the client with its files in the download "
+                    "folder",
+                    torrent.download_id,
+                )
+    return removed
 
 
 def record_self_removal(client_id: int, code: str | None) -> None:

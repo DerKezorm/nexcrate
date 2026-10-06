@@ -24,6 +24,7 @@ from ..models import ApiKey, ReleaseTrack, Title, Version
 from ..services import recycle_bin, tmdb
 from ..services.api_v1 import music_writing, titles, writing
 from ..services.api_v1 import versions as v1_versions
+from ..services.downloads import seeding as download_seeding
 from ..services.downloads import store as download_store
 from ..services.music import musicbrainz as mb
 from . import library as library_router
@@ -244,7 +245,11 @@ async def make_request(payload: RequestIn, key: RequestKey) -> JSONResponse:
 class WithdrawIn(BaseModel):
     versions: VersionIds = None
     series: SeriesScopeIn | None = None
-    delete_files: bool = Field(default=False, description="Also move the files of the scope into the recycle bin.")
+    delete_files: bool = Field(
+        default=False,
+        description="Also move the files of the scope into the recycle bin. Finished torrents whose files lie wholly "
+        "in the scope leave their clients with the torrents' files in the download folder.",
+    )
 
 
 class WithdrawnAlbumOut(BaseModel):
@@ -397,6 +402,16 @@ def _running_of(kind: str, ref: str) -> tuple[int, list[tuple[int, str, int | No
         return title.id, running
 
 
+def _finished_of(title_id: int) -> list[int]:
+    with SessionLocal() as db:
+        own = set(
+            db.scalars(
+                select(Version.version_definition_id).where(Version.title_id == title_id, Version.source_id.is_(None))
+            )
+        )
+        return download_seeding.finished_of(db, title_id, own)
+
+
 @router.delete(
     "/titles/{kind}/{ref}",
     status_code=204,
@@ -404,7 +419,8 @@ def _running_of(kind: str, ref: str) -> tuple[int, list[tuple[int, str, int | No
     summary="Remove a title from the library",
     description=(
         "As the button in nexcrate: nexcrate's own versions go, and the title when none is left. Its running "
-        "downloads are stopped at their client first. With `delete_files` the files go into the recycle bin before; "
+        "downloads are stopped at their client first. With `delete_files` the files go into the recycle bin before, "
+        "and the finished torrents leave their clients with the torrents' files in the download folder; "
         "restoring such a file adds the title again, unwatched. Versions a Radarr or Sonarr connection "
         "feeds stay, and the answer is 409 `title_has_source_versions`."
     ),
@@ -422,6 +438,7 @@ async def remove_title(
     title_id, running = await asyncio.to_thread(_running_of, kind, ref)
     await writing.cancel_downloads(running)
     if delete_files:
+        await writing.remove_finished(await asyncio.to_thread(_finished_of, title_id))
         await asyncio.to_thread(recycle_bin.delete, title_id, recycle_bin.Scope(), _caller(key).actor)
     if kind == "album":
         # An album stays in its artist's catalogue; its version goes.

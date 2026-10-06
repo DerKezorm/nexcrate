@@ -277,7 +277,11 @@
     "removeOwn_other": "Remove own versions",
     "done": "{{title}} is removed.",
     "ownDone": "Your versions are removed. The ones from Radarr stay.",
-    "companion": "The movie stays on disk. nexcrate only takes its release.nex away."
+    "companion": "The movie stays on disk. nexcrate only takes its release.nex away.",
+    "confirmWithFiles": "Yes, remove with its files",
+    "textWithFiles": "The title and its versions disappear from the library, and its files go into the recycle bin.",
+    "files": "Move the files into the recycle bin",
+    "filesHint": "The files can be brought back from the recycle bin for the set time. Finished torrents also leave the download client, with their files in the download folder, even while they still seed. A connected media server reads the folders again."
   },
   "runningDownload": {
     "movie_one": "A download is running for this movie. nexcrate removes it in the download client as well.",

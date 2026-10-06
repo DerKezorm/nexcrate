@@ -6,7 +6,7 @@ import { libraryApi } from '../../api/library'
 import type { TitleDetail } from '../../api/types'
 import { Dialog } from '../../components/Dialog'
 import { Symbol } from '../../components/Symbol'
-import { Button, FormMessage } from '../../components/ui'
+import { Button, FormMessage, Toggle } from '../../components/ui'
 import { formatList } from '../../lib/format'
 import { useVersions } from '../versions/useVersions'
 import { definitionOf, isFromSource, namedCount, namedLabels, pendingDownloads } from './versionDefinitions'
@@ -44,6 +44,8 @@ export function RemoveTitleDialog(props: Props) {
 function RemoveWhole({ title, onClose, onRemoved, onStale, problem, setProblem }: Shared) {
   const { t } = useTranslation()
   const [busy, setBusy] = useState(false)
+  // Issue #10: auf Wunsch gehen die Dateien mit, in den Papierkorb, und fertige Torrents aus dem Download-Programm.
+  const [files, setFiles] = useState(false)
   // Wie viele Downloads der Server in seinem 409 genannt hat (siehe namedCount).
   const [named, setNamed] = useState(0)
   const pending = title.versions.reduce((sum, version) => sum + pendingDownloads(version), 0)
@@ -53,7 +55,7 @@ function RemoveWhole({ title, onClose, onRemoved, onStale, problem, setProblem }
     setBusy(true)
     setProblem(null)
     try {
-      await libraryApi.remove(title.id, loading > 0)
+      await libraryApi.remove(title.id, loading > 0, files)
       onRemoved()
     } catch (error) {
       setProblem(error)
@@ -83,15 +85,16 @@ function RemoveWhole({ title, onClose, onRemoved, onStale, problem, setProblem }
             {t('common.actions.cancel')}
           </Button>
           <Button variant="danger" onClick={() => void remove()} loading={busy}>
-            {t('title.remove.confirm')}
+            {files ? t('title.remove.confirmWithFiles') : t('title.remove.confirm')}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-mist-300">{t('title.remove.text')}</p>
+        <p className="text-sm text-mist-300">{files ? t('title.remove.textWithFiles') : t('title.remove.text')}</p>
         {/* Library from disk: removing takes the release.nex nexcrate wrote, never the movie. */}
-        <p className="text-sm text-mist-400">{t('title.remove.companion')}</p>
+        {!files && <p className="text-sm text-mist-400">{t('title.remove.companion')}</p>}
+        <Toggle label={t('title.remove.files')} hint={t('title.remove.filesHint')} checked={files} onChange={setFiles} disabled={busy} />
         {loading > 0 && <FormMessage tone="info">{t('title.runningDownload.movie', { count: loading })}</FormMessage>}
         {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
       </div>

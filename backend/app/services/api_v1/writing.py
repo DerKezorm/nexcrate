@@ -42,10 +42,11 @@ from ...models import (
     VersionDefinition,
     utcnow,
 )
-from .. import companions, images, library, recycle_bin, tmdb
+from .. import companions, downloaders, images, library, recycle_bin, tmdb
 from ..automatic import clock as automatic_clock
 from ..automatic import planning as automatic_planning
 from ..downloads import actions as download_actions
+from ..downloads import seeding as download_seeding
 from ..downloads import store as download_store
 from ..music import musicbrainz as mb
 from ..music import store as music_store
@@ -120,6 +121,8 @@ class Plan:
     title_id: int
     definition_ids: list[int]
     running: list[tuple[int, str, int | None]] = field(default_factory=list)
+    #: The imported torrents of the scope still in their clients; they go when the files go (Issue #10).
+    finished: list[int] = field(default_factory=list)
 
 
 # --- Checks shared by every address ------------------------------------------------------------------------------ #
@@ -769,7 +772,8 @@ def _plan_withdraw(kind: str, ref: str, public_ids: list[str] | None, scope: Ser
                 if not episodes or not episodes <= covered:
                     continue
             running.append((download.id, download.state, download.version_definition_id))
-        return Plan(title.id, sorted(chosen), running)
+        finished = download_seeding.finished_of(db, title.id, chosen, covered)
+        return Plan(title.id, sorted(chosen), running, finished)
 
 
 async def cancel_downloads(running: list[tuple[int, str, int | None]]) -> dict[int, int]:
@@ -790,6 +794,15 @@ async def cancel_downloads(running: list[tuple[int, str, int | None]]) -> dict[i
         if definition_id is not None:
             stopped[definition_id] = stopped.get(definition_id, 0) + 1
     return stopped
+
+
+async def remove_finished(download_ids: list[int]) -> None:
+    """The files go, so their finished torrents leave the clients first (Issue #10); a client that fails answers with
+    its error."""
+    try:
+        await download_seeding.remove_finished(download_ids)
+    except downloaders.ClientError as exc:
+        raise exc.http() from exc
 
 
 def _remove_versions(db: OrmSession, title: Title, versions: list[Version]) -> list[companions.Removal]:
@@ -909,6 +922,8 @@ async def withdraw(kind: str, ref: str, public_ids: list[str] | None, scope: Ser
     """Take a request back (N20): watching off, running downloads stopped, files into the bin when asked."""
     plan = await asyncio.to_thread(_plan_withdraw, kind, ref, public_ids, scope)
     stopped = await cancel_downloads(plan.running)
+    if delete_files:
+        await remove_finished(plan.finished)
     return await asyncio.to_thread(_apply_withdraw, plan, scope, delete_files, caller, stopped)
 
 

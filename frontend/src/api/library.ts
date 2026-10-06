@@ -73,8 +73,16 @@ export const libraryApi = {
   /**
    * 409 `title_has_source_versions`, solange eine Verbindung zu Radarr Fassungen liefert. Laeuft ein Download, 409
    * `title_download_active`, ausser mit `removeDownloads`: Dann entfernt der Server ihn auch im Download-Programm.
+   * Mit `deleteFiles` (Issue #10) kommen die Dateien in den Papierkorb, und fertige Torrents gehen samt ihren Dateien
+   * im Download-Ordner aus dem Download-Programm.
    */
-  remove: (id: number, removeDownloads = false) => api.delete<void>(removeDownloads ? `/library/${id}?remove_downloads=true` : `/library/${id}`),
+  remove: (id: number, removeDownloads = false, deleteFiles = false) => {
+    const params = new URLSearchParams()
+    if (removeDownloads) params.set('remove_downloads', 'true')
+    if (deleteFiles) params.set('delete_files', 'true')
+    const query = params.toString()
+    return api.delete<void>(query ? `/library/${id}?${query}` : `/library/${id}`)
+  },
   /** Mehrere Titel auf einmal entfernen, samt laufender Downloads; mit `delete_files` die Dateien in den Papierkorb. */
   removeMany: (body: { kind: MediaKind; title_ids?: number[] | null; state?: string | null; q?: string | null; tag?: string | null; delete_files: boolean }) =>
     api.post<RemovedMany>('/library/remove', body),
