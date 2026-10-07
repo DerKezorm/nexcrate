@@ -275,6 +275,20 @@
       "small": [
         "Ein verbundener Mediaserver liest danach den nächsten Ordner neu ein, der noch steht."
       ]
+    },
+    "0.7.3": {
+      "lead": "Diese Version entfernt beim Entfernen eines Titels samt Dateien den ganzen Ordner, wie Radarr und Sonarr. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Der ganze Ordner geht mit",
+          "body": "Entfernst du einen Titel samt Dateien, kommt alles, was noch im Film- oder Serienordner liegt, mit in den Papierkorb: Poster, .nfo, Extras. Danach geht der Ordner. Nur „Dateien löschen“ lässt den Rest im Ordner stehen. Liegt im Ordner eine Datei eines anderen Titels oder ein Link, gehen nur die eigenen Dateien.",
+          "where": "Titel entfernen mit Haken, Auswahl entfernen mit Haken, oder Löschen in nexview"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Bleibt ein fertiger Torrent im Download-Programm, weil er nicht mehr in nexcrates Kategorie steht, sagt das Log das jetzt."
+      ]
     }
   }
 }

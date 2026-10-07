@@ -275,6 +275,20 @@
       "small": [
         "A connected media server then reads the nearest folder that is left."
       ]
+    },
+    "0.7.3": {
+      "lead": "This version removes the whole folder when you remove a title with its files, as Radarr and Sonarr do. No database change.",
+      "sections": [
+        {
+          "title": "The whole folder goes along",
+          "body": "When you remove a title with its files, everything still in the movie or series folder goes into the recycle bin too: artwork, .nfo, extras. Then the folder goes. Deleting only the files leaves the rest of the folder alone. If the folder holds another title's file or a link, only the title's own files go.",
+          "where": "Remove title with the box, remove a selection with the box, or deleting in nexview"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "If a finished torrent stays in the download client because it is no longer in nexcrate's category, the log now says so."
+      ]
     }
   }
 }
