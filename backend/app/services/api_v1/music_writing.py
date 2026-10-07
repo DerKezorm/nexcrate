@@ -241,7 +241,7 @@ def _apply_withdraw(artist_id: int, delete_files: bool, caller: writing.Caller,
 
     moment = utcnow()
     moves: list[recycle_bin.Move] = []
-    folders: list[tuple[str, str]] = []
+    gone = recycle_bin.Result()
     with SessionLocal() as db:
         artist = db.get(Artist, artist_id)
         if artist is None:
@@ -274,7 +274,9 @@ def _apply_withdraw(artist_id: int, delete_files: bool, caller: writing.Caller,
                 if delete_files:
                     result = recycle_bin.delete_in(db, title, recycle_bin.Scope(), caller.actor, moment)
                     moves += result.moves
-                    folders += result.folders
+                    gone.folders += result.folders
+                    gone.roots.update(result.roots)
+                    gone.drops += result.drops
                     outcome["files_recycled"] = result.files
                 if outcome["monitoring_off"] or outcome["files_recycled"]:
                     db.add(writing._history_entry(version, label, "withdrawn", caller, None, moment))
@@ -301,7 +303,7 @@ def _apply_withdraw(artist_id: int, delete_files: bool, caller: writing.Caller,
         automatic_planning.replan_apart([title.id for title in albums], automatic_clock.now())
         if removing:
             music_router.remove_artist(db, artist_id)
-    recycle_bin.tell_media_servers(folders)
+    recycle_bin.settle(gone)
     logger.info("Artist %d taken back through key %d: %d albums, %d downloads stopped, artist removed %s", artist_id,
                 caller.key_id, len(outcomes), sum(stopped.values()), removing)  # fmt: skip
     return {"title_removed": removing, "versions": [], "albums": outcomes}

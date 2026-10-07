@@ -47,6 +47,7 @@ from ..models import (
     HistoryEntry,
     RecycleEntry,
     ReleaseTrack,
+    SeasonFolder,
     Title,
     TrackFile,
     Version,
@@ -143,11 +144,26 @@ class VersionResult:
     tracks: list[str] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class Drop:
+    """A season or album folder whose version kept no file in it: its ``release.nex`` goes after the commit, when it is
+    still the one nexcrate wrote and names nothing else (Issue #10)."""
+
+    kind: str
+    folder: Path
+    label: str
+    sha256: str
+
+
 @dataclass
 class Result:
     versions: list[VersionResult] = field(default_factory=list)
     #: The folders that lost a file, for the media servers after the commit: ``(kind, folder)``.
     folders: list[tuple[str, str]] = field(default_factory=list)
+    #: The root folder of each folder in ``folders``: tidying climbs no higher (Issue #10).
+    roots: dict[str, str] = field(default_factory=dict)
+    #: The ``release.nex`` of season and album folders left without a file of their version (Issue #10).
+    drops: list[Drop] = field(default_factory=list)
     moves: list[Move] = field(default_factory=list)
     #: The ``release.nex`` entries of movie files that went, for ``companions.remove`` after the commit: the entry
     #: named a file in the bin.
@@ -462,6 +478,7 @@ def _delete_movie(db: OrmSession, title: Title, version: Version, label: str, ac
                    bin_path=_relative(target, root), size=size, extras=extras or None, file_facts=facts)
         )  # fmt: skip
         result.folders.append(("movie", str(path.parent)))
+        result.roots[str(path.parent)] = str(root)
         done.files, done.size = 1, size
     for row in subtitles:
         db.delete(row)
@@ -574,6 +591,7 @@ def _delete_series(db: OrmSession, title: Title, version: Version, label: str, s
                        episodes=[episode.episode_number for episode in episodes])
             )  # fmt: skip
             result.folders.append(("series", str(path.parent)))
+            result.roots[str(path.parent)] = str(root)
             done.files += 1
             done.size += size
             done.episodes.extend(
@@ -650,6 +668,7 @@ def _delete_album(db: OrmSession, title: Title, version: Version, label: str, sc
                              "tracks": [track_refs[value] for value in row.track_ids or [] if value in track_refs]})
             )  # fmt: skip
             result.folders.append(("music", str(path.parent)))
+            result.roots[str(path.parent)] = str(root)
             done.files += 1
             done.size += size
             if mbid := track_refs.get(row.track_id or 0):
@@ -686,6 +705,7 @@ def delete_in(db: OrmSession, title: Title, scope: Scope, actor: Actor, moment: 
     try:
         for version in versions:
             label = labels.get(version.version_definition_id, "")
+            before = len(result.folders)
             if title.kind == "movie":
                 done = _delete_movie(db, title, version, label, actor, moment, result)
             elif title.kind == "album":
@@ -693,6 +713,8 @@ def delete_in(db: OrmSession, title: Title, scope: Scope, actor: Actor, moment: 
             else:
                 done = _delete_series(db, title, version, label, scope, actor, moment, result)
             result.versions.append(done)
+            if done.files:
+                _plan_drops(db, title, version, label, result, result.folders[before:])
             if done.files or done.missing:
                 episodes = done.episodes if title.kind == "series" else None
                 tracks = done.tracks if title.kind == "album" else None
@@ -704,6 +726,100 @@ def delete_in(db: OrmSession, title: Title, scope: Scope, actor: Actor, moment: 
         undo(result.moves)
         raise
     return result
+
+
+def _plan_drops(db: OrmSession, title: Title, version: Version, label: str, result: Result,
+                lost_in: list[tuple[str, str]]) -> None:  # fmt: skip
+    """Season and album folders this version lost files in and keeps none in: their ``release.nex`` may go. Only with
+    the hash nexcrate stored when it wrote the file, so a file changed since stays."""
+    db.flush()
+    lost = {Path(folder) for kind, folder in lost_in if kind in ("series", "music")}
+    if title.kind == "album":
+        left = db.scalar(select(TrackFile.id).where(TrackFile.version_id == version.id).limit(1))
+        if left is None and version.companion_sha256:
+            for folder in lost:
+                result.drops.append(Drop("album", folder, label, version.companion_sha256))
+        return
+    if title.kind != "series":
+        return
+    # The season folders the version still has a file in.
+    names = set()
+    for relative in db.scalars(select(EpisodeFile.relative_path).where(EpisodeFile.version_id == version.id)):
+        parts = relative.replace("\\", "/").split("/")
+        if len(parts) > 1:
+            names.add(parts[0])
+    for season in db.scalars(select(SeasonFolder).where(SeasonFolder.version_id == version.id)):
+        if not season.companion_hash or season.name in names:
+            continue
+        for folder in lost:
+            drop = Drop("series", folder, label, season.companion_hash)
+            if folder.name == season.name and drop not in result.drops:
+                result.drops.append(drop)
+
+
+def drop_companions(drops: Iterable[Drop]) -> int:
+    """After the commit: each planned ``release.nex`` goes when it is nexcrate's, unchanged, and names only this
+    version. Returns how many went; never raises."""
+    from . import companions_album, companions_series
+
+    gone = 0
+    planned = list(drops)
+    if not planned:
+        return 0
+    try:
+        installation = companions.installation_id()
+        for drop in planned:
+            key = files.resolved(drop.folder) or drop.folder
+            with companions._lock_for(key):
+                reader = companions_series.read if drop.kind == "series" else companions_album.read
+                found = reader(drop.folder, installation)
+                if found["outcome"] != companions.OURS or found.get("sha256") != drop.sha256:
+                    continue
+                if drop.kind == "series" and any(entry.get("version") != drop.label for entry in found["entries"]):
+                    continue
+                if companions.remove_file(drop.folder):
+                    gone += 1
+    except Exception:  # the files went already; a release.nex left behind is no reason to fail
+        logger.exception("A release.nex of a folder left without files could not be removed")
+    if gone:
+        logger.info("%d release.nex files of folders left without files went", gone)
+    return gone
+
+
+def settle(result: Result, removals: Iterable[companions.Removal] = ()) -> None:
+    """After the commit, in this order: the ``release.nex`` entries of what went, folders left empty, the media
+    servers."""
+    planned = [*result.companions, *removals]
+    if planned:
+        companions.remove(planned)
+    drop_companions(result.drops)
+    tell_media_servers(tidy(result.folders, result.roots))
+
+
+def tidy(changed: Iterable[tuple[str, str]], roots: dict[str, str]) -> list[tuple[str, str]]:
+    """After the commit, and after ``release.nex`` went: the folders the bin left empty go, upward to just below their
+    root folder, as Radarr removes a movie's folder with its file (Issue #10, 06.10.2026).
+
+    Only ``os.rmdir``: whatever is left in a folder keeps it (artwork, a ``.nfo``, a file nexcrate does not know), a
+    link is never followed, a root folder and anything outside it never go. A file brought back from the bin makes its
+    folders again. Returns ``changed`` for the media servers, a removed folder replaced by the nearest one left.
+    """
+    told: list[tuple[str, str]] = []
+    removed = 0
+    for kind, raw in changed:
+        folder, root = Path(raw), Path(roots.get(raw, raw))
+        while files.strictly_inside(folder, root) and not files.is_link(folder):
+            try:
+                os.rmdir(folder)
+            except OSError:
+                break
+            removed += 1
+            folder = folder.parent
+        if (kind, str(folder)) not in told:
+            told.append((kind, str(folder)))
+    if removed:
+        logger.info("%d folders left empty by the recycle bin went", removed)
+    return told
 
 
 def tell_media_servers(changed: Iterable[tuple[str, str]]) -> None:
@@ -736,9 +852,7 @@ def delete(title_id: int, scope: Scope, actor: Actor = OWNER) -> Result:
             db.rollback()
             undo(result.moves)
             raise
-    tell_media_servers(result.folders)
-    if result.companions:
-        companions.remove(result.companions)
+    settle(result)
     logger.info("Title %d: %d files went into the recycle bin (%s)", title_id, result.files, actor.kind)
     return result
 

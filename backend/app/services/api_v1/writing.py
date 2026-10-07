@@ -885,11 +885,8 @@ def _apply_withdraw(plan: Plan, scope: SeriesScope | None, delete_files: bool, c
             db.rollback()
             recycle_bin.undo(result.moves)
             raise
-    recycle_bin.tell_media_servers(result.folders)
     # The entries of the files that went into the bin, then those of the versions that went.
-    removals = result.companions + removals
-    if removals:
-        companions.remove(removals)
+    recycle_bin.settle(result, removals)
     if title_removed:
         images.forget([plan.title_id])
     logger.info(
