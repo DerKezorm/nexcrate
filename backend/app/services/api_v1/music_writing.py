@@ -272,7 +272,8 @@ def _apply_withdraw(artist_id: int, delete_files: bool, caller: writing.Caller,
                     download_store.follow_version(db, title.id, version.version_definition_id, moment)
                     outcome["monitoring_off"] = True
                 if delete_files:
-                    result = recycle_bin.delete_in(db, title, recycle_bin.Scope(), caller.actor, moment)
+                    whole = recycle_bin.Scope(with_folders=True)
+                    result = recycle_bin.delete_in(db, title, whole, caller.actor, moment)
                     moves += result.moves
                     gone.folders += result.folders
                     gone.roots.update(result.roots)

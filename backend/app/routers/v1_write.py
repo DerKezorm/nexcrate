@@ -439,7 +439,7 @@ async def remove_title(
     await writing.cancel_downloads(running)
     if delete_files:
         await writing.remove_finished(await asyncio.to_thread(_finished_of, title_id))
-        await asyncio.to_thread(recycle_bin.delete, title_id, recycle_bin.Scope(), _caller(key).actor)
+        await asyncio.to_thread(recycle_bin.delete, title_id, recycle_bin.Scope(with_folders=True), _caller(key).actor)
     if kind == "album":
         # An album stays in its artist's catalogue; its version goes.
         await asyncio.to_thread(music_writing.remove_album_version, title_id)

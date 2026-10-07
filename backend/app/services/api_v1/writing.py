@@ -846,6 +846,7 @@ def _apply_withdraw(plan: Plan, scope: SeriesScope | None, delete_files: bool, c
                 definition_ids=tuple(plan.definition_ids),
                 seasons=series_scope.seasons,
                 episodes=series_scope.episodes,
+                with_folders=True,
             )
             result = recycle_bin.delete_in(db, title, bin_scope, caller.actor, moment)
             for done in result.versions:

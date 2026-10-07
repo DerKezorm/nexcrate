@@ -39,6 +39,7 @@ from sqlalchemy.orm import Session as OrmSession
 from ..db import SessionLocal
 from ..meldungen import error
 from ..models import (
+    DiskRoot,
     Download,
     Episode,
     EpisodeFile,
@@ -119,6 +120,9 @@ class Scope:
     episode_file_ids: tuple[int, ...] = ()
     track_ids: tuple[int, ...] = ()
     track_file_ids: tuple[int, ...] = ()
+    #: With a whole scope: what is left in each version's own folder goes into the bin too, as Radarr and Sonarr remove
+    #: a title's folder (Issue #10). Removing a title and taking it back set it; deleting files alone does not.
+    with_folders: bool = False
 
     @property
     def whole(self) -> bool:
@@ -702,6 +706,8 @@ def delete_in(db: OrmSession, title: Title, scope: Scope, actor: Actor, moment: 
         )
     }
     result = Result()
+    # Before the files go: a movie version forgets its path with its file.
+    own_folders = _own_folders(db, title, versions) if scope.with_folders and scope.whole else []
     try:
         for version in versions:
             label = labels.get(version.version_definition_id, "")
@@ -721,11 +727,108 @@ def delete_in(db: OrmSession, title: Title, scope: Scope, actor: Actor, moment: 
                 db.add(
                     history(version, label, "files_deleted", done.files, actor, moment, done.size, episodes, tracks)
                 )
+        for kind, root, folder in own_folders:
+            _recycle_rest(kind, root, folder, moment, result)
         db.flush()
     except BaseException:
         undo(result.moves)
         raise
     return result
+
+
+def _own_folders(db: OrmSession, title: Title, versions: list[Version]) -> list[tuple[str, Path, Path]]:
+    """The folder of each version that is the version's alone: ``(kind, root, folder)``.
+
+    A movie's folder is the one its file lies in, a series' the series folder, an album's the album folder. Never a
+    root folder or a link, and never a folder that holds, or is, what nexcrate counts as another version's or a library
+    folder: that version would lose its file without knowing it.
+    """
+    from .music import album_read
+    from .music import paths as music_paths
+
+    removing = {version.id for version in versions}
+    found: list[tuple[str, Path, Path]] = []
+    for version in versions:
+        root = _root(version.root_folder)
+        folder: Path | None = None
+        if root is None:
+            continue
+        if title.kind == "movie" and version.relative_path and "/" in version.relative_path.replace("\\", "/"):
+            path = below(root, version.relative_path)
+            folder = path.parent if path is not None else None
+        elif title.kind == "series":
+            located = _series_folder(db, version)
+            folder = located[1] if located is not None else None
+        elif title.kind == "album" and not music_paths.sharing(db, version):
+            folder = album_read.album_folder(version)
+        if folder is None or files.is_link(folder) or not folder.is_dir() or not files.strictly_inside(folder, root):
+            continue
+        if _holds_another(db, folder, removing):
+            logger.info("Version %d: its folder holds another version's files or folder; only its own files went",
+                        version.id)  # fmt: skip
+            continue
+        if _holds_a_link(folder):
+            logger.info("Version %d: its folder holds a link; only its own files went", version.id)
+            continue
+        kind = {"movie": "movie", "series": "series"}.get(title.kind, "music")
+        if (kind, root, folder) not in found:
+            found.append((kind, root, folder))
+    return found
+
+
+def _holds_another(db: OrmSession, folder: Path, removing: set[int]) -> bool:
+    """Whether a library folder, or a file or folder of a version not being removed, lies in ``folder``."""
+    raw: list[str | None] = []
+    raw.extend(db.scalars(select(VersionDefinition.folder).where(VersionDefinition.folder.is_not(None))))
+    raw.extend(db.scalars(select(DiskRoot.path)))
+    for root_folder, relative in db.execute(
+        select(Version.root_folder, Version.relative_path).where(
+            Version.id.not_in(removing), Version.root_folder.is_not(None), Version.relative_path.is_not(None)
+        )
+    ).tuples():
+        raw.append(str(Path(root_folder, relative)))
+    for value in raw:
+        if not value:
+            continue
+        seen = folders.visible_path(value)
+        if seen is not None and files.inside(seen, folder):
+            return True
+    return False
+
+
+def _holds_a_link(folder: Path) -> bool:
+    """A link anywhere in the folder: moving it would follow it, removing it would take what it leads to."""
+    for current, names, file_names in os.walk(folder):
+        here = Path(current)
+        if any(files.is_link(here / name) for name in [*names, *file_names]):
+            return True
+    return False
+
+
+def _recycle_rest(kind: str, root: Path, folder: Path, moment: datetime, result: Result) -> None:
+    """Everything left in a version's own folder into the bin beside its files, one file at a time. A file that will
+    not move stays, and so does its folder; the title's own files went all the same. The empty folders go
+    afterwards with ``tidy``."""
+    moved = kept = 0
+    for current, _names, file_names in os.walk(folder):
+        here = Path(current)
+        for name in file_names:
+            try:
+                _move_into_bin(here / name, root, moment, result.moves)
+                moved += 1
+            except (OSError, files.FileProblem):
+                kept += 1
+    for current, _names, _files in os.walk(folder, topdown=False):
+        if Path(current) != folder:
+            try:
+                os.rmdir(current)
+            except OSError:
+                pass
+    if moved or kept:
+        logger.info("%d further files of a version's own folder went into the recycle bin, %d stayed", moved, kept)
+    if (kind, str(folder)) not in result.folders:
+        result.folders.append((kind, str(folder)))
+    result.roots[str(folder)] = str(root)
 
 
 def _plan_drops(db: OrmSession, title: Title, version: Version, label: str, result: Result,
@@ -808,6 +911,9 @@ def tidy(changed: Iterable[tuple[str, str]], roots: dict[str, str]) -> list[tupl
     removed = 0
     for kind, raw in changed:
         folder, root = Path(raw), Path(roots.get(raw, raw))
+        # A folder that went already: the nearest one left counts.
+        while not os.path.lexists(folder) and folder != root and root in folder.parents:
+            folder = folder.parent
         while files.strictly_inside(folder, root) and not files.is_link(folder):
             try:
                 os.rmdir(folder)

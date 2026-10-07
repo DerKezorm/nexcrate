@@ -2141,7 +2141,7 @@ def _recycle_title(title_id: int) -> int:
         )
     if not definitions:
         return 0
-    return recycle_bin.delete(title_id, recycle_bin.Scope(definition_ids=definitions)).files
+    return recycle_bin.delete(title_id, recycle_bin.Scope(definition_ids=definitions, with_folders=True)).files
 
 
 @router.post(

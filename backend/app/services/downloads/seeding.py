@@ -361,6 +361,13 @@ async def remove_finished(download_ids: list[int]) -> int:
             for torrent in client.torrents:
                 seeding = found.get(torrent.client_download_id)
                 if seeding is None:
+                    # Gone from the client, or moved out of nexcrate's category: then it stays where it is (Issue #10).
+                    logger.info(
+                        "Download %d: its title's files go, but client %d has no finished torrent of it in nexcrate's "
+                        "category; nothing is removed there",
+                        torrent.download_id,
+                        client.id,
+                    )
                     continue
                 verdict = await asyncio.to_thread(safety, torrent.download_id, client.id, seeding.path)
                 if verdict != "ok":
