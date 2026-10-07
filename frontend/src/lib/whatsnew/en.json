@@ -261,6 +261,20 @@
       "small": [
         "If downloads are still running when you remove a title with its files, nexcrate now says so before any file moves."
       ]
+    },
+    "0.7.2": {
+      "lead": "This version also removes the folders that are left empty once their files went into the recycle bin. No database change.",
+      "sections": [
+        {
+          "title": "No more empty folders",
+          "body": "When files go into the recycle bin, a folder left empty goes too: the movie folder, a season folder with its last episode, the series folder with its last season, and likewise album and artist folders. The release.nex nexcrate wrote there goes with it, unless it was changed by hand. A folder that still holds anything else stays, and a version's own folder never goes. Bring a file back from the recycle bin and its folder is made again.",
+          "where": "Wherever files go into the recycle bin, also when deleting in nexview"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "A connected media server then reads the nearest folder that is left."
+      ]
     }
   }
 }

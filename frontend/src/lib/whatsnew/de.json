@@ -261,6 +261,20 @@
       "small": [
         "Laufen beim Entfernen samt Dateien noch Downloads, sagt nexcrate das jetzt, bevor eine Datei bewegt wird."
       ]
+    },
+    "0.7.2": {
+      "lead": "Diese Version räumt nach dem Papierkorb auch die Ordner weg, die dabei leer werden. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Keine leeren Ordner mehr",
+          "body": "Kommen Dateien in den Papierkorb, geht ein Ordner, der danach leer ist, mit: der Filmordner, ein Staffelordner mit seiner letzten Folge, der Serienordner mit seiner letzten Staffel, ebenso Album- und Künstlerordner. Die release.nex, die nexcrate dort geschrieben hat, geht mit, außer sie wurde von Hand geändert. Ein Ordner, in dem noch etwas anderes liegt, bleibt, der Ordner einer Fassung selbst nie. Holst du eine Datei aus dem Papierkorb zurück, entsteht ihr Ordner neu.",
+          "where": "Überall, wo Dateien in den Papierkorb kommen, auch beim Löschen in nexview"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Ein verbundener Mediaserver liest danach den nächsten Ordner neu ein, der noch steht."
+      ]
     }
   }
 }
