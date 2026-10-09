@@ -14,6 +14,8 @@ import { FinishDialog } from './FinishDialog'
 import {
   type Choice,
   alsoHeld,
+  deviation,
+  hasProposals,
   initialChoices,
   OPEN_DECISIONS as OPEN,
   preselects,
@@ -46,6 +48,10 @@ const DECISION_KEYS: Record<string, string> = {
  * auf eine andere Serie und bei einem Paket, das anders zaehlt als TMDB, ist nichts vorgewaehlt. Eine Doppelfolge geht nur
  * ganz. Ist eine Datei nicht besser als die vorhandene, fragt der Dialog einmal nach, auch "Nur die anderen ablegen".
  * Dateien ohne lesbaren Namen bekommen Folgen nur auf Knopfdruck (Antwort des Besitzers vom 17.09.2026).
+ *
+ * Seit 09.10.2026: Traegt eine Datei den Namen einer Folge, ist diese vorgewaehlt ("nach Folgenname"). Zaehlt das Paket
+ * anders, nimmt der Knopf den Vorschlag statt der rohen Nummern. Neben jeder Datei steht der Name der gewaehlten Folge,
+ * rosa, wenn er vom Folgennamen in der Datei oder von der gelesenen Nummer abweicht.
  */
 export function AssignDialog({ download, onClose, onDone }: { download: Download; onClose: () => void; onDone: (message: string) => void }) {
   const { t, i18n } = useTranslation()
@@ -99,6 +105,8 @@ export function AssignDialog({ download, onClose, onDone }: { download: Download
   const readable = editable.some((file) => file.episodes.length > 0)
   const unreadable = data !== null ? unreadableCount(data) : 0
   const proposals = data !== null ? proposable(data, choices) : 0
+  const named = data !== null && hasProposals(data, 'name')
+  const shifted = data !== null && hasProposals(data, 'shift')
   const twiceCodes = [...twice].map((id) => episodeById.get(id)?.code ?? String(id)).join(', ')
 
   function update(key: number, episodes: (number | null)[]) {
@@ -172,11 +180,13 @@ export function AssignDialog({ download, onClose, onDone }: { download: Download
         {code === 'other_series_suspected' && <p className="text-sm text-mist-300">{t('downloads.assign.otherSeriesHint')}</p>}
         {unknown !== '' && <p className="text-sm text-mist-300">{t('downloads.assign.unknownHint', { codes: unknown })}</p>}
         {counted !== '' && <p className="text-sm text-mist-300">{t('downloads.assign.countedHint', { scheme: countingName(t, counted) })}</p>}
-        {data !== null && !preselect && readable && (
+        {named && <p className="text-sm text-mist-300">{t('downloads.assign.byNameHint')}</p>}
+        {shifted && <p className="text-sm text-mist-300">{t('downloads.assign.shiftHint')}</p>}
+        {data !== null && (!preselect || shifted) && (readable || shifted || named) && (
           <div>
             <Button variant="ghost" size="sm" onClick={() => setChoices((current) => withReadings(data, current))}>
               <Symbol name="check" />
-              {t('downloads.assign.useRead')}
+              {shifted || named ? t('downloads.assign.useProposal') : t('downloads.assign.useRead')}
             </Button>
           </div>
         )}
@@ -208,6 +218,11 @@ export function AssignDialog({ download, onClose, onDone }: { download: Download
               const choice = choices[file.key] ?? { episodes: [null], proposal: false }
               const read = readingCode(file)
               const reason = DECISION_KEYS[file.decision]
+              const chosenEpisodes = choice.episodes
+                .map((id) => (id !== null ? episodeById.get(id) : undefined))
+                .filter((episode): episode is DownloadEpisodeChoice => episode !== undefined)
+              const off = deviation(file, choice)
+              const namedText = (file.named ?? []).map((episode) => (episode.name ? `${episode.code} ${episode.name}` : episode.code)).join(', ')
               return (
                 <li key={file.key} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 rounded-xl border border-ink-700 bg-ink-900/60 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <div className="flex min-w-0 flex-col gap-1">
@@ -220,7 +235,17 @@ export function AssignDialog({ download, onClose, onDone }: { download: Download
                         {read !== null && readPart(file) !== null && ' · ' + t('downloads.assign.partShort', { part: readPart(file) })}
                       </span>
                     </p>
+                    {namedText !== '' && <p className="text-xs text-mist-400">{t('downloads.assign.namedIn', { names: namedText })}</p>}
                     {reason !== undefined && <p className="text-xs text-mist-400">{t(reason)}</p>}
+                    {chosenEpisodes.length > 0 && (
+                      // Der Name der gewaehlten Folge neben der Datei, Abweichungen vom Namen oder der Nummer markiert.
+                      <p className={'text-xs ' + (off !== null ? 'text-bad-400' : 'text-mist-300')}>
+                        {t('downloads.assign.chosen', {
+                          names: chosenEpisodes.map((episode) => (episode.name ? `${episode.code} ${episode.name}` : episode.code)).join(', '),
+                        })}
+                        {off !== null && ' ' + t(off === 'name' ? 'downloads.assign.offName' : 'downloads.assign.offNumber')}
+                      </p>
+                    )}
                   </div>
                   <div className="flex min-w-0 flex-col gap-2">
                     {choice.episodes.map((selected, index) => {
@@ -266,6 +291,7 @@ export function AssignDialog({ download, onClose, onDone }: { download: Download
                           </div>
                           <p className="flex flex-wrap gap-2 text-xs">
                             {index === 0 && choice.proposal && <Badge tone="accent">{t('downloads.assign.proposal')}</Badge>}
+                            {index === 0 && choice.byName && <Badge tone="accent">{t('downloads.assign.byName')}</Badge>}
                             {episode?.current_file && <span className="text-mist-400">{t('downloads.assign.replaces', { quality: episode.current_file.quality ?? '?' })}</span>}
                             {episode && !episode.watched && <span className="text-mist-500">{t('downloads.assign.notWatched')}</span>}
                           </p>

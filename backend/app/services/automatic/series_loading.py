@@ -41,7 +41,7 @@ from ..downloads import loading
 from ..search import jobs as search_jobs
 from ..search import series as series_search
 from ..series import anime, watching
-from . import budget, planning, scheduler, series_planning, settings, upgrade_guard, waiting, wishes
+from . import budget, handover_retry, planning, scheduler, series_planning, settings, upgrade_guard, waiting, wishes
 
 logger = logging.getLogger("nexcrate.automatic")
 
@@ -423,6 +423,7 @@ def _load_takes(
                 version_id,
                 exc.code,
             )
+            handover_retry.note(search, key, version_id, exc.code, now, only=codes, episode_ids=wanted.episode_ids)
             return (key, "failure") if exc.code in RELEASE_CODES else (None, "")
         scheduler._count_grab(int(release["indexer_id"]))
         taken.add(key)

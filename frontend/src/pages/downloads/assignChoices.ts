@@ -3,8 +3,37 @@ import type { DownloadEpisodeChoice, DownloadFiles, DownloadVideo } from '../../
 /** Entscheidungen, deren Dateien der Besitzer noch zuordnen kann. Wie `OPEN_DECISIONS` im Server. */
 export const OPEN_DECISIONS = ['open', 'not_needed', 'duplicate', 'sample', 'not_filed', 'extra', 'skipped']
 
-/** `part`: die Haelfte einer Doppelfolge, 1 oder 2; fehlt oder null fuer eine ganze Folge. */
-export type Choice = { episodes: (number | null)[]; proposal: boolean; part?: 1 | 2 | null }
+/**
+ * `part`: die Haelfte einer Doppelfolge, 1 oder 2; fehlt oder null fuer eine ganze Folge. `byName`: vorgewaehlt nach dem
+ * Folgennamen in der Datei (seit 09.10.2026).
+ */
+export type Choice = { episodes: (number | null)[]; proposal: boolean; part?: 1 | 2 | null; byName?: boolean }
+
+/** Die Folgen, die der Server fuer eine Datei vorschlaegt, und wie; null ohne Vorschlag. */
+export function proposalOf(file: DownloadVideo): { ids: number[]; by: 'name' | 'shift' } | null {
+  const proposal = file.proposal
+  if (!proposal || proposal.episodes.length === 0) return null
+  return { ids: proposal.episodes.map((episode) => episode.id), by: proposal.by }
+}
+
+/** Ob eine wartende Datei einen Vorschlag hat: dann nimmt der Knopf ihn statt der rohen Nummern. */
+export function hasProposals(data: DownloadFiles, by?: 'name' | 'shift'): boolean {
+  return data.files.some((file) => OPEN_DECISIONS.includes(file.decision) && proposalOf(file) !== null && (by === undefined || proposalOf(file)?.by === by))
+}
+
+/**
+ * Wie die Wahl einer Datei von dem abweicht, was die Datei sagt: `name`, wenn sie den Namen einer Folge traegt, die nicht
+ * gewaehlt ist; sonst `number`, wenn die gelesenen Folgen andere sind als die gewaehlten. null ohne Wahl oder ohne Abweichung.
+ */
+export function deviation(file: DownloadVideo, choice: Choice | undefined): 'name' | 'number' | null {
+  const chosen = (choice?.episodes ?? []).filter((id): id is number => id !== null)
+  if (chosen.length === 0) return null
+  const named = (file.named ?? []).map((episode) => episode.id)
+  if (named.length > 0) return named.every((id) => chosen.includes(id)) ? null : 'name'
+  const read = file.episodes.map((episode) => episode.id)
+  if (read.length === 0) return null
+  return read.length === chosen.length && read.every((id) => chosen.includes(id)) ? null : 'number'
+}
 
 /** Die Haelfte, die nexcrate aus einer Datei gelesen hat. */
 export function readPart(file: DownloadVideo): 1 | 2 | null {
@@ -32,6 +61,9 @@ export function preselects(problemCode: string | null | undefined, unknown: stri
  * Vorbelegung: das Gelesene, wenn es nur Folgen dieses Downloads sind; eine Datei, die eine andere Folge liest, bleibt leer.
  * Ohne `preselect` bleibt alles leer. Dateien ohne lesbaren Namen bleiben immer leer: ihre Reihenfolge sagt nichts sicher
  * ueber die Folge, Vorschlaege gibt es nur auf Knopfdruck (`withProposals`, Antwort des Besitzers vom 17.09.2026).
+ *
+ * Seit 09.10.2026 zuerst, auch ohne `preselect`: traegt eine offene Datei den Namen einer Folge dieses Downloads, ist diese
+ * Folge vorgewaehlt, markiert "nach Folgenname". Ein Vorschlag aus der Verschiebung kommt nur per Knopf.
  */
 export function initialChoices(data: DownloadFiles, preselect = true): Record<number, Choice> {
   const choices: Record<number, Choice> = {}
@@ -39,6 +71,13 @@ export function initialChoices(data: DownloadFiles, preselect = true): Record<nu
   const inDownload = new Set(data.episodes.filter((episode) => episode.in_download).map((episode) => episode.id))
   const editable = data.files.filter((file) => OPEN_DECISIONS.includes(file.decision))
   for (const file of editable) {
+    const proposal = file.decision === 'open' ? proposalOf(file) : null
+    if (proposal?.by !== 'name' || !proposal.ids.every((id) => inDownload.has(id) && !taken.has(id))) continue
+    choices[file.key] = { episodes: proposal.ids, proposal: false, byName: true }
+    proposal.ids.forEach((id) => taken.add(id))
+  }
+  for (const file of editable) {
+    if (choices[file.key]) continue
     const read = preselect && file.decision === 'open' ? file.episodes.map((episode) => episode.id) : []
     const usable = read.length > 0 && read.every((id) => inDownload.has(id) && !taken.has(id))
     const part = usable ? readPart(file) : null
@@ -92,7 +131,11 @@ export function unreadableCount(data: DownloadFiles): number {
   return data.files.filter((file) => OPEN_DECISIONS.includes(file.decision) && file.reading === null && file.episodes.length === 0).length
 }
 
-/** "Gelesene Nummern uebernehmen": jede Datei ohne Wahl bekommt die Folgen, die sie gelesen hat, soweit sie frei sind. */
+/**
+ * "Gelesene Nummern uebernehmen": jede Datei ohne Wahl bekommt die Folgen, die sie gelesen hat, soweit sie frei sind. Seit
+ * 09.10.2026 nimmt der Knopf den Vorschlag des Servers statt der rohen Nummern, wo es einen gibt: zaehlt das Paket anders,
+ * waeren die rohen Nummern ab der Doppelfolge falsch.
+ */
 export function withReadings(data: DownloadFiles, choices: Record<number, Choice>): Record<number, Choice> {
   const next = { ...choices }
   const taken = new Set(
@@ -101,12 +144,14 @@ export function withReadings(data: DownloadFiles, choices: Record<number, Choice
       .filter((id): id is number => id !== null),
   )
   for (const file of data.files) {
-    if (!OPEN_DECISIONS.includes(file.decision) || file.episodes.length === 0) continue
+    const proposal = proposalOf(file)
+    if (!OPEN_DECISIONS.includes(file.decision) || (file.episodes.length === 0 && proposal === null)) continue
     if ((next[file.key]?.episodes ?? []).some((id) => id !== null)) continue
-    const read = file.episodes.map((episode) => episode.id).filter((id) => !taken.has(id))
+    const wanted = proposal !== null ? proposal.ids : file.episodes.map((episode) => episode.id)
+    const read = wanted.filter((id) => !taken.has(id))
     if (read.length === 0) continue
     read.forEach((id) => taken.add(id))
-    next[file.key] = { episodes: read, proposal: false }
+    next[file.key] = { episodes: read, proposal: proposal?.by === 'shift', ...(proposal?.by === 'name' ? { byName: true } : {}) }
   }
   return next
 }

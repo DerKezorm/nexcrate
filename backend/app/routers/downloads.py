@@ -160,6 +160,11 @@ class Download(BaseModel):
         "nothing.",
     )
     aftermath: DownloadAftermath | None = Field(default=None, description="For a failed download: what came of it.")
+    removal_stuck: bool = Field(
+        default=False,
+        description="For a failed download: its client has not removed the job with its files for a day, although "
+        "nexcrate tries every round. The owner may remove it in the client.",
+    )
     confirmed: list[str] = Field(
         description="What the owner confirmed: not_fitting, blocklisted or no_gain when loading; title_mismatch when "
         "the release's name fits none of the movie's titles and the owner loaded it all the same or filed it away "
@@ -248,6 +253,14 @@ class FileEpisode(BaseModel):
     name: str
 
 
+class FileProposal(BaseModel):
+    by: str = Field(
+        description="name: the episode names in the file or folder name, compared with TMDB's names of the series. "
+        "shift: a file with two numbers where TMDB lists one episode of double length, every number after it one lower."
+    )
+    episodes: list[FileEpisode]
+
+
 class DownloadVideo(BaseModel):
     key: int = Field(description="Names the file in assign and choose; never a path.")
     path: str = Field(description="Relative to the download; a video out of its archives starts with `unpacked:`.")
@@ -258,6 +271,14 @@ class DownloadVideo(BaseModel):
         description="filed, open, sample, extra, duplicate, not_needed, not_filed; candidate or chosen for a movie."
     )
     episodes: list[FileEpisode]
+    named: list[FileEpisode] = Field(
+        default_factory=list,
+        description="The episodes whose names stand behind the number in the file or folder name, read when the "
+        "files are listed; empty without such a name.",
+    )
+    proposal: FileProposal | None = Field(
+        default=None, description="What nexcrate proposes for a series file that waits for the owner; null without."
+    )
 
 
 class CurrentEpisodeFile(BaseModel):

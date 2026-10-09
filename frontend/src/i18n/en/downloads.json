@@ -296,7 +296,8 @@
       "no_indexer": "No indexer is set for automatic search. Only then does nexcrate search another release.",
       "schedule": "Three replacements were tried today already. nexcrate searches on schedule again.",
       "owner": "nexcrate does not search on by itself. The card under Problems says what you can do."
-    }
+    },
+    "removalStuck": "{{client}} has not removed the job and its files for more than a day. nexcrate keeps trying; you can also delete it there yourself."
   },
   "scope": {
     "season_one": "Season {{season}}, {{value}} episode",
@@ -339,7 +340,7 @@
     "unreadableHint_one": "{{value}} file has no readable name, so nexcrate does not know which episode it is. Choose it yourself, or fill in the free episodes in order and check them before storing.",
     "unreadableHint_other": "{{value}} files have no readable names, so nexcrate does not know which episodes they are. Choose them yourself, or fill in the free episodes in order and check them before storing.",
     "useProposals": "Fill in free episodes in order",
-    "otherSeriesHint": "The files are named like another series, so nothing is chosen yet. If it is this series after all, the button takes over the numbers read. Check them before storing.",
+    "otherSeriesHint": "The files are named like another series, so nothing is chosen yet. If it is this series after all, the button takes over the numbers read or the proposal. Check them before storing.",
     "unknownHint": "The pack counts differently than TMDB: {{codes}} do not exist there. So a number that fits may be another episode. Check every assignment before storing.",
     "countedHint": "The files count by {{scheme}}, not as assumed when loading. nexcrate read them that way. Check every assignment before storing.",
     "openHint": "Files without an episode stay open. You can assign them later or leave the rest.",
@@ -356,7 +357,15 @@
     },
     "partLabel": "Part of the episode: {{path}}",
     "partWhole": "Whole episode",
-    "partShort": "Part {{part}}"
+    "partShort": "Part {{part}}",
+    "byName": "by episode name",
+    "byNameHint": "Where a file carries the name of an episode, that episode is chosen, marked “by episode name”. nexcrate compared the names with TMDB. Check them before storing.",
+    "shiftHint": "A file with two numbers is twice as long as the others: TMDB lists it as one episode, and every number after it counts one on. The button takes over this proposal.",
+    "useProposal": "Use the proposal",
+    "namedIn": "Episode name in the file: {{names}}",
+    "chosen": "Chosen: {{names}}.",
+    "offName": "Differs from the episode name in the file.",
+    "offNumber": "Differs from the number read."
   },
   "choose": {
     "title": "Choose file",

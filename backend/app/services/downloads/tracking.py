@@ -12,7 +12,8 @@
   under Problems.
 * A client that cannot be asked keeps its downloads as they are and gets its error code.
 * Failed (SABnzbd only): the release goes on the title's blocklist, a history entry ``failed``, and the job leaves
-  SABnzbd with its files. A ``_FAILED_`` folder SABnzbd leaves anyway goes a minute later (``leftovers``).
+  SABnzbd with its files. A ``_FAILED_`` folder SABnzbd leaves anyway goes a minute later (``leftovers``). A removal
+  the client did not answer is kept (``removals``) and tried again every round the client answers (09.10.2026).
 * Completed downloads are handed to ``importing`` after each round, also those a folder ``_UNPACK_`` held back before.
 * Once a minute imported torrents are looked at for their seed goal, and removed after it when the client says so
   (``seeding``).
@@ -35,7 +36,7 @@ from ...models import Download, DownloadClient
 from ...models.downloads import CLIENT_STATES, FAILED_DETAILS, FAILED_REASONS
 from .. import downloaders
 from ..automatic import replacement
-from . import foreign, importing, leftovers, seeding, store
+from . import foreign, importing, leftovers, removals, seeding, store
 
 logger = logging.getLogger("nexcrate.downloads")
 
@@ -106,6 +107,8 @@ class _Work:
     #: ⚠️ With the decrypted secret.
     target: downloaders.Target = field(repr=False)
     download_ids: list[str] = field(default_factory=list)
+    #: Failed downloads whose job the client did not remove yet: download id and the client's id of the job.
+    removals: list[tuple[int, str]] = field(default_factory=list)
 
 
 def _tracked():
@@ -121,8 +124,10 @@ def _work() -> list[_Work]:
         for client_id, download_id in rows:
             if download_id:
                 by_client.setdefault(int(client_id), []).append(download_id)
+        left = removals.by_client(db)
+        db.commit()
         work: list[_Work] = []
-        for client in db.scalars(select(DownloadClient).where(DownloadClient.id.in_(list(by_client)))):
+        for client in db.scalars(select(DownloadClient).where(DownloadClient.id.in_(list(set(by_client) | set(left))))):
             # ⚠️ A qBittorrent that refused the password is not asked again: five failures ban the address.
             if not client.enabled or store.login_blocked(client):
                 continue
@@ -133,11 +138,18 @@ def _work() -> list[_Work]:
                 secret=crypto.decrypt(client.secret) if client.secret else "",
                 category=client.category,
             )
-            work.append(_Work(client_id=client.id, target=target, download_ids=by_client[client.id]))
+            work.append(
+                _Work(
+                    client_id=client.id,
+                    target=target,
+                    download_ids=by_client.get(client.id, []),
+                    removals=left.get(client.id, []),
+                )
+            )
     return work
 
 
-def _follow(db: object, row: Download, job: downloaders.Job | None, removals: list[str]) -> None:
+def _follow(db: object, row: Download, job: downloaders.Job | None, removals: list[tuple[int, str]]) -> None:
     moment = store.now()
     if row.handed_unsure_at is not None:
         # The client did not answer the hand-over in time: ``foreign`` finds its job, or ends it as not_taken.
@@ -174,7 +186,7 @@ def _follow(db: object, row: Download, job: downloaders.Job | None, removals: li
         # failure nexcrate takes care of is no problem for the owner.
         row.failure_handling = replacement.after_failure(db, row, moment)  # type: ignore[arg-type]
         if row.protocol == "usenet":
-            removals.append(row.client_download_id)
+            removals.append((row.id, row.client_download_id))
         logger.info("Download %d failed in its client (%s)", row.id, reason)
     elif job.state == "problem":
         row.state, row.problem_code = "problem", job.problem or "client_error"
@@ -191,18 +203,19 @@ def _follow(db: object, row: Download, job: downloaders.Job | None, removals: li
         row.updated_at = moment
 
 
-def _apply(client_id: int, found: dict[str, downloaders.Job]) -> list[str]:
-    """Write what the client said. Returns the download ids to remove from the client with their files."""
-    removals: list[str] = []
+def _apply(client_id: int, found: dict[str, downloaders.Job]) -> list[tuple[int, str]]:
+    """Write what the client said. Returns the downloads to remove from the client with their files: nexcrate's id and
+    the client's."""
+    removed: list[tuple[int, str]] = []
     with SessionLocal() as db:
         client = db.get(DownloadClient, client_id)
         if client is None:
-            return removals
+            return removed
         client.last_error_code = None
         rows = list(db.scalars(select(Download).where(Download.client_id == client_id, _tracked())))
         for row in rows:
             key = row.client_download_id.lower() if row.protocol == "torrent" else row.client_download_id
-            _follow(db, row, found.get(key), removals)
+            _follow(db, row, found.get(key), removed)
         db.flush()
         # Once per version, not once per download: a series version follows all its downloads in one pass, and a
         # series with eight downloads counted its episodes eight times while the write lock was held (23.09.2026:
@@ -215,11 +228,25 @@ def _apply(client_id: int, found: dict[str, downloaders.Job]) -> list[str]:
             followed.add(key)
             store.follow(db, row, store.now())
         db.commit()
-    return removals
+    return removed
 
 
 def _client_failed(client_id: int, code: str) -> None:
     store.record_client_error(client_id, code)
+
+
+def _settle_removals(client_id: int, done: list[int], failed: list[int]) -> None:
+    """Keep what the client did not remove for the next round, forget what it did."""
+    with SessionLocal() as db:
+        removals.forget(db, done)
+        new = removals.remember(db, failed, store.now())
+        db.commit()
+    for download_id in new:
+        logger.info(
+            "Download client %d did not remove failed download %d; nexcrate tries again every round",
+            client_id,
+            download_id,
+        )
 
 
 def _completed_ids() -> list[int]:
@@ -234,21 +261,33 @@ async def run_round() -> None:
         _last_round = clock()
         _soon_at = None
     for work in await asyncio.to_thread(_work):
-        try:
-            async with downloaders.open_client(work.target) as client:
-                found = await client.jobs(work.download_ids)
-        except downloaders.ClientError as exc:
-            logger.info("Download client %d could not be asked: %s", work.client_id, exc.code)
-            await asyncio.to_thread(_client_failed, work.client_id, exc.code)
-            continue
-        removals = await asyncio.to_thread(_apply, work.client_id, found)
-        for download_id in removals:
+        to_remove: list[tuple[int, str]] = []
+        if work.download_ids:
             try:
                 async with downloaders.open_client(work.target) as client:
-                    await client.remove(download_id, delete_files=True)
+                    found = await client.jobs(work.download_ids)
             except downloaders.ClientError as exc:
-                logger.info("Download client %d did not remove a failed job: %s", work.client_id, exc.code)
-        if removals:
+                logger.info("Download client %d could not be asked: %s", work.client_id, exc.code)
+                await asyncio.to_thread(_client_failed, work.client_id, exc.code)
+                continue
+            to_remove = await asyncio.to_thread(_apply, work.client_id, found)
+        # Removals that failed in an earlier round go after the new ones (09.10.2026).
+        to_remove += [item for item in work.removals if item not in to_remove]
+        done: list[int] = []
+        failed: list[int] = []
+        for place, (download_id, job_id) in enumerate(to_remove):
+            try:
+                async with downloaders.open_client(work.target) as client:
+                    await client.remove(job_id, delete_files=True)
+            except downloaders.ClientError as exc:
+                logger.debug("Download client %d did not remove download %d: %s", work.client_id, download_id, exc.code)
+                # One wait for a client that does not answer per round, not one per job.
+                failed += [item for item, _job in to_remove[place:]]
+                break
+            done.append(download_id)
+        if to_remove:
+            await asyncio.to_thread(_settle_removals, work.client_id, done, failed)
+        if done:
             leftovers.after_removal()
     for download_id in await asyncio.to_thread(_completed_ids):
         # An import that met a locked database pauses before its next try (``importing.waits``).

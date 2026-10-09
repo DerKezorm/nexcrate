@@ -32,6 +32,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -195,12 +196,29 @@ class Context:
     halves: dict[int, CurrentFile] = field(default_factory=dict)
 
 
+#: The words of a title, for the part before its colon.
+_TITLE_WORDS = re.compile(r"[^\W_]+")
+
+
+def before_colon(text: str | None) -> str | None:
+    """The part of a title before its colon when it has at least two words: packs name "Planet Erde II: Eine Erde -
+    viele Welten" as ``Planet.Erde.II`` (09.10.2026). One word ("Star: ...") would say yes to too much.
+
+    ⚠️ Only for reading the files of a download, never for the search: there it would find other series.
+    """
+    if not text or ":" not in text:
+        return None
+    head = text.split(":", 1)[0].strip()
+    return head if len(_TITLE_WORDS.findall(head)) >= 2 else None
+
+
 def _titles(db: OrmSession, title: Title) -> tuple[tuple[str, ...], frozenset[str]]:
     texts = [title.title, title.title_en, title.original_title]
     texts += list(db.scalars(select(TitleAlias.text).where(TitleAlias.title_id == title.id)))
     texts += list(db.scalars(select(AlternateTitle.text).where(AlternateTitle.title_id == title.id)))
     if title.tvdb_id:
         texts += list(db.scalars(select(XemName.text).where(XemName.tvdb_id == title.tvdb_id)))
+    texts += [before_colon(text) for text in list(texts)]
     unique: list[str] = []
     for text in texts:
         if text and text not in unique:
@@ -1449,6 +1467,8 @@ def _file_all(context: Context, found: Found, root: Path, manual: dict[int, tupl
     videos = [video for video in found.videos if video.path not in already]
     if manual is None:
         result = episodes.assign(videos, assignment_context(context), ranker(context))
+        if result.by_names:
+            logger.info("Download %d: the videos are read by their episode names", context.download_id)
     else:
         result = _manual_result(context, videos, manual)
     row_ids = record_files(context, result)

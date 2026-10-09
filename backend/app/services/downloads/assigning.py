@@ -18,8 +18,10 @@
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
+from collections import Counter, defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
+from pathlib import PurePosixPath
 from typing import Any
 
 from sqlalchemy import func, select, update
@@ -123,6 +125,8 @@ def files_of(download_id: int) -> dict[str, Any]:
                         "parts": [1, 2] if second is not None else ([1] if stored.part == 1 else []),
                     }
 
+        proposals = _proposals(db, row, listed) if row.scope is not None and series_rows else {}
+
         def episode_out(episode_id: int) -> dict[str, Any]:
             item = series_rows.get(episode_id)
             if item is None:
@@ -145,6 +149,7 @@ def files_of(download_id: int) -> dict[str, Any]:
                     "reading": _reading_out(item.reading),
                     "decision": item.decision,
                     "episodes": [episode_out(episode_id) for episode_id in item.episode_ids or []],
+                    **_proposal_out(proposals.get(item.id), episode_out),
                 }
                 for item in listed
             ],
@@ -162,6 +167,70 @@ def files_of(download_id: int) -> dict[str, Any]:
             "series": {"id": row.title_id, "title": title.title if title is not None else ""},
             "version": {"id": row.version_definition_id, "label": row.version_label},
         }
+
+
+@dataclass(frozen=True)
+class _Proposed:
+    #: The episodes the video's name names; empty without a name of the series.
+    named: tuple[int, ...]
+    proposal: tuple[int, ...]
+    #: ``name`` or ``shift`` (``episodes.BY_NAME``, ``episodes.BY_SHIFT``); None without a proposal.
+    by: str | None
+
+
+def _proposals(db: Any, row: Download, listed: list[DownloadFile]) -> dict[int, _Proposed]:
+    """The episode names and proposals of the videos, read again now (09.10.2026): a download that waits for the owner
+    since before the names counted gets them too. By row id; empty when the download cannot be read."""
+    waiting = [item for item in listed if item.decision != episodes.FILED]
+    if not waiting:
+        return {}
+    try:
+        context = series_import.load(db, row.id)
+        if context is None:
+            return {}
+        per_folder = Counter(_folder_of(item.path) for item in waiting)
+        videos = [
+            episodes.Video(
+                key=item.id,
+                path=item.path,
+                size=item.size or 0,
+                duration_seconds=item.duration_seconds,
+                # A video at the top of the job lies in the download's own folder, named like the release.
+                folder_name=PurePosixPath(_folder_of(item.path)).name or row.release_title,
+                folder_videos=per_folder[_folder_of(item.path)],
+                skip=episodes.SKIP_EXTRA if item.decision == episodes.EXTRA else None,
+            )
+            for item in waiting
+        ]
+        result = episodes.assign(videos, series_import.assignment_context(context))
+    except Exception:
+        # The dialog opens without proposals rather than not at all.
+        logger.exception("Download %d: the episode names of its files could not be read", row.id)
+        return {}
+    return {
+        item.video.key: _Proposed(
+            item.reading.named if item.reading is not None else (), item.proposal, item.proposed_by
+        )
+        for item in result.files
+    }
+
+
+def _folder_of(path: str) -> str:
+    parent = PurePosixPath(path.removeprefix(episodes.UNPACKED_PREFIX)).parent.as_posix()
+    return "" if parent == "." else parent
+
+
+def _proposal_out(found: _Proposed | None, episode_out: Any) -> dict[str, Any]:
+    if found is None:
+        return {"named": [], "proposal": None}
+    return {
+        "named": [episode_out(episode_id) for episode_id in found.named],
+        "proposal": (
+            {"by": found.by, "episodes": [episode_out(episode_id) for episode_id in found.proposal]}
+            if found.by is not None and found.proposal
+            else None
+        ),
+    }
 
 
 def _reading_out(reading: dict[str, Any] | None) -> dict[str, Any] | None:

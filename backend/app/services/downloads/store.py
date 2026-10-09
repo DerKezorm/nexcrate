@@ -41,7 +41,7 @@ from ...models import (
 from ...models.downloads import ACTIVE_STATES
 from ..music import store as music_store
 from ..schreibweisen import nfc
-from . import unpacking
+from . import removals, unpacking
 
 logger = logging.getLogger("nexcrate.downloads")
 
@@ -310,6 +310,7 @@ def download_out(
     by_state: dict[str, list[str]] | None = None,
     artist: str | None = None,
     aftermath: dict[str, Any] | None = None,
+    removal_stuck: bool = False,
 ) -> dict[str, Any]:
     return {
         "id": row.id,
@@ -346,6 +347,8 @@ def download_out(
         "failed_reason": row.failed_reason if row.state == "failed" else None,
         "failed_detail": row.failed_detail if row.state == "failed" else None,
         "aftermath": aftermath,
+        # The client has not removed the failed job for a day (09.10.2026); nexcrate keeps trying.
+        "removal_stuck": removal_stuck,
         "confirmed": list(row.confirmed or []),
         "origin": row.origin or "manual",
         "grabbed_at": row.grabbed_at,
@@ -394,6 +397,7 @@ def outs(db: OrmSession, rows: Iterable[Download]) -> list[dict[str, Any]]:
         else {}
     )
     states = episode_states(db, [row.id for row in listed if is_series(row)])
+    stuck = removals.stuck(db, now()) if any(row.state == "failed" for row in listed) else set()
     artist_ids = {title.artist_id for title in titles.values() if title.kind == "album" and title.artist_id}
     artists = (
         dict(db.execute(select(Artist.id, Artist.name).where(Artist.id.in_(artist_ids))).tuples().all())
@@ -409,6 +413,7 @@ def outs(db: OrmSession, rows: Iterable[Download]) -> list[dict[str, Any]]:
             states.get(row.id),
             artists.get(titles[row.title_id].artist_id or 0) if row.title_id in titles else None,
             aftermath_of(db, row, titles.get(row.title_id)) if row.state == "failed" else None,
+            row.id in stuck,
         )
         for row in listed
     ]

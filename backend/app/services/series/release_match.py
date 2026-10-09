@@ -93,6 +93,8 @@ class EpisodeRow:
     name: str
     air_date: str | None
     runtime: int | None
+    #: TMDB's English name, beside ``name`` in the account's language.
+    name_en: str | None = None
 
     @property
     def special(self) -> bool:
@@ -176,6 +178,7 @@ def load(db: OrmSession, title: Title) -> Numbering:
             name=row.name or "",
             air_date=row.air_date,
             runtime=row.runtime,
+            name_en=row.name_en,
         )
         for row in rows
     }

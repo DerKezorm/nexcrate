@@ -76,7 +76,7 @@ from ..downloads import loading
 from ..search import jobs as search_jobs
 from ..search import plan as search_plan
 from ..search.model import TitleInfo, title_info
-from . import budget, clock, planning, settings, upgrade_guard, waiting, wishes
+from . import budget, clock, handover_retry, planning, settings, upgrade_guard, waiting, wishes
 
 logger = logging.getLogger("nexcrate.automatic")
 
@@ -129,6 +129,7 @@ def reset() -> None:
     with _lock:
         _starts.clear()
         _cursor = 0
+    handover_retry.reset()
 
 
 def run_job() -> None:
@@ -147,6 +148,8 @@ def run_round() -> int:
         kinds = settings.load_kinds(db)
     plan_round(now)
     wishes.clear_unwanted()
+    # A replacement the download client did not answer is handed over again (09.10.2026).
+    handover_retry.run(now)
     # With every switch off a program's wish still starts (answer 3).
     return start_due(now, kinds)
 
@@ -653,6 +656,7 @@ def _load(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> di
                 logger.info(
                     "Automatic search %s: version %d could not load a release: %s", search.search_id, version_id, code
                 )
+                handover_retry.note(search, release["release_key"], version_id, code, now)
                 if code in RELEASE_CODES:
                     continue
                 break

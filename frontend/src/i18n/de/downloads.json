@@ -296,7 +296,8 @@
       "no_indexer": "Kein Indexer ist für die automatische Suche eingestellt. Erst dann sucht nexcrate ein anderes Release.",
       "schedule": "Heute gab es schon drei Ersatzversuche. nexcrate sucht wieder nach Plan.",
       "owner": "nexcrate sucht nicht selbst weiter. Die Karte unter Probleme sagt, was du tun kannst."
-    }
+    },
+    "removalStuck": "{{client}} hat den Auftrag samt Dateien seit über einem Tag nicht entfernt. nexcrate versucht es weiter, du kannst ihn dort auch selbst löschen."
   },
   "scope": {
     "season_one": "Staffel {{season}}, {{value}} Folge",
@@ -339,7 +340,7 @@
     "unreadableHint_one": "{{value}} Datei hat keinen lesbaren Namen, nexcrate weiß nicht, welche Folge sie ist. Wähle sie selbst oder trag die freien Folgen der Reihe nach ein und prüfe sie vor dem Ablegen.",
     "unreadableHint_other": "{{value}} Dateien haben keine lesbaren Namen, nexcrate weiß nicht, welche Folgen sie sind. Wähle sie selbst oder trag die freien Folgen der Reihe nach ein und prüfe sie vor dem Ablegen.",
     "useProposals": "Freie Folgen der Reihe nach eintragen",
-    "otherSeriesHint": "Die Dateien heißen wie eine andere Serie, deshalb ist nichts vorgewählt. Ist es doch diese Serie, übernimmt der Knopf die gelesenen Nummern. Prüfe sie vor dem Ablegen.",
+    "otherSeriesHint": "Die Dateien heißen wie eine andere Serie, deshalb ist nichts vorgewählt. Ist es doch diese Serie, übernimmt der Knopf die gelesenen Nummern oder den Vorschlag. Prüfe sie vor dem Ablegen.",
     "unknownHint": "Das Paket zählt anders als TMDB: {{codes}} gibt es dort nicht. Eine passende Nummer kann deshalb eine andere Folge sein. Prüfe jede Zuordnung vor dem Ablegen.",
     "countedHint": "Die Dateien zählen nach {{scheme}}, nicht wie beim Laden angenommen. nexcrate hat sie so gelesen. Prüfe jede Zuordnung vor dem Ablegen.",
     "openHint": "Dateien ohne Folge bleiben offen. Du kannst sie später zuordnen oder den Rest nicht ablegen.",
@@ -356,7 +357,15 @@
     },
     "partLabel": "Teil der Folge: {{path}}",
     "partWhole": "Ganze Folge",
-    "partShort": "Teil {{part}}"
+    "partShort": "Teil {{part}}",
+    "byName": "nach Folgenname",
+    "byNameHint": "Wo eine Datei den Namen einer Folge trägt, ist diese Folge vorgewählt, markiert „nach Folgenname“. nexcrate hat die Namen mit TMDB verglichen. Prüfe sie vor dem Ablegen.",
+    "shiftHint": "Eine Datei mit zwei Nummern ist doppelt so lang wie die anderen: TMDB führt sie als eine Folge, jede Nummer danach zählt eins weiter. Der Knopf übernimmt diesen Vorschlag.",
+    "useProposal": "Vorschlag übernehmen",
+    "namedIn": "Folgenname in der Datei: {{names}}",
+    "chosen": "Gewählt: {{names}}.",
+    "offName": "Weicht vom Folgennamen in der Datei ab.",
+    "offNumber": "Weicht von der gelesenen Nummer ab."
   },
   "choose": {
     "title": "Datei wählen",

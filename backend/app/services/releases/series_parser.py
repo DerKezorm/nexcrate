@@ -251,6 +251,9 @@ class ParsedSeries:
     #: The resolution the name carries (2160, 1080, 720, ...), or None. Sonarr falls back to it for a source it
     #: does not know.
     resolution_hint: int | None
+    #: What stands behind the numbering form, as written: often the episode's name, then the features
+    #: (``Die.Bruecke.GERMAN.1080p.WEB-EXAMPLE``). Empty without a form.
+    after: str = ""
 
     @property
     def is_pack(self) -> bool:
@@ -744,4 +747,5 @@ def parse_series(
         release_title=text,
         masked_title=masked,
         resolution_hint=_resolution_hint(text),
+        after=text[hit.end :] if found is not None else "",
     )

@@ -52,6 +52,7 @@ export function DownloadHistory({ items }: { items: Download[] }) {
                   {failed && <p className="text-sm text-mist-300">{failed}</p>}
                   {said && <p className="text-sm text-mist-300">{said}</p>}
                   {after && <p className="text-sm wrap-anywhere text-mist-200">{after}</p>}
+                  {download.state === 'failed' && download.removal_stuck && <p className="text-sm text-bad-400">{t('downloads.history.removalStuck', { client })}</p>}
                   {/* Bei einem Paket naennte die Zeile nur die zuletzt abgelegte Datei. */}
                   {download.imported_file && (download.scope?.episodes.length ?? 0) <= 1 && (
                     <p className="text-xs wrap-anywhere text-mist-500">

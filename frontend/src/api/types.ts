@@ -1465,6 +1465,8 @@ export type Download = {
   failed_detail?: FailedDetail | string | null
   /** Seit dem 22.09.2026, nur bei `failed`: was daraus wurde. */
   aftermath?: DownloadAftermath | null
+  /** Ein fehlgeschlagener Download, dessen Auftrag das Download-Programm seit einem Tag nicht entfernt hat (seit 09.10.2026). */
+  removal_stuck?: boolean
   confirmed: string[]
   /** Seit Schritt 3c: woher der Download kam. Ein Server von davor schickt es nicht; dann gilt er als von Hand geladen. */
   origin?: DownloadOrigin
@@ -1506,6 +1508,10 @@ export type DownloadVideo = {
   reading: DownloadFileReading | null
   decision: string
   episodes: { id: number; code: string; name: string }[]
+  /** Die Folgen, deren Namen hinter der Nummer im Datei- oder Ordnernamen stehen (seit 09.10.2026). */
+  named?: { id: number; code: string; name: string }[]
+  /** Was nexcrate fuer eine wartende Datei vorschlaegt: nach Folgenname oder nach der Verschiebung hinter einer Doppelfolge. */
+  proposal?: { by: 'name' | 'shift'; episodes: { id: number; code: string; name: string }[] } | null
 }
 
 export type DownloadEpisodeChoice = {

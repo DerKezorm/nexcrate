@@ -23,7 +23,7 @@ from ..downloads import loading
 from ..releases import music_qualities as mq
 from ..search import album as album_search
 from ..search import jobs as search_jobs
-from . import album_planning, budget, clock, planning, scheduler, settings, waiting, wishes
+from . import album_planning, budget, clock, handover_retry, planning, scheduler, settings, waiting, wishes
 
 logger = logging.getLogger("nexcrate.automatic")
 
@@ -208,6 +208,7 @@ def _load(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> tu
             logger.info(
                 "Automatic search %s: album %d could not load a release: %s", search.search_id, search.title_id, code
             )
+            handover_retry.note(search, release["release_key"], int(decision["version_id"]), code, now)
             if code in scheduler.RELEASE_CODES:
                 continue
             break
