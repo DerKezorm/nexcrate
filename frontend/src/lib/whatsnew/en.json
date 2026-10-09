@@ -313,6 +313,26 @@
       "small": [
         "When a series is called “Name: Subtitle” on TMDB, nexcrate also knows its files by the part before the colon, if it has at least two words. The search keeps the whole title."
       ]
+    },
+    "0.8.1": {
+      "lead": "This version finds and files episodes right where TMDB lists a double episode as one and the releases count two. And signing in with Microsoft Entra ID. No database change.",
+      "sections": [
+        {
+          "title": "Double episodes TMDB lists as one",
+          "body": "TMDB lists some series with one long episode where TVDB and every release count two numbers. Every number after it is shifted, in The Office season 4 by up to four. Where nexcrate has no TVDB numbering, it now spots such episodes by their runtime on TMDB and counts them split as well. The episode name in the release decides which count is right. A release without a name stays ambiguous there and is not loaded by itself. Searching one episode also asks the shifted number.",
+          "where": "Search, automatic search and filing of series"
+        },
+        {
+          "title": "Sign in with Microsoft Entra ID",
+          "body": "The issuer may now be common or organizations as well, not only a fixed tenant ID. The form says what Entra needs: the redirect address with https and, if you like, the email address as an optional claim.",
+          "where": "Settings › System › Account › Another provider or by hand"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When a file carries the name of an episode outside its download, “Assign by hand” chooses that episode all the same.",
+        "An episode name of four letters such as “Geld” now counts as a name, no longer as a common word."
+      ]
     }
   }
 }

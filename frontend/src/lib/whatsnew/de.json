@@ -313,6 +313,26 @@
       "small": [
         "Heißt eine Serie bei TMDB „Name: Untertitel“, erkennt nexcrate ihre Dateien auch am Teil vor dem Doppelpunkt, wenn er mindestens zwei Wörter hat. Die Suche bleibt beim ganzen Titel."
       ]
+    },
+    "0.8.1": {
+      "lead": "Diese Version findet und ordnet Folgen richtig zu, wo TMDB eine Doppelfolge als eine Folge führt und die Releases als zwei zählen. Dazu kommt die Anmeldung mit Microsoft Entra ID. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Doppelfolgen, die TMDB als eine führt",
+          "body": "Manche Serien führt TMDB mit einer langen Folge, wo TVDB und alle Releases zwei Nummern zählen. Danach ist jede Nummer verschoben, bei The Office Staffel 4 um bis zu vier. Fehlt nexcrate die TVDB-Zählung, erkennt es solche Folgen jetzt an ihrer Laufzeit bei TMDB und zählt sie zusätzlich geteilt. Der Folgenname im Release entscheidet, welche Zählung stimmt. Ein Release ohne Namen bleibt dort zweideutig und wird nicht von selbst geladen. Die Suche nach einer einzelnen Folge fragt auch die verschobene Nummer.",
+          "where": "Suche, Automatik und Ablegen von Serien"
+        },
+        {
+          "title": "Anmeldung mit Microsoft Entra ID",
+          "body": "Als Aussteller geht jetzt auch common oder organizations, nicht nur eine feste Mandanten-ID. Das Formular sagt, was Entra braucht: die Rückleitungsadresse mit https und, falls gewünscht, die Mailadresse als optionalen Claim.",
+          "where": "Einstellungen › System › Konto › Anderer Anbieter oder von Hand"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Trägt eine Datei den Namen einer Folge, die nicht zu ihrem Download gehört, ist diese Folge im Dialog „Von Hand zuordnen“ trotzdem vorgewählt.",
+        "Ein Folgenname mit vier Buchstaben wie „Geld“ zählt jetzt als Name, nicht mehr als Allerweltswort."
+      ]
     }
   }
 }
