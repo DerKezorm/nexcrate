@@ -62,17 +62,20 @@ export function preselects(problemCode: string | null | undefined, unknown: stri
  * Ohne `preselect` bleibt alles leer. Dateien ohne lesbaren Namen bleiben immer leer: ihre Reihenfolge sagt nichts sicher
  * ueber die Folge, Vorschlaege gibt es nur auf Knopfdruck (`withProposals`, Antwort des Besitzers vom 17.09.2026).
  *
- * Seit 09.10.2026 zuerst, auch ohne `preselect`: traegt eine offene Datei den Namen einer Folge dieses Downloads, ist diese
- * Folge vorgewaehlt, markiert "nach Folgenname". Ein Vorschlag aus der Verschiebung kommt nur per Knopf.
+ * Seit 09.10.2026 zuerst, auch ohne `preselect`: traegt eine offene Datei den Namen einer Folge, ist diese Folge
+ * vorgewaehlt, markiert "nach Folgenname", auch wenn sie nicht zu diesem Download gehoert (The Office S04: die Datei
+ * S04E14 ist TMDBs S04E10). Nicht, wenn diese Folge schon eine Datei dieses Downloads hat. Ein Vorschlag aus der
+ * Verschiebung kommt nur per Knopf.
  */
 export function initialChoices(data: DownloadFiles, preselect = true): Record<number, Choice> {
   const choices: Record<number, Choice> = {}
   const taken = new Set<number>()
   const inDownload = new Set(data.episodes.filter((episode) => episode.in_download).map((episode) => episode.id))
+  const choosable = new Set(data.episodes.filter((episode) => episode.state !== 'filed').map((episode) => episode.id))
   const editable = data.files.filter((file) => OPEN_DECISIONS.includes(file.decision))
   for (const file of editable) {
     const proposal = file.decision === 'open' ? proposalOf(file) : null
-    if (proposal?.by !== 'name' || !proposal.ids.every((id) => inDownload.has(id) && !taken.has(id))) continue
+    if (proposal?.by !== 'name' || !proposal.ids.every((id) => choosable.has(id) && !taken.has(id))) continue
     choices[file.key] = { episodes: proposal.ids, proposal: false, byName: true }
     proposal.ids.forEach((id) => taken.add(id))
   }

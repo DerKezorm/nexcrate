@@ -25,7 +25,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 from .. import schreibweisen
-from ..series.release_match import Numbering
+from .release_match import Numbering
 
 #: Words a common name is made of; a name of these and digits only is plain.
 PLAIN_WORDS = frozenset(
@@ -39,8 +39,8 @@ PLAIN_WORDS = frozenset(
         "proper", "repack", "internal", "dubbed", "subbed", "uhd", "hdr", "x264", "x265", "hevc", "complete",
     }
 )  # fmt: skip
-#: A name of fewer letters is plain.
-PLAIN_LENGTH = 5
+#: A name of fewer letters is plain. Four letters are a name: "Geld" (The Office S04E04, measured 09.10.2026).
+PLAIN_LENGTH = 4
 #: Words that may stand between two names in one file.
 CONNECTORS = frozenset({"and", "und", "plus"})
 #: The most names one video is read for.

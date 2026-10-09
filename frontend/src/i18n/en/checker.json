@@ -130,7 +130,8 @@
         "unknown": "{{via}}",
         "owner": "Your local correction",
         "group": "The episode group",
-        "absolute": "The absolute number"
+        "absolute": "The absolute number",
+        "parts": "The number with double episodes split"
       },
       "owner": "by your local correction",
       "group": "by the chosen episode group",
@@ -142,8 +143,11 @@
         "tvdb": "TVDB",
         "tmdb": "TMDB",
         "group": "the episode group",
-        "unknown": "{{via}}"
-      }
+        "unknown": "{{via}}",
+        "parts": "the count with double episodes split"
+      },
+      "parts": "by the count with double episodes split",
+      "episode_name": "The episode name in the release decides: it belongs to this episode."
     },
     "refused": {
       "anime_numbering": "This is counted through as anime is (episode {{numbers}}). nexcrate reads that only for series of the type anime.",

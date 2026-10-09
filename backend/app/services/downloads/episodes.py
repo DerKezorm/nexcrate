@@ -59,9 +59,8 @@ from statistics import median
 from typing import Any
 
 from .. import releases
+from ..series import episode_names, release_match
 from ..series import parts as series_parts
-from ..series import release_match
-from . import episode_names
 
 #: Sonarr's sample limits in seconds, by the expected runtime in minutes (``DetectSample``).
 SAMPLE_LIMITS = ((3, 15), (10, 90), (30, 300))

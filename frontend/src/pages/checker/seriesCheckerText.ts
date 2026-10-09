@@ -115,6 +115,9 @@ export function viaText(t: TFunction, via: string | null): string | null {
     // Seit Anime A2: die Durchzaehlung einer Anime-Serie.
     case 'absolute':
       return t('checker.series.match.absolute')
+    // Seit 09.10.2026: Doppelfolgen, die TMDB als eine fuehrt, geteilt gezaehlt.
+    case 'parts':
+      return t('checker.series.match.parts')
     default:
       return t('checker.series.match.unknown', { via })
   }
@@ -137,6 +140,8 @@ export function schemeName(t: TFunction, via: string | null): string {
       return t('checker.series.match.name.group')
     case 'absolute':
       return t('checker.series.match.name.absolute')
+    case 'parts':
+      return t('checker.series.match.name.parts')
     default:
       return t('checker.series.match.name.unknown', { via: via ?? '' })
   }
@@ -153,6 +158,8 @@ export function countingName(t: TFunction, via: string | null): string {
       return t('checker.series.match.counting.tmdb')
     case 'group':
       return t('checker.series.match.counting.group')
+    case 'parts':
+      return t('checker.series.match.counting.parts')
     default:
       return t('checker.series.match.counting.unknown', { via: via ?? '' })
   }
@@ -175,6 +182,7 @@ export function matchNotes(t: TFunction, match: Pick<SeriesMatch, 'ambiguous' | 
     if (note === 'two_dates') lines.push(t('checker.series.match.two_dates'))
     if (note === 'not_daily') lines.push(t('checker.series.match.not_daily'))
     if (note === 'not_anime') lines.push(t('checker.series.match.not_anime'))
+    if (note === 'episode_name') lines.push(t('checker.series.match.episode_name'))
     if (note === 'group_counting') lines.push(t('checker.series.match.group_counting', { scheme: countingName(t, match.via ?? null) }))
   }
   return lines

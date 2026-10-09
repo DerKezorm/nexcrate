@@ -38,6 +38,18 @@ the owner's indexer) means episode 1179 counted through. When no numbering has t
 Without the owner's switch (``titles.use_scene_numbering`` false) the scene numbering is not read at all, as with
 Sonarr's ``useSceneNumbering`` off.
 
+**Double episodes TMDB counts as one** (``parts``, 09.10.2026): TMDB lists The Office's hour-long episodes as one
+episode each, TVDB and the scene as two numbers, so season 4 has 14 episodes on TMDB and 19 in every release name, and
+``S04E14`` is TMDB's ``S04E10``. For a regular season without scene or TVDB numbers, where ``series/parts.py`` finds
+long episodes by TMDB's runtimes, ``load`` adds the scheme ``parts``: those numbers, each double taking two. It is the
+last scheme, so alone it decides nothing; a release whose numbers read differently through it is ambiguous, and the
+search does not take it on its own.
+
+**Episode names decide** between readings (``series/episode_names.py``): when the name behind the numbers is the name
+of the episodes one reading finds, and not plain, that reading goes first and the release is not ambiguous (note
+``episode_name``). ``S04E14.Das.Stuhl-Model`` is TMDB's ``S04E10`` then, ``S04E10.Krieg.der.Filialen`` TMDB's
+``S04E06``.
+
 The first scheme that finds episodes wins. When another scheme would find other episodes, the result is
 ``ambiguous`` and names the other scheme and its episodes; the search of a later stage does not take such a
 release on its own.
@@ -62,6 +74,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session as OrmSession
@@ -74,7 +87,9 @@ from .store import code as episode_code
 
 #: The schemes in the order of decision 13 of the design notes: the owner's corrections, scene, TVDB, the chosen
 #: TMDB episode group, and ``tmdb``, the numbering on the episode itself.
-SCHEMES = ("owner", "scene", "tvdb", "group", "tmdb")
+SCHEMES = ("owner", "scene", "tvdb", "group", "tmdb", "parts")
+#: The scheme of double episodes TMDB counts as one, built from TMDB's runtimes (see the module).
+PARTS = "parts"
 #: Schemes read from ``episode_numbers``.
 STORED_SCHEMES = ("owner", "scene", "tvdb", "group")
 #: Numberings a release group can count by. The owner's corrections are single episodes: they say nothing about a group.
@@ -138,6 +153,8 @@ class Numbering:
     by_scene_absolute: dict[int, tuple[tuple[int, int], ...]] = field(default_factory=dict)
     #: TheXEM's names that stand for one scene season: spelling key to season. A key two seasons share is left out.
     scene_seasons: dict[str, int] = field(default_factory=dict)
+    #: What is worked out once per numbering: the index of the episode names.
+    cache: dict[str, Any] = field(default_factory=dict, compare=False, repr=False)
 
     def has(self, scheme: str) -> bool:
         return scheme in self.schemes and bool(self.schemes[scheme].by_number)
@@ -221,7 +238,7 @@ def load(db: OrmSession, title: Title) -> Numbering:
         ).all()
         if row.episode_id in episodes
     }
-    return Numbering(
+    numbering = Numbering(
         title_id=title.id,
         series_type=title.series_type,
         episodes=episodes,
@@ -233,6 +250,43 @@ def load(db: OrmSession, title: Title) -> Numbering:
         by_scene_absolute={number: tuple(places) for number, places in scene_absolute.items()},
         scene_seasons=_scene_seasons(db, title) if use_scene and scene_absolute else {},
     )
+    add_parts(numbering)
+    return numbering
+
+
+def add_parts(numbering: Numbering) -> None:
+    """The scheme ``parts`` for every regular season without scene or TVDB numbers whose long episodes TMDB counts as
+    one (see the module). Not for anime and daily series: they count otherwise."""
+    from . import parts as series_parts
+
+    if numbering.series_type in ("anime", "daily"):
+        return
+    scheme = Scheme()
+    for season in numbering.regular_seasons:
+        if any(numbering.schemes[name].episodes_of(season) for name in ("scene", "tvdb") if name in numbering.schemes):
+            continue
+        numbers = series_parts.split(numbering, season)
+        if numbers is None:
+            continue
+        for number, place in numbers.items():
+            scheme.by_number[(season, number)] = place.episode_id
+            if place.episode_id not in scheme.seasons[season]:
+                scheme.seasons[season].append(place.episode_id)
+    if scheme.by_number:
+        numbering.schemes[PARTS] = scheme
+
+
+def named(numbering: Numbering, parsed: ParsedSeries) -> tuple[int, ...]:
+    """The episodes the name behind a release's numbers names, when that name is not plain; empty otherwise."""
+    from . import episode_names
+
+    if not parsed.after:
+        return ()
+    index = numbering.cache.get("names")
+    if index is None:
+        index = numbering.cache["names"] = episode_names.index(numbering)
+    found = episode_names.read(parsed.after, index)
+    return found.episode_ids if found is not None and not found.plain else ()
 
 
 def _scene_seasons(db: OrmSession, title: Title) -> dict[str, int]:
@@ -524,9 +578,19 @@ def match(
 
     if not readings:
         return Match(notes=tuple(notes))
-    if prefer is not None:
+    by_name = False
+    if parsed.form in ("standard", "multi_episode") and len(readings) > 1 and readings[0][0] != "owner":
+        name_ids = set(named(numbering, parsed))
+        fitting = next((entry for entry in readings if name_ids and name_ids <= set(entry[1])), None)
+        if fitting is not None:
+            # The name says which reading is right: it goes first, and the other readings make it no less sure.
+            readings.remove(fitting)
+            readings.insert(0, fitting)
+            by_name = True
+            notes.append("episode_name")
+    if not by_name and prefer is not None:
         readings.sort(key=lambda entry: 0 if entry[0] == prefer else 1)
-    elif counts and readings[0][0] != "owner" and not decisive:
+    elif not by_name and counts and readings[0][0] != "owner" and not decisive:
         chosen = next((entry for entry in readings if entry[0] in counts), None)
         # The first reading in ``counts`` is the first reading itself when that one is in them: nothing moves then.
         if chosen is not None and set(chosen[1]) != set(readings[0][1]):
@@ -536,7 +600,7 @@ def match(
     via, ids, missing = readings[0]
     # A correction of the owner decides: no other reading makes it ambiguous (decision 13). So does a scene name that
     # says the season of a name counted through (B6).
-    settled = via == "owner" or (decisive and via == "scene")
+    settled = via == "owner" or (decisive and via == "scene") or by_name
     other = None if settled else next((entry for entry in readings[1:] if set(entry[1]) != set(ids)), None)
     scene_scheme = numbering.schemes.get("scene")
     if via == "scene" and scene_scheme is not None and any(episode_id in scene_scheme.unverified for episode_id in ids):

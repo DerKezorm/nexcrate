@@ -130,7 +130,8 @@
         "unknown": "{{via}}",
         "owner": "Deine lokale Korrektur",
         "group": "Die Episodengruppe",
-        "absolute": "Die Durchzählung"
+        "absolute": "Die Durchzählung",
+        "parts": "Die Nummer mit geteilten Doppelfolgen"
       },
       "owner": "über deine lokale Korrektur",
       "group": "über die gewählte Episodengruppe",
@@ -142,8 +143,11 @@
         "tvdb": "TVDB",
         "tmdb": "TMDB",
         "group": "der Episodengruppe",
-        "unknown": "{{via}}"
-      }
+        "unknown": "{{via}}",
+        "parts": "der Zählung mit geteilten Doppelfolgen"
+      },
+      "parts": "über die Zählung mit geteilten Doppelfolgen",
+      "episode_name": "Der Folgenname im Release entscheidet: Er gehört zu dieser Folge."
     },
     "refused": {
       "anime_numbering": "Das ist durchgezählt wie bei Anime (Folge {{numbers}}). So liest nexcrate nur Serien vom Typ Anime.",

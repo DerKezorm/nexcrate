@@ -64,7 +64,7 @@ single missing episode on its own.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any
 
@@ -268,6 +268,19 @@ def _targets(
             absolute=counted.get(episode_id) if title.series_type == "anime" else None,
         )
 
+    # Double episodes TMDB counts as one (``release_match.PARTS``): an episode whose release number moves is asked by
+    # that number too, the first of a double. The names of the releases decide which is right (09.10.2026).
+    split: dict[int, tuple[int, int]] = {}
+    for key, episode_id in sorted(numbering.schemes.get(release_match.PARTS, release_match.Scheme()).by_number.items()):
+        split.setdefault(episode_id, key)
+
+    def episode_targets(episode_id: int) -> list[Target]:
+        first = episode_target(episode_id)
+        moved = split.get(episode_id)
+        if moved is None or first.air_date is not None or (first.season, first.episode) == moved:
+            return [first]
+        return [first, replace(first, code=episode_code(*moved), season=moved[0], episode=moved[1])]
+
     def season_targets(season: int) -> list[Target]:
         members = [episode_id for episode_id, episode in episodes.items() if episode.season == season]
         if daily:
@@ -299,7 +312,7 @@ def _targets(
                 wanted.update(members)
         for episode_id in scope.get("episodes") or []:
             if episode_id in episodes and episode_id not in wanted:
-                targets.append(episode_target(episode_id))
+                targets.extend(episode_targets(episode_id))
                 wanted.add(episode_id)
         if not targets:
             raise ScopeInvalid
@@ -313,7 +326,7 @@ def _targets(
         episode_id = scope["episode_id"]
         if episode_id not in episodes:
             raise ScopeInvalid
-        return [episode_target(episode_id)], {episode_id}
+        return episode_targets(episode_id), {episode_id}
     if kind == SEASON:
         season = scope["season"]
         members = {episode_id for episode_id, episode in episodes.items() if episode.season == season}
