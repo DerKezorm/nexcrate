@@ -218,9 +218,11 @@ export function SignInSettings({ onPasswordLogin }: { onPasswordLogin?: (on: boo
       {config && byHand && (
         <form onSubmit={saveByHand} className="flex flex-col gap-4 rounded-2xl border border-ink-700 bg-ink-900/60 p-4" noValidate>
           <p className="text-sm text-mist-500">{t('system.account.signIn.byHand.intro')}</p>
+          <p className="text-sm text-mist-500">{t('system.account.signIn.byHand.entraHint')}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
               label={t('system.account.signIn.byHand.issuer')}
+              hint={t('system.account.signIn.byHand.issuerHint')}
               value={form.issuer}
               onChange={(event) => setForm({ ...form, issuer: event.target.value })}
               placeholder="https://auth.example.com/application/o/nexcrate/"

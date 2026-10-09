@@ -21,6 +21,12 @@ No OIDC library: httpx fetches the documents, PyJWT checks the signatures. The s
 write out, and a library would bring a second HTTP stack and a second JWT interpretation.
 
 ``transport_for_tests`` lets the tests inject an ``httpx.MockTransport``; nothing here touches the network then.
+
+**Microsoft Entra ID with ``common`` or ``organizations``** (09.10.2026, as nexbeat): the discovery document of
+such an address names ``https://login.microsoftonline.com/{tenantid}/v2.0`` as its issuer, a placeholder for the
+tenant. The discovery accepts it for exactly these addresses, and a token is checked against the placeholder
+replaced by the ``tid`` of that same, already signed token. The placeholder itself is never an issuer. Which
+tenants may sign in is the app registration's business in Entra (single or multi tenant).
 """
 
 from __future__ import annotations
@@ -206,12 +212,44 @@ async def _fetch_json(url: str, purpose: str) -> dict[str, Any]:
     return _as_object(response, purpose, url)
 
 
+#: Entra ID's placeholder for the tenant in the issuer of a ``common`` or ``organizations`` address.
+TENANT_PLACEHOLDER = "{tenantid}"
+#: What may stand in the configured address where the published issuer has the placeholder.
+_TENANT_PART = re.compile(r"common|organizations|consumers|[0-9a-fA-F-]{36}")
+#: A tenant id as Entra puts it into ``tid``.
+_TENANT_ID = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+
+
+def _same_issuer(reported: str, issuer: str) -> bool:
+    """Whether the discovery document's issuer belongs to the configured address: the same, or Entra's placeholder
+    where the address names ``common``, ``organizations``, ``consumers`` or a tenant."""
+    if reported == issuer:
+        return True
+    if reported.count(TENANT_PLACEHOLDER) != 1:
+        return False
+    before, after = reported.split(TENANT_PLACEHOLDER)
+    if not issuer.startswith(before) or not issuer.endswith(after) or len(issuer) <= len(before) + len(after):
+        return False
+    return bool(_TENANT_PART.fullmatch(issuer[len(before) : len(issuer) - len(after)]))
+
+
+def accepted_issuers(description: dict[str, Any], claims: dict[str, Any]) -> set[str]:
+    """Who may have issued a token: the discovery document's issuer, with Entra's placeholder replaced by the
+    token's own ``tid``. Never the placeholder itself."""
+    published = str(description.get("issuer") or "").rstrip("/")
+    tenant = str(claims.get("tid") or "")
+    if TENANT_PLACEHOLDER in published:
+        published = published.replace(TENANT_PLACEHOLDER, tenant) if _TENANT_ID.fullmatch(tenant) else ""
+    return {published} if published and TENANT_PLACEHOLDER not in published else set()
+
+
 async def discovery(issuer_url: str, *, fresh: bool = False) -> dict[str, Any]:
     """The provider's discovery document, cached.
 
     The ``issuer`` inside the document must equal the requested address. The standard demands it, and it is no
     formality: the value is later compared character by character with the ``iss`` of every token. A provider
-    answering under one address and claiming another would silently defeat that check.
+    answering under one address and claiming another would silently defeat that check. The one exception is
+    Entra's placeholder for the tenant (see the module).
     """
     issuer = issuer_url.rstrip("/")
     if not fresh:
@@ -220,7 +258,7 @@ async def discovery(issuer_url: str, *, fresh: bool = False) -> dict[str, Any]:
             return cached[0]
     data = await _fetch_json(f"{issuer}/.well-known/openid-configuration", "provider description")
     reported = str(data.get("issuer") or "").rstrip("/")
-    if reported != issuer:
+    if not _same_issuer(reported, issuer):
         logger.warning("OIDC: provider at %r calls itself %r, refusing the mismatch", issuer, reported)
         raise OidcError("oidc_issuer_mismatch", "The provider reports a different address than configured.")
     missing = [key for key in ("authorization_endpoint", "token_endpoint", "jwks_uri") if not data.get(key)]
@@ -439,9 +477,9 @@ async def _verify_token(
             key=key,
             algorithms=list(ALGORITHMS),
             audience=client_id,
-            issuer=str(description["issuer"]),
             leeway=CLOCK_LEEWAY,
-            options={"require": list(required)},
+            # The issuer is checked right below: Entra's placeholder needs the token's own ``tid``.
+            options={"require": list(required), "verify_iss": False},
         )
     except jwt.PyJWTError as error:
         # ``alg`` belongs in the line: an algorithm outside ALGORITHMS looks like a bad signature otherwise.
@@ -455,6 +493,11 @@ async def _verify_token(
         )
         raise OidcError("oidc_token_invalid", "The provider's token could not be checked.") from error
 
+    if str(claims.get("iss") or "").rstrip("/") not in accepted_issuers(description, claims):
+        logger.warning(
+            "OIDC: %s was issued by %r, expected %r", purpose, claims.get("iss"), description.get("issuer")
+        )
+        raise OidcError("oidc_token_invalid", "The provider's token could not be checked.")
     # ``azp`` must be this client whenever it is present (OIDC Core 3.1.3.7). ``jwt.decode`` only checks that
     # our client id occurs in ``aud``; a token the provider issued for another application that merely mentions
     # nexcrate would pass otherwise.

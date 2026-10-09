@@ -123,13 +123,15 @@
       "byHand": {
         "toggle": "Anderer Anbieter oder von Hand",
         "edit": "Von Hand ändern",
-        "intro": "Für authentik, Authelia, Keycloak, Pocket ID und andere. Lege dort eine Anwendung mit der Rückleitungsadresse unten an.",
+        "intro": "Für authentik, Authelia, Keycloak, Pocket ID, Microsoft Entra ID und andere. Lege dort eine Anwendung mit der Rückleitungsadresse unten an.",
         "issuer": "Aussteller (Issuer)",
         "clientId": "Client-ID",
         "clientSecret": "Client-Geheimnis",
         "secretKept": "Leer lassen behält das gespeicherte Geheimnis.",
         "name": "Name auf dem Knopf",
-        "nameHint": "Leer zeigt „OpenID Connect“."
+        "nameHint": "Leer zeigt „OpenID Connect“.",
+        "issuerHint": "authentik: https://auth.example.com/application/o/nexcrate/. Entra ID: https://login.microsoftonline.com/<Mandanten-ID>/v2.0, auch mit common oder organizations.",
+        "entraHint": "Microsoft Entra ID: eine Web-App registrieren, dort die Rückleitungsadresse eintragen (Entra nimmt nur https an, außer für localhost) und ein Client-Geheimnis anlegen. Eine Mailadresse schickt Entra nur, wenn email als optionaler Claim eingetragen ist. nexcrate kommt ohne aus."
       },
       "redirect": "Rückleitungsadresse",
       "redirectHint": "So muss sie beim Anbieter stehen. Hinter einem Proxy die Adresse nach außen eintragen.",

@@ -123,13 +123,15 @@
       "byHand": {
         "toggle": "Another provider or by hand",
         "edit": "Change by hand",
-        "intro": "For authentik, Authelia, Keycloak, Pocket ID and others. Create an application there with the redirect address below.",
+        "intro": "For authentik, Authelia, Keycloak, Pocket ID, Microsoft Entra ID and others. Create an application there with the redirect address below.",
         "issuer": "Issuer",
         "clientId": "Client ID",
         "clientSecret": "Client secret",
         "secretKept": "Leave empty to keep the stored secret.",
         "name": "Name on the button",
-        "nameHint": "Empty shows “OpenID Connect”."
+        "nameHint": "Empty shows “OpenID Connect”.",
+        "issuerHint": "authentik: https://auth.example.com/application/o/nexcrate/. Entra ID: https://login.microsoftonline.com/<tenant ID>/v2.0, also with common or organizations.",
+        "entraHint": "Microsoft Entra ID: register a web app, enter the redirect address there (Entra accepts only https, except for localhost) and create a client secret. Entra sends an email address only if email is added as an optional claim. nexcrate works without it."
       },
       "redirect": "Redirect address",
       "redirectHint": "This is how it must appear at the provider. Behind a proxy, enter the address to the outside.",
