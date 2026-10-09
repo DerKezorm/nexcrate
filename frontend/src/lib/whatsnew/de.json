@@ -289,6 +289,30 @@
       "small": [
         "Bleibt ein fertiger Torrent im Download-Programm, weil er nicht mehr in nexcrates Kategorie steht, sagt das Log das jetzt."
       ]
+    },
+    "0.8.0": {
+      "lead": "Diese Version liest die Folgennamen in den Dateien: Ein Paket, das anders zählt als TMDB, landet trotzdem richtig. Dazu wiederholt nexcrate, was SABnzbd nicht beantwortet hat. Keine Änderung an der Datenbank.",
+      "sections": [
+        {
+          "title": "Folgennamen entscheiden mit",
+          "body": "nexcrate vergleicht den Namen hinter der Nummer, in der Datei oder im Ordner, mit den Namen der Folgen bei TMDB, deutsch und englisch. Zählt ein Paket anders, etwa weil eine Doppelfolge in einer Datei steckt und jede Nummer danach eins höher ist, legt nexcrate nach den Namen ab, wenn jede Datei mit Nummer einen Namen trägt und alles zusammenpasst. Nennt eine Datei den Namen einer anderen Folge als ihre Nummer und sagt sonst nichts, welches stimmt, fragt nexcrate dich. Allerweltsnamen wie „Pilot“ oder „Teil 1“ entscheiden nichts.",
+          "where": "Downloads, beim Ablegen von Serien"
+        },
+        {
+          "title": "Zuordnen mit Vorschlag",
+          "body": "Wo eine Datei den Namen einer Folge trägt, ist diese Folge vorgewählt, markiert „nach Folgenname“. Ohne Namen schlägt nexcrate bei einer doppelt langen Datei mit zwei Nummern vor, jede Nummer danach eins tiefer zu lesen; der Knopf „Vorschlag übernehmen“ trägt das ein. Unter jeder Datei steht die gewählte Folge, rosa, wenn sie vom Namen oder der Nummer in der Datei abweicht.",
+          "where": "Downloads › Probleme › Von Hand zuordnen"
+        },
+        {
+          "title": "SABnzbd antwortet nicht",
+          "body": "Konnte nexcrate einen fehlgeschlagenen Auftrag nicht aus SABnzbd entfernen, versucht es das jede Runde wieder; nach einem Tag steht es an der Karte im Verlauf. Scheitert die Übergabe eines Ersatz-Downloads, weil SABnzbd nicht antwortet, übergibt nexcrate ihn nach drei Minuten noch einmal, statt bis zur nächsten Suche zu warten.",
+          "where": "Downloads › Verlauf, und von selbst"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Heißt eine Serie bei TMDB „Name: Untertitel“, erkennt nexcrate ihre Dateien auch am Teil vor dem Doppelpunkt, wenn er mindestens zwei Wörter hat. Die Suche bleibt beim ganzen Titel."
+      ]
     }
   }
 }

@@ -289,6 +289,30 @@
       "small": [
         "If a finished torrent stays in the download client because it is no longer in nexcrate's category, the log now says so."
       ]
+    },
+    "0.8.0": {
+      "lead": "This version reads the episode names in the files: a pack that counts differently than TMDB still lands right. And nexcrate tries again what SABnzbd did not answer. No database change.",
+      "sections": [
+        {
+          "title": "Episode names have a say",
+          "body": "nexcrate compares the name behind the number, in the file or its folder, with the episode names on TMDB, in your language and in English. When a pack counts differently, for example because a double episode sits in one file and every number after it is one higher, nexcrate files by the names, as long as every file with a number carries a name and everything fits. When a file names another episode than its number and nothing else says which is right, nexcrate asks you. Common names such as “Pilot” or “Part 1” decide nothing.",
+          "where": "Downloads, when series are filed"
+        },
+        {
+          "title": "Assigning with a proposal",
+          "body": "Where a file carries an episode's name, that episode is chosen, marked “by episode name”. Without names, for a file with two numbers that is twice as long, nexcrate proposes reading every number after it one lower; the button “Use the proposal” fills that in. Below each file stands the chosen episode, in pink when it differs from the name or the number in the file.",
+          "where": "Downloads › Problems › Assign by hand"
+        },
+        {
+          "title": "SABnzbd does not answer",
+          "body": "If nexcrate could not remove a failed job from SABnzbd, it tries again every round; after a day the history card says so. If handing over a replacement fails because SABnzbd does not answer, nexcrate hands it over again three minutes later instead of waiting for the next search.",
+          "where": "Downloads › History, and by itself"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When a series is called “Name: Subtitle” on TMDB, nexcrate also knows its files by the part before the colon, if it has at least two words. The search keeps the whole title."
+      ]
     }
   }
 }
