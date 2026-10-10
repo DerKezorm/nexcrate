@@ -22,6 +22,13 @@ export type { Language } from './languages'
 const STORAGE_KEY = 'nexcrate.language'
 
 const LOADERS = import.meta.glob<{ default: Record<string, unknown> }>('./*/*.json')
+/**
+ * Die Texte der gemeinsamen Anmeldung (Bauplan 04) kommen unveraendert aus `vendor/nexoidc` und stehen unter `oidc`.
+ * `{{app}}` darin ist immer nexcrate.
+ */
+const OIDC_LOADERS = import.meta.glob<{ default: { oidc: Record<string, unknown> } }>('../vendor/nexoidc/oidc.*.json')
+/** Der Name der App in den gemeinsamen Texten. */
+export const APP_NAME = 'nexcrate'
 
 /** Vor der Anmeldung: die zuletzt gewaehlte Sprache, sonst die des Browsers. */
 function initialLanguage(): Language {
@@ -42,7 +49,8 @@ async function textsFor(language: Language): Promise<Record<string, unknown>> {
       .filter(([path]) => path.startsWith(prefix))
       .map(async ([path, load]) => [path.slice(prefix.length, -'.json'.length), (await load()).default] as const),
   )
-  return Object.fromEntries(parts)
+  const oidc = OIDC_LOADERS[`../vendor/nexoidc/oidc.${language}.json`]
+  return { ...Object.fromEntries(parts), ...(oidc ? { oidc: (await oidc()).default.oidc } : {}) }
 }
 
 export async function startI18n(language: Language = initialLanguage()): Promise<void> {
@@ -50,7 +58,7 @@ export async function startI18n(language: Language = initialLanguage()): Promise
     resources: { [language]: { translation: await textsFor(language) } },
     lng: language,
     fallbackLng: false,
-    interpolation: { escapeValue: false },
+    interpolation: { escapeValue: false, defaultVariables: { app: APP_NAME } },
   })
   document.documentElement.lang = language
 }

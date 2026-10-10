@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AuthGate } from './auth/AuthGate'
 import { AppShell } from './components/AppShell'
@@ -11,7 +11,7 @@ import { AboutPage } from './pages/AboutPage'
 import { OpenPage } from './pages/OpenPage'
 import { ArtistPage } from './pages/music/ArtistPage'
 import { SettingsPage } from './pages/SettingsPage'
-import { IMPORT_TAB_PATH } from './pages/settings/tabs'
+import { ACCOUNT_TAB_PATH, IMPORT_TAB_PATH } from './pages/settings/tabs'
 import { TitlePage } from './pages/TitlePage'
 
 /**
@@ -19,6 +19,12 @@ import { TitlePage } from './pages/TitlePage'
  * Die fruehere Seite "Uebernahme" ist heute der Reiter Import der Einstellungen; alte
  * Lesezeichen kommen dort an.
  */
+function ToAccount() {
+  const { search } = useLocation()
+  const extra = new URLSearchParams(search).toString()
+  return <Navigate to={ACCOUNT_TAB_PATH + (extra ? `&${extra}` : '')} replace />
+}
+
 export default function App() {
   return (
     <AuthGate>
@@ -36,6 +42,8 @@ export default function App() {
           {/* Feste Spruenge von aussen (V4): bleiben, wie die Seiten auch heissen. */}
           <Route path="open/*" element={<OpenPage />} />
           <Route path="uebernahme" element={<Navigate to={IMPORT_TAB_PATH} replace />} />
+          {/* Der Rueckweg eines Anbieters beim Verknuepfen (`/konto?linked=` oder `?error=`) landet beim Konto. */}
+          <Route path="konto" element={<ToAccount />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { oidcApi } from '../../api/auth'
 import { errorText } from '../../api/client'
 import { useAuth } from '../../auth/useAuth'
 import { Symbol } from '../../components/Symbol'
@@ -9,10 +10,10 @@ import { isLanguage, LANGUAGES } from '../../i18n/languages'
 import { formatDate } from '../../lib/format'
 import { Detail } from './parts'
 import { PasswordForm } from './PasswordForm'
-import { SignInSettings } from './SignInSettings'
+import { MyProviders } from './MyProviders'
 import { TwoFactorSection } from './TwoFactorSection'
 
-/** Das eine Konto: Name, Sprache, Passwort, zweiter Faktor, Anmeldung ueber einen Anbieter, abmelden. */
+/** Das eine Konto: Name, Sprache, Passwort, zweiter Faktor, Anmeldeanbieter, abmelden. */
 export function AccountSettings() {
   const { t, i18n } = useTranslation()
   const { me, setLanguage, logout, logoutAll } = useAuth()
@@ -21,6 +22,13 @@ export function AccountSettings() {
   const [leaveProblem, setLeaveProblem] = useState<unknown>(null)
   // Aus: Passwort und zweiter Faktor gelten nur noch fuer den Notzugang (NEXCRATE_PASSWORD_LOGIN=1).
   const [passwordLogin, setPasswordLogin] = useState(true)
+
+  useEffect(() => {
+    oidcApi.passwordLogin().then(
+      (state) => setPasswordLogin(state.password_login),
+      () => undefined,
+    )
+  }, [])
 
   async function chooseLanguage(value: string) {
     if (!isLanguage(value)) return
@@ -74,7 +82,7 @@ export function AccountSettings() {
 
       <TwoFactorSection emergencyOnly={!passwordLogin} />
 
-      <SignInSettings onPasswordLogin={setPasswordLogin} />
+      <MyProviders />
 
       <Section title={t('system.account.sessions.title')} intro={t('system.account.sessions.intro')}>
         <div className="flex flex-wrap gap-2">

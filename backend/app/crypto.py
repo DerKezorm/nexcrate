@@ -24,34 +24,38 @@ logger = logging.getLogger("nexcrate.crypto")
 
 PREFIX = "enc:"
 
-_fernet_cache: Fernet | None = None
+_fernet_cache: dict[str, Fernet] = {}
 
 
-def _fernet() -> Fernet:
-    global _fernet_cache
-    if _fernet_cache is None:
+def _fernet(context: str = "") -> Fernet:
+    """The key for a context. Without one, the key every credential had so far; with one (``oidc-provider:<id>``), a
+    key of its own, so a ciphertext of one context never opens under another."""
+    cached = _fernet_cache.get(context)
+    if cached is None:
         secret = get_settings().resolved_secret_key().encode("utf-8")
         # A prefix of its own, so this key differs from any other use of the same secret.
-        digest = hashlib.sha256(b"nexcrate-credentials:" + secret).digest()
-        _fernet_cache = Fernet(base64.urlsafe_b64encode(digest))
-    return _fernet_cache
+        material = b"nexcrate-credentials:" + secret
+        if context:
+            material = b"nexcrate-credentials:" + context.encode("utf-8") + b":" + secret
+        cached = Fernet(base64.urlsafe_b64encode(hashlib.sha256(material).digest()))
+        _fernet_cache[context] = cached
+    return cached
 
 
 def forget_key() -> None:
-    """Drop the derived key; the next call derives it again. For tests and a key change."""
-    global _fernet_cache
-    _fernet_cache = None
+    """Drop the derived keys; the next call derives them again. For tests and a key change."""
+    _fernet_cache.clear()
 
 
 def is_encrypted(value: str) -> bool:
     return value.startswith(PREFIX)
 
 
-def encrypt(value: str) -> str:
-    return PREFIX + _fernet().encrypt(value.encode("utf-8")).decode("ascii")
+def encrypt(value: str, context: str = "") -> str:
+    return PREFIX + _fernet(context).encrypt(value.encode("utf-8")).decode("ascii")
 
 
-def decrypt(value: str) -> str:
+def decrypt(value: str, context: str = "") -> str:
     """The plain value, or an empty string when it cannot be read, with a loud log line."""
     if not value:
         return ""
@@ -59,7 +63,7 @@ def decrypt(value: str) -> str:
         logger.warning("A stored credential is not encrypted. It is used as it is; saving it again encrypts it.")
         return value
     try:
-        return _fernet().decrypt(value[len(PREFIX) :].encode("ascii")).decode("utf-8")
+        return _fernet(context).decrypt(value[len(PREFIX) :].encode("ascii")).decode("utf-8")
     except (InvalidToken, ValueError):
         logger.error(
             "A stored credential cannot be decrypted with the current secret key. "

@@ -11,29 +11,34 @@ import { useAuth } from '../auth/useAuth'
 import { AuthFrame } from '../components/AuthFrame'
 import { PasswordField } from '../components/PasswordField'
 import { Symbol } from '../components/Symbol'
-import { buttonClasses } from '../components/buttonClasses'
 import { Button, Card, Field, FormMessage } from '../components/ui'
 import { withBase } from '../lib/base'
 import { useCountdown } from '../lib/useCountdown'
+import { oidcErrorKey } from '../vendor/nexoidc/oidc'
 
 /** Gesperrt bis `until`. `seconds` ist die Wartezeit, wie der Server sie nannte. */
 type Lock = { until: number; seconds: number }
 
-/** Der Weg zum Anbieter. Eine Seite des Servers, keine Anfrage: der Browser geht dorthin und kommt zurueck. */
-const PROVIDER_START = withBase('/api/oidc/start')
+/** Der Weg zu einem Anbieter. Eine Seite des Servers, keine Anfrage: der Browser geht dorthin und kommt zurueck. */
+function providerStart(slug: string): string {
+  return withBase(`/api/oidc/${encodeURIComponent(slug)}/start`)
+}
 
 /**
- * Ein Fehler vom Rueckweg des Anbieters steht als `?oidc_error=<code>` in der Adresse. Einmal gelesen, verschwindet
- * er aus der Adresse, damit ein Neuladen ihn nicht wieder zeigt.
+ * Was der Rueckweg vom Anbieter in die Adresse schrieb: `?error=<code>` (nur Codes der gemeinsamen Anmeldung, nie ein
+ * roher Text) und `?step=code`, wenn nach dem Anbieter noch der Code des zweiten Faktors fehlt. Einmal gelesen,
+ * verschwindet es aus der Adresse, damit ein Neuladen es nicht wiederholt.
  */
-function takeProviderError(): string | null {
+function takeReturn(): { error: string | null; code: boolean } {
   const params = new URLSearchParams(window.location.search)
-  const code = params.get('oidc_error')
-  if (!code || !/^[a-z0-9_]+$/.test(code)) return null
-  params.delete('oidc_error')
+  const key = oidcErrorKey(params.get('error'))
+  const code = params.get('step') === 'code'
+  if (!params.has('error') && !params.has('step')) return { error: null, code: false }
+  params.delete('error')
+  params.delete('step')
   const rest = params.toString()
   window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : '') + window.location.hash)
-  return code
+  return { error: key, code }
 }
 
 /**
@@ -41,8 +46,10 @@ function takeProviderError(): string | null {
  * (`login_throttled` mit `retry_after`). Die Seite zaehlt sie sichtbar herunter
  * und gibt den Knopf erst danach wieder frei, statt jeden Klick scheitern zu lassen.
  *
- * Ist ein Anbieter verknuepft (authentik und andere), steht sein Knopf oben. Das Formular fuer das Passwort fehlt,
- * wenn die Anmeldung mit Passwort ausgeschaltet ist. Mit zweitem Faktor folgt auf das Passwort der Code.
+ * Aufbau wie in jeder nex-App (Bauplan 04): Passwortformular, darunter "oder", darunter je aktivem Anbieter ein Knopf
+ * in der Reihenfolge der Liste. Ist die Anmeldung mit Passwort aus, bleiben nur die Knoepfe; der Rueckweg ist dann
+ * `NEXCRATE_PASSWORD_LOGIN=1`. Mit zweitem Faktor folgt auf das Passwort (oder einen Anbieter, dem der zweite Faktor
+ * nicht anvertraut ist) der Code.
  */
 export function LoginPage({ notice }: { notice: LoginNotice | null }) {
   const { t } = useTranslation()
@@ -50,13 +57,13 @@ export function LoginPage({ notice }: { notice: LoginNotice | null }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
-  const [askCode, setAskCode] = useState(false)
+  const [returned] = useState(() => takeReturn())
+  const [askCode, setAskCode] = useState(returned.code)
   const [problem, setProblem] = useState<string | null>(null)
   const [lock, setLock] = useState<Lock | null>(null)
   const [busy, setBusy] = useState(false)
   const [tried, setTried] = useState(false)
   const [provider, setProvider] = useState<OidcState | null>(null)
-  const [providerError] = useState<string | null>(() => takeProviderError())
   const remaining = useCountdown(lock?.until ?? null)
   const locked = lock !== null && remaining > 0
 
@@ -66,7 +73,7 @@ export function LoginPage({ notice }: { notice: LoginNotice | null }) {
       .state()
       // Ohne Antwort bleibt das Formular fuer das Passwort, wie bisher.
       .then((answer) => alive && setProvider(answer))
-      .catch(() => alive && setProvider({ enabled: false, provider_name: '', password_login: true }))
+      .catch(() => alive && setProvider({ password_login: true, providers: [] }))
     return () => {
       alive = false
     }
@@ -185,7 +192,7 @@ export function LoginPage({ notice }: { notice: LoginNotice | null }) {
 
   // Nur ein ausdrueckliches Nein blendet das Formular aus; eine fremde oder halbe Antwort laesst es stehen.
   const showPassword = provider === null || provider.password_login !== false
-  const showProvider = provider !== null && provider.enabled === true
+  const buttons = Array.isArray(provider?.providers) ? provider.providers : []
 
   return (
     <AuthFrame>
@@ -199,20 +206,7 @@ export function LoginPage({ notice }: { notice: LoginNotice | null }) {
           {notice && !tried && (
             <FormMessage tone="info">{notice === 'setupClosed' ? t('auth.login.setupClosed') : t('auth.login.sessionEnded')}</FormMessage>
           )}
-          {providerError && !tried && <FormMessage>{errorText(t, new ApiError(0, providerError))}</FormMessage>}
-          {showProvider && (
-            <a href={PROVIDER_START} className={`${buttonClasses(showPassword ? 'ghost' : 'primary', 'md')} w-full`}>
-              <Symbol name="shield" />
-              {t('auth.login.provider', { name: provider.provider_name || 'OpenID Connect' })}
-            </a>
-          )}
-          {showProvider && showPassword && (
-            <p className="flex items-center gap-3 text-xs text-mist-600" aria-hidden="true">
-              <span className="h-px flex-1 bg-ink-700" />
-              {t('auth.login.or')}
-              <span className="h-px flex-1 bg-ink-700" />
-            </p>
-          )}
+          {returned.error && !tried && <FormMessage>{t(returned.error)}</FormMessage>}
           {showPassword && (
             <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4" noValidate>
               <Field
@@ -223,7 +217,7 @@ export function LoginPage({ notice }: { notice: LoginNotice | null }) {
                 autoCapitalize="none"
                 spellCheck={false}
                 maxLength={USERNAME_MAX}
-                autoFocus={!showProvider}
+                autoFocus
                 required
               />
               <PasswordField
@@ -239,6 +233,28 @@ export function LoginPage({ notice }: { notice: LoginNotice | null }) {
                 {t('auth.login.submit')}
               </Button>
             </form>
+          )}
+          {showPassword && buttons.length > 0 && (
+            <p className="flex items-center gap-3 text-xs text-mist-600" aria-hidden="true">
+              <span className="h-px flex-1 bg-ink-700" />
+              {t('oidc.login.or')}
+              <span className="h-px flex-1 bg-ink-700" />
+            </p>
+          )}
+          {buttons.length > 0 && (
+            <div className="flex flex-col gap-2" data-testid="provider-buttons">
+              {buttons.map((entry) => (
+                <Button
+                  key={entry.slug}
+                  variant={showPassword ? 'ghost' : 'primary'}
+                  className="w-full"
+                  onClick={() => window.location.assign(providerStart(entry.slug))}
+                >
+                  <Symbol name="shield" />
+                  {t('oidc.login.button', { name: entry.label })}
+                </Button>
+              ))}
+            </div>
           )}
         </div>
       </Card>

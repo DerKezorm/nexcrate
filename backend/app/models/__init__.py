@@ -35,6 +35,7 @@ from .media import (
 from .mediaserver import MediaServer
 from .music import AlbumArtist, Artist, Release, ReleaseMedium, ReleaseTrack, SourceUnmappedFile, TrackFile
 from .notify import NotificationMessage, NotificationTarget
+from .oidc import OidcLink, OidcProvider
 from .prowlarr import ProwlarrConnection
 from .recycle import RecycleEntry
 from .rename import RenameRun, RenameStep, RenameTitle
@@ -89,6 +90,8 @@ __all__ = [
     "MediaServer",
     "NotificationMessage",
     "NotificationTarget",
+    "OidcLink",
+    "OidcProvider",
     "PendingRelease",
     "Profile",
     "ProwlarrConnection",

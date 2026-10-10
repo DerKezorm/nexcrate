@@ -18,6 +18,7 @@ import { MusicVersionSettings } from './settings/MusicVersionSettings'
 import { NotificationSettings } from './settings/NotificationSettings'
 import { QualitySettings } from './settings/QualitySettings'
 import { ServerSettings } from './settings/ServerSettings'
+import { SignInSettings } from './settings/SignInSettings'
 import {
   addressOfFileTopic,
   addressOfKind,
@@ -91,6 +92,8 @@ export function SettingsPage() {
   const systemTabs: Tab<SettingsTab>[] = [
     { value: 'logs', label: t('settings.tabs.logs') },
     { value: 'account', label: t('settings.tabs.account') },
+    // Wer hereinkommt und womit: neben dem Konto.
+    { value: 'signin', label: t('settings.tabs.signin') },
     // Sicherungen gehoeren zum Betrieb der Installation, wie das Konto.
     { value: 'backups', label: t('settings.tabs.backups') },
     // Schluessel fuer andere Programme gehoeren zum Zugang, deshalb neben dem Konto.
@@ -146,6 +149,7 @@ export function SettingsPage() {
       {tab === 'tags' && <TagsTab />}
       {tab === 'logs' && <LogSettings />}
       {tab === 'account' && <AccountSettings />}
+      {tab === 'signin' && <SignInSettings />}
       {tab === 'backups' && <BackupSettings />}
       {tab === 'apikeys' && <ApiKeySettings />}
       {tab === 'webhooks' && <WebhookSettings />}

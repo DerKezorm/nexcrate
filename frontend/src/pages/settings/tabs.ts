@@ -1,6 +1,6 @@
 import type { KindSection } from './useKindLabel'
 
-export type SettingsTab = 'versions' | 'quality' | 'services' | 'indexers' | 'clients' | 'files' | 'automatic' | 'servers' | 'notifications' | 'tags' | 'import' | 'logs' | 'account' | 'backups' | 'apikeys' | 'webhooks' | 'bazarr' | 'about'
+export type SettingsTab = 'versions' | 'quality' | 'services' | 'indexers' | 'clients' | 'files' | 'automatic' | 'servers' | 'notifications' | 'tags' | 'import' | 'logs' | 'account' | 'signin' | 'backups' | 'apikeys' | 'webhooks' | 'bazarr' | 'about'
 
 /** Der Reiter "Import". Die leere Bibliothek und die alte Adresse `/uebernahme` fuehren hierher. */
 export const IMPORT_TAB_PATH = '/einstellungen?reiter=import'
@@ -38,8 +38,14 @@ export const AUTOMATIC_TAB_PATH = '/einstellungen?reiter=automatik'
 /** Der Reiter "Online-Dienste" mit dem TMDB-Token, etwa von der Ordnerseite, solange keiner gespeichert ist. */
 export const TMDB_TAB_PATH = '/einstellungen?reiter=dienste'
 
+/** Der Reiter "Anmeldung" mit Passwort, Anbietern und authentik. */
+export const SIGNIN_TAB_PATH = '/einstellungen?reiter=anmeldung'
+
+/** Das Konto; `?linked=` und `?error=` vom Rueckweg eines Anbieters haengen daran. */
+export const ACCOUNT_TAB_PATH = '/einstellungen?reiter=konto'
+
 /** Was unter "System" liegt und deshalb eine zweite Reiterreihe bekommt. */
-export const SYSTEM_TABS: readonly SettingsTab[] = ['logs', 'account', 'backups', 'apikeys', 'webhooks', 'bazarr']
+export const SYSTEM_TABS: readonly SettingsTab[] = ['logs', 'account', 'signin', 'backups', 'apikeys', 'webhooks', 'bazarr']
 
 /**
  * ⚠️ Deutsche Woerter in der Adresse, englische Werte im Code, wie in nexbeat.
@@ -64,6 +70,7 @@ const FROM_ADDRESS: Record<string, SettingsTab> = {
   system: 'logs',
   protokoll: 'logs',
   konto: 'account',
+  anmeldung: 'signin',
   sicherungen: 'backups',
   schluessel: 'apikeys',
   webhooks: 'webhooks',
@@ -85,6 +92,7 @@ const TO_ADDRESS: Record<SettingsTab, string> = {
   tags: 'tags',
   logs: 'protokoll',
   account: 'konto',
+  signin: 'anmeldung',
   backups: 'sicherungen',
   apikeys: 'schluessel',
   webhooks: 'webhooks',

@@ -62,7 +62,7 @@ def reset_password(read_password: Callable[[str], str] | None = None, out: TextI
     from .db import SessionLocal
     from .models import ACCOUNT_ID, Account, Session
     from .security import PASSWORD_MIN_LENGTH, hash_password
-    from .services import sign_in
+    from .services import oidc_store
 
     read = read_password or getpass.getpass
     stream = out or sys.stdout
@@ -99,7 +99,7 @@ def reset_password(read_password: Callable[[str], str] | None = None, out: TextI
         account.password_hash = hash_password(password)
         result = db.execute(delete(Session))
         db.commit()
-        password_open = sign_in.password_login_open(db)
+        password_open = oidc_store.password_login_open(db)
 
     ended = int(getattr(result, "rowcount", 0) or 0)
     logger.warning("Password reset from the command line, ended %d sessions", ended)
@@ -108,7 +108,7 @@ def reset_password(read_password: Callable[[str], str] | None = None, out: TextI
     if not password_open:
         say(
             "The sign-in with a password is switched off for OpenID Connect. To use it, start nexcrate with "
-            "NEXCRATE_PASSWORD_LOGIN=1 and switch it on again under Settings, System, Account."
+            "NEXCRATE_PASSWORD_LOGIN=1 and switch it on again under Settings, System, Sign-in."
         )
     return 0
 

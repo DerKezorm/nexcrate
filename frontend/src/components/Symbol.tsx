@@ -55,6 +55,7 @@ const SYMBOLS = {
   ],
   logout: [{ d: 'M13.5 4.5H5.5v15h8' }, { d: 'M10 12h10.5M17 8.5l3.5 3.5-3.5 3.5' }],
   pulse: [{ d: 'M3.5 12h4l2.5-6 4 12 2.5-6h4' }],
+  grip: [{ d: 'M9 6v0M15 6v0M9 12v0M15 12v0M9 18v0M15 18v0', dot: true }],
 } satisfies Record<string, Path[]>
 
 export type SymbolName = keyof typeof SYMBOLS

@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     #: The emergency switch: ``1`` opens the sign-in with a password even when it was switched off for OpenID Connect,
     #: for the day the provider is gone. Empty or anything else leaves the setting in the interface in charge.
     password_login: str = ""
+    #: The address people reach nexcrate at, sub path included (``https://example.com/nexcrate``), when the setting
+    #: "Public address" is empty. Sign-in providers send the browser back there.
+    public_url: str = ""
 
     _generated_key: str | None = PrivateAttr(default=None)
 

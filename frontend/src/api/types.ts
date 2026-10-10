@@ -14,24 +14,64 @@ export type TotpState = { enabled: boolean; recovery_codes_left: number }
 export type TotpEnrolment = { seed: string; uri: string; qr_svg: string }
 export type RecoveryCodes = { recovery_codes: string[] }
 
-export type OidcState = { enabled: boolean; provider_name: string; password_login: boolean }
+/** Was die Anmeldeseite zeigt: das Formular fuer das Passwort und je aktivem Anbieter einen Knopf. */
+export type OidcButton = { slug: string; label: string }
+export type OidcState = { password_login: boolean; providers: OidcButton[] }
 
-export type OidcConfig = {
-  configured: boolean
+/** Ein Eintrag der Anbieterliste, wie der Betreiber ihn sieht (nie das Geheimnis). */
+export type OidcProvider = {
+  id: number
+  slug: string
+  label: string
   issuer: string
   client_id: string
-  provider_name: string
+  has_secret: boolean
+  scopes: string
+  enabled: boolean
+  auto_create: boolean
+  trusts_second_factor: boolean
+  managed: string
+  position: number
   redirect_uri: string
-  linked: boolean
-  linked_name: string
-  linked_at: string
+  links: number
+  editable: boolean
+}
+
+export type OidcProviderForm = {
+  label: string
+  slug?: string
+  issuer: string
+  client_id: string
+  client_secret: string
+  scopes: string
+  enabled: boolean
+  auto_create: boolean
+  trusts_second_factor: boolean
+}
+
+export type OidcImpact = { issuer_change: number; count: number; only: number; only_names: string[] }
+
+/** Ein aktiver Anbieter aus Sicht des Kontos. */
+export type MyProvider = { slug: string; label: string; linked: boolean; email: string | null }
+
+export type PasswordLogin = {
   password_login: boolean
   password_login_open: boolean
+  can_switch_off: boolean
   emergency_switch: boolean
 }
 
-export type AuthentikStep = { key: string; ok: boolean; detail: string }
-export type AuthentikSetup = { ok: boolean; steps: AuthentikStep[]; owner: string; provider: OidcConfig }
+export type AuthentikStep = { key: string; ok: boolean; detail: string; reason?: string; status?: number }
+export type AuthentikResult = {
+  ok: boolean
+  steps: AuthentikStep[]
+  client_id: string
+  issuer: string
+  provider_id: number | null
+  links_dropped: number
+  /** Mit `reason: issuer_change`: wie viele Konten sich neu verknuepfen muessten. */
+  count?: number
+}
 
 export type SetupStatus = {
   setup_required: boolean

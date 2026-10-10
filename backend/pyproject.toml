@@ -6,6 +6,8 @@ requires-python = ">=3.14"
 [tool.ruff]
 target-version = "py314"
 line-length = 120
+# The shared sign-in module is checked where it is made (bauplaene/oidc) and copied unchanged.
+extend-exclude = ["app/vendor/nexoidc", "tests/nexoidc"]
 
 [tool.ruff.lint]
 extend-select = ["E501", "E402", "S608", "B", "BLE"]

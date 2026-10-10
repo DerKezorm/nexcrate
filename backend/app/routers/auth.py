@@ -16,7 +16,7 @@ from ..deps import CurrentAccount, CurrentSession, DbSession
 from ..meldungen import error, error_responses
 from ..models import ACCOUNT_ID, Account
 from ..security import PASSWORD_MIN_LENGTH, dummy_hash, hash_password, verify_password
-from ..services import anmeldebremse, known_devices, sessions, sign_in, totp
+from ..services import anmeldebremse, known_devices, oidc_store, sessions, totp
 
 logger = logging.getLogger("nexcrate.auth")
 
@@ -132,7 +132,7 @@ def login(payload: LoginIn, request: Request, response: Response, db: DbSession)
     if wait:
         logger.warning("Login refused, the brake is on for %d more seconds", wait)
         raise throttled(wait)
-    if not sign_in.password_login_open(db):
+    if not oidc_store.password_login_open(db):
         # Public anyway: the sign-in page shows no password form then (GET /api/oidc/state).
         logger.info("Login refused, the sign-in with a password is switched off")
         raise error("password_login_off", "The sign-in with a password is switched off.", 403)

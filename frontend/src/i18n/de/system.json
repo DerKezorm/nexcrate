@@ -71,7 +71,7 @@
     },
     "twoFactor": {
       "title": "Zweiter Faktor",
-      "intro": "Nach dem Passwort fragt nexcrate zusätzlich nach einem Code aus einer Authenticator-App, etwa Aegis, 2FAS oder dem Passwortmanager. Bei der Anmeldung über einen Anbieter gilt dessen zweiter Faktor.",
+      "intro": "Nach dem Passwort fragt nexcrate zusätzlich nach einem Code aus einer Authenticator-App, etwa Aegis, 2FAS oder dem Passwortmanager. Nach einem Anbieter fragt nexcrate nur, wenn der Anbieter den zweiten Faktor nicht selbst prüft (Einstellung am Anbieter).",
       "on": "Eingeschaltet",
       "offText": "Ausgeschaltet. Das Passwort allein öffnet nexcrate.",
       "enable": "Einschalten",
@@ -92,63 +92,6 @@
       "recoveryIntro": "Die bisherigen Codes gelten danach nicht mehr.",
       "disable": "Ausschalten",
       "disableIntro": "Danach öffnet das Passwort allein nexcrate wieder."
-    },
-    "signIn": {
-      "title": "Anmeldung über authentik",
-      "intro": "Melde dich mit deinem Konto bei authentik oder einem anderen OpenID-Connect-Anbieter an. nexcrate verknüpft genau ein Konto beim Anbieter und weist jedes andere ab.",
-      "linkedBadge": "Verknüpft",
-      "linkedNow": "Verknüpft. Ab jetzt kannst du dich über den Anbieter anmelden.",
-      "authentik": {
-        "title": "authentik für mich einrichten",
-        "intro": "nexcrate legt in authentik Anbieter und Anwendung an und lässt nur das Konto hinein, dem das Token gehört.",
-        "url": "Adresse von authentik",
-        "token": "API-Token",
-        "tokenHint": "In authentik unter Verzeichnis, Token und App-Passwörter mit dem Zweck API anlegen. nexcrate benutzt es nur für diese Einrichtung und speichert es nicht.",
-        "run": "Einrichten",
-        "blueprint": "Blueprint herunterladen",
-        "blueprintHint": "Lieber ohne Token: Der Blueprint legt dasselbe in authentik an. Danach Client-ID und Geheimnis von Hand eintragen.",
-        "stepsLabel": "Schritte der Einrichtung",
-        "done": "authentik ist eingerichtet und lässt nur {{owner}} hinein. Verknüpfe jetzt dein Konto."
-      },
-      "steps": {
-        "reached": "authentik erreicht",
-        "owner": "Konto des Tokens",
-        "signing_key": "Signaturschlüssel",
-        "mappings": "Angaben für den Anbieter",
-        "provider": "Anbieter",
-        "application": "Anwendung",
-        "binding": "Nur dein Konto",
-        "filled": "In nexcrate gespeichert"
-      },
-      "byHand": {
-        "toggle": "Anderer Anbieter oder von Hand",
-        "edit": "Von Hand ändern",
-        "intro": "Für authentik, Authelia, Keycloak, Pocket ID, Microsoft Entra ID und andere. Lege dort eine Anwendung mit der Rückleitungsadresse unten an.",
-        "issuer": "Aussteller (Issuer)",
-        "clientId": "Client-ID",
-        "clientSecret": "Client-Geheimnis",
-        "secretKept": "Leer lassen behält das gespeicherte Geheimnis.",
-        "name": "Name auf dem Knopf",
-        "nameHint": "Leer zeigt „OpenID Connect“.",
-        "issuerHint": "authentik: https://auth.example.com/application/o/nexcrate/. Entra ID: https://login.microsoftonline.com/<Mandanten-ID>/v2.0, auch mit common oder organizations.",
-        "entraHint": "Microsoft Entra ID: eine Web-App registrieren, dort die Rückleitungsadresse eintragen (Entra nimmt nur https an, außer für localhost) und ein Client-Geheimnis anlegen. Eine Mailadresse schickt Entra nur, wenn email als optionaler Claim eingetragen ist. nexcrate kommt ohne aus."
-      },
-      "redirect": "Rückleitungsadresse",
-      "redirectHint": "So muss sie beim Anbieter stehen. Hinter einem Proxy die Adresse nach außen eintragen.",
-      "copy": "Kopieren",
-      "copied": "Kopiert",
-      "configured": "Eingerichtet: {{name}} unter {{issuer}}",
-      "notLinked": "Noch nicht verknüpft. Melde dich einmal bei {{name}} an, dieses Konto öffnet nexcrate dann.",
-      "linked": "Verknüpft mit {{name}} am {{date}}.",
-      "noName": "einem Konto ohne Namen",
-      "linkPassword": "Passwort von nexcrate",
-      "link": "Mit {{name}} verknüpfen",
-      "relink": "Neu verknüpfen",
-      "passwordLogin": "Anmeldung mit Passwort",
-      "passwordLoginHint": "Aus: Nur der Anbieter öffnet nexcrate. Fällt er aus, öffnet NEXCRATE_PASSWORD_LOGIN=1 im Compose die Anmeldung mit Passwort wieder.",
-      "emergency": "NEXCRATE_PASSWORD_LOGIN=1 hält die Anmeldung mit Passwort gerade offen, egal was der Schalter sagt.",
-      "unlink": "Verknüpfung lösen",
-      "remove": "Anbieter entfernen"
     },
     "emergencyOnly": "Gilt nur für den Notzugang, solange die Anmeldung mit Passwort aus ist (NEXCRATE_PASSWORD_LOGIN=1)."
   },
@@ -257,5 +200,17 @@
     "noteVersions": "Jede Fassung ist in Bazarr ein eigener Eintrag, ein Film in 1080p und in 4K steht dort also zweimal. Der Name der Fassung kommt als Tag mit, und Bazarr kann je Tag ein eigenes Sprachprofil vergeben.",
     "noteSubtitles": "Untertitel, die Bazarr neben ein Video schreibt, gehen mit dem Video: beim Umbenennen mit, bei einem Upgrade oder beim Entfernen mit in den Papierkorb. Beim Einschalten sieht nexcrate einmal nach Untertiteln, die schon da liegen.",
     "notePaths": "Sieht Bazarr die Medien unter anderen Pfaden als nexcrate, in Bazarr Pfadzuordnungen eintragen."
+  },
+  "signIn": {
+    "wayBack": "Fällt der Anbieter aus, öffnet NEXCRATE_PASSWORD_LOGIN=1 im Compose die Anmeldung mit Passwort wieder.",
+    "needsLink": "Abschalten geht erst, wenn dein Konto mit einem aktiven Anbieter verknüpft ist (Konto, Anmeldeanbieter).",
+    "offNow": "Die Anmeldung mit Passwort ist aus. Fällt der Anbieter aus, starte nexcrate mit NEXCRATE_PASSWORD_LOGIN=1.",
+    "emergency": "NEXCRATE_PASSWORD_LOGIN=1 hält die Anmeldung mit Passwort gerade offen, egal was der Schalter sagt.",
+    "order": "{{name}} verschieben",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "more": "Mehr",
+    "linkPassword": "Passwort von nexcrate",
+    "linkedNow": "Dein Konto ist jetzt mit {{name}} verknüpft. Ab jetzt kannst du dich auch dort anmelden."
   }
 }

@@ -104,6 +104,7 @@ from .services import (
     jobs,
     judging,
     logs,
+    oidc_store,
     profile_upkeep,
     ratings,
     sessions,
@@ -133,6 +134,7 @@ from .services.rename import apply as rename_apply
 from .services.series import folder_read as series_folder_read
 from .services.series import halves as series_halves
 from .services.series import watching as series_watching
+from .vendor import nexoidc
 
 logger = logging.getLogger("nexcrate")
 
@@ -428,7 +430,15 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     except Exception:
         restored = False
         logger.exception("Restoring the laid out backup failed; the database stays as it was")
-    init_db()
+    schema_changes = init_db()
+    # The single provider of the settings becomes the entry ``oidc`` of the list, once; the copy before the new tables
+    # is its backup (otherwise one is made first).
+    try:
+        oidc_store.migrate_settings(backed_up=bool(schema_changes))
+    except Exception:
+        logger.exception("Moving the sign-in provider to the list failed; the old settings stay as they were")
+    # The TLS context of the sign-in, read once outside the event loop (the first sign-in would wait for it).
+    await nexoidc.warm()
     if restored:
         # The sessions in the restored database are of then; everyone logs in again.
         backups.end_sessions()
@@ -769,6 +779,8 @@ def mount_frontend(app: FastAPI, directory: Path, base: str = "") -> Path | None
 
 def create_app(frontend_dir: Path | None = None) -> FastAPI:
     settings = get_settings()
+    # The shared sign-in module learns who it runs in before the first request.
+    oidc_store.configure()
     app = FastAPI(
         title="nexcrate",
         version=__version__,

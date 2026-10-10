@@ -24,7 +24,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
-    exclude: ['node_modules/**', 'dist/**'],
+    // Die Ende-zu-Ende-Tests unter e2e/ laufen mit Playwright (npm run e2e), nicht mit vitest.
+    exclude: ['node_modules/**', 'dist/**', 'e2e/**'],
   },
   server: {
     // Fester Port: Ist er belegt, bricht Vite ab, statt still auf einen anderen auszuweichen.

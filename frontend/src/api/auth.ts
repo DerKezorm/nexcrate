@@ -1,5 +1,19 @@
 import { api } from './client'
-import type { AuthentikSetup, LoginAnswer, Me, OidcConfig, OidcState, RecoveryCodes, SetupStatus, TotpEnrolment, TotpState } from './types'
+import type {
+  AuthentikResult,
+  LoginAnswer,
+  Me,
+  MyProvider,
+  OidcImpact,
+  OidcProvider,
+  OidcProviderForm,
+  OidcState,
+  PasswordLogin,
+  RecoveryCodes,
+  SetupStatus,
+  TotpEnrolment,
+  TotpState,
+} from './types'
 
 /** Einrichtung und Anmeldung, wie in the design notes unter "Authentication". */
 export const authApi = {
@@ -27,15 +41,22 @@ export const totpApi = {
   recovery: (password: string) => api.post<RecoveryCodes>('/auth/totp/recovery', { password }),
 }
 
-/** Anmeldung ueber einen Anbieter (OpenID Connect), etwa authentik. */
+/** Anmeldung ueber Anbieter (OpenID Connect), gemeinsam mit allen nex-Apps (Bauplan 04). */
 export const oidcApi = {
   /** Oeffentlich: was die Anmeldeseite zeigt. */
   state: () => api.get<OidcState>('/oidc/state', { ignoreSessionLost: true }),
-  config: () => api.get<OidcConfig>('/oidc/config'),
-  save: (body: { issuer: string; client_id: string; client_secret: string; provider_name: string }) => api.put<OidcConfig>('/oidc/config', body),
-  remove: () => api.delete<void>('/oidc/config'),
-  authentik: (url: string, token: string) => api.post<AuthentikSetup>('/oidc/authentik/setup', { url, token }),
-  linkStart: (password: string) => api.post<{ url: string }>('/oidc/link/start', { password }),
-  unlink: () => api.delete<void>('/oidc/link'),
-  passwordLogin: (enabled: boolean) => api.put<OidcConfig>('/oidc/password-login', { enabled }),
+  providers: () => api.get<OidcProvider[]>('/oidc/admin/providers'),
+  addProvider: (body: OidcProviderForm) => api.post<OidcProvider>('/oidc/admin/providers', body),
+  saveProvider: (id: number, body: OidcProviderForm) => api.put<OidcProvider & { dropped: number }>(`/oidc/admin/providers/${id}`, body),
+  removeProvider: (id: number) => api.delete<OidcImpact>(`/oidc/admin/providers/${id}`),
+  orderProviders: (ids: number[]) => api.put<unknown>('/oidc/admin/providers/order', { ids }),
+  impact: (id: number, issuer = '') =>
+    api.get<OidcImpact>(`/oidc/admin/providers/${id}/impact${issuer ? `?issuer=${encodeURIComponent(issuer)}` : ''}`),
+  mine: () => api.get<MyProvider[]>('/oidc/me'),
+  linkStart: (slug: string, password: string) => api.post<{ url: string }>(`/oidc/${encodeURIComponent(slug)}/link`, { password }),
+  unlink: (slug: string) => api.delete<void>(`/oidc/${encodeURIComponent(slug)}/link`),
+  authentik: (url: string, token: string, confirmIssuerChange = false) =>
+    api.post<AuthentikResult>('/oidc/authentik/setup', { url, token, confirm_issuer_change: confirmIssuerChange }),
+  passwordLogin: () => api.get<PasswordLogin>('/oidc/password-login'),
+  setPasswordLogin: (enabled: boolean) => api.put<PasswordLogin>('/oidc/password-login', { enabled }),
 }

@@ -45,7 +45,8 @@ silent films with their real TMDB data, in place of TMDB's answer of the day.
 - **An API for other programs** (`/api/v1`) with keys, an event feed and webhooks.
 - **Bazarr** (beta) reads nexcrate as Radarr and Sonarr, live, and the subtitles it writes move
   with their video.
-- **Sign-in through authentik** or another OpenID Connect provider, set up with one button, and
+- **Sign-in through authentik**, Microsoft Entra ID or any other OpenID Connect provider, several side by
+  side, authentik set up with one button, and
   a **second factor** (authenticator app plus recovery codes) for the sign-in with a password.
 
 | | |
@@ -80,25 +81,34 @@ docker exec -it nexcrate python -m app.cli reset-password
 
 It asks for the new password twice without showing it, and ends every session.
 
-### Sign-in through authentik
+### Sign-in through authentik and other providers
 
-Settings › System › Account › "Set up authentik for me": enter the address of authentik and an
-API token, and nexcrate creates the signing key, the provider and the application, and binds the
-application to the token's own user, so authentik lets nobody else through. The token is used
-for this setup only and not stored. Rather without a token: download the blueprint there, apply
-it in authentik and enter client ID and secret by hand. Other providers (Authelia, Keycloak,
-Pocket ID and more) are entered by hand with the redirect address shown on the page.
+Settings › System › Sign-in has three cards. **Sign-in**: the switch for the sign-in with a
+password and the public address. **Sign-in providers**: every provider that speaks OpenID
+Connect (authentik, Microsoft Entra ID with `common` or `organizations`, Keycloak, Authelia,
+Pocket ID), each with a button on the sign-in page and its own redirect address
+(`/api/oidc/<short name>/callback`). **authentik in one step**: enter the address of authentik and
+an API token, and nexcrate creates the signing key, the provider and the application, fills in
+the entry and binds the application to the token's own user, so authentik lets nobody else
+through. The token is used for this setup only and not stored. Rather without a token: download
+the blueprint there, apply it in authentik and enter client ID and secret in the form.
 
-Then link your account: nexcrate asks for its password and sends you to the provider once. That
-one identity opens nexcrate from then on; every other identity is turned away, however the
-provider is set up. Once linked, the sign-in with a password can be switched off. If the
-provider is ever gone, start nexcrate with `NEXCRATE_PASSWORD_LOGIN=1` to open it again.
+Then link your account under Settings › System › Account › Sign-in providers: nexcrate asks for
+its password and sends you to the provider once. One identity per provider opens nexcrate from
+then on; every other identity is turned away, however the provider is set up. A provider can be
+trusted with the second factor (the default) or not; then nexcrate asks for its own code after
+the provider too. Once linked, the sign-in with a password can be switched off. If the provider
+is ever gone, start nexcrate with `NEXCRATE_PASSWORD_LOGIN=1` to open it again.
+
+Coming from nexcrate 0.5 to 0.8: the provider of the settings becomes the entry "oidc" with its
+link at the first start, and its redirect address `/api/oidc/callback` keeps working.
 
 ### Second factor
 
 Settings › System › Account › "Second factor": after the password, nexcrate asks for a code from
-an authenticator app. Eight recovery codes are shown once. A sign-in through the provider asks
-for no code, the provider brings its own. Lost the phone and the codes?
+an authenticator app. Eight recovery codes are shown once. A sign-in through a provider asks for
+no code while the provider is trusted with the second factor (the default). Lost the phone and the
+codes?
 
 ```bash
 docker exec -it nexcrate python -m app.cli reset-second-factor
@@ -189,7 +199,8 @@ All optional, see `.env.example` and `docker-compose.yml`.
 | `NEXCRATE_LOG_LEVEL` | empty | Fixes the log mode: `quiet`, `normal`, `detailed`, `trace` |
 | `NEXCRATE_PORT` | `8390` | Port inside the container |
 | `NEXCRATE_URL_BASE` | empty | Serve nexcrate under a sub path such as `/nexcrate`; `/api/health` also answers at the root |
-| `NEXCRATE_PASSWORD_LOGIN` | empty | `1` opens the sign-in with a password even when it was switched off for authentik |
+| `NEXCRATE_PASSWORD_LOGIN` | empty | `1` opens the sign-in with a password even when it was switched off for the providers |
+| `NEXCRATE_PUBLIC_URL` | empty | The address people reach nexcrate at, sub path included, when Settings › System › Sign-in names none; providers send the browser back there |
 
 ### Logs
 
