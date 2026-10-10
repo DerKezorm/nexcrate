@@ -13,7 +13,7 @@ import socket
 import ssl
 from dataclasses import dataclass
 from email.message import EmailMessage
-from email.utils import formataddr, make_msgid
+from email.utils import formataddr, formatdate, make_msgid
 
 from .base import ChannelError
 
@@ -118,6 +118,9 @@ async def send(server: Server, to: str, subject: str, text: str, html: str) -> N
     message["From"] = formataddr((server.from_name or "nexcrate", server.from_address))
     message["To"] = to.strip()
     message["Message-ID"] = make_msgid(domain=server.from_address.split("@")[-1])
+    # Pflichtfeld nach RFC 5322. smtplib ergaenzt es nicht, und ohne Date verwerfen
+    # iCloud, Outlook und Gmail die Mail still.
+    message["Date"] = formatdate(localtime=True)
     message["Auto-Submitted"] = "auto-generated"
     message.set_content(text)
     message.add_alternative(html, subtype="html")
