@@ -60,10 +60,15 @@ LEGACY_PROVIDER = (ISSUER, CLIENT_ID, CLIENT_SECRET, PROVIDER_NAME)
 LEGACY_LINK = (SUBJECT, SUBJECT_NAME, LINKED_AT)
 #: Set once the old settings were looked at: removing every entry later never brings the old provider back.
 MIGRATED = "oidc_list_migrated"
+#: What the old settings and the old subject said when the mirror wrote them last (``migrate.fingerprint``); at the next
+#: start ``migrate.resync`` takes over what the version before the list changed since.
+FINGERPRINT = "oidc_legacy_fingerprint"
 #: The owner's choice for the sign-in with a password, "0" off; the same key the version before the list reads.
 PASSWORD_LOGIN = "password_login"
 #: The old version showed this much of a provider's name for the linked identity.
 NAME_MAX = 100
+#: How the version before the list behaved after a provider: no code asked (blueprint 06 "Wanderung").
+TRUSTED_BEFORE = True
 
 
 # --- Start-up ------------------------------------------------------------------------------------------------------ #
@@ -332,17 +337,46 @@ def reopen_password_login(db: OrmSession) -> None:
 # --- The way back (blueprint 01 "Umstieg" 4) ------------------------------------------------------------------------ #
 
 
-def mirror_legacy(db: OrmSession) -> None:
-    """The way back to nexcrate 0.8.1: that version reads ``oidc_issuer``, ``oidc_client_id``, ``oidc_client_secret``,
-    ``oidc_provider_name`` and ``oidc_subject``, and lets in whoever has that subject at that issuer. So they must
-    always describe the entry ``oidc`` exactly, or be empty; otherwise going back would bring a removed provider back,
-    or let in an identity the account gave up.
+def read_legacy(db: OrmSession) -> tuple[migrate.Legacy, list[tuple[int, str]]]:
+    """The old settings and the old subject, read the one way the move, the fingerprint and ``resync`` read them. The
+    secret is the decrypted one: it is sealed with a fresh nonce at every write, and a fingerprint of the sealed text
+    would change with each."""
+    label = get_setting(db, PROVIDER_NAME)
+    legacy = migrate.Legacy(
+        issuer=get_setting(db, ISSUER),
+        client_id=get_setting(db, CLIENT_ID),
+        client_secret=crypto.decrypt(get_setting(db, CLIENT_SECRET)),
+        label=label,
+        auto_create=False,
+        # The authentik button of 0.5.0 to 0.8.1 named the provider "authentik"; the form never did by itself.
+        set_up_by_button=label == "authentik",
+    )
+    subject = get_setting(db, SUBJECT)
+    return legacy, [(ACCOUNT_ID, subject)] if subject else []
 
-    - The entry ``oidc`` gone or its issuer changed: the old settings and the old subject are emptied for good.
-    - Else the old settings follow the entry: its client only while it is on (switched off, the old version finds no
-      client and lets nobody in through it), its name; the old subject is the account's link there, or empty.
+
+def mirror_legacy(db: OrmSession) -> None:
+    """The way back to nexcrate 0.8.1 (see ``_mirror``), then the fingerprint of what stands there now, in the same
+    transaction: at the next start ``migrate.resync`` takes over only what 0.8.1 changed after it.
 
     Nothing is committed here; the store calls it before every commit."""
+    _mirror(db)
+    db.flush()
+    legacy, subjects = read_legacy(db)
+    set_setting(db, FINGERPRINT, migrate.fingerprint(legacy, subjects))
+
+
+def _mirror(db: OrmSession) -> None:
+    """That version reads ``oidc_issuer``, ``oidc_client_id``, ``oidc_client_secret``, ``oidc_provider_name`` and
+    ``oidc_subject``, and lets in whoever has that subject at that issuer. So they must always describe the entry
+    ``oidc`` exactly, or be empty; otherwise going back would bring a removed provider back, or let in an identity the
+    account gave up.
+
+    - The entry ``oidc`` gone or its issuer changed: the old settings and the old subject are emptied for good.
+    - Else the old settings follow the entry: its client only while it is on and the provider checks the second factor
+      itself (switched off, or asking the code here, the old version finds no client and lets nobody in through it: it
+      knows neither switch and would skip the code), its name; the old subject is the account's link there, or empty.
+      Switching it on again brings all of it back."""
     db.flush()
     issuer = get_setting(db, ISSUER)
     entry = db.scalar(select(OidcProvider).where(OidcProvider.slug == nexoidc.LEGACY_SLUG)) if issuer else None
@@ -363,8 +397,11 @@ def mirror_legacy(db: OrmSession) -> None:
         set_setting(db, SUBJECT_NAME, ((link.email or "") if link is not None else "")[:NAME_MAX])
         when: datetime | None = link.created_at if link is not None else None
         set_setting(db, LINKED_AT, when.isoformat() if when is not None else "")
-    client_id = entry.client_id if entry.enabled else ""
-    secret = crypto.decrypt(entry.client_secret_enc, secret_context(entry.id)) if entry.enabled else ""
+    # The old version asked no code after a provider and has no off switch: a client it may use is one the new version
+    # lets in without a code as well.
+    usable = entry.enabled and entry.trusts_second_factor
+    client_id = entry.client_id if usable else ""
+    secret = crypto.decrypt(entry.client_secret_enc, secret_context(entry.id)) if usable else ""
     if get_setting(db, CLIENT_ID) != client_id or crypto.decrypt(get_setting(db, CLIENT_SECRET)) != secret:
         set_setting(db, CLIENT_ID, client_id)
         set_setting(db, CLIENT_SECRET, crypto.encrypt(secret) if secret else "")
@@ -377,19 +414,9 @@ def mirror_legacy(db: OrmSession) -> None:
 
 def legacy_plan(db: OrmSession) -> migrate.Plan | None:
     """The entry ``oidc`` and its link the old settings become; None when no provider was set up."""
-    label = get_setting(db, PROVIDER_NAME)
-    legacy = migrate.Legacy(
-        issuer=get_setting(db, ISSUER),
-        client_id=get_setting(db, CLIENT_ID),
-        client_secret=crypto.decrypt(get_setting(db, CLIENT_SECRET)),
-        label=label,
-        auto_create=False,
-        # The authentik button of 0.5.0 to 0.8.1 named the provider "authentik"; the form never did by itself.
-        set_up_by_button=label == "authentik",
-    )
-    subject = get_setting(db, SUBJECT)
+    legacy, subjects = read_legacy(db)
     # nexcrate asked no code after the provider before the list: the moved entry keeps that (blueprint 06).
-    return migrate.plan(legacy, [(ACCOUNT_ID, subject)] if subject else [], trusts_second_factor=True)
+    return migrate.plan(legacy, subjects, trusts_second_factor=TRUSTED_BEFORE)
 
 
 def migration_due(db: OrmSession) -> bool:
@@ -401,15 +428,28 @@ def migration_due(db: OrmSession) -> bool:
 
 
 def migrate_settings(*, backed_up: bool) -> Provider | None:
-    """Once, at the first start with the list: the provider of the settings becomes the entry ``oidc`` with the linked
-    subject; ``/api/oidc/callback`` keeps signing in. ``backed_up``: this start copied the database already (the new
-    tables do that before the schema change); else a copy is made first. Nothing happens when there was no provider
-    or the list has entries already; a second start finds the flag and does nothing."""
+    """What every start runs for the old single provider. The first start with the list: the provider of the settings
+    becomes the entry ``oidc`` with the linked subject; ``/api/oidc/callback`` keeps signing in. ``backed_up``: this
+    start copied the database already (the new tables do that before the schema change); else a copy is made first.
+    Nothing is moved when there was no provider or the list has entries already.
+
+    Every later start: whatever the version before the list changed in the old settings since the last mirror (the
+    owner went back, changed something there and came up again) is taken over (``migrate.resync``). The mirror and its
+    fingerprint are written again each time, so that the next start compares against what stands there now."""
     with SessionLocal() as db:
         if not migration_due(db):
-            if get_setting(db, MIGRATED) != "1":
+            if get_setting(db, MIGRATED) == "1":
+                legacy, subjects = read_legacy(db)
+                migrate.resync(
+                    SqlStore(db),
+                    legacy,
+                    subjects,
+                    previous=get_setting(db, FINGERPRINT) or None,
+                    trusts_second_factor=TRUSTED_BEFORE,
+                )
+            else:
                 set_setting(db, MIGRATED, "1")
-                db.commit()
+            SqlStore(db).commit()
             return None
     if not backed_up:
         from . import backups

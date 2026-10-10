@@ -14,6 +14,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
+import { oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
 import { browserLanguage, isLanguage, type Language } from './languages'
 
 export { FALLBACK_LANGUAGE, isLanguage, LANGUAGES } from './languages'
@@ -24,9 +25,10 @@ const STORAGE_KEY = 'nexcrate.language'
 const LOADERS = import.meta.glob<{ default: Record<string, unknown> }>('./*/*.json')
 /**
  * Die Texte der gemeinsamen Anmeldung (Bauplan 04) kommen unveraendert aus `vendor/nexoidc` und stehen unter `oidc`.
- * `{{app}}` darin ist immer nexcrate.
+ * `{{app}}` darin ist immer nexcrate. nexcrate hat ein Konto: `oidcWording` setzt die Saetze fuer Apps mit einem Konto
+ * (`oidc.single`) an die Stelle der allgemeinen.
  */
-const OIDC_LOADERS = import.meta.glob<{ default: { oidc: Record<string, unknown> } }>('../vendor/nexoidc/oidc.*.json')
+const OIDC_LOADERS = import.meta.glob<{ default: OidcWording }>('../vendor/nexoidc/oidc.*.json')
 /** Der Name der App in den gemeinsamen Texten. */
 export const APP_NAME = 'nexcrate'
 
@@ -50,7 +52,7 @@ async function textsFor(language: Language): Promise<Record<string, unknown>> {
       .map(async ([path, load]) => [path.slice(prefix.length, -'.json'.length), (await load()).default] as const),
   )
   const oidc = OIDC_LOADERS[`../vendor/nexoidc/oidc.${language}.json`]
-  return { ...Object.fromEntries(parts), ...(oidc ? { oidc: (await oidc()).default.oidc } : {}) }
+  return { ...Object.fromEntries(parts), ...(oidc ? oidcWording((await oidc()).default, { singleAccount: true }) : {}) }
 }
 
 export async function startI18n(language: Language = initialLanguage()): Promise<void> {

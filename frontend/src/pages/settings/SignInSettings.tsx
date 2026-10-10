@@ -234,7 +234,7 @@ function ProvidersCard({ providers, reload, address }: { providers: OidcProvider
                   <Symbol name="grip" />
                 </button>
               )}
-              <span className="min-w-0 flex-1">
+              <span className="min-w-40 flex-1">
                 <span className="block font-medium text-mist-100 wrap-anywhere">{entry.label}</span>
                 <span className="block text-xs text-mist-500 wrap-anywhere">{entry.issuer}</span>
               </span>
@@ -243,7 +243,7 @@ function ProvidersCard({ providers, reload, address }: { providers: OidcProvider
                 {entry.managed === 'authentik' && <Badge tone="accent">{t('oidc.admin.managed')}</Badge>}
               </span>
               {entry.editable && (
-                <span className="flex gap-2">
+                <span className="flex w-full gap-2 sm:w-auto">
                   <Button variant="ghost" size="sm" onClick={() => setEditing(entry)}>
                     {t('oidc.admin.edit')}
                   </Button>

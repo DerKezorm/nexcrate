@@ -63,8 +63,14 @@ router = APIRouter(prefix="/api/oidc", tags=["oidc"])
 BRAKE_KEY = "oidc-callback"
 #: The cookie that names the session a linking started from (the session cookie itself stays behind, Strict).
 LINK_COOKIE = "nexcrate_oidc_link"
-#: Errors that cost nothing to produce or that a household member at the provider would cause: they do not brake.
-UNBRAKED = frozenset({"oidc_state_mismatch", "too_many_attempts", "oidc_no_account", "oidc_not_configured"})
+#: Errors that cost nothing to produce, that anybody can make without an attempt of their own, or that a household
+#: member at the provider would cause: they do not brake. ⚠️ Everything the module raises before it has read a valid
+#: attempt cookie belongs here (``oidc_provider_error`` is raised first: ``/callback?error=x`` needs no cookie, and
+#: braking it would let any visitor lock the owner out). What needs a started attempt (a code the provider refuses) does
+#: brake, as it did in 0.8.1.
+UNBRAKED = frozenset(
+    {"oidc_state_mismatch", "too_many_attempts", "oidc_no_account", "oidc_not_configured", "oidc_provider_error"}
+)
 
 
 class ProviderIn(BaseModel):

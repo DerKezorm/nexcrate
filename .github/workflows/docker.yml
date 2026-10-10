@@ -43,6 +43,13 @@ jobs:
         working-directory: backend
         run: python -m ruff check app
 
+      # The sign-in module is shared with the other nex apps and copied unchanged. These tests check that the copy
+      # is the module (checksums) and that the sign-in keeps what every app promises. They bring their own empty
+      # database and need nothing but the dependencies above.
+      - name: Sign-in contract tests
+        working-directory: backend
+        run: python -m pytest tests/nexoidc -q -p no:cacheprovider
+
       # On a release the version in the code must match the tag. Otherwise the
       # app reports a different version than the one that is installed.
       - name: Version matches the tag
