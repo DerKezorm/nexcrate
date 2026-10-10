@@ -18,8 +18,10 @@ Paths below ``/api/oidc``:
 | GET | ``/me`` | session: every active entry with ``linked`` |
 | POST, DELETE | ``/{slug}/link`` | session: link (password → ``{"url"}``), unlink |
 | DELETE | ``/admin/accounts/{account}/links/{provider}`` | session, with the password |
-| POST | ``/authentik/setup`` | session: ``{"url", "token", "confirm_issuer_change"}`` → always 200, the steps |
-| GET | ``/authentik/blueprint`` | session: ``nexcrate-authentik.yaml`` |
+| POST | ``/authentik/setup`` | session: ``{"url", "token", "confirm_issuer_change", "public_url"}``, 200, the steps |
+| GET | ``/authentik/address`` | session: what the authentik card shows about the public address |
+| POST | ``/authentik/address`` | session: ``{"public_url", "confirm"}`` saves it ("Use it only"); 409 asks first |
+| GET | ``/authentik/blueprint`` | session: ``nexcrate-authentik.yaml``; without a public address 409 |
 | GET, PUT | ``/password-login`` | session: the switch for the sign-in with a password |
 
 The return leg is a browser redirect, not an API answer: every outcome, every failure included, ends in a redirect
@@ -99,6 +101,14 @@ class SetupIn(BaseModel):
     token: str = Field(min_length=1, max_length=2000)
     #: The operator confirmed that the run may change the issuer of the button's entry (``reason: issuer_change``).
     confirm_issuer_change: bool = False
+    #: The address the operator confirmed in the card (the browser's own) while nexcrate has no public address yet.
+    public_url: str = Field(default="", max_length=600)
+
+
+class AddressIn(BaseModel):
+    public_url: str = Field(max_length=600)
+    #: The operator confirmed ``oidc.admin.addressChangeConfirm`` (and ``addressChangeHand``).
+    confirm: bool = False
 
 
 class PasswordLoginIn(BaseModel):
@@ -500,20 +510,71 @@ def operator_unlink(
 )
 async def authentik_setup(payload: SetupIn, request: Request, db: DbSession) -> dict[str, Any]:
     result = await authentik.setup(
-        _store(db), payload.url, payload.token, _base(request), confirm_issuer_change=payload.confirm_issuer_change
+        _store(db),
+        payload.url,
+        payload.token,
+        _base(request),
+        confirm_issuer_change=payload.confirm_issuer_change,
+        public_url=payload.public_url,
+        headers=request.headers,
     )
     return result.as_dict()
 
 
 @router.get(
+    "/authentik/address",
+    summary="What the authentik card shows about the public address",
+    description=(
+        "The address nexcrate has, the one the browser used, whether a proxy seems to change the scheme, and whether "
+        "authentik still knows an older redirect address (``stale``)."
+    ),
+)
+def authentik_address(request: Request, db: DbSession) -> dict[str, Any]:
+    return authentik.address_view(_store(db), _base(request), request.headers)
+
+
+@router.post(
+    "/authentik/address",
+    summary="Save the public address (the authentik card's \"Use it only\")",
+    description=(
+        "Saves the address people reach nexcrate at, without setting anything up at authentik. When it leaves an "
+        "address behind that authentik or a provider made by hand knows, nothing is saved until ``confirm`` is true: "
+        "the answer is 409 ``public_url_change`` with ``count``, ``address`` and ``hand``."
+    ),
+    responses=error_responses((409, "public_url_change"), (409, "public_url_needed"), (422, "public_url_invalid")),
+)
+def authentik_save_address(payload: AddressIn, request: Request, db: DbSession) -> dict[str, Any]:
+    try:
+        return authentik.save_public_url(_store(db), payload.public_url, _base(request), confirm=payload.confirm)
+    except ValueError as failure:
+        raise error("public_url_invalid", "This is not an address nexcrate can use.", 422) from failure
+    except authentik.PublicUrlChange as asked:
+        raise error(
+            "public_url_change", "Saving this address changes what the providers know.", 409, **asked.question
+        ) from asked
+    except authentik.PublicUrlNotKept as failure:
+        raise error("public_url_needed", "nexcrate could not keep the address.", 409) from failure
+
+
+@router.get(
     "/authentik/blueprint",
     summary="Download a blueprint that creates the same provider and application in authentik",
-    description="For owners who would rather not hand over a token. Client id and secret go into the form afterwards.",
+    description=(
+        "For owners who would rather not hand over a token. Client id and secret go into the form afterwards. Needs "
+        "the public address first (409 ``public_url_needed``): the blueprint never guesses one."
+    ),
     response_class=Response,
-    responses={200: {"content": {"application/yaml": {}}, "description": "The blueprint as YAML."}},
+    responses={
+        200: {"content": {"application/yaml": {}}, "description": "The blueprint as YAML."},
+        **error_responses((409, "public_url_needed")),
+    },
 )
 def authentik_blueprint(request: Request, db: DbSession) -> Response:
-    text = authentik.blueprint(authentik.blueprint_redirect(_store(db), _base(request)))
+    try:
+        redirect = authentik.blueprint_redirect(_store(db), _base(request))
+    except authentik.PublicUrlNeeded as failure:
+        raise error("public_url_needed", "Enter the address people reach nexcrate at first.", 409) from failure
+    text = authentik.blueprint(redirect)
     name = authentik.blueprint_filename()
     return Response(
         content=text, media_type="application/yaml", headers={"Content-Disposition": f'attachment; filename="{name}"'}

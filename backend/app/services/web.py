@@ -9,9 +9,9 @@ with the session and goes on.
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlsplit
 
 from .. import db as database
+from ..vendor.nexoidc import flow
 
 SETTING = "web_url"
 MAX_LENGTH = 500
@@ -30,21 +30,17 @@ LINKS = {
 
 def normalize(text: str) -> str:
     """``https://host[:port][/path]`` without a trailing slash, query or fragment; empty stays empty. Raises
-    ``ValueError`` for anything else."""
+    ``ValueError`` for anything else.
+
+    ⚠️ The sign-in module takes this address as its public address and registers callbacks below it at the provider, so
+    this accepts exactly what the module's own check accepts (``flow.clean_public_url``: scheme and host in small
+    letters, at most 199 characters, no ``.`` or ``..`` in the path) and nothing it refuses."""
     value = (text or "").strip()
     if not value:
         return ""
     if len(value) > MAX_LENGTH:
         raise ValueError("too long")
-    parts = urlsplit(value)
-    if parts.scheme not in ("http", "https") or not parts.hostname:
-        raise ValueError("not an address")
-    if parts.query or parts.fragment or parts.username or parts.password:
-        raise ValueError("not an address")
-    path = parts.path.rstrip("/")
-    host = f"[{parts.hostname}]" if ":" in parts.hostname else parts.hostname
-    port = f":{parts.port}" if parts.port else ""
-    return f"{parts.scheme}://{host}{port}{path}"
+    return flow.clean_public_url(value)
 
 
 def web_url(db: Any) -> str | None:

@@ -5,19 +5,26 @@ import { oidcApi } from '../../api/auth'
 import { ApiError, errorText } from '../../api/client'
 import { systemSettingsApi } from '../../api/outside'
 import type { AuthentikResult, OidcProvider, OidcProviderForm, PasswordLogin } from '../../api/types'
+import { AddressChangeDialog } from '../../components/AddressChange'
 import { Dialog } from '../../components/Dialog'
 import { PasswordField } from '../../components/PasswordField'
 import { Symbol } from '../../components/Symbol'
 import { buttonClasses } from '../../components/buttonClasses'
 import { Badge, Button, Field, FormMessage, Section, Spinner, Switch } from '../../components/ui'
-import { withBase } from '../../lib/base'
+import { addressQuestion, type AddressQuestion } from '../../lib/addressQuestion'
+import { URL_BASE, withBase } from '../../lib/base'
 import {
   authentikIssuerChange,
+  authentikProposal,
+  authentikProxyWarning,
   authentikReasonKey,
+  authentikRedirect,
+  authentikStale,
   authentikStepKey,
   oidcErrorKey,
   oidcFormErrorKey,
   slugFromLabel,
+  type AuthentikAddress,
 } from '../../vendor/nexoidc/oidc'
 
 const BLUEPRINT = withBase('/api/oidc/authentik/blueprint')
@@ -60,7 +67,7 @@ export function SignInSettings() {
     <div className="flex flex-col gap-4">
       <SignInCard address={address} onAddress={setAddress} providers={providers} />
       <ProvidersCard providers={providers} reload={load} address={address ?? ''} />
-      <AuthentikCard address={address} reload={load} />
+      <AuthentikCard address={address} reload={load} onAddress={setAddress} />
       {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
     </div>
   )
@@ -83,6 +90,7 @@ function SignInCard({
   const [busy, setBusy] = useState<string | null>(null)
   const [problem, setProblem] = useState<unknown>(null)
   const [saved, setSaved] = useState(false)
+  const [asking, setAsking] = useState<AddressQuestion | null>(null)
 
   // Neu lesen, wenn sich die Liste aendert: ein entfernter Anbieter oeffnet das Passwort wieder.
   useEffect(() => {
@@ -105,20 +113,27 @@ function SignInCard({
     }
   }
 
-  async function saveAddress(event: FormEvent) {
-    event.preventDefault()
+  // Eine neue Adresse, die eine Rueckleitadresse bei einem Anbieter zuruecklaesst, fragt zuerst (409 `public_url_change`).
+  async function sendAddress(confirm: boolean) {
     setBusy('address')
     setProblem(null)
     setSaved(false)
     try {
-      const answer = await systemSettingsApi.change({ web_url: value })
+      const answer = await systemSettingsApi.change({ web_url: value, confirm_address: confirm })
       onAddress(answer.web_url ?? '')
       setSaved(true)
     } catch (error) {
-      setProblem(error)
+      const question = addressQuestion(error)
+      if (question) setAsking(question)
+      else setProblem(error)
     } finally {
       setBusy(null)
     }
+  }
+
+  function saveAddress(event: FormEvent) {
+    event.preventDefault()
+    void sendAddress(false)
   }
 
   return (
@@ -141,7 +156,7 @@ function SignInCard({
         )}
         {state !== null && !state.password_login && <FormMessage tone="info">{t('system.signIn.offNow')}</FormMessage>}
         {state?.emergency_switch && <FormMessage tone="info">{t('system.signIn.emergency')}</FormMessage>}
-        <form onSubmit={(event) => void saveAddress(event)} className="flex flex-col gap-3 sm:flex-row sm:items-end" noValidate>
+        <form onSubmit={saveAddress} className="flex flex-col gap-3 sm:flex-row sm:items-end" noValidate>
           <div className="min-w-0 flex-1">
             <Field
               label={t('oidc.admin.address')}
@@ -160,6 +175,15 @@ function SignInCard({
         {saved && <FormMessage tone="ok">{t('system.outside.saved')}</FormMessage>}
         {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
       </div>
+      <AddressChangeDialog
+        question={asking}
+        busy={busy === 'address'}
+        onCancel={() => setAsking(null)}
+        onConfirm={() => {
+          setAsking(null)
+          void sendAddress(true)
+        }}
+      />
     </Section>
   )
 }
@@ -544,32 +568,81 @@ function ProviderDialog({
 
 // --- Karte 3: authentik in einem Schritt ---------------------------------------------------------------------------
 
-function AuthentikCard({ address, reload }: { address: string | null; reload: () => Promise<void> }) {
+function AuthentikCard({
+  address,
+  reload,
+  onAddress,
+}: {
+  address: string | null
+  reload: () => Promise<void>
+  onAddress: (next: string) => void
+}) {
   const { t } = useTranslation()
   const [url, setUrl] = useState('')
   const [token, setToken] = useState('')
   const [result, setResult] = useState<AuthentikResult | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [view, setView] = useState<AuthentikAddress | null>(null)
+  const [busy, setBusy] = useState<'run' | 'adopt' | null>(null)
   const [problem, setProblem] = useState<unknown>(null)
 
   const [asking, setAsking] = useState<number | null>(null)
+  const [askingAddress, setAskingAddress] = useState<AddressQuestion | null>(null)
+
+  // Der Vorschlag ist die Adresse, unter der der Browser nexcrate gerade erreicht, samt Unterpfad.
+  const proposal = authentikProposal(window.location.origin, URL_BASE)
+  const noAddress = view !== null && view.public_url === ''
+  const stale = authentikStale(view)
+
+  const loadView = useCallback(async () => {
+    try {
+      setView(await oidcApi.authentikAddress())
+    } catch {
+      setView(null)
+    }
+  }, [])
+
+  // Neu lesen, wenn Karte 1 eine Adresse gespeichert hat.
+  useEffect(() => {
+    void loadView()
+  }, [loadView, address])
 
   async function runButton(confirmIssuerChange: boolean) {
-    setBusy(true)
+    setBusy('run')
     setProblem(null)
     setResult(null)
     try {
-      const answer = await oidcApi.authentik(url.trim(), token.trim(), confirmIssuerChange)
+      // Ohne eigene Adresse traegt der Knopf nichts Geratenes ein: er bekommt die bestaetigte (den Vorschlag).
+      const answer = await oidcApi.authentik(url.trim(), token.trim(), confirmIssuerChange, noAddress ? proposal : '')
       setResult(answer)
       // Haelt der Knopf vor einem anderen Aussteller an, bleibt das Token fuer den bestaetigten zweiten Lauf.
       const count = authentikIssuerChange(answer)
       if (count === null) setToken('')
       else setAsking(count)
+      // Die Adresse bleibt gespeichert, auch wenn der Lauf danach scheitert.
+      if (answer.public_url) onAddress(answer.public_url)
+      if (answer.address) setView(answer.address)
+      else await loadView()
       await reload()
     } catch (error) {
       setProblem(error)
     } finally {
-      setBusy(false)
+      setBusy(null)
+    }
+  }
+
+  async function adoptOnly(confirm: boolean) {
+    setBusy('adopt')
+    setProblem(null)
+    try {
+      const answer = await oidcApi.saveAddress(proposal, confirm)
+      setView(answer)
+      onAddress(answer.public_url)
+    } catch (error) {
+      const question = addressQuestion(error)
+      if (question) setAskingAddress(question)
+      else setProblem(error)
+    } finally {
+      setBusy(null)
     }
   }
 
@@ -581,14 +654,26 @@ function AuthentikCard({ address, reload }: { address: string | null; reload: ()
   return (
     <Section title={t('oidc.authentik.title')} intro={t('oidc.authentik.text')}>
       <div id="sign-in-authentik" className="flex flex-col gap-4">
-        {address === '' && (
-          <FormMessage tone="info">
-            {t('oidc.authentik.noAddress')}{' '}
-            <a href="#sign-in" className="underline">
-              {t('oidc.admin.address')}
-            </a>
-          </FormMessage>
+        {view !== null && noAddress && (
+          <div className="flex flex-col gap-2 rounded-2xl border border-ink-700 p-3.5" data-testid="authentik-proposal">
+            <p className="text-sm text-mist-300">{t('oidc.authentik.noAddress')}</p>
+            <code className="rounded-xl border border-ink-700 bg-ink-900 px-3 py-2 font-mono text-xs text-mist-100 wrap-anywhere" data-testid="proposal-address">
+              {proposal}
+            </code>
+            <p className="text-xs text-mist-500">
+              {t('oidc.admin.redirect')}:{' '}
+              <code className="font-mono text-mist-300 wrap-anywhere" data-testid="proposal-redirect">
+                {authentikRedirect(proposal, view)}
+              </code>
+            </p>
+            {authentikProxyWarning(proposal, view) && (
+              <p className="text-xs text-bad-500" role="alert" data-testid="proxy-warning">
+                {t('oidc.authentik.proxyWarning', { address: view.seen })}
+              </p>
+            )}
+          </div>
         )}
+        {stale !== null && <FormMessage>{t('oidc.authentik.stale', { address: stale })}</FormMessage>}
         <form onSubmit={setUp} className="flex flex-col gap-4" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
@@ -602,16 +687,29 @@ function AuthentikCard({ address, reload }: { address: string | null; reload: ()
             <PasswordField label={t('oidc.authentik.token')} value={token} onChange={(event) => setToken(event.target.value)} autoComplete="off" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="submit" loading={busy} disabled={url.trim() === '' || token.trim() === ''}>
-              {t('oidc.authentik.run')}
+            <Button type="submit" loading={busy === 'run'} disabled={busy === 'adopt' || url.trim() === '' || token.trim() === ''}>
+              {noAddress ? t('oidc.authentik.adopt') : t('oidc.authentik.run')}
             </Button>
-            <a href={BLUEPRINT} download className={buttonClasses('ghost', 'md')}>
-              <Symbol name="download" />
-              {t('oidc.authentik.blueprint')}
-            </a>
+            {noAddress && (
+              <Button variant="ghost" onClick={() => void adoptOnly(false)} loading={busy === 'adopt'} disabled={busy === 'run'}>
+                {t('oidc.authentik.adoptOnly')}
+              </Button>
+            )}
+            {/* Der Blueprint raet keine Adresse: ohne eigene geht er erst nach "Nur uebernehmen". */}
+            {noAddress ? (
+              <Button variant="ghost" disabled>
+                <Symbol name="download" />
+                {t('oidc.authentik.blueprint')}
+              </Button>
+            ) : (
+              <a href={BLUEPRINT} download className={buttonClasses('ghost', 'md')}>
+                <Symbol name="download" />
+                {t('oidc.authentik.blueprint')}
+              </a>
+            )}
           </div>
         </form>
-        {busy && (
+        {busy === 'run' && (
           <p className="text-sm text-mist-400" role="status">
             {t('oidc.authentik.asking')}
           </p>
@@ -660,6 +758,15 @@ function AuthentikCard({ address, reload }: { address: string | null; reload: ()
       >
         <p className="text-sm text-mist-300">{t('oidc.admin.issuerChangeConfirm', { count: asking ?? 0 })}</p>
       </Dialog>
+      <AddressChangeDialog
+        question={askingAddress}
+        busy={busy === 'adopt'}
+        onCancel={() => setAskingAddress(null)}
+        onConfirm={() => {
+          setAskingAddress(null)
+          void adoptOnly(true)
+        }}
+      />
     </Section>
   )
 }

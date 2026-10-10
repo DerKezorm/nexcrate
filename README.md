@@ -93,6 +93,19 @@ the entry and binds the application to the token's own user, so authentik lets n
 through. The token is used for this setup only and not stored. Rather without a token: download
 the blueprint there, apply it in authentik and enter client ID and secret in the form.
 
+nexcrate never registers an address it guessed: the redirect address at authentik is built from
+the public address. While there is none, the card suggests the address your browser uses right
+now ("Use it and set up", or "Use it only" to just keep it), and it warns when the server sees
+another scheme or host than the browser, which is what a reverse proxy that ends TLS does when
+nexcrate does not believe its `X-Forwarded-Proto`. Changing the public address later asks first
+when authentik or a provider you entered by hand still knows the old redirect address, and the
+card says so until the button has run again.
+
+**Behind a reverse proxy that ends TLS** nexcrate takes the scheme (`X-Forwarded-Proto`) only
+from the addresses named in `FORWARDED_ALLOW_IPS` (uvicorn's own setting, default `127.0.0.1`,
+a comma separated list; `*` trusts every sender, so only behind a proxy nobody can bypass).
+Name the address your proxy connects from, for example the gateway of the Docker network.
+
 Then link your account under Settings › System › Account › Sign-in providers: nexcrate asks for
 its password and sends you to the provider once. One identity per provider opens nexcrate from
 then on; every other identity is turned away, however the provider is set up. A provider can be
@@ -201,6 +214,7 @@ All optional, see `.env.example` and `docker-compose.yml`.
 | `NEXCRATE_URL_BASE` | empty | Serve nexcrate under a sub path such as `/nexcrate`; `/api/health` also answers at the root |
 | `NEXCRATE_PASSWORD_LOGIN` | empty | `1` opens the sign-in with a password even when it was switched off for the providers |
 | `NEXCRATE_PUBLIC_URL` | empty | The address people reach nexcrate at, sub path included, when Settings › System › Sign-in names none; providers send the browser back there |
+| `FORWARDED_ALLOW_IPS` | `127.0.0.1` | The proxies nexcrate believes when they say `X-Forwarded-Proto: https` (comma separated addresses, `*` for all); needed behind a reverse proxy that ends TLS, see Sign-in through authentik |
 
 ### Logs
 

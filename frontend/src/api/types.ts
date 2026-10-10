@@ -1,3 +1,5 @@
+import type { AuthentikAddress } from '../vendor/nexoidc/oidc'
+
 /** Die Formen aus the design notes. Zeiten kommen als ISO-Text. */
 
 /** Das eine Konto. */
@@ -71,6 +73,10 @@ export type AuthentikResult = {
   links_dropped: number
   /** Mit `reason: issuer_change`: wie viele Konten sich neu verknuepfen muessten. */
   count?: number
+  /** Die Adresse, die dieser Lauf als oeffentliche gespeichert hat (die bestaetigte), sonst leer. */
+  public_url?: string
+  /** Mit `reason: public_url_needed`: was die Karte zeigt. */
+  address?: AuthentikAddress | null
 }
 
 export type SetupStatus = {

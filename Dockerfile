@@ -67,5 +67,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 # ⚠️ One worker process: SQLite, the in-memory login brake and the background jobs must exist once.
 # No access log: nexcrate writes its own request lines, with masked query strings.
+# Behind a reverse proxy that ends TLS, uvicorn believes X-Forwarded-Proto only from the addresses in the environment
+# variable FORWARDED_ALLOW_IPS (default 127.0.0.1); the sign-in uses the scheme for its redirect address. No
+# --no-proxy-headers here, on purpose.
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--workers", "1", "--no-access-log"]

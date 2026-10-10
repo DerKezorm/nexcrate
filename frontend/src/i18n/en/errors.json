@@ -350,5 +350,8 @@
   "scopes_invalid": "The scopes must contain openid.",
   "provider_managed": "This provider comes through a coupling and changes only there.",
   "provider_unknown": "This provider no longer exists.",
-  "password_login_needs_link": "Link your account to an active provider first. Only then can the sign-in with a password be switched off."
+  "password_login_needs_link": "Link your account to an active provider first. Only then can the sign-in with a password be switched off.",
+  "public_url_change": "This address changes what the providers know. Confirm the question and it is saved.",
+  "public_url_invalid": "This address cannot be used. Check how it is written.",
+  "public_url_needed": "nexcrate has no public address yet. Enter the address you reach nexcrate at first."
 }

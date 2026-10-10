@@ -43,6 +43,10 @@ class OidcProvider(Base):
     position: Mapped[int] = mapped_column(Integer, default=0)
     #: The callback the provider knows when it is not the standard one; set by a migration only, never by the form.
     redirect_path: Mapped[str] = mapped_column(String(300), default="")
+    #: The redirect address the authentik button last registered at authentik for this entry; "" when it never did (an
+    #: entry by hand, or one the button made before the address was remembered). Compared with the address of today it
+    #: tells whether authentik still sends people to an old one.
+    registered_redirect: Mapped[str] = mapped_column(String(500), default="", server_default="")
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
 
 

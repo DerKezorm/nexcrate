@@ -33,7 +33,6 @@ from ..vendor.nexoidc import (
     Provider,
     ProviderValues,
     migrate,
-    protocol,
     providers,
     secret_context,
 )
@@ -63,6 +62,9 @@ MIGRATED = "oidc_list_migrated"
 #: What the old settings and the old subject said when the mirror wrote them last (``migrate.fingerprint``); at the next
 #: start ``migrate.resync`` takes over what the version before the list changed since.
 FINGERPRINT = "oidc_legacy_fingerprint"
+#: The issuer the version before the list knows, as it wrote it (with or without the slash), or ``migrate.CLOSED``:
+#: ``migrate.way_back`` decides by it what the old settings show. Stored before the move and kept by ``resync``.
+ANCHOR = "oidc_legacy_anchor"
 #: The owner's choice for the sign-in with a password, "0" off; the same key the version before the list reads.
 PASSWORD_LOGIN = "password_login"
 #: The old version showed this much of a provider's name for the linked identity.
@@ -88,6 +90,16 @@ def public_url() -> str:
         return ""
 
 
+def save_public_url(url: str) -> None:
+    """The address the operator confirmed in the authentik card, stored as the address to the outside (the setting
+    ``public_url`` reads first), in a transaction of its own and committed at once: it outlives a restart, and a run of
+    the button that fails later keeps it. ``ValueError`` for an address the module would refuse."""
+    value = web.normalize(url)
+    with SessionLocal() as db:
+        set_setting(db, web.SETTING, value)
+        db.commit()
+
+
 def _server_secret() -> str:
     return get_settings().resolved_secret_key()
 
@@ -100,6 +112,7 @@ def configure() -> None:
             app_name=APP_NAME,
             server_secret=_server_secret,
             public_url=public_url,
+            save_public_url=save_public_url,
             single_account=True,
             login_page=base + LOGIN_PAGE,
             account_page=base + ACCOUNT_PAGE,
@@ -148,6 +161,7 @@ class SqlStore:
             position=row.position,
             redirect_path=row.redirect_path,
             created_at=row.created_at,
+            registered_redirect=row.registered_redirect or "",
         )
 
     def list_providers(self) -> list[Provider]:
@@ -170,6 +184,9 @@ class SqlStore:
             values.position,
         )
         row.redirect_path = values.redirect_path
+        if values.registered_redirect is not None:
+            # None keeps what the button registered last; only the button writes it.
+            row.registered_redirect = values.registered_redirect
 
     def insert_provider(self, values: ProviderValues) -> Provider:
         row = OidcProvider()
@@ -368,45 +385,43 @@ def mirror_legacy(db: OrmSession) -> None:
 
 def _mirror(db: OrmSession) -> None:
     """That version reads ``oidc_issuer``, ``oidc_client_id``, ``oidc_client_secret``, ``oidc_provider_name`` and
-    ``oidc_subject``, and lets in whoever has that subject at that issuer. So they must always describe the entry
-    ``oidc`` exactly, or be empty; otherwise going back would bring a removed provider back, or let in an identity the
-    account gave up.
+    ``oidc_subject``, and lets in whoever has that subject at that issuer. What it finds there is the module's one rule
+    for the way back (``migrate.way_back``, decided by the entry ``oidc`` and the stored anchor); this writes it in the
+    form 0.8.1 reads:
 
-    - The entry ``oidc`` gone or its issuer changed: the old settings and the old subject are emptied for good.
-    - Else the old settings follow the entry: its client only while it is on and the provider checks the second factor
-      itself (switched off, or asking the code here, the old version finds no client and lets nobody in through it: it
-      knows neither switch and would skip the code), its name; the old subject is the account's link there, or empty.
-      Switching it on again brings all of it back."""
+    - The entry on and trusting the provider with the second factor, at the issuer the anchor names: all of it.
+    - Off, or asking the code here: issuer and name stay, no client (0.8.1 knows neither switch and would skip the code,
+      so with no client it lets nobody in). On again brings everything back.
+    - Another issuer than the anchor, or no entry: everything empty, the subject too, and the anchor closed for good.
+
+    The issuer is written as the anchor holds it, letter by letter (0.8.1 compares it so when a provider is saved, and
+    a slash more or less would throw the linked subject away). The anchor is stored here, in the same transaction."""
     db.flush()
-    issuer = get_setting(db, ISSUER)
-    entry = db.scalar(select(OidcProvider).where(OidcProvider.slug == nexoidc.LEGACY_SLUG)) if issuer else None
-    if issuer and (entry is None or not protocol.same_issuer(entry.issuer, issuer)):
-        for key in LEGACY_PROVIDER + LEGACY_LINK:
-            set_setting(db, key, "")
-        logger.info("The provider before the list is gone or another: its old settings and subject are emptied")
-        entry = None
-    if entry is None:
-        if any(get_setting(db, key) for key in LEGACY_LINK):
-            for key in LEGACY_LINK:
-                set_setting(db, key, "")
-        return
-    link = db.scalar(select(OidcLink).where(OidcLink.provider_id == entry.id, OidcLink.account_id == ACCOUNT_ID))
-    subject = link.subject if link is not None else ""
-    if get_setting(db, SUBJECT) != subject:
-        set_setting(db, SUBJECT, subject)
-        set_setting(db, SUBJECT_NAME, ((link.email or "") if link is not None else "")[:NAME_MAX])
-        when: datetime | None = link.created_at if link is not None else None
+    store = SqlStore(db)
+    entry = store.provider_by_slug(nexoidc.LEGACY_SLUG)
+    link = (
+        db.scalar(select(OidcLink).where(OidcLink.provider_id == entry.id, OidcLink.account_id == ACCOUNT_ID))
+        if entry is not None
+        else None
+    )
+    mirror = migrate.way_back(entry, [(ACCOUNT_ID, link.subject)] if link is not None else [], get_setting(db, ANCHOR))
+    legacy = mirror.legacy
+    if get_setting(db, ANCHOR) != mirror.anchor:
+        set_setting(db, ANCHOR, mirror.anchor)
+    wanted = mirror.subjects.get(ACCOUNT_ID, "")
+    if get_setting(db, SUBJECT) != wanted:
+        set_setting(db, SUBJECT, wanted)
+        set_setting(db, SUBJECT_NAME, ((link.email or "") if link is not None and wanted else "")[:NAME_MAX])
+        when: datetime | None = link.created_at if link is not None and wanted else None
         set_setting(db, LINKED_AT, when.isoformat() if when is not None else "")
-    # The old version asked no code after a provider and has no off switch: a client it may use is one the new version
-    # lets in without a code as well.
-    usable = entry.enabled and entry.trusts_second_factor
-    client_id = entry.client_id if usable else ""
-    secret = crypto.decrypt(entry.client_secret_enc, secret_context(entry.id)) if usable else ""
-    if get_setting(db, CLIENT_ID) != client_id or crypto.decrypt(get_setting(db, CLIENT_SECRET)) != secret:
-        set_setting(db, CLIENT_ID, client_id)
-        set_setting(db, CLIENT_SECRET, crypto.encrypt(secret) if secret else "")
-    if get_setting(db, PROVIDER_NAME) != entry.label:
-        set_setting(db, PROVIDER_NAME, entry.label)
+    if get_setting(db, ISSUER) != legacy.issuer:
+        set_setting(db, ISSUER, legacy.issuer)
+    secret_now = crypto.decrypt(get_setting(db, CLIENT_SECRET))
+    if get_setting(db, CLIENT_ID) != legacy.client_id or secret_now != legacy.client_secret:
+        set_setting(db, CLIENT_ID, legacy.client_id)
+        set_setting(db, CLIENT_SECRET, crypto.encrypt(legacy.client_secret) if legacy.client_secret else "")
+    if get_setting(db, PROVIDER_NAME) != legacy.label:
+        set_setting(db, PROVIDER_NAME, legacy.label)
 
 
 # --- The move from the settings (blueprint 01 "Umstieg", 06 "Wanderung") -------------------------------------------- #
@@ -434,36 +449,55 @@ def migrate_settings(*, backed_up: bool) -> Provider | None:
     Nothing is moved when there was no provider or the list has entries already.
 
     Every later start: whatever the version before the list changed in the old settings since the last mirror (the
-    owner went back, changed something there and came up again) is taken over (``migrate.resync``). The mirror and its
-    fingerprint are written again each time, so that the next start compares against what stands there now."""
+    owner went back, changed something there and came up again) is taken over (``migrate.resync``), with a copy of the
+    database first when there is something to take over. The mirror, the anchor and the fingerprint are written again
+    each time, also on a start without any provider (a provider set up in 0.8.1 later would be thrown away
+    otherwise), so that the next start compares against what stands there now."""
     with SessionLocal() as db:
-        if not migration_due(db):
-            if get_setting(db, MIGRATED) == "1":
-                legacy, subjects = read_legacy(db)
-                migrate.resync(
-                    SqlStore(db),
-                    legacy,
-                    subjects,
-                    previous=get_setting(db, FINGERPRINT) or None,
-                    trusts_second_factor=TRUSTED_BEFORE,
-                )
-            else:
-                set_setting(db, MIGRATED, "1")
-            SqlStore(db).commit()
-            return None
-    if not backed_up:
+        legacy, subjects = read_legacy(db)
+        moving = migration_due(db)
+        changed = (
+            not moving
+            and get_setting(db, MIGRATED) == "1"
+            and migrate.changes_since(get_setting(db, FINGERPRINT) or None, legacy, subjects).any
+        )
+    if (moving or changed) and not backed_up:
         from . import backups
 
-        backups.create(kind=backups.UPDATE, comment="before the sign-in provider list")
+        comment = "before the sign-in provider list" if moving else "before taking over the sign-in settings of 0.8.1"
+        backups.create(kind=backups.UPDATE, comment=comment)
     with SessionLocal() as db:
-        if not migration_due(db):
-            return None
         store = SqlStore(db)
-        entry = migrate.apply(store, legacy_plan(db))
-        if entry is not None and not entry.client_secret:
-            # The old version counted a provider without a readable secret as not set up; so does the list.
-            store.update_provider(entry.id, providers.values_of(entry, enabled=False))
-            logger.warning("OIDC: the moved entry has no readable client secret and stays off until it is entered")
-        set_setting(db, MIGRATED, "1")
+        if moving and migration_due(db):
+            # The anchor first: the commit of the move mirrors the way back and has to see it.
+            legacy, _subjects = read_legacy(db)
+            set_setting(db, ANCHOR, migrate.anchor_of(legacy))
+            entry = migrate.apply(store, legacy_plan(db))
+            if entry is not None and not entry.client_secret:
+                # The old version counted a provider without a readable secret as not set up; so does the list.
+                store.update_provider(entry.id, providers.values_of(entry, enabled=False))
+                logger.warning("OIDC: the moved entry has no readable client secret and stays off until it is entered")
+            set_setting(db, MIGRATED, "1")
+            store.commit()
+            return entry
+        if get_setting(db, MIGRATED) == "1":
+            legacy, subjects = read_legacy(db)
+
+            def keep_anchor(value: str) -> None:
+                set_setting(db, ANCHOR, value)
+
+            migrate.resync(
+                store,
+                legacy,
+                subjects,
+                previous=get_setting(db, FINGERPRINT) or None,
+                trusts_second_factor=TRUSTED_BEFORE,
+                anchor=get_setting(db, ANCHOR) or None,
+                keep_anchor=keep_anchor,
+            )
+        else:
+            legacy, _subjects = read_legacy(db)
+            set_setting(db, ANCHOR, migrate.anchor_of(legacy))
+            set_setting(db, MIGRATED, "1")
         store.commit()
-        return entry
+        return None

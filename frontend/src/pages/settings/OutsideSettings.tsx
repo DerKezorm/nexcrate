@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next'
 
 import { errorText } from '../../api/client'
 import { systemSettingsApi, type SystemSettings, type UpdateInfo } from '../../api/outside'
+import { AddressChangeDialog } from '../../components/AddressChange'
 import { Symbol } from '../../components/Symbol'
 import { Button, Field, FormMessage, Spinner, Switch } from '../../components/ui'
 import { useNotice } from '../../components/useNotice'
+import { addressQuestion, type AddressQuestion } from '../../lib/addressQuestion'
 import { formatDateTime } from '../../lib/format'
 
 /**
@@ -55,43 +57,62 @@ function WebAddress({ settings, onSaved }: { settings: SystemSettings; onSaved: 
   const [value, setValue] = useState(settings.web_url ?? '')
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<unknown>(null)
+  const [asking, setAsking] = useState<AddressQuestion | null>(null)
 
-  async function save(event: FormEvent) {
-    event.preventDefault()
+  // Dieselbe Adresse wie unter Anmeldung: eine, die eine Rueckleitadresse bei einem Anbieter zuruecklaesst, fragt zuerst.
+  async function send(confirm: boolean) {
     setBusy(true)
     setProblem(null)
     try {
-      const saved = await systemSettingsApi.change({ web_url: value })
+      const saved = await systemSettingsApi.change({ web_url: value, confirm_address: confirm })
       onSaved(saved)
       setValue(saved.web_url ?? '')
       notify(t('system.outside.saved'))
     } catch (error) {
-      setProblem(error)
+      const question = addressQuestion(error)
+      if (question) setAsking(question)
+      else setProblem(error)
     } finally {
       setBusy(false)
     }
   }
 
+  function save(event: FormEvent) {
+    event.preventDefault()
+    void send(false)
+  }
+
   return (
-    <form onSubmit={(event) => void save(event)} className="flex flex-col gap-3 border-t border-ink-700 pt-4">
-      <h3 className="text-sm font-semibold text-mist-300">{t('system.outside.title')}</h3>
-      <Field
-        label={t('system.outside.address')}
-        hint={t('system.outside.addressHint')}
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder="https://example.com/nexcrate"
-        inputMode="url"
-        autoComplete="off"
+    <>
+      <form onSubmit={save} className="flex flex-col gap-3 border-t border-ink-700 pt-4">
+        <h3 className="text-sm font-semibold text-mist-300">{t('system.outside.title')}</h3>
+        <Field
+          label={t('system.outside.address')}
+          hint={t('system.outside.addressHint')}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="https://example.com/nexcrate"
+          inputMode="url"
+          autoComplete="off"
+        />
+        <p className="text-xs text-mist-500">
+          {settings.url_base === '' ? t('system.outside.noBase') : t('system.outside.base', { base: settings.url_base })}
+        </p>
+        {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
+        <Button type="submit" loading={busy} className="self-start">
+          {t('system.outside.save')}
+        </Button>
+      </form>
+      <AddressChangeDialog
+        question={asking}
+        busy={busy}
+        onCancel={() => setAsking(null)}
+        onConfirm={() => {
+          setAsking(null)
+          void send(true)
+        }}
       />
-      <p className="text-xs text-mist-500">
-        {settings.url_base === '' ? t('system.outside.noBase') : t('system.outside.base', { base: settings.url_base })}
-      </p>
-      {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
-      <Button type="submit" loading={busy} className="self-start">
-        {t('system.outside.save')}
-      </Button>
-    </form>
+    </>
   )
 }
 

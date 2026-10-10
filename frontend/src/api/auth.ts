@@ -1,4 +1,5 @@
 import { api } from './client'
+import type { AuthentikAddress } from '../vendor/nexoidc/oidc'
 import type {
   AuthentikResult,
   LoginAnswer,
@@ -55,8 +56,19 @@ export const oidcApi = {
   mine: () => api.get<MyProvider[]>('/oidc/me'),
   linkStart: (slug: string, password: string) => api.post<{ url: string }>(`/oidc/${encodeURIComponent(slug)}/link`, { password }),
   unlink: (slug: string) => api.delete<void>(`/oidc/${encodeURIComponent(slug)}/link`),
-  authentik: (url: string, token: string, confirmIssuerChange = false) =>
-    api.post<AuthentikResult>('/oidc/authentik/setup', { url, token, confirm_issuer_change: confirmIssuerChange }),
+  /** `publicUrl`: die Adresse, die der Besitzer in der Karte bestaetigt hat, solange nexcrate keine eigene hat. */
+  authentik: (url: string, token: string, confirmIssuerChange = false, publicUrl = '') =>
+    api.post<AuthentikResult>('/oidc/authentik/setup', {
+      url,
+      token,
+      confirm_issuer_change: confirmIssuerChange,
+      public_url: publicUrl,
+    }),
+  /** Was die Karte ueber die oeffentliche Adresse zeigt (Vorschlag, Warnung, veraltete Rueckleitadresse). */
+  authentikAddress: () => api.get<AuthentikAddress>('/oidc/authentik/address'),
+  /** "Nur uebernehmen": 409 `public_url_change` fragt zuerst (`count`, `address`, `hand`), 422 `public_url_invalid`. */
+  saveAddress: (publicUrl: string, confirm = false) =>
+    api.post<AuthentikAddress>('/oidc/authentik/address', { public_url: publicUrl, confirm }),
   passwordLogin: () => api.get<PasswordLogin>('/oidc/password-login'),
   setPasswordLogin: (enabled: boolean) => api.put<PasswordLogin>('/oidc/password-login', { enabled }),
 }

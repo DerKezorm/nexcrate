@@ -211,6 +211,15 @@ class Adapter(StandardAdapter):
             set_setting(db, web.SETTING, web.normalize(url))
             db.commit()
 
+    def read_public_url(self) -> str:
+        # From the database, as a restart would find it.
+        with SessionLocal() as db:
+            return web.web_url(db) or ""
+
+    def save_public_url_route(self, url: str, *, confirm: bool = False) -> httpx.Response:
+        # Card 1 and the address under "About" save the public address through the settings of the system.
+        return self.operator().put("/api/system-settings", json={"web_url": url, "confirm_address": confirm})
+
     def legacy_setup(
         self, *, issuer: str, client_id: str, client_secret: str, label: str, subjects: dict[str, str]
     ) -> None:
@@ -222,9 +231,10 @@ class Adapter(StandardAdapter):
             set_setting(db, oidc_store.PROVIDER_NAME, label)
             set_setting(db, oidc_store.SUBJECT, subjects.get(name, ""))
             if not self._legacy_written:
-                # A database of 0.8.1 has never seen the list: the flag and the fingerprint the start of this version
-                # set go. 0.8.1 does not know them, so what it does later leaves them as they are.
+                # A database of 0.8.1 has never seen the list: the flag, the anchor and the fingerprint the start of
+                # this version set go. 0.8.1 does not know them, so what it does later leaves them as they are.
                 set_setting(db, oidc_store.MIGRATED, "")
+                set_setting(db, oidc_store.ANCHOR, "")
                 set_setting(db, oidc_store.FINGERPRINT, "")
             db.commit()
         self._legacy_written = True
@@ -240,6 +250,7 @@ class Adapter(StandardAdapter):
             "client_id": legacy.client_id,
             "client_secret": legacy.client_secret,
             "label": legacy.label,
+            "auto_create": legacy.auto_create,
             "subjects": {self._name(): subject for _account_id, subject in subjects},
         }
 

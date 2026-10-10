@@ -93,8 +93,13 @@ export const bazarrApi = {
 
 export const systemSettingsApi = {
   read: () => api.get<SystemSettings>('/system-settings'),
-  /** 422 `invalid_input` fuer eine Adresse, die keine ist. */
-  change: (body: { web_url?: string; update_check?: boolean }) => api.put<SystemSettings>('/system-settings', body),
+  /**
+   * 422 `invalid_input` fuer eine Adresse, die keine ist. 409 `public_url_change` fragt zuerst, wenn die neue Adresse
+   * eine Rueckleitadresse hinterlaesst, die ein Anbieter kennt (`count`, `address`, `hand`); mit `confirm_address`
+   * wird sie gespeichert.
+   */
+  change: (body: { web_url?: string; update_check?: boolean; confirm_address?: boolean }) =>
+    api.put<SystemSettings>('/system-settings', body),
   checkNow: () => api.post<UpdateInfo>('/system-settings/update-check'),
 }
 

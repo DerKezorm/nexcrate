@@ -70,3 +70,8 @@ services:
       # The address people reach nexcrate at, sub path included, when the interface names none.
       # Sign-in providers send the browser back there. Empty: the setting, else the request.
       NEXCRATE_PUBLIC_URL: ${NEXCRATE_PUBLIC_URL:-}
+
+      # Behind a reverse proxy that ends TLS: the address the proxy connects from (uvicorn's own
+      # setting, comma separated, "*" for every sender). Only these are believed when they say
+      # X-Forwarded-Proto: https, so that the redirect address of a sign-in provider is https.
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
