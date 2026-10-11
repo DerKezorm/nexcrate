@@ -44,6 +44,7 @@ from .middleware import (
     internal_error_response,
     is_api_path,
 )
+from .proxy import behind_proxy, trusted_proxies
 from .routers import api_keys as api_keys_router
 from .routers import arr_profiles as arr_profiles_router
 from .routers import auth, docs, health, imports, library, setup, sources, versions
@@ -811,3 +812,7 @@ def create_app(frontend_dir: Path | None = None) -> FastAPI:
 
 
 app = create_app()
+
+#: What uvicorn runs in the image (``--no-proxy-headers``): ``app`` behind the handling of trusted proxies
+#: (``FORWARDED_ALLOW_IPS``, nobody out of the box). See ``proxy.py``.
+asgi = behind_proxy(app, trusted_proxies())

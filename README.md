@@ -102,9 +102,12 @@ when authentik or a provider you entered by hand still knows the old redirect ad
 card says so until the button has run again.
 
 **Behind a reverse proxy that ends TLS** nexcrate takes the scheme (`X-Forwarded-Proto`) only
-from the addresses named in `FORWARDED_ALLOW_IPS` (uvicorn's own setting, default `127.0.0.1`,
-a comma separated list; `*` trusts every sender, so only behind a proxy nobody can bypass).
-Name the address your proxy connects from, for example the gateway of the Docker network.
+from the addresses named in `FORWARDED_ALLOW_IPS` (a comma separated list of addresses or
+networks; `*` trusts every sender, so only behind a proxy nobody can bypass). Out of the box the
+list is empty and nobody is believed. Name the address your proxy connects from, for example the
+gateway of the Docker network, or `127.0.0.1` for a proxy on the same host with host networking.
+nexcrate takes the rightmost value, the one your proxy wrote, whatever its case, and only `http`
+or `https`.
 
 Then link your account under Settings › System › Account › Sign-in providers: nexcrate asks for
 its password and sends you to the provider once. One identity per provider opens nexcrate from
@@ -214,7 +217,7 @@ All optional, see `.env.example` and `docker-compose.yml`.
 | `NEXCRATE_URL_BASE` | empty | Serve nexcrate under a sub path such as `/nexcrate`; `/api/health` also answers at the root |
 | `NEXCRATE_PASSWORD_LOGIN` | empty | `1` opens the sign-in with a password even when it was switched off for the providers |
 | `NEXCRATE_PUBLIC_URL` | empty | The address people reach nexcrate at, sub path included, when Settings › System › Sign-in names none; providers send the browser back there |
-| `FORWARDED_ALLOW_IPS` | `127.0.0.1` | The proxies nexcrate believes when they say `X-Forwarded-Proto: https` (comma separated addresses, `*` for all); needed behind a reverse proxy that ends TLS, see Sign-in through authentik |
+| `FORWARDED_ALLOW_IPS` | empty (nobody) | The proxies nexcrate believes when they say `X-Forwarded-Proto: https` (comma separated addresses or networks, `*` for all); needed behind a reverse proxy that ends TLS, see Sign-in through authentik |
 
 ### Logs
 
