@@ -333,6 +333,37 @@
         "Trägt eine Datei den Namen einer Folge, die nicht zu ihrem Download gehört, ist diese Folge im Dialog „Von Hand zuordnen“ trotzdem vorgewählt.",
         "Ein Folgenname mit vier Buchstaben wie „Geld“ zählt jetzt als Name, nicht mehr als Allerweltswort."
       ]
+    },
+    "0.9.0": {
+      "lead": "Die Anmeldung läuft jetzt mit mehreren Anbietern gleichzeitig, ein Konto je Person. Der erste Start legt zwei Tabellen an und kopiert vorher die Datenbank.",
+      "sections": [
+        {
+          "title": "Mehrere Anmeldeanbieter, ein Konto",
+          "body": "Füge beliebig viele OpenID-Connect-Anbieter hinzu (authentik, Microsoft Entra ID, Keycloak, Authelia, Pocket ID). Jeder hat einen eigenen Knopf auf der Anmeldeseite und eine eigene Rückleitadresse. Jede Person verknüpft jeden Anbieter einmal; eine nicht verknüpfte Identität wird abgewiesen, wie der Anbieter auch eingestellt ist. authentik richtest du in einem Schritt aus seiner Adresse und einem Token ein. Ein bisheriger Anbieter zieht beim ersten Start um und behält seine Rückleitadresse.",
+          "where": "Einstellungen › System › Anmeldung und Konto"
+        },
+        {
+          "title": "Anmeldung mit Passwort lässt sich ausschalten",
+          "body": "Ist ein Anbieter verknüpft, kann das Passwort abgeschaltet werden. Fällt der letzte Anbieter weg, öffnet sich das Passwort von selbst wieder. Von Hand öffnest du es, indem du nexcrate einmal mit NEXCRATE_PASSWORD_LOGIN=1 starten.",
+          "where": "Einstellungen › System › Anmeldung"
+        },
+        {
+          "title": "Rückfrage beim Ändern der öffentlichen Adresse",
+          "body": "Kennt authentik oder ein von Hand eingetragener Anbieter noch die alte Rückleitadresse, fragt nexcrate beim Ändern der öffentlichen Adresse zuerst nach und sagt, was zu erneuern ist.",
+          "where": "Einstellungen › System › Anmeldung"
+        },
+        {
+          "title": "Hinter einem Proxy, der TLS beendet",
+          "body": "nexcrate glaubt X-Forwarded-Proto nur von den Adressen in FORWARDED_ALLOW_IPS (Standard 127.0.0.1). Trage die Adresse ein, von der dein Proxy verbindet, zum Beispiel das Gateway des Docker-Netzes, sonst entsteht die Rückleitadresse mit http.",
+          "where": "Compose-Datei, Umgebung"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Wer nicht angemeldet ist, kann den Besitzer nicht mehr durch falsche Anfragen von der Anmeldung aussperren.",
+        "Mails tragen eine Date-Zeile. Manche Anbieter verwarfen sie ohne sie stillschweigend.",
+        "Der erste Start dieser Fassung kopiert die Datenbank, bevor er die neuen Tabellen anlegt. Bei einer großen Bibliothek dauert das eine Weile."
+      ]
     }
   }
 }
