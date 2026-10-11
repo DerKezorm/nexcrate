@@ -364,6 +364,18 @@
         "Mails tragen eine Date-Zeile. Manche Anbieter verwarfen sie ohne sie stillschweigend.",
         "Der erste Start dieser Fassung kopiert die Datenbank, bevor er die neuen Tabellen anlegt. Bei einer großen Bibliothek dauert das eine Weile."
       ]
+    },
+    "0.9.1": {
+      "lead": "Ein kleines Release für nexcrate hinter einem Reverse-Proxy: Es liest das Schema so, wie der Proxy es geschrieben hat, und traut keinem Proxy, bis du ihn nennst.",
+      "sections": [
+        {
+          "title": "Hinter einem Reverse-Proxy",
+          "body": "nexcrate nimmt jetzt den rechtesten Wert von X-Forwarded-Proto, egal ob groß oder klein geschrieben; ein Wert wie „http, https“ von zwei Proxys zählt also als https. FORWARDED_ALLOW_IPS ist ab Werk leer (bisher 127.0.0.1): Trag die Adresse ein, von der dein Proxy kommt, zum Beispiel das Gateway des Docker-Netzes. Ist die Variable schon gesetzt, wie bei den meisten Installationen hinter TLS, ändert sich nichts. Ein Proxy auf demselben Rechner mit Host-Netz braucht FORWARDED_ALLOW_IPS=127.0.0.1.",
+          "where": "Compose-Datei, Umgebung"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": []
     }
   }
 }

@@ -364,6 +364,18 @@
         "Mails carry a Date header. Some providers dropped them silently without one.",
         "The first start of this version copies the database before it adds the new tables. On a large library that takes a while."
       ]
+    },
+    "0.9.1": {
+      "lead": "A small release for nexcrate behind a reverse proxy: it reads the scheme the way the proxy wrote it, and trusts no proxy until you name it.",
+      "sections": [
+        {
+          "title": "Behind a reverse proxy",
+          "body": "nexcrate now takes the rightmost value of X-Forwarded-Proto, whatever its case, so a value like “http, https” from two proxies counts as https. FORWARDED_ALLOW_IPS is empty by default (it was 127.0.0.1): name the address your proxy connects from, for example the gateway of the Docker network. With the variable already set, as most setups behind TLS have it, nothing changes. A proxy on the same machine with host networking needs FORWARDED_ALLOW_IPS=127.0.0.1.",
+          "where": "Compose file, environment"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": []
     }
   }
 }
