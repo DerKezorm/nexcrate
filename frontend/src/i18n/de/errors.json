@@ -335,7 +335,7 @@
   "oidc_provider_error": "Der Anbieter hat die Anmeldung abgebrochen.",
   "oidc_token_refused": "Der Anbieter hat den Code nicht eingelöst.",
   "oidc_no_signing_key": "Der Anbieter unterschreibt ohne Schlüssel. Wähl dort einen Signierschlüssel für den Provider.",
-  "oidc_no_account": "Für dich gibt es hier kein Konto. Bitte um eine Einladung, oder melde dich mit Passwort an und verknüpfe dein Konto unter Mein Konto, Sicherheit.",
+  "oidc_no_account": "Für dich gibt es hier kein Konto. Bitte den Betreiber um eines, oder melde dich mit Passwort an und verknüpfe dein Konto in deinen Kontoeinstellungen.",
   "oidc_subject_taken": "Diese Identität ist schon mit einem anderen Konto verknüpft.",
   "oidc_only_account": "Dieses Konto meldet sich nur über diesen Anbieter an. Die letzte Verknüpfung bleibt.",
   "oidc_link_mismatch": "Diese Verknüpfung gehört zu einem anderen Konto.",

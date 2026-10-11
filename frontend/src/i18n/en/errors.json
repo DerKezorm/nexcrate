@@ -335,7 +335,7 @@
   "oidc_provider_error": "The provider stopped the sign-in.",
   "oidc_token_refused": "The provider did not redeem the code.",
   "oidc_no_signing_key": "The provider signs without a key. Choose a signing key for the provider there.",
-  "oidc_no_account": "There is no account for you here. Ask for an invitation, or sign in with your password and link your account under My account, Security.",
+  "oidc_no_account": "There is no account for you here. Ask the operator for one, or sign in with your password and link your account in your account settings.",
   "oidc_subject_taken": "This identity is linked to another account already.",
   "oidc_only_account": "This account signs in through this provider only. The last link stays.",
   "oidc_link_mismatch": "This link belongs to another account.",

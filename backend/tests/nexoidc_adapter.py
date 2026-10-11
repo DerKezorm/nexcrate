@@ -75,6 +75,7 @@ class Adapter(StandardAdapter):
     package = "app.vendor.nexoidc"
     api = "/api"
     single_account = True
+    has_invitations = False
     only_authentik = False
     supports_coupling = False
     has_second_factor = True

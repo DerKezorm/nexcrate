@@ -14,7 +14,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-import { oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
+import { oidcVariables, oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
 import { browserLanguage, isLanguage, type Language } from './languages'
 
 export { FALLBACK_LANGUAGE, isLanguage, LANGUAGES } from './languages'
@@ -25,8 +25,9 @@ const STORAGE_KEY = 'nexcrate.language'
 const LOADERS = import.meta.glob<{ default: Record<string, unknown> }>('./*/*.json')
 /**
  * Die Texte der gemeinsamen Anmeldung (Bauplan 04) kommen unveraendert aus `vendor/nexoidc` und stehen unter `oidc`.
- * `{{app}}` darin ist immer nexcrate. nexcrate hat ein Konto: `oidcWording` setzt die Saetze fuer Apps mit einem Konto
- * (`oidc.single`) an die Stelle der allgemeinen.
+ * `{{app}}` und `{{slug}}` darin sind immer nexcrate (`oidcVariables`). nexcrate hat ein Konto und keine Einladungen:
+ * `oidcWording` setzt die Saetze fuer Apps mit einem Konto (`oidc.single`) und ohne Einladungen an die Stelle der
+ * allgemeinen.
  */
 const OIDC_LOADERS = import.meta.glob<{ default: OidcWording }>('../vendor/nexoidc/oidc.*.json')
 /** Der Name der App in den gemeinsamen Texten. */
@@ -52,7 +53,7 @@ async function textsFor(language: Language): Promise<Record<string, unknown>> {
       .map(async ([path, load]) => [path.slice(prefix.length, -'.json'.length), (await load()).default] as const),
   )
   const oidc = OIDC_LOADERS[`../vendor/nexoidc/oidc.${language}.json`]
-  return { ...Object.fromEntries(parts), ...(oidc ? oidcWording((await oidc()).default, { singleAccount: true }) : {}) }
+  return { ...Object.fromEntries(parts), ...(oidc ? oidcWording((await oidc()).default, { singleAccount: true, invitations: false }) : {}) }
 }
 
 export async function startI18n(language: Language = initialLanguage()): Promise<void> {
@@ -60,7 +61,7 @@ export async function startI18n(language: Language = initialLanguage()): Promise
     resources: { [language]: { translation: await textsFor(language) } },
     lng: language,
     fallbackLng: false,
-    interpolation: { escapeValue: false, defaultVariables: { app: APP_NAME } },
+    interpolation: { escapeValue: false, defaultVariables: oidcVariables(APP_NAME) },
   })
   document.documentElement.lang = language
 }
