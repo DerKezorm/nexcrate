@@ -376,6 +376,25 @@
       ],
       "smallTitle": "Also",
       "small": []
+    },
+    "0.9.2": {
+      "lead": "A small release from issue #12: clearer words where nexcrate cannot find a download, and SABnzbd jobs that no longer stay behind.",
+      "sections": [
+        {
+          "title": "When nexcrate cannot find a download",
+          "body": "A download whose files nexcrate cannot find now says why no mapping was proposed. The card shows the path the download client reported. Found in more than one place, every place is listed and one click takes the right one. If the search stopped before it saw all folders, Choose the folder is there. If nexcrate looked everywhere and found nothing, the card says the download folder is probably not mounted in the container and lists the folders nexcrate sees.",
+          "where": "Downloads, Problems"
+        },
+        {
+          "title": "What the card of a download client counts",
+          "body": "The card called every unfinished download running, also finished ones waiting for the import and problems that sit in the client's history. It now names the three apart, and the problems lead to Downloads, Problems.",
+          "where": "Settings, Download clients"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "A movie that came with bonus clips no longer keeps its SABnzbd job and folder after the import: clips at most half the size of the movie go with the folder, as in Radarr."
+      ]
     }
   }
 }

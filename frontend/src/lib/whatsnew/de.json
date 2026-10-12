@@ -376,6 +376,25 @@
       ],
       "smallTitle": "Außerdem",
       "small": []
+    },
+    "0.9.2": {
+      "lead": "Ein kleines Release aus Issue #12: klarere Worte, wo nexcrate einen Download nicht findet, und SABnzbd-Aufträge, die nicht mehr liegen bleiben.",
+      "sections": [
+        {
+          "title": "Wenn nexcrate einen Download nicht findet",
+          "body": "Findet nexcrate die Dateien eines Downloads nicht, sagt die Karte jetzt, warum es keine Zuordnung vorschlägt. Sie zeigt den Pfad, den das Download-Programm meldet. Liegt der Ordner an mehreren Stellen, stehen alle da, und ein Klick nimmt die richtige. Hat die Suche aufgehört, bevor sie alle Ordner gesehen hat, gibt es „Ordner wählen“. Hat nexcrate alles durchgesehen und nichts gefunden, sagt die Karte, dass der Download-Ordner vermutlich nicht im Container eingebunden ist, und nennt die Ordner, die nexcrate sieht.",
+          "where": "Downloads, Probleme"
+        },
+        {
+          "title": "Was die Karte eines Download-Programms zählt",
+          "body": "Die Karte nannte jeden unfertigen Download „läuft“, auch fertige, die auf das Ablegen warten, und Probleme, die längst im Verlauf des Programms stehen. Jetzt nennt sie die drei getrennt, und die Probleme führen zu Downloads, Probleme.",
+          "where": "Einstellungen, Download-Programme"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Kam ein Film mit Bonus-Clips, bleiben Auftrag und Ordner in SABnzbd nach dem Ablegen nicht mehr stehen: Clips, höchstens halb so groß wie der Film, gehen mit dem Ordner, wie bei Radarr."
+      ]
     }
   }
 }
