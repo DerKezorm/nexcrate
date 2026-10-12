@@ -79,8 +79,12 @@
       "priority": "Priority {{value}}",
       "noSecret": "No credentials",
       "fromSource": "From Radarr: {{name}}",
-      "active_one": "{{value}} download running",
-      "active_other": "{{value}} downloads running"
+      "running_one": "{{value}} download in the client",
+      "running_other": "{{value}} downloads in the client",
+      "importing_one": "{{value}} finished, being imported",
+      "importing_other": "{{value}} finished, being imported",
+      "problems_one": "{{value}} with a problem",
+      "problems_other": "{{value}} with a problem"
     },
     "details": {
       "category": "Category",
@@ -117,7 +121,7 @@
       "testLabel": "Test connection: {{name}}",
       "editLabel": "Edit: {{name}}",
       "removeLabel": "Remove: {{name}}",
-      "removeBlocked": "Removing works once no download of {{name}} is running any more.",
+      "removeBlocked": "Removing works once {{name}} has no open download left: none in the client, none being imported and none under Problems.",
       "fixAccess": "Change credentials",
       "fixAccessLabel": "Change credentials: {{name}}"
     },

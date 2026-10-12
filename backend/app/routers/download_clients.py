@@ -26,7 +26,7 @@ from ..db import SessionLocal
 from ..deps import DbSession
 from ..meldungen import error, error_responses
 from ..models import Download, DownloadClient, Source, utcnow
-from ..models.downloads import PROTOCOL_OF_KIND
+from ..models.downloads import CLIENT_STATES, PROTOCOL_OF_KIND
 from ..services import downloaders, tags
 from ..services.downloads import retention, seeding, store
 from ..services.lidarr import ERRORS as LIDARR_ERRORS
@@ -82,7 +82,19 @@ class DownloadClientOut(BaseModel):
     path_mappings: list[PathMapping] = Field(description="Confirmed pairs of the client's paths and nexcrate's.")
     last_error_code: str | None = Field(description="The code of the last failed call, null after a success.")
     from_source: FromSource | None = Field(description="The Radarr connection it was fetched from, if any.")
-    active_downloads: int = Field(description="Downloads of this client that are not finished.")
+    active_downloads: int = Field(
+        description="Downloads of this client that are not finished: the sum of running_downloads, "
+        "importing_downloads and problem_downloads. While it is above 0 the client cannot be deleted."
+    )
+    running_downloads: int = Field(
+        default=0, description="Downloads the client still works on: queued, downloading or paused there."
+    )
+    importing_downloads: int = Field(
+        default=0, description="Downloads the client has finished that wait for or go through the import."
+    )
+    problem_downloads: int = Field(
+        default=0, description="Downloads of this client with a problem; they are listed under Problems."
+    )
     tags: list[str] = Field(
         default_factory=list,
         description="With tags it loads only titles sharing one, and those only through clients with a fitting tag "
@@ -301,6 +313,29 @@ def _active_count(db: Any, client_id: int) -> int:
     )
 
 
+def _stage_counts(db: Any, client_id: int) -> dict[str, int]:
+    """The unfinished downloads of a client by where they stand. Only the first part is still in the client: a
+    finished download sits in its history, and a problem waits under Problems (issue #12: the card called all of them
+    running)."""
+    by_state: dict[str, int] = {
+        state: int(count)
+        for state, count in db.execute(
+            select(Download.state, func.count(Download.id))
+            .where(Download.client_id == client_id, Download.state.in_(store.UNFINISHED_STATES))
+            .group_by(Download.state)
+        ).all()
+    }
+    running = sum(by_state.get(state, 0) for state in CLIENT_STATES)
+    problems = by_state.get("problem", 0)
+    importing = sum(by_state.values()) - running - problems
+    return {
+        "active_downloads": running + importing + problems,
+        "running_downloads": running,
+        "importing_downloads": importing,
+        "problem_downloads": problems,
+    }
+
+
 def _load(client_id: int) -> _Stored | None:
     with SessionLocal() as db:
         row = db.get(DownloadClient, client_id)
@@ -337,7 +372,7 @@ def client_out(db: Any, row: DownloadClient) -> DownloadClientOut:
         path_mappings=[PathMapping.model_validate(mapping) for mapping in (row.path_mappings or [])],
         last_error_code=row.last_error_code,
         from_source=from_source,
-        active_downloads=_active_count(db, row.id),
+        **_stage_counts(db, row.id),
         tags=tags.of_clients(db, [row.id]).get(row.id, []),
         remove_completed=None if downloaders.is_usenet(row.kind) else bool(row.remove_completed),
         self_removal=None if downloaders.is_usenet(row.kind) else row.self_removal,

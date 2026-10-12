@@ -1399,7 +1399,14 @@ export type DownloadClient = {
   path_mappings: PathMapping[]
   last_error_code: string | null
   from_source: { source_id: number; name: string } | null
+  /** Alles Offene zusammen: running, importing und problem. Solange groesser 0, laesst sich das Programm nicht entfernen. */
   active_downloads: number
+  /** Liegt noch im Programm: in der Warteschlange, laedt, pausiert. */
+  running_downloads: number
+  /** Im Programm fertig, wartet auf das Ablegen oder wird gerade abgelegt. */
+  importing_downloads: number
+  /** Steht unter Downloads, Probleme. */
+  problem_downloads: number
   /** Seit T2. Ein Server von davor schickt keine. */
   tags?: string[]
   /** Usenet: wie lange die Newsserver Artikel halten, aus dem Programm gelesen. null bei Torrents und vor dem ersten Lesen. */

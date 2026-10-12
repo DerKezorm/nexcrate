@@ -79,8 +79,12 @@
       "priority": "Priorität {{value}}",
       "noSecret": "Ohne Zugangsdaten",
       "fromSource": "Aus Radarr: {{name}}",
-      "active_one": "{{value}} Download läuft gerade",
-      "active_other": "{{value}} Downloads laufen gerade"
+      "running_one": "{{value}} Download im Programm",
+      "running_other": "{{value}} Downloads im Programm",
+      "importing_one": "{{value}} fertig, wird abgelegt",
+      "importing_other": "{{value}} fertig, werden abgelegt",
+      "problems_one": "{{value}} mit Problem",
+      "problems_other": "{{value}} mit Problem"
     },
     "details": {
       "category": "Kategorie",
@@ -117,7 +121,7 @@
       "testLabel": "Verbindung prüfen: {{name}}",
       "editLabel": "Bearbeiten: {{name}}",
       "removeLabel": "Entfernen: {{name}}",
-      "removeBlocked": "Entfernen geht erst, wenn kein Download von {{name}} mehr läuft.",
+      "removeBlocked": "Entfernen geht erst, wenn {{name}} keinen offenen Download mehr hat: keinen im Programm, keinen beim Ablegen und keinen unter Probleme.",
       "fixAccess": "Zugangsdaten ändern",
       "fixAccessLabel": "Zugangsdaten ändern: {{name}}"
     },

@@ -1,5 +1,6 @@
 import { Fragment, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { errorText } from '../../api/client'
 import { downloadClientsApi } from '../../api/downloadClients'
@@ -10,6 +11,7 @@ import { Badge, Button, FormMessage, Section, Spinner } from '../../components/u
 import { useNotice } from '../../components/useNotice'
 import { formatNumber } from '../../lib/format'
 import { ClientDialog, type ClientTemplate } from '../clients/ClientDialog'
+import { DOWNLOADS_PROBLEMS_PATH } from '../downloads/address'
 import { clientErrorText, clientKindText, protocolText, retentionText } from '../clients/clientText'
 import { RadarrClientsDialog } from '../clients/RadarrClientsDialog'
 import { useDownloadClients } from '../clients/useDownloadClients'
@@ -19,7 +21,7 @@ import { CardTags } from './CardTags'
 /**
  * Reiter "Download-Programme": SABnzbd und qBittorrent eintragen, pruefen, aendern, entfernen, dazu
  * "Aus Radarr, Sonarr oder Lidarr holen", sobald es eine Verbindung gibt. Das Geheimnis zeigt die Seite nie,
- * nur ob eines gespeichert ist. Entfernen ist gesperrt, solange Downloads des Programms laufen.
+ * nur ob eines gespeichert ist. Entfernen ist gesperrt, solange Downloads des Programms offen sind.
  */
 export function ClientSettings() {
   const { t } = useTranslation()
@@ -266,9 +268,20 @@ function ClientCard({ client, onEdit, onRemove, onChanged }: { client: DownloadC
         />
       )}
       {inUse && (
-        <p className="flex items-center gap-2 text-sm text-info-500">
+        // Getrennt nach Ort (Issue #12): Nur der erste Teil liegt noch im Programm, Fertiges steht dort schon im Verlauf.
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-info-500">
           <Symbol name="download" className="h-4 w-4 shrink-0" />
-          {t('settings.clients.state.active', { count: client.active_downloads, value: formatNumber(client.active_downloads, i18n.language) })}
+          {client.running_downloads > 0 && (
+            <span>{t('settings.clients.state.running', { count: client.running_downloads, value: formatNumber(client.running_downloads, i18n.language) })}</span>
+          )}
+          {client.importing_downloads > 0 && (
+            <span>{t('settings.clients.state.importing', { count: client.importing_downloads, value: formatNumber(client.importing_downloads, i18n.language) })}</span>
+          )}
+          {client.problem_downloads > 0 && (
+            <Link to={DOWNLOADS_PROBLEMS_PATH} className="text-bad-500 underline-offset-2 hover:underline">
+              {t('settings.clients.state.problems', { count: client.problem_downloads, value: formatNumber(client.problem_downloads, i18n.language) })}
+            </Link>
+          )}
         </p>
       )}
       {failed && client.last_error_code !== null && (
