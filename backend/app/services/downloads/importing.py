@@ -358,6 +358,10 @@ class Outcome:
     media_read: media.Read | None = None
     #: The file the movie replaced, now in the recycle folder, for its entry in the bin.
     replaced: Replaced | None = None
+    #: The other videos of the job folder when nexcrate picked the movie by its rule (bonus clips beside it): seen and
+    #: set aside by this import, so they do not keep the job folder from going, as in Radarr. Empty when the owner chose
+    #: among several videos; those stay with the job.
+    set_aside: tuple[Path, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -568,9 +572,12 @@ def file_away(context: Context) -> Outcome:
         if not found.videos:
             raise Problem("no_video")
         source = _pick(context, found, job, job)
-        return _file(context, folder, job, job, source, videos=len(found.videos))
+        aside = _set_aside(context, found, found, source)
+        outcome = _file(context, folder, job, job, source, videos=len(found.videos))
+        return dataclasses.replace(outcome, set_aside=aside)
     # A clip next to the archives is a video of the download too: then only subtitles named after the movie belong.
     job_videos = len(found.videos)
+    job_found = found
     try:
         # Next to the movie's destination, so the video moves by rename on one file system.
         unpacked = unpacking.unpack(unpacking.archive_sets(found.archive_files), folder, context.download_id)
@@ -583,10 +590,25 @@ def file_away(context: Context) -> Outcome:
         if not found.videos:
             raise Problem("no_video")
         source = _pick(context, found, job, unpacked)
-        return _file(context, folder, job, unpacked, source, videos=job_videos + len(found.videos))
+        aside = _set_aside(context, job_found, found, source)
+        outcome = _file(context, folder, job, unpacked, source, videos=job_videos + len(found.videos))
+        return dataclasses.replace(outcome, set_aside=aside)
     finally:
         # The chosen video left by rename; the rest goes, and everything after a failure.
         unpacking.remove(folder, context.download_id)
+
+
+def _set_aside(context: Context, job_found: files.Scan, found: files.Scan, source: Path) -> tuple[Path, ...]:
+    """The videos of the job folder the import saw beside the movie it picked by its rule, at most half its size: clips
+    of this release, as the rule takes the largest only when it is twice the next. A choice of the owner among several
+    videos sets nothing aside, and neither does a video of the job folder as large as one unpacked from its archives."""
+    if context.chosen is not None:
+        return ()
+    # Measured by the scan, before the movie moves.
+    movie = next((size for path, size in found.videos if path == source), None)
+    if movie is None:
+        return ()
+    return tuple(path for path, size in job_found.videos if path != source and size * 2 <= movie)
 
 
 def _named(path: Path, job: Path, origin: Path) -> str:
@@ -1064,7 +1086,7 @@ async def _clean_usenet(context: Context, outcome: Outcome) -> None:
     folder = outcome.job if outcome.job.is_dir() else outcome.job.parent
     mount = folders.containing_mount(files.resolved(folder) or folder)
     removed = mount is not None and files.remove_job_folder(
-        folder, category=target.category, mount=mount, keep=outcome.folder
+        folder, category=target.category, mount=mount, keep=outcome.folder, known=outcome.set_aside
     )
     if not removed:
         logger.info("Download %d: the job folder is not one to delete; it stays in the client", context.download_id)
