@@ -4,8 +4,18 @@
  *
  * `series`: ein Serien-Download. Scheitert dort eine Datei (etwa ein fremdes Video im Staffelordner), sind die anderen
  * schon abgelegt; "Rest nicht ablegen" beendet ihn dann wie bei offenen Dateien (seit der Durchsicht).
+ *
+ * `pathSearch`: bei `path_not_found` der Grund ohne Vorschlag (`twice`, `cut`, `nowhere`, `no_path`); null bei
+ * aelteren Problemen, die ihn nicht tragen.
  */
-export function problemActions(code: string, state: string, hasProposal: boolean, series = false, album = false): string[] {
+export function problemActions(
+  code: string,
+  state: string,
+  hasProposal: boolean,
+  series = false,
+  album = false,
+  pathSearch: string | null = null,
+): string[] {
   const retry = state === 'problem' || state === 'completed' ? ['retry'] : []
   if (album) {
     // Seit M4: ein Albendownload. Zuordnen oeffnet den Dialog mit Titellisten, "Rest nicht ablegen" beendet ihn.
@@ -31,8 +41,12 @@ export function problemActions(code: string, state: string, hasProposal: boolean
       return ['toTitle', 'clear']
     // Seit 28.09.2026 (Issue #3): Erneut versuchen auch neben einem Vorschlag, und ohne Vorschlag den Ordner selbst
     // waehlen. Bei einer Seedbox kommen die Dateien erst spaeter.
+    // Seit 12.10.2026 (Issue #12): Hat die Suche alles durchgesehen und nichts gefunden, oder nennt das Programm keinen
+    // Pfad, hilft kein Ordner von Hand; dann bleibt Erneut versuchen, die Karte sagt, was zu tun ist.
     case 'path_not_found':
-      return hasProposal ? ['mapping', ...retry, 'remove'] : [...retry, 'mapFolder', 'remove']
+      if (hasProposal) return ['mapping', ...retry, 'remove']
+      if (pathSearch === 'nowhere' || pathSearch === 'no_path') return [...retry, 'remove']
+      return [...retry, 'mapFolder', 'remove']
     case 'packed':
       return ['removeAndBlock', 'toTitle']
     // Seit 29.09.2026 (Issue #3): kommt das Video erst per Sync, legt "Erneut versuchen" es ab.

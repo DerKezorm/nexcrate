@@ -20,7 +20,8 @@ import { DownloadHead } from './DownloadHead'
 import { FinishDialog } from './FinishDialog'
 import { ForeignJobs } from './ForeignJobs'
 import { problemActions } from './problemActions'
-import { clientNameOf, isRetryable, problemReasonText, problemWhyText, proposalOf } from './downloadText'
+import { clientNameOf, isRetryable, pathSearchOf, problemReasonText, problemWhyText, proposalOf } from './downloadText'
+import type { PathSearch } from './downloadText'
 import { MappingDialog, PathPair } from './MappingDialog'
 import { RemoveDownloadDialog } from './RemoveDownloadDialog'
 
@@ -92,6 +93,7 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
   const code = info.code
   const client = clientNameOf(t, download)
   const proposal = proposalOf(info)
+  const pathSearch = pathSearchOf(info)
   const title = download.title.title
   const percent = download.state === 'downloading' && download.progress !== null ? percentOf(download.progress) : null
 
@@ -219,7 +221,8 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
     ),
   }
   const album = download.scope?.kind === 'album'
-  const actions = problemActions(code, download.state, proposal !== null, download.scope != null && !album, album).map((name) => (
+  const series = download.scope != null && !album
+  const actions = problemActions(code, download.state, proposal !== null, series, album, pathSearch?.reason ?? null).map((name) => (
     <span key={name} className="contents">
       {buttons[name]}
     </span>
@@ -247,6 +250,7 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
           <PathPair mapping={proposal} />
         </div>
       )}
+      {pathSearch && !proposal && <PathFound search={pathSearch} client={client} download={download} onChanged={onChanged} />}
       {percent !== null && <ProgressBar value={percent / 100} tone="accent" label={t('downloads.active.progress', { title })} />}
       <p className="font-mono text-xs leading-5 wrap-anywhere text-mist-600">{download.release.title}</p>
       {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
@@ -328,5 +332,78 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
         />
       )}
     </article>
+  )
+}
+
+/**
+ * Seit 12.10.2026 (Issue #12): was das Programm meldet und was nexcrate fand, wo es nichts vorschlagen kann. Zweimal
+ * gefunden: jede Stelle mit Knopf, der Klick leitet die Zuordnung ab wie "Ordner waehlen". Nirgends gefunden: die
+ * Ordner, die nexcrate sieht, zum Vergleich mit den Volumes des Containers.
+ */
+function PathFound({ search, client, download, onChanged }: { search: PathSearch; client: string; download: Download; onChanged: (message?: string) => void }) {
+  const { t } = useTranslation()
+  const [taking, setTaking] = useState<string | null>(null)
+  const [problem, setProblem] = useState<unknown>(null)
+  const matches = search.reason === 'twice' ? search.matches : []
+  const mounts = search.reason === 'nowhere' ? search.mounts : []
+  if (search.reported === null && matches.length === 0 && mounts.length === 0) return null
+
+  async function take(path: string) {
+    setTaking(path)
+    setProblem(null)
+    try {
+      await downloadsApi.mapFolder(download.id, path)
+      onChanged(t('downloads.mapping.done'))
+    } catch (error) {
+      setProblem(error)
+    } finally {
+      setTaking(null)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-ink-700 bg-ink-850/60 p-3">
+      {search.reported !== null && (
+        <div className="min-w-0">
+          <p className="text-xs text-mist-500">{t('downloads.problems.path.reported', { client })}</p>
+          <p className="font-mono text-sm break-all text-mist-100">{search.reported}</p>
+        </div>
+      )}
+      {matches.length > 0 && (
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="text-xs text-mist-500">{t('downloads.problems.path.found')}</p>
+          <ul className="flex flex-col gap-2">
+            {matches.map((path) => (
+              <li key={path} className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="min-w-0 flex-1 font-mono text-sm break-all text-mist-100">{path}</span>
+                <Button
+                  size="sm"
+                  onClick={() => void take(path)}
+                  loading={taking === path}
+                  disabled={taking !== null}
+                  aria-label={t('downloads.problems.path.takeLabel', { path })}
+                >
+                  {taking !== path && <Symbol name="check" />}
+                  {t('downloads.problems.path.take')}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {mounts.length > 0 && (
+        <div className="min-w-0">
+          <p className="text-xs text-mist-500">{t('downloads.problems.path.mounts')}</p>
+          <ul className="mt-1 flex flex-col gap-0.5">
+            {mounts.map((path) => (
+              <li key={path} className="font-mono text-sm break-all text-mist-100">
+                {path}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
+    </div>
   )
 }

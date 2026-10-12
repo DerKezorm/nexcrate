@@ -412,7 +412,7 @@ def _path_key(path: str) -> str:
 def _local_job(context: Context) -> Path:
     reported = context.reported_path
     if not reported:
-        raise Problem("path_not_found", proposal=None)
+        raise Problem("path_not_found", **files.Lookout("no_path").values(reported))
     mapped = files.map_remote(reported, context.mappings)
     candidates: list[str | Path] = [mapped] if mapped is not None else []
     if files.remote_parts(reported) is not None:
@@ -421,7 +421,7 @@ def _local_job(context: Context) -> Path:
         path = folders.visible_path(candidate)
         if path is not None:
             return path
-    raise Problem("path_not_found", proposal=files.propose(reported, folders.mount_points()))
+    raise Problem("path_not_found", **files.look_for(reported, folders.mount_points()).values(reported))
 
 
 def _root(context: Context) -> Path:

@@ -158,6 +158,10 @@
     "why": {
       "pathProposal": "nexcrate and {{client}} see the same folder under different paths. nexcrate found the download under its own folders and suggests a mapping.",
       "pathNoProposal": "nexcrate did not find it under its own folders either. Is the download folder mounted in the nexcrate container? When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete.",
+      "pathTwice": "nexcrate found a folder named like this download in more than one place below its own folders and cannot tell which one {{client}} means. Pick the right one: nexcrate works out the mapping for {{client}} from it and files the download.",
+      "pathCut": "nexcrate stopped searching before it had looked through all of its folders: there were too many, or they went too deep. If you know where the download is, choose its folder: nexcrate works out the mapping for {{client}} from it.",
+      "pathNowhere": "nexcrate looked through all of its folders and found nothing named like this download. Most likely the download folder of {{client}} is not mounted in the nexcrate container: add it as a volume, restart the container and try again. When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete.",
+      "pathNoPath": "{{client}} named no path for this download. Try again once it shows one.",
       "packed": "nexcrate does not unpack yet. Remove the download and take another release.",
       "packedReason": {
         "unsupported": "nexcrate cannot unpack this kind of archive.",
@@ -221,6 +225,13 @@
     "proposal": "nexcrate suggests this mapping",
     "clientSees": "In the download client",
     "nexcrateSees": "In nexcrate",
+    "path": {
+      "reported": "{{client}} reports",
+      "found": "Found in these places",
+      "take": "This one",
+      "takeLabel": "Take this folder: {{path}}",
+      "mounts": "nexcrate sees these folders"
+    },
     "retried": "nexcrate tries again.",
     "filedAnyway": "nexcrate files the download anyway.",
     "cleared": "The failed download is in the history only now."

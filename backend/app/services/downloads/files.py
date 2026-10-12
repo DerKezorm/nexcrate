@@ -15,7 +15,8 @@ No database here: ``importing`` hands in the paths it has checked and gets back 
 * ⚠️ Every path written to or deleted is checked after resolving links: inside the version folder, or inside the job
   folder of the download.
 * A path a client reports is a text in the client's world. ``map_remote`` turns it into a local path with the
-  confirmed mappings; ``propose`` looks for the job's name below nexcrate's mount points.
+  confirmed mappings; ``look_for`` looks for the job's name below nexcrate's mount points and says why it proposes
+  nothing (found twice, search cut short, found nowhere).
 """
 
 from __future__ import annotations
@@ -72,6 +73,9 @@ MAX_ENTRIES = 50_000
 #: How deep ``propose`` looks below a mount point, and how many folders it visits at most.
 PROPOSE_DEPTH = 6
 PROPOSE_MAX_FOLDERS = 20_000
+#: How many places of a name found more than once, and how many mount points, a ``path_not_found`` names.
+PROPOSE_SHOWN = 5
+PROPOSE_SHOWN_MOUNTS = 10
 COPY_CHUNK = 8 * MIB
 _SAMPLE = re.compile(r"(?<![a-z0-9])sample(?![a-z0-9])", re.IGNORECASE)
 #: Extras in a series pack by name (decision 17).
@@ -167,21 +171,53 @@ def below_working_folder(path: Path) -> bool:
     return any(part.upper().startswith(WORKING_PREFIXES) for part in path.parts)
 
 
-def propose(reported: str, mounts: list[Path]) -> dict[str, str] | None:
-    """A mapping for a reported path nexcrate does not see: its name found once below the mount points, or None.
+@dataclass(frozen=True)
+class Lookout:
+    """What the search below the mount points found for a reported path nexcrate does not see (12.10.2026).
+
+    ``reason`` tells the owner what to do: ``proposed`` (one place, a mapping to confirm), ``twice`` (more than one
+    place, the owner picks one), ``cut`` (the search stopped at its limits, the owner may know the folder),
+    ``nowhere`` (looked everywhere, the download folder is not mounted) or ``no_path`` (the client named no path).
+    """
+
+    reason: str
+    proposal: dict[str, str] | None = None
+    #: For ``twice``: the places found, at most ``PROPOSE_SHOWN``.
+    matches: tuple[str, ...] = ()
+    #: The mount points that were searched, at most ``PROPOSE_SHOWN_MOUNTS``.
+    mounts: tuple[str, ...] = ()
+
+    def values(self, reported: str | None) -> dict[str, Any]:
+        """The values of the problem ``path_not_found``."""
+        return {
+            "proposal": self.proposal,
+            "reported": reported or None,
+            "search": self.reason,
+            "matches": list(self.matches),
+            "mounts": list(self.mounts),
+        }
+
+
+def look_for(reported: str | None, mounts: list[Path]) -> Lookout:
+    """Looks for the job's name below the mount points; one match is a proposal.
 
     The proposal is the longest pair of prefixes that differ, with at least one name left in the remote one.
     """
-    parts = remote_parts(reported)
+    shown = tuple(str(mount) for mount in mounts[:PROPOSE_SHOWN_MOUNTS])
+    parts = remote_parts(reported or "")
     if parts is None or not parts[1]:
-        return None
+        return Lookout("no_path", mounts=shown)
     root, names = parts
     wanted = names[-1]
     matches: list[Path] = []
     visited = 0
+    cut = False
     for mount in mounts:
         stack: list[tuple[Path, int]] = [(mount, 0)]
-        while stack and visited < PROPOSE_MAX_FOLDERS and len(matches) < 2:
+        while stack and len(matches) < PROPOSE_SHOWN:
+            if visited >= PROPOSE_MAX_FOLDERS:
+                cut = True
+                break
             folder, depth = stack.pop()
             visited += 1
             try:
@@ -194,11 +230,21 @@ def propose(reported: str, mounts: list[Path]) -> dict[str, str] | None:
                 path = Path(entry.path)
                 if entry.name == wanted and path not in matches:
                     matches.append(path)
-                if depth < PROPOSE_DEPTH and entry.is_dir(follow_symlinks=False):
-                    stack.append((path, depth + 1))
-    if len(matches) != 1:
-        return None
-    return _pair(root, names, list(matches[0].parts))
+                if entry.is_dir(follow_symlinks=False):
+                    if depth < PROPOSE_DEPTH:
+                        stack.append((path, depth + 1))
+                    else:
+                        cut = True
+    if len(matches) == 1:
+        return Lookout("proposed", _pair(root, names, list(matches[0].parts)), mounts=shown)
+    if matches:
+        return Lookout("twice", matches=tuple(str(path) for path in matches[:PROPOSE_SHOWN]), mounts=shown)
+    return Lookout("cut" if cut else "nowhere", mounts=shown)
+
+
+def propose(reported: str, mounts: list[Path]) -> dict[str, str] | None:
+    """A mapping for a reported path nexcrate does not see: its name found once below the mount points, or None."""
+    return look_for(reported, mounts).proposal
 
 
 def mapping_for(reported: str, local: Path) -> dict[str, str] | None:

@@ -224,6 +224,36 @@ export function proposalOf(problem: DownloadProblem | null): PathMapping | null 
   return typeof remote === 'string' && typeof local === 'string' && remote !== '' && local !== '' ? { remote, local } : null
 }
 
+/** Was die Suche zu einem `path_not_found` ergab (seit 12.10.2026, Issue #12). */
+export type PathSearch = { reason: string; reported: string | null; matches: string[]; mounts: string[] }
+
+/** Die Suche eines `path_not_found`. Null bei anderen Codes und bei aelteren Problemen, die sie nicht tragen. */
+export function pathSearchOf(problem: DownloadProblem | null): PathSearch | null {
+  if (problem === null || problem.code !== 'path_not_found') return null
+  const values = problem.values ?? {}
+  if (typeof values.search !== 'string') return null
+  const paths = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item !== '') : [])
+  const reported = typeof values.reported === 'string' && values.reported !== '' ? values.reported : null
+  return { reason: values.search, reported, matches: paths(values.matches), mounts: paths(values.mounts) }
+}
+
+/** Warum nexcrate die Dateien nicht findet, und was hilft: nach dem Vorschlag, sonst nach dem Grund der Suche. */
+function pathWhyText(t: TFunction, problem: DownloadProblem, client: string): string {
+  if (proposalOf(problem) !== null) return t('downloads.problems.why.pathProposal', { client })
+  switch (pathSearchOf(problem)?.reason) {
+    case 'twice':
+      return t('downloads.problems.why.pathTwice', { client })
+    case 'cut':
+      return t('downloads.problems.why.pathCut', { client })
+    case 'nowhere':
+      return t('downloads.problems.why.pathNowhere', { client })
+    case 'no_path':
+      return t('downloads.problems.why.pathNoPath', { client })
+    default:
+      return t('downloads.problems.why.pathNoProposal')
+  }
+}
+
 /**
  * Warum sich ein gepackter Download nicht entpacken liess, nach `values.reason`. Ohne Grund, oder mit einem, den
  * diese Oberflaeche nicht kennt, der allgemeine Satz von vor dem Entpacken.
@@ -270,7 +300,7 @@ function titleMismatchWhyText(t: TFunction, values: Record<string, unknown>): st
 export function problemWhyText(t: TFunction, problem: DownloadProblem, client: string, album = false): string {
   switch (problem.code) {
     case 'path_not_found':
-      return proposalOf(problem) !== null ? t('downloads.problems.why.pathProposal', { client }) : t('downloads.problems.why.pathNoProposal')
+      return pathWhyText(t, problem, client)
     case 'packed':
       return packedWhyText(t, problem.values?.reason)
     case 'no_video':
