@@ -145,6 +145,12 @@ export function FolderPicker({
       onClose={close}
       footer={
         <>
+          {/* Ueber den Knoepfen, nicht unter der Liste: Bei vielen Unterordnern stand die Ablehnung ausserhalb des Bildes, und der Knopf schien nichts zu tun. */}
+          {problem !== null && (
+            <div className="basis-full">
+              <FormMessage>{errorText(t, problem)}</FormMessage>
+            </div>
+          )}
           <Button variant="ghost" onClick={close} disabled={busy}>
             {t('common.actions.cancel')}
           </Button>
@@ -216,7 +222,6 @@ export function FolderPicker({
             {t('settings.files.picker.takeBlocked')}
           </p>
         )}
-        {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
       </div>
     </Dialog>
   )

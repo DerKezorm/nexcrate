@@ -273,18 +273,25 @@ def check_version_folder(db: OrmSession, definition: VersionDefinition, raw: str
     """The resolved folder a movie version may use, or the HTTP error of ``PUT /api/versions/{id}/folder``.
 
     Visible, writable (a hidden test file is created and removed), and neither another version's folder nor inside or
-    around it.
+    around it. A refusal is logged: the request log is off, and without the line nothing shows the choice arrived.
     """
     try:
         path, _mount = visible(raw)
     except NotVisible as exc:
+        logger.info("Version definition %d: chosen folder refused, folder_not_visible", definition.id)
         raise error(
             "folder_not_visible", "nexcrate does not see this folder. Only mounted folders can be chosen.", 404
         ) from exc
     if not is_writable(path):
+        logger.info("Version definition %d: chosen folder refused, folder_not_writable", definition.id)
         raise error("folder_not_writable", "nexcrate cannot write into this folder.", 422)
     other = _other_version_using(db, definition.id, path)
     if other is not None:
+        logger.info(
+            "Version definition %d: chosen folder refused, folder_in_use by version definition %d",
+            definition.id,
+            other.id,
+        )
         raise error(
             "folder_in_use",
             "This folder is already the default folder of another version, or lies inside or around it.",
