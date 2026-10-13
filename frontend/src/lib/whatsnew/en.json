@@ -395,6 +395,20 @@
       "small": [
         "A movie that came with bonus clips no longer keeps its SABnzbd job and folder after the import: clips at most half the size of the movie go with the folder, as in Radarr."
       ]
+    },
+    "0.9.3": {
+      "lead": "A small release from issue #13: when nexcrate refuses a default folder, you now see why.",
+      "sections": [
+        {
+          "title": "Choosing a default folder",
+          "body": "When nexcrate refused the chosen folder, for example because it may not write into it or because it already belongs to another version, the message stood below the folder list. With many subfolders it lay outside the window, and Take this folder seemed to do nothing. It now stands above the buttons.",
+          "where": "Settings, Folders and naming, Folders"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The log now names every refusal of a chosen folder with its reason."
+      ]
     }
   }
 }

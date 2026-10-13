@@ -395,6 +395,20 @@
       "small": [
         "Kam ein Film mit Bonus-Clips, bleiben Auftrag und Ordner in SABnzbd nach dem Ablegen nicht mehr stehen: Clips, höchstens halb so groß wie der Film, gehen mit dem Ordner, wie bei Radarr."
       ]
+    },
+    "0.9.3": {
+      "lead": "Ein kleines Release aus Issue #13: Lehnt nexcrate einen Standardordner ab, sieht man jetzt, warum.",
+      "sections": [
+        {
+          "title": "Standardordner wählen",
+          "body": "Lehnte nexcrate den gewählten Ordner ab, etwa weil es nicht hineinschreiben darf oder weil er schon einer anderen Fassung gehört, stand die Meldung unter der Ordnerliste. Bei vielen Unterordnern lag sie außerhalb des Fensters, und „Diesen Ordner nehmen“ schien nichts zu tun. Jetzt steht sie über den Knöpfen.",
+          "where": "Einstellungen, Ordner und Benennung, Ordner"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Das Protokoll nennt jetzt jede Ablehnung eines gewählten Ordners mit ihrem Grund."
+      ]
     }
   }
 }
