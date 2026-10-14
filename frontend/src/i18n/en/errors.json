@@ -175,7 +175,7 @@
   "listenbrainz_unavailable": "ListenBrainz is not available at the moment.",
   "listenbrainz_bad_answer": "ListenBrainz sent an answer nexcrate cannot read.",
   "listenbrainz_timeout": "ListenBrainz did not answer in time.",
-  "musicbrainz_disabled": "MusicBrainz is switched off under Settings, Privacy.",
+  "musicbrainz_disabled": "MusicBrainz is switched off under Settings, Online services.",
   "musicbrainz_busy": "MusicBrainz is busy right now. Please try again shortly.",
   "musicbrainz_unavailable": "MusicBrainz is not available at the moment.",
   "musicbrainz_timeout": "MusicBrainz did not answer in time.",

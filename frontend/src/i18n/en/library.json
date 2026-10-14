@@ -52,7 +52,7 @@
   "emptyLibrary": {
     "title": "No movies yet",
     "freshTitle": "Start fresh",
-    "freshText": "Search for a movie and pick its versions. nexcrate only starts searching for downloads in a later step.",
+    "freshText": "Search for a movie and pick its versions. With automation on, nexcrate searches for the downloads by itself, otherwise you search on the movie page.",
     "freshAction": "Search for a movie",
     "importTitle": "Import from Radarr",
     "importText": "If you already use Radarr, nexcrate fetches your movies from there. Nothing changes in Radarr.",
@@ -84,7 +84,8 @@
     "allExist": "{{title}} already has every movie version there is. You create more versions in Settings.",
     "openTitle": "Open title",
     "back": "Choose another",
-    "searchLater": "nexcrate only starts searching for downloads in a later step. Until then the version shows as wanted in the library.",
+    "automaticOn": "Automation searches for the new version by itself once the movie is out.",
+    "automaticOff": "Automation for movies is off. You can search on the movie page.",
     "menuLabel": "Add: search for a movie or read folders",
     "movie": "Search for a movie",
     "disk": "Read folders",

@@ -162,7 +162,7 @@
       "pathCut": "nexcrate hat die Suche abgebrochen, bevor es alle seine Ordner durchgesehen hatte: Es waren zu viele, oder sie lagen zu tief. Weißt du, wo der Download liegt, wähle seinen Ordner: nexcrate leitet daraus die Zuordnung für {{client}} ab.",
       "pathNowhere": "nexcrate hat alle seine Ordner durchgesehen und nichts mit dem Namen dieses Downloads gefunden. Vermutlich ist der Download-Ordner von {{client}} im Container von nexcrate nicht eingebunden: Trag ihn als Volume ein, starte den Container neu und versuch es erneut. Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind.",
       "pathNoPath": "{{client}} hat für diesen Download keinen Pfad genannt. Versuch es erneut, sobald es einen nennt.",
-      "packed": "nexcrate entpackt noch nicht. Entferne den Download und nimm ein anderes Release.",
+      "packed": "nexcrate konnte die Archive nicht entpacken. Entferne den Download und nimm ein anderes Release.",
       "packedReason": {
         "unsupported": "Diese Art Archiv kann nexcrate nicht entpacken.",
         "incomplete": "Ein Teil des Archivs fehlt.",

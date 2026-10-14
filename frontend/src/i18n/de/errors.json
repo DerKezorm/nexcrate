@@ -175,7 +175,7 @@
   "listenbrainz_unavailable": "ListenBrainz ist gerade nicht verfügbar.",
   "listenbrainz_bad_answer": "ListenBrainz hat eine Antwort geschickt, die nexcrate nicht lesen kann.",
   "listenbrainz_timeout": "ListenBrainz hat nicht rechtzeitig geantwortet.",
-  "musicbrainz_disabled": "MusicBrainz ist unter Einstellungen, Datenschutz ausgeschaltet.",
+  "musicbrainz_disabled": "MusicBrainz ist unter Einstellungen, Online-Dienste ausgeschaltet.",
   "musicbrainz_busy": "MusicBrainz ist gerade ausgelastet. Versuch es gleich noch einmal.",
   "musicbrainz_unavailable": "MusicBrainz ist gerade nicht erreichbar.",
   "musicbrainz_timeout": "MusicBrainz hat nicht rechtzeitig geantwortet.",

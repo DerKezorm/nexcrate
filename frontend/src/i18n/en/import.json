@@ -517,8 +517,8 @@
     "differs": {
       "title": "What works differently here",
       "notAllowed": "When a file is already there in a quality the profile does not allow, nexcrate leaves it alone, even if it is better than allowed. {{app}} would replace it.",
-      "delay": "Delay profiles (waiting time, Usenet before torrent) live at the version here, under \"Protocol and waiting time\". The profile without a tag is read; profiles bound to tags do not come over.",
-      "tags": "There are no tags. What a tag binds there, the version binds here: it picks its profile."
+      "delay": "Delay profiles (waiting time, Usenet before torrent) live at the version here, under \"Protocol and waiting time\", and can be read in there, those bound to tags too.",
+      "tags": "A profile does not hang on a tag here: each version picks its own profile."
     },
     "whereTo": "Profiles that came over stand under Settings → Quality → Profiles. A version picks its profile on its own tile."
   }

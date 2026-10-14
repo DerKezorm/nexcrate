@@ -256,7 +256,7 @@ function pathWhyText(t: TFunction, problem: DownloadProblem, client: string): st
 
 /**
  * Warum sich ein gepackter Download nicht entpacken liess, nach `values.reason`. Ohne Grund, oder mit einem, den
- * diese Oberflaeche nicht kennt, der allgemeine Satz von vor dem Entpacken.
+ * diese Oberflaeche nicht kennt (aeltere Problemzeilen), der allgemeine Satz.
  */
 function packedWhyText(t: TFunction, reason: unknown): string {
   switch (reason) {

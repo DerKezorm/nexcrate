@@ -17,6 +17,7 @@ import { formatNumber } from '../../lib/format'
 import { AssignFromDisk } from '../disk/AssignFromDisk'
 import { SERIES_VERSIONS_TAB_PATH, VERSIONS_TAB_PATH } from '../settings/tabs'
 import { TmdbTokenForm } from '../settings/TmdbTokenForm'
+import { MovieAutomaticNote } from '../title/SeriesAutomaticNote'
 import { useVersions } from '../versions/useVersions'
 import { readAddChoice, storeAddChoice } from './addChoice'
 import { SeriesChoices, SeriesFacts } from './SeriesChoices'
@@ -517,7 +518,7 @@ export function AddDialog({
             {free.length === 0 ? (
               <FormMessage tone="info">{t('library.add.allExist', { title: picked.title })}</FormMessage>
             ) : (
-              <FormMessage tone="info">{t('library.add.searchLater')}</FormMessage>
+              <MovieAutomaticNote />
             )}
           </>
         )}

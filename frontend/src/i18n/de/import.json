@@ -517,8 +517,8 @@
     "differs": {
       "title": "Was hier anders läuft",
       "notAllowed": "Liegt schon eine Datei in einer Qualität, die das Profil nicht erlaubt, lässt nexcrate sie liegen, auch wenn sie besser ist als erlaubt. {{app}} würde sie ersetzen.",
-      "delay": "Delay-Profile (Wartezeit, Usenet vor Torrent) stehen hier an der Fassung unter „Protokoll und Wartezeit“. Eingelesen wird das Profil ohne Tag; an Tags gebundene kommen nicht mit.",
-      "tags": "Tags gibt es nicht. Was dort ein Tag bindet, bindet hier die Fassung: sie wählt ihr Profil."
+      "delay": "Delay-Profile (Wartezeit, Usenet vor Torrent) stehen hier an der Fassung unter „Protokoll und Wartezeit“ und lassen sich dort einlesen, auch die an Tags gebundenen.",
+      "tags": "Ein Profil hängt hier nicht an einem Tag: Jede Fassung wählt ihr Profil selbst."
     },
     "whereTo": "Übernommene Profile stehen unter Einstellungen → Qualität → Profile. Zugewiesen wird ein Profil bei der Fassung."
   }

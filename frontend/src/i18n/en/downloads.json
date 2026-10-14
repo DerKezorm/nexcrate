@@ -162,7 +162,7 @@
       "pathCut": "nexcrate stopped searching before it had looked through all of its folders: there were too many, or they went too deep. If you know where the download is, choose its folder: nexcrate works out the mapping for {{client}} from it.",
       "pathNowhere": "nexcrate looked through all of its folders and found nothing named like this download. Most likely the download folder of {{client}} is not mounted in the nexcrate container: add it as a volume, restart the container and try again. When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete.",
       "pathNoPath": "{{client}} named no path for this download. Try again once it shows one.",
-      "packed": "nexcrate does not unpack yet. Remove the download and take another release.",
+      "packed": "nexcrate could not unpack the archives. Remove the download and take another release.",
       "packedReason": {
         "unsupported": "nexcrate cannot unpack this kind of archive.",
         "incomplete": "A part of the archive is missing.",

@@ -52,7 +52,7 @@
   "emptyLibrary": {
     "title": "Noch keine Filme da",
     "freshTitle": "Neu anfangen",
-    "freshText": "Such einen Film und wähl seine Fassungen. Nach Downloads sucht nexcrate erst in einem späteren Schritt.",
+    "freshText": "Such einen Film und wähl seine Fassungen. Ist die Automatik an, sucht nexcrate die Downloads von selbst, sonst suchst du auf der Seite des Films.",
     "freshAction": "Film suchen",
     "importTitle": "Aus Radarr importieren",
     "importText": "Nutzt du schon Radarr, holt nexcrate deine Filme von dort. In Radarr ändert sich dabei nichts.",
@@ -84,7 +84,8 @@
     "allExist": "{{title}} hat schon alle Fassungen, die es für Filme gibt. Weitere Fassungen legst du unter Einstellungen an.",
     "openTitle": "Titel öffnen",
     "back": "Andere Auswahl",
-    "searchLater": "Nach Downloads sucht nexcrate erst in einem späteren Schritt. Bis dahin steht die Fassung als gesucht in der Bibliothek.",
+    "automaticOn": "Die Automatik sucht die neue Fassung von selbst, sobald der Film erschienen ist.",
+    "automaticOff": "Die Automatik für Filme ist aus. Suchen geht auf der Seite des Films.",
     "menuLabel": "Hinzufügen: Film suchen oder Ordner einlesen",
     "movie": "Film suchen",
     "disk": "Ordner einlesen",

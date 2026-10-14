@@ -43,7 +43,7 @@ services:
       PUID: 1000
       PGID: 1000
 
-      # ⚠️ The key that encrypts stored credentials such as Radarr API keys. Leaving it empty
+      # ⚠️ The key that encrypts stored credentials such as indexer and download client keys. Leaving it empty
       # is fine: nexcrate creates one on the first start and keeps it as /data/secret.key.
       # Back it up together with the data directory; without it the stored credentials
       # cannot be read.
