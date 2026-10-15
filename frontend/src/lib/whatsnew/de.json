@@ -433,6 +433,31 @@
       "small": [
         "Nennt kein Name eine Quelle, richtet sich die Qualität wie bei Radarr nach dem Dateityp. Der Dialog „Zuordnen“ sagt das jetzt auch, statt „aus dem Namen“."
       ]
+    },
+    "1.0.0": {
+      "lead": "Eine App auf dem Handy verbindet sich jetzt mit einem QR-Code, und die Schnittstelle für Programme kann suchen und entdecken wie du im Browser.",
+      "sections": [
+        {
+          "title": "iPhone-App per QR-Code verbinden",
+          "body": "Unter API-Schlüssel steht ein neuer Knopf „iPhone-App verbinden“. Er zeigt einen QR-Code, die App scannt ihn und bekommt ihren eigenen Schlüssel, ohne Adresse oder Schlüssel abzutippen. Der Code gilt zehn Minuten und nur einmal. Ein Code, den niemand gescannt hat, hinterlässt keinen Schlüssel; einen genommenen siehst du danach in der Liste und kannst ihn dort widerrufen.",
+          "where": "Einstellungen, System, API-Schlüssel"
+        },
+        {
+          "title": "Suchen nach Namen",
+          "body": "Programme finden Filme und Serien bei TMDB und Künstler und Alben bei MusicBrainz nach ihrem Namen, unter /api/v1/search. Jeder Treffer sagt, ob er schon in der Bibliothek steht, und lässt sich gleich anfragen. Dafür reicht ein Schlüssel mit „Lesen“.",
+          "where": "Schnittstelle /api/v1"
+        },
+        {
+          "title": "Entdecken für Programme",
+          "body": "Die Listen der Seite Entdecken gibt es jetzt auch unter /api/v1/discover, mit denselben Filtern und ohne das, was du schon hast. „Nicht interessiert“ geht mit dem Recht „Anfragen“.",
+          "where": "Schnittstelle /api/v1"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Ein einzelner Film oder eine Serie trägt unter /api/v1 jetzt Inhaltsangabe, Laufzeit und Genres, und jeder Download nennt sein Download-Programm.",
+        "Die Ordnerliste zeigt dieselbe Qualität wie der Dialog „Zuordnen“, also „Nach Dateityp“, wo der Name keine Quelle nennt."
+      ]
     }
   }
 }

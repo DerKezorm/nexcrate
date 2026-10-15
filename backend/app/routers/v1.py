@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, ClassVar
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field, SerializerFunctionWrapHandler, model_serializer
@@ -58,13 +58,19 @@ STATE_MEANINGS = {
 
 
 class _KindBlocks(BaseModel):
-    """Leaves out the block of another kind; every other field stays, null or not."""
+    """Leaves out the block of another kind; every other field stays, null or not. A field named in ``_ONLY_ASKED``
+    stands only where one title is asked for, and then also when null."""
+
+    _ONLY_ASKED: ClassVar[tuple[str, ...]] = ("about",)
 
     @model_serializer(mode="wrap")
     def _without_foreign_blocks(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
         data: dict[str, Any] = handler(self)
         for key in KIND_BLOCKS:
             if key in data and data[key] is None:
+                del data[key]
+        for key in self._ONLY_ASKED:
+            if key in data and key not in self.model_fields_set:
                 del data[key]
         return data
 
@@ -407,6 +413,12 @@ class SeriesBlock(BaseModel):
     )
 
 
+class AboutOut(BaseModel):
+    overview: str | None = Field(description="TMDB's overview in the account language.")
+    runtime_minutes: int | None
+    genres: list[str]
+
+
 class TitleOut(_KindBlocks):
     kind: str = Field(examples=["series"])
     ref: str = Field(
@@ -433,6 +445,10 @@ class TitleOut(_KindBlocks):
     series: SeriesBlock | None = None
     album: AlbumBlock | None = None
     artist: ArtistBlock | None = None
+    about: AboutOut | None = Field(
+        default=None,
+        description="A movie's or series' overview, runtime and genres; only where one title is asked for.",
+    )
 
 
 class ChangedTitleOut(TitleOut):

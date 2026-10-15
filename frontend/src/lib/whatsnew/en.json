@@ -433,6 +433,31 @@
       "small": [
         "When no name names a source, the quality follows the file type, as in Radarr. The Assign dialog now says so instead of “from the name”."
       ]
+    },
+    "1.0.0": {
+      "lead": "An app on the phone now connects with a QR code, and the interface for programs can search and discover as you do in the browser.",
+      "sections": [
+        {
+          "title": "Connect the iPhone app with a QR code",
+          "body": "API keys has a new button, Connect the iPhone app. It shows a QR code; the app scans it and gets a key of its own, without typing an address or a key. The code holds ten minutes and only once. A code nobody scanned leaves no key behind; a key the app took stands in the list afterwards and can be revoked there.",
+          "where": "Settings, System, API keys"
+        },
+        {
+          "title": "Search by name",
+          "body": "Programs find movies and series at TMDB and artists and albums at MusicBrainz by their name, under /api/v1/search. Each hit says whether the library has it and can be requested right away. A key with read is enough.",
+          "where": "Interface /api/v1"
+        },
+        {
+          "title": "Discover for programs",
+          "body": "The lists of the Discover page are also under /api/v1/discover now, with the same filters and without what you have already. Not interested needs the scope request.",
+          "where": "Interface /api/v1"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "A single movie or series under /api/v1 now carries its overview, runtime and genres, and every download names its download client.",
+        "The folder list shows the same quality as the Assign dialog, so By file type where the name names no source."
+      ]
     }
   }
 }

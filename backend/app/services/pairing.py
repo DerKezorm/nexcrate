@@ -7,6 +7,10 @@ Confirmed, a normal key comes into being under the program's name; the program f
 and afterwards it stands in the list of keys like any other and can be revoked. The key never shows in the interface.
 
 A request lives ``LIFETIME``; at most ``PENDING_MAX`` wait at once, so nobody fills the owner's screen with them.
+
+The other way round (S1, the QR code "Connect the iPhone app"): the owner prepares a pairing in the interface, which
+is approved from the start. Its id and secret travel in a QR code to the app, which fetches the key as any program
+does. The key comes into being only then, so a code nobody scanned leaves no key behind.
 """
 
 from __future__ import annotations
@@ -44,8 +48,14 @@ def shown_code(code: str) -> str:
     return f"{code[:3]}-{code[3:]}"
 
 
+#: The scopes a prepared pairing grants: the app adds, searches and resolves problems.
+DEVICE_SCOPES = ["read", "request", "operate"]
+
+
 def clear_expired(db: OrmSession, now: datetime) -> None:
-    db.execute(delete(ApiPairing).where(ApiPairing.state == "pending", ApiPairing.expires_at < now))
+    db.execute(
+        delete(ApiPairing).where(ApiPairing.state.in_(("pending", "approved")), ApiPairing.expires_at < now)
+    )
     db.execute(
         delete(ApiPairing).where(ApiPairing.state != "pending", ApiPairing.created_at < now - LIFETIME - KEEP_ANSWERED)
     )
@@ -99,8 +109,15 @@ def poll(db: OrmSession, pairing_id: str, secret: str | None) -> dict[str, Any]:
     now = utcnow()
     row = _own(db, pairing_id, secret)
     state, key, scopes = row.state, None, None
-    if state == "pending" and row.expires_at < now:
+    if state in ("pending", "approved") and row.expires_at < now:
         state = "expired"
+    if state == "approved":
+        # Prepared by the owner: the key comes into being now, at the first fetch, and goes out at once.
+        key_row, key = _make_key(db, row.app, list(row.scopes or DEVICE_SCOPES))
+        row.state, row.key_id = "delivered", key_row.id
+        db.commit()
+        logger.info("A program fetched the key %d of a pairing the owner prepared", key_row.id)
+        return {"state": "confirmed", "key": key, "scopes": list(key_row.scopes or []), "expires_at": row.expires_at}
     if state == "confirmed" and row.key_enc:
         key = crypto.decrypt(row.key_enc)
         made = db.get(ApiKey, row.key_id) if row.key_id is not None else None
@@ -149,15 +166,19 @@ def _free_name(db: OrmSession, name: str) -> str:
     return f"{name} {number}"[: api_keys.NAME_MAX_LENGTH]
 
 
+def _make_key(db: OrmSession, app: str, scopes: list[str]) -> tuple[ApiKey, str]:
+    if int(db.scalar(select(func.count(ApiKey.id))) or 0) >= api_keys.KEYS_MAX:
+        raise error("api_key_limit", f"There are {api_keys.KEYS_MAX} keys already.", 409, max=api_keys.KEYS_MAX)
+    return api_keys.create(db, _free_name(db, app), scopes, utcnow())
+
+
 def confirm(db: OrmSession, pairing_id: str, scopes: list[str]) -> dict[str, Any]:
     """The owner says yes: a key with the chosen scopes, kept for the program to fetch. Commits."""
     row = _pending(db, pairing_id)
     chosen = api_keys.clean_scopes(scopes)
     if chosen is None:
         raise error("invalid_input", "The input is not valid.", 422, fields=["scopes"])
-    if int(db.scalar(select(func.count(ApiKey.id))) or 0) >= api_keys.KEYS_MAX:
-        raise error("api_key_limit", f"There are {api_keys.KEYS_MAX} keys already.", 409, max=api_keys.KEYS_MAX)
-    key_row, key = api_keys.create(db, _free_name(db, row.app), chosen, utcnow())
+    key_row, key = _make_key(db, row.app, chosen)
     row.state, row.key_id, row.key_enc = "confirmed", key_row.id, crypto.encrypt(key)
     db.commit()
     logger.info("The owner connected a program with key %d, scopes %s", key_row.id, ",".join(chosen))
@@ -169,3 +190,56 @@ def deny(db: OrmSession, pairing_id: str) -> None:
     row.state = "denied"
     db.commit()
     logger.info("The owner refused a program that asked to be connected")
+
+
+# --- Prepared by the owner (S1) ----------------------------------------------------------------------------------- #
+
+
+def prepare(db: OrmSession, app: str) -> dict[str, Any]:
+    """A pairing the owner approves before any program asks; its id and secret go into a QR code. Commits."""
+    now = utcnow()
+    name = api_keys.clean_name(app)
+    if name is None or len(name) > APP_MAX_LENGTH:
+        raise error("invalid_input", "The input is not valid.", 422, fields=["app"])
+    clear_expired(db, now)
+    approved = select(func.count()).select_from(ApiPairing).where(ApiPairing.state == "approved")
+    waiting_now = int(db.scalar(approved) or 0)
+    if waiting_now >= PENDING_MAX:
+        raise error("pairing_limit", "Too many programs are waiting to be connected; try again later.", 429,
+                    max=PENDING_MAX)  # fmt: skip
+    secret = secrets.token_urlsafe(32)
+    row = ApiPairing(
+        pairing_id=secrets.token_urlsafe(16),
+        secret_hash=hash_token(secret),
+        app=name,
+        scopes=list(DEVICE_SCOPES),
+        code=_code(),
+        state="approved",
+        created_at=now,
+        expires_at=now + LIFETIME,
+    )
+    db.add(row)
+    db.commit()
+    logger.info("The owner prepared a pairing for %s", name)
+    return {"pairing_id": row.pairing_id, "secret": secret, "expires_at": row.expires_at}
+
+
+def prepared(db: OrmSession, pairing_id: str) -> dict[str, Any]:
+    """How a prepared pairing stands for the owner: waiting, connected (with the key's name) or expired."""
+    row = db.get(ApiPairing, pairing_id)
+    if row is None or row.state not in ("approved", "delivered") or row.secret_hash is None:
+        raise error("pairing_not_found", "This pairing does not exist, or not any more.", 404)
+    if row.state == "delivered":
+        made = db.get(ApiKey, row.key_id) if row.key_id is not None else None
+        return {"state": "connected", "key_name": made.name if made is not None else None, "expires_at": row.expires_at}
+    state = "expired" if row.expires_at < utcnow() else "waiting"
+    return {"state": state, "key_name": None, "expires_at": row.expires_at}
+
+
+def withdraw(db: OrmSession, pairing_id: str) -> None:
+    """The owner closes the QR code before it was scanned: the pairing goes. Commits."""
+    row = db.get(ApiPairing, pairing_id)
+    if row is not None and row.state == "approved":
+        db.delete(row)
+        db.commit()
+        logger.info("The owner withdrew a prepared pairing")

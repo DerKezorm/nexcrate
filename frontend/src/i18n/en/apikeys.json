@@ -67,5 +67,18 @@
     "deny": "Refuse",
     "confirmed": "Connected: key “{{name}}” made.",
     "denied": "{{app}} refused."
+  },
+  "app": {
+    "button": "Connect the iPhone app",
+    "title": "Connect the iPhone app",
+    "scan": "Open the nexcrate app on the iPhone, tap “Scan QR code” and point the camera at this code. The iPhone's camera app works too.",
+    "qr": "QR code to connect the iPhone app",
+    "scopes": "The app gets a key of its own with the scopes read, request and operate. It then stands in this list and can be revoked here.",
+    "address": "The app connects to {{address}}. If the iPhone reaches nexcrate at another address, set it under System in “Address to the outside”.",
+    "waiting": "Waiting for the app, {{minutes}} min left.",
+    "connected": "Connected: key “{{name}}” created.",
+    "expired": "The code has expired.",
+    "again": "Show a new code",
+    "close": "Close"
   }
 }

@@ -91,6 +91,7 @@ from .routers import totp as totp_router
 from .routers import trash as trash_router
 from .routers import v1 as v1_router
 from .routers import v1_back as v1_back_router
+from .routers import v1_discover as v1_discover_router
 from .routers import v1_pairing as v1_pairing_router
 from .routers import v1_round as v1_round_router
 from .routers import v1_search as v1_search_router
@@ -262,6 +263,10 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
     (
         v1_search_router.router,
         "The contract for other programs: finding a title by its name to request it; the scope read is enough.",
+    ),
+    (
+        v1_discover_router.router,
+        "The contract for other programs: the Discover lists; the scope read is enough, not interested needs request.",
     ),
 ]
 

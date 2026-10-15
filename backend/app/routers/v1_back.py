@@ -118,6 +118,9 @@ class QueueItemOut(_KindBlocks):
     quality: str | None = Field(description="Read from the release name.")
     release: str | None = Field(description="The release name. Never a link.")
     protocol: str = Field(description="usenet or torrent.")
+    client: str | None = Field(
+        default=None, description="The name the owner gave the download client; null when it was deleted since."
+    )
     grabbed_at: datetime
     problem: ProblemOut | None
     series: QueueSeriesBlock | None = None

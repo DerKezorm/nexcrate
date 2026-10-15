@@ -153,7 +153,9 @@ def render(db: OrmSession, rows: list[Download]) -> list[dict[str, Any]]:
     """Downloads of the kinds ``/api/v1`` answers for, as the queue lists them."""
     title_ids = {row.title_id for row in rows}
     titles = {row.id: row for row in db.scalars(select(Title).where(Title.id.in_(title_ids)))} if title_ids else {}
-    client_codes = {client.id: client.last_error_code for client in db.scalars(select(DownloadClient))}
+    clients = list(db.scalars(select(DownloadClient)))
+    client_codes = {client.id: client.last_error_code for client in clients}
+    client_names = {client.id: client.name for client in clients}
     public = v1_versions.public_ids(db)
     origins = {
         (title_id, definition_id): origin
@@ -191,6 +193,7 @@ def render(db: OrmSession, rows: list[Download]) -> list[dict[str, Any]]:
             "quality": row.quality,
             "release": row.release_title or None,
             "protocol": row.protocol,
+            "client": client_names.get(row.client_id or 0),
             "grabbed_at": row.grabbed_at,
             "problem": _problem(row, client_codes.get(row.client_id or 0)),
         }

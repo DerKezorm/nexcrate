@@ -67,5 +67,18 @@
     "deny": "Ablehnen",
     "confirmed": "Verbunden: Schlüssel „{{name}}“ angelegt.",
     "denied": "{{app}} abgelehnt."
+  },
+  "app": {
+    "button": "iPhone-App verbinden",
+    "title": "iPhone-App verbinden",
+    "scan": "Öffne die nexcrate-App auf dem iPhone, tippe auf „QR-Code scannen“ und halte die Kamera auf diesen Code. Die Kamera-App des iPhones geht auch.",
+    "qr": "QR-Code zum Verbinden der iPhone-App",
+    "scopes": "Die App bekommt einen eigenen Schlüssel mit den Rechten Lesen, Anfragen und Bedienen. Er steht danach in dieser Liste und lässt sich hier widerrufen.",
+    "address": "Die App verbindet sich mit {{address}}. Erreicht das iPhone nexcrate unter einer anderen Adresse, trag sie unter System bei „Adresse nach außen“ ein.",
+    "waiting": "Wartet auf die App, noch {{minutes}} min.",
+    "connected": "Verbunden: Schlüssel „{{name}}“ angelegt.",
+    "expired": "Der Code ist abgelaufen.",
+    "again": "Neuen Code zeigen",
+    "close": "Schließen"
   }
 }

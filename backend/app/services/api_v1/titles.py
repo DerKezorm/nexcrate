@@ -677,7 +677,22 @@ def detail(db: OrmSession, title_id: int) -> dict[str, Any] | None:
         item["album"]["media"] = album_media(db, title_id)
     elif item["kind"] == "artist":
         item["artist"]["catalogue"] = _catalogue(db, -title_id)
+    else:
+        _add_about(db, title_id, item)
     return item
+
+
+def _add_about(db: OrmSession, title_id: int, item: dict[str, Any]) -> None:
+    """What only the page of one movie or series shows: TMDB's texts. Not in the list, so the change numbers of the
+    library stay as they are. Never a file's name: no path of the disk leaves through /api/v1."""
+    title = db.get(Title, title_id)
+    if title is None:
+        return
+    item["about"] = {
+        "overview": title.overview or None,
+        "runtime_minutes": title.runtime or None,
+        "genres": list(title.genres or []),
+    }
 
 
 def album_media(db: OrmSession, title_id: int) -> list[dict[str, Any]]:

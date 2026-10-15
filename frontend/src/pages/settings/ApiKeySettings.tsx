@@ -10,6 +10,7 @@ import { Symbol } from '../../components/Symbol'
 import { Badge, Button, Field, FormMessage, Section, Spinner, Toggle } from '../../components/ui'
 import { useNotice } from '../../components/useNotice'
 import { formatAge, formatDate } from '../../lib/format'
+import { AppConnectDialog } from './AppConnectDialog'
 import { useApiKeys } from './useApiKeys'
 
 /** Die Beschreibung der Schnittstelle liefert das Backend selbst aus, ausserhalb der Oberflaeche. */
@@ -38,6 +39,7 @@ export function ApiKeySettings() {
   const notify = useNotice()
   const { keys, error, reload } = useApiKeys()
   const [adding, setAdding] = useState(false)
+  const [connecting, setConnecting] = useState(false)
   const [renaming, setRenaming] = useState<ApiKey | null>(null)
   const [revoking, setRevoking] = useState<ApiKey | null>(null)
 
@@ -48,10 +50,15 @@ export function ApiKeySettings() {
         intro={t('apikeys.intro')}
         actions={
           keys !== null ? (
-            <Button onClick={() => setAdding(true)}>
-              <Symbol name="plus" />
-              {t('apikeys.add')}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="ghost" onClick={() => setConnecting(true)}>
+                {t('apikeys.app.button')}
+              </Button>
+              <Button onClick={() => setAdding(true)}>
+                <Symbol name="plus" />
+                {t('apikeys.add')}
+              </Button>
+            </div>
           ) : undefined
         }
       >
@@ -88,6 +95,14 @@ export function ApiKeySettings() {
           onClose={() => {
             setAdding(false)
             reload()
+          }}
+        />
+      )}
+      {connecting && (
+        <AppConnectDialog
+          onClose={(connected) => {
+            setConnecting(false)
+            if (connected) reload()
           }}
         />
       )}

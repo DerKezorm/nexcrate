@@ -353,5 +353,7 @@
   "password_login_needs_link": "Verknüpfe dein Konto zuerst mit einem aktiven Anbieter. Erst dann lässt sich die Anmeldung mit Passwort abschalten.",
   "public_url_change": "Diese Adresse ändert, was die Anbieter kennen. Bestätige die Rückfrage, dann wird sie gespeichert.",
   "public_url_invalid": "Diese Adresse lässt sich nicht verwenden. Prüf, wie sie geschrieben ist.",
-  "public_url_needed": "nexcrate hat noch keine öffentliche Adresse. Trag zuerst die Adresse ein, unter der du nexcrate erreichst."
+  "public_url_needed": "nexcrate hat noch keine öffentliche Adresse. Trag zuerst die Adresse ein, unter der du nexcrate erreichst.",
+  "filter_not_for_kind": "Diesen Filter gibt es für diese Art nicht.",
+  "list_unknown": "Diese Liste gibt es nicht."
 }
