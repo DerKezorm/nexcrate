@@ -458,6 +458,16 @@
         "Ein einzelner Film oder eine Serie trägt unter /api/v1 jetzt Inhaltsangabe, Laufzeit und Genres, und jeder Download nennt sein Download-Programm.",
         "Die Ordnerliste zeigt dieselbe Qualität wie der Dialog „Zuordnen“, also „Nach Dateityp“, wo der Name keine Quelle nennt."
       ]
+    },
+    "1.1.0": {
+      "lead": "Programme bekommen zu jedem Film und jeder Serie eine Übersicht mit Handlung, Bewertung und Besetzung, auch für Titel, die noch nicht in der Bibliothek stehen.",
+      "sections": [
+        {
+          "title": "Handlung und Besetzung für Programme",
+          "body": "Unter /api/v1/about stehen zu einem Film oder einer Serie Handlung, Leitsatz, Laufzeit, Genres, die Bewertung bei TMDB, Regie oder Idee und bis zu zwanzig aus der Besetzung mit Rolle und Bild. Das geht für Titel der Bibliothek und für solche, die du erst hinzufügen willst. nexcrate fragt TMDB dafür einmal je Titel und Sprache und merkt sich die Antwort sieben Tage. Dafür reicht ein Schlüssel mit „Lesen“.",
+          "where": "Schnittstelle /api/v1"
+        }
+      ]
     }
   }
 }

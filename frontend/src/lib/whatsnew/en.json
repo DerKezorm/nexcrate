@@ -458,6 +458,16 @@
         "A single movie or series under /api/v1 now carries its overview, runtime and genres, and every download names its download client.",
         "The folder list shows the same quality as the Assign dialog, so By file type where the name names no source."
       ]
+    },
+    "1.1.0": {
+      "lead": "Programs get an overview of every movie and series with plot, rating and cast, also for titles that are not in the library yet.",
+      "sections": [
+        {
+          "title": "Plot and cast for programs",
+          "body": "/api/v1/about gives a movie's or series' plot, tagline, runtime, genres, TMDB's rating, who directed or created it, and up to twenty of the cast with role and picture. It works for titles of the library and for those you are about to add. nexcrate asks TMDB once per title and language and keeps the answer for seven days. A key with read is enough.",
+          "where": "Interface /api/v1"
+        }
+      ]
     }
   }
 }
