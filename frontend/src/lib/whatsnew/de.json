@@ -409,6 +409,30 @@
       "small": [
         "Das Protokoll nennt jetzt jede Ablehnung eines gewählten Ordners mit ihrem Grund."
       ]
+    },
+    "0.9.4": {
+      "lead": "Wer neu anfängt und Ordner einliest, kommt jetzt ohne Umweg in die Bibliothek: nexcrate sagt, was noch fehlt, und lässt es gleich dort erledigen.",
+      "sections": [
+        {
+          "title": "Ordner einlesen ohne Sackgasse",
+          "body": "Einlesen ging auch ohne Fassung und ohne TMDB-Schlüssel, dann blieb aber alles unter „Unbekannt“, und die Bibliothek blieb leer. Jetzt steht oben auf der Seite, was noch fehlt. Die Fassung lässt sich gleich dort anlegen, und der eingelesene Ordner wird auf Wunsch ihr Standardordner. Dasselbe geht im Dialog „Zuordnen“.",
+          "where": "Bibliothek, Ordner einlesen"
+        },
+        {
+          "title": "Nach dem Einlesen",
+          "body": "Die Seite sagt, wie viele Ordner aufs Zuordnen warten, springt auf Wunsch zur Liste und öffnet den ersten Reiter, in dem etwas steht. Bisher stand sie auf dem leeren Reiter „Wiederherstellen“. Auch eine leere Bibliothek nennt die Ordner, die noch warten.",
+          "where": "Bibliothek, Ordner einlesen"
+        },
+        {
+          "title": "Keine weiße Seite mehr",
+          "body": "Lässt sich eine Seite nicht anzeigen, steht dort jetzt, was passiert ist, mit „Neu laden“ und dem Weg zurück zur Bibliothek. nexcrate schreibt den Fehler zugleich in sein Protokoll.",
+          "where": "Einstellungen, System, Protokoll"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Nennt kein Name eine Quelle, richtet sich die Qualität wie bei Radarr nach dem Dateityp. Der Dialog „Zuordnen“ sagt das jetzt auch, statt „aus dem Namen“."
+      ]
     }
   }
 }

@@ -409,6 +409,30 @@
       "small": [
         "The log now names every refusal of a chosen folder with its reason."
       ]
+    },
+    "0.9.4": {
+      "lead": "Starting fresh and reading folders now leads straight into the library: nexcrate says what is still missing and lets you settle it right there.",
+      "sections": [
+        {
+          "title": "Reading folders without a dead end",
+          "body": "Reading worked without a version and without a TMDB token, but then everything stayed under Unknown and the library stayed empty. The page now says at the top what is still missing. You can create the version right there, and the folder you read can become its default folder. The Assign dialog offers the same.",
+          "where": "Library, Read folders"
+        },
+        {
+          "title": "After reading",
+          "body": "The page says how many folders wait for assigning, jumps to the list on request and opens the first tab that holds something. Before, it stood on the empty Restore tab. An empty library names the folders that still wait, too.",
+          "where": "Library, Read folders"
+        },
+        {
+          "title": "No more blank page",
+          "body": "When a page cannot be shown, it now says what happened, with Reload and the way back to the library. nexcrate writes the error into its log at the same time.",
+          "where": "Settings, System, Log"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When no name names a source, the quality follows the file type, as in Radarr. The Assign dialog now says so instead of “from the name”."
+      ]
     }
   }
 }
