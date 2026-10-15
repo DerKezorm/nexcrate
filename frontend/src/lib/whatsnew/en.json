@@ -467,6 +467,10 @@
           "body": "/api/v1/about gives a movie's or series' plot, tagline, runtime, genres, TMDB's rating, who directed or created it, and up to twenty of the cast with role and picture. It works for titles of the library and for those you are about to add. nexcrate asks TMDB once per title and language and keeps the answer for seven days. A key with read is enough.",
           "where": "Interface /api/v1"
         }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The interface's library stays as it is: the overview stands only with a single title, so its change numbers do not move."
       ]
     }
   }
