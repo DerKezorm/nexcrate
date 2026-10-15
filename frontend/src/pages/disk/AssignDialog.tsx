@@ -16,8 +16,9 @@ import { formatList } from '../../lib/format'
 import { mediaSummary } from '../../lib/media'
 import { languageText } from '../../lib/names'
 import { sizeText } from '../../lib/size'
-import { TMDB_TAB_PATH, VERSIONS_TAB_PATH } from '../settings/tabs'
+import { TMDB_TAB_PATH } from '../settings/tabs'
 import { definitionOf, isFromSource } from '../title/versionDefinitions'
+import { QuickVersion } from '../versions/QuickVersion'
 import { useVersions } from '../versions/useVersions'
 import { fromText, largestVideo } from './diskText'
 import { pickedFromProposal, pickedFromResult, type PickedMovie } from './pickedMovie'
@@ -78,6 +79,8 @@ export function AssignDialog({
   const [picked, setPicked] = useState<PickedMovie | null>(movie)
   const [detail, setDetail] = useState<TitleDetail | null>(null)
   const [versionId, setVersionId] = useState<number | null>(rootVersions.length === 1 ? rootVersions[0].id : null)
+  // Die Fassung ist gleich hier angelegt, nur ihr Standardordner liess sich nicht setzen.
+  const [versionProblem, setVersionProblem] = useState<unknown>(null)
   const [busy, setBusy] = useState(false)
   // Ab Werk an (24.09.2026): Eingelesenes loest keine Verbesserungen aus.
   const [keep, setKeep] = useState(true)
@@ -189,6 +192,8 @@ export function AssignDialog({
   }
 
   const summary = media?.media ? mediaSummary(media.media, language, t('title.version.bit')) : null
+  // Kein Name nennt eine Quelle: Wie Radarr entscheidet der Dateityp, und das soll der Satz auch sagen.
+  const byType = media?.source_from === 'extension'
   const languages = media && Array.isArray(media.languages) ? media.languages.filter((name) => typeof name === 'string' && name !== '') : []
 
   const movieButton = (candidate: PickedMovie, meta: string | null, key: string) => {
@@ -279,14 +284,22 @@ export function AssignDialog({
               {media !== null && (
                 <>
                   {media.error_code !== null ? (
-                    <p className="text-mist-300">{t(media.error_code === 'media_truncated' ? 'disk.assign.truncated' : 'disk.assign.unreadable')}</p>
+                    <p className="text-mist-300">
+                      {media.error_code === 'media_truncated'
+                        ? byType
+                          ? t('disk.assign.truncatedByType')
+                          : t('disk.assign.truncated')
+                        : byType
+                          ? t('disk.assign.unreadableByType')
+                          : t('disk.assign.unreadable')}
+                    </p>
                   ) : (
                     summary !== null && <p className="text-mist-200">{t('disk.assign.media', { summary })}</p>
                   )}
                   {media.quality !== null && (
                     <p className="flex flex-wrap items-baseline gap-x-2 text-mist-100">
                       <span className="font-semibold">{t('disk.assign.quality', { quality: media.quality })}</span>
-                      {media.error_code === null && <span className="text-xs text-mist-500">{media.quality_from === 'media' ? t('disk.assign.fromMedia') : t('disk.assign.fromName')}</span>}
+                      {media.error_code === null && <span className="text-xs text-mist-500">{media.quality_from === 'media' ? (byType ? t('disk.assign.fromMediaByType') : t('disk.assign.fromMedia')) : byType ? t('disk.assign.fromType') : t('disk.assign.fromName')}</span>}
                     </p>
                   )}
                   {languages.length > 0 && <p className="text-xs text-mist-500">{t('disk.assign.languages', { languages: formatList(languages.map((name) => languageText(t, name)), language) })}</p>}
@@ -372,6 +385,7 @@ export function AssignDialog({
         <section className="flex flex-col gap-2" aria-label={t('disk.assign.version')}>
           <Heading>{t('disk.assign.version')}</Heading>
           {versionsError !== null && <FormMessage>{errorText(t, versionsError)}</FormMessage>}
+          {versionProblem !== null && <FormMessage>{errorText(t, versionProblem)}</FormMessage>}
           {versions === null ? (
             versionsError === null && (
               <p className="flex items-center gap-2 text-sm text-mist-500" role="status">
@@ -382,10 +396,15 @@ export function AssignDialog({
           ) : versions.length === 0 ? (
             <div className="flex flex-col items-start gap-2 rounded-xl border border-dashed border-ink-600 p-4">
               <p className="text-sm text-mist-300">{t('disk.assign.noVersions')}</p>
-              <Link to={VERSIONS_TAB_PATH} onClick={close} className="inline-flex items-center gap-2 text-sm font-semibold text-accent-400 hover:underline">
-                {t('disk.assign.noVersionsAction')}
-                <Symbol name="arrow" />
-              </Link>
+              <QuickVersion
+                kind="movie"
+                folder={root?.path ?? null}
+                onCreated={(created, folderProblem) => {
+                  reloadVersions()
+                  setVersionId(created.id)
+                  setVersionProblem(folderProblem)
+                }}
+              />
             </div>
           ) : fixed !== null ? (
             <div className="flex flex-col gap-0.5">

@@ -239,6 +239,13 @@ class MediaOut(BaseModel):
     error_code: Literal["media_unreadable", "media_timeout", "media_truncated"] | None = Field(
         description="Set when the tool failed or found the file cut off (media_truncated); the name decides then."
     )
+    source_from: Literal["name", "folder", "tag", "extension", "none"] = Field(
+        default="none",
+        description=(
+            "Where the source of `quality` came from. `extension` when no name says one: then, as in Radarr, the file "
+            "type decides (an .mkv is WEBDL)."
+        ),
+    )
 
 
 _KEEP_AS_IS = (

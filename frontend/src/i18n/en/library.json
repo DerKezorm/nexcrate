@@ -59,7 +59,12 @@
     "importAction": "Go to import",
     "diskTitle": "Movies from disk",
     "diskText": "If your movies already lie in folders, nexcrate reads them. You confirm which movie is which.",
-    "diskAction": "Read folders"
+    "diskAction": "Read folders",
+    "waiting_one": "One folder you read waits for you to assign it. Only then does the movie show up here.",
+    "waiting_other": "{{count}} folders you read wait for you to assign them. Only then do the movies show up here.",
+    "waitingSeries_one": "One folder you read waits for you to assign it. Only then does the show show up here.",
+    "waitingSeries_other": "{{count}} folders you read wait for you to assign them. Only then do the shows show up here.",
+    "waitingAction": "Assign the folders"
   },
   "add": {
     "open": "Add",

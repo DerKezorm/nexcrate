@@ -2464,6 +2464,8 @@ export type DiskMediaResult = {
   quality_from: QualityFrom | null
   languages: string[]
   error_code: string | null
+  /** Woher die Quelle der Qualitaet kommt; `extension`, wenn kein Name eine nennt (wie Radarr: .mkv ist WEBDL). */
+  source_from?: 'name' | 'folder' | 'tag' | 'extension' | 'none'
 }
 
 /** `POST /api/disk/folders/{id}/assign`. `version_id` is the number of the version under Settings. */

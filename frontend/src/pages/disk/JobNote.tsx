@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, errorText } from '../../api/client'
 import type { DiskJob, DiskRootKind } from '../../api/types'
+import { Symbol } from '../../components/Symbol'
 import { Button, FormMessage, ProgressBar, Spinner } from '../../components/ui'
 import { formatNumber } from '../../lib/format'
 import { jobDoneText, jobFailedText, jobOutcomes, jobTitle, phaseText } from './diskText'
@@ -12,7 +13,25 @@ import { jobDoneText, jobFailedText, jobOutcomes, jobTitle, phaseText } from './
  *
  * Auf der Seite der Serien heissen Wiederherstellen und Zuordnen nach Serien (S6).
  */
-export function JobNote({ job, lost, error, onDismiss, kind = 'movie' }: { job: DiskJob | null; lost: boolean; error: unknown; onDismiss: () => void; kind?: DiskRootKind }) {
+export function JobNote({
+  job,
+  lost,
+  error,
+  onDismiss,
+  kind = 'movie',
+  waiting = 0,
+  onShowList,
+}: {
+  job: DiskJob | null
+  lost: boolean
+  error: unknown
+  onDismiss: () => void
+  kind?: DiskRootKind
+  /** Eingelesene Ordner, die noch zugeordnet oder wiederhergestellt werden muessen. */
+  waiting?: number
+  /** Springt zur Liste der Ordner. */
+  onShowList?: () => void
+}) {
   const { t, i18n } = useTranslation()
   const number = (value: number) => formatNumber(value, i18n.language)
   const title = job === null ? '' : jobTitle(t, job, kind)
@@ -66,6 +85,17 @@ export function JobNote({ job, lost, error, onDismiss, kind = 'movie' }: { job: 
         </dl>
       )}
       {conflicts && <p className="text-xs text-mist-400">{t('disk.job.conflictsHint')}</p>}
+      {!failed && job.kind === 'scan' && waiting > 0 && (
+        <div className="flex flex-col items-start gap-2 text-sm text-mist-200">
+          <p>{kind === 'series' ? t('disk.job.waitingSeries', { count: waiting }) : kind === 'album' ? t('disk.job.waitingMusic', { count: waiting }) : t('disk.job.waiting', { count: waiting })}</p>
+          {onShowList && (
+            <Button size="sm" onClick={onShowList}>
+              <Symbol name="arrow" />
+              {t('disk.job.showList')}
+            </Button>
+          )}
+        </div>
+      )}
       {stopped !== null && (
         <div className="flex flex-col gap-1 text-sm text-mist-200" role="status">
           <p>{t('disk.job.tmdbStopped', { count: stopped.pending })}</p>

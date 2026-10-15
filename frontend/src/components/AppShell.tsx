@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 
+import { CrashBoundary } from './CrashBoundary'
+
 import { systemSettingsApi } from '../api/outside'
 import { systemApi } from '../api/system'
 import { Logo } from './Logo'
@@ -102,7 +104,9 @@ export function AppShell() {
           <div className="mb-6 empty:hidden">
             <PairingBanner />
           </div>
-          <Outlet />
+          <CrashBoundary resetKey={pathname}>
+            <Outlet />
+          </CrashBoundary>
         </main>
         <WhatsNewAfterUpdate />
 

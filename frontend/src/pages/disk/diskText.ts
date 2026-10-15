@@ -92,6 +92,14 @@ export function countOf(roots: readonly DiskRoot[], state: DiskFolderState, root
   return roots.filter((root) => rootId === null || root.id === rootId).reduce((sum, root) => sum + (root.counts?.[state] ?? 0), 0)
 }
 
+/** Was nach dem Einlesen auf den Besitzer wartet, bevor es in der Bibliothek steht: wiederherstellen, Vorschlag, unbekannt, Konflikt. */
+export const WAITING_STATES: readonly DiskFolderState[] = ['restorable', 'proposal', 'unknown', 'conflict']
+
+/** Wie viele eingelesene Ordner noch zugeordnet oder wiederhergestellt werden muessen. */
+export function waitingCount(roots: readonly DiskRoot[]): number {
+  return WAITING_STATES.reduce((sum, state) => sum + countOf(roots, state), 0)
+}
+
 export function tabCount(roots: readonly DiskRoot[], tab: DiskTab, rootId: number | null = null, kind: DiskRootKind = 'movie'): number {
   return statesOf(kind, tab).reduce((sum, state) => sum + countOf(roots, state, rootId), 0)
 }

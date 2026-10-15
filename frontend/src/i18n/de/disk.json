@@ -75,7 +75,14 @@
     "conflictsHint": "Was nicht ging, steht unter Konflikte.",
     "dismiss": "Ausblenden",
     "tmdbStopped_one": "TMDB hat aufgehört zu antworten. Ein Ordner ist noch ohne Vorschläge, lies später noch einmal ein.",
-    "tmdbStopped_other": "TMDB hat aufgehört zu antworten. {{count}} Ordner sind noch ohne Vorschläge, lies später noch einmal ein."
+    "tmdbStopped_other": "TMDB hat aufgehört zu antworten. {{count}} Ordner sind noch ohne Vorschläge, lies später noch einmal ein.",
+    "waiting_one": "Ein Ordner wartet darauf, dass du ihn zuordnest. Erst dann steht der Film in der Bibliothek.",
+    "waiting_other": "{{count}} Ordner warten darauf, dass du sie zuordnest. Erst dann stehen die Filme in der Bibliothek.",
+    "waitingSeries_one": "Ein Ordner wartet darauf, dass du ihn zuordnest. Erst dann steht die Serie in der Bibliothek.",
+    "waitingSeries_other": "{{count}} Ordner warten darauf, dass du sie zuordnest. Erst dann stehen die Serien in der Bibliothek.",
+    "waitingMusic_one": "Ein Ordner wartet darauf, dass du ihn zuordnest. Erst dann steht das Album in der Bibliothek.",
+    "waitingMusic_other": "{{count}} Ordner warten darauf, dass du sie zuordnest. Erst dann stehen die Alben in der Bibliothek.",
+    "showList": "Zur Liste"
   },
   "tabs": {
     "label": "Ordner nach Zustand",
@@ -223,7 +230,11 @@
     "openTitle": "Titel öffnen",
     "missingChoice": "Wähl einen Film und eine Fassung.",
     "loadFailed": "Diesen Ordner findet nexcrate nicht mehr. Lies die Ordner neu ein.",
-    "truncated": "Die Datei ist abgeschnitten, sie ist kürzer, als ihr Inhalt angibt. nexcrate nimmt die Qualität aus dem Namen."
+    "truncated": "Die Datei ist abgeschnitten, sie ist kürzer, als ihr Inhalt angibt. nexcrate nimmt die Qualität aus dem Namen.",
+    "unreadableByType": "Die Datei ließ sich nicht lesen, und ihr Name nennt keine Quelle. nexcrate richtet sich wie Radarr nach dem Dateityp.",
+    "truncatedByType": "Die Datei ist abgeschnitten, sie ist kürzer, als ihr Inhalt sagt. Ihr Name nennt keine Quelle, deshalb richtet sich nexcrate wie Radarr nach dem Dateityp.",
+    "fromType": "Quelle aus dem Dateityp, wie in Radarr",
+    "fromMediaByType": "Auflösung aus der Datei, Quelle aus dem Dateityp"
   },
   "series": {
     "sub": "Serien, die schon auf der Platte liegen, holst du hier in die Bibliothek. nexcrate verschiebt und löscht dabei nichts.",
@@ -369,5 +380,30 @@
   "keep": {
     "label": "Vorhandenes nicht verbessern",
     "hint": "Was hier eingelesen wird, bleibt, wie es ist: Titel mit Datei stehen auf „in Ruhe lassen“, Folgen mit Datei sind aus. Was fehlt, sucht nexcrate weiter, und was später dazukommt, wird ganz normal verbessert."
+  },
+  "quickVersion": {
+    "defaultVideo": "Full HD",
+    "defaultMusic": "Musik",
+    "useFolder": "{{folder}} als ihren Standardordner nehmen. Dorthin legt nexcrate neue Titel dieser Fassung.",
+    "create": "Fassung anlegen"
+  },
+  "setup": {
+    "titleMovies": "So kommen deine Filme in die Bibliothek",
+    "titleSeries": "So kommen deine Serien in die Bibliothek",
+    "titleMusic": "So kommt deine Musik in die Bibliothek",
+    "introMovies": "Einlesen findet die Ordner auf der Platte. In die Bibliothek kommt ein Film erst, wenn du ihn einem Film bei TMDB und einer Fassung zuordnest. Dafür fehlt noch etwas:",
+    "introSeries": "Einlesen findet die Ordner auf der Platte. In die Bibliothek kommt eine Serie erst, wenn du sie einer Serie bei TMDB und einer Fassung zuordnest. Dafür fehlt noch etwas:",
+    "introMusic": "Einlesen findet die Albumordner auf der Platte. In die Bibliothek kommt ein Album erst, wenn du es einem Album und der Fassung für Musik zuordnest. Dafür fehlt noch die Fassung:",
+    "tmdbMissing": "Der TMDB-Schlüssel. Ohne ihn erkennt nexcrate keinen Titel und schlägt nichts vor. Er ist kostenlos.",
+    "tmdbAction": "TMDB-Schlüssel eintragen",
+    "tmdbDone": "Der TMDB-Schlüssel ist eingetragen.",
+    "versionMissing": "Eine Fassung, etwa Full HD. Jeder Titel gehört zu einer Fassung; mit mehreren hältst du zum Beispiel Full HD und 4K auseinander. Leg sie gleich hier an:",
+    "versionMissingMusic": "Die Fassung für Musik. Alle Alben gehören zu ihr. Leg sie gleich hier an:",
+    "versionDone_one": "Die Fassung {{labels}} ist angelegt.",
+    "versionDone_other": "Die Fassungen {{labels}} sind angelegt.",
+    "stepDone": "Erledigt",
+    "stepOpen": "Offen",
+    "created": "Die Fassung {{label}} ist angelegt.",
+    "createdWithFolder": "Die Fassung {{label}} ist angelegt, ihr Standardordner ist {{folder}}."
   }
 }

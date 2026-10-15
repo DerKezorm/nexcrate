@@ -5,15 +5,16 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { errorText } from '../../api/client'
 import { diskApi } from '../../api/disk'
 import { musicApi } from '../../api/music'
-import type { DiskFolder, DiskFolderState, DiskJob, DiskOverview, DiskRoot, DiskRootKind, Proposal } from '../../api/types'
+import type { DiskFolder, DiskFolderState, DiskJob, DiskOverview, DiskRoot, DiskRootKind, Proposal, Version } from '../../api/types'
 import { Segmented } from '../../components/Segmented'
 import { Symbol } from '../../components/Symbol'
 import { TabRow, type Tab } from '../../components/TabRow'
 import { Button, FormMessage, PageLoading, PageTitle } from '../../components/ui'
 import { useNotice } from '../../components/useNotice'
 import { FolderPicker } from '../files/FolderPicker'
-import { KIND_PARAM, TMDB_TAB_PATH } from '../settings/tabs'
+import { KIND_PARAM } from '../settings/tabs'
 import { useKindLabel } from '../settings/useKindLabel'
+import { useVersions } from '../versions/useVersions'
 import { AlbumAssignDialog } from './AlbumAssignDialog'
 import { AssignAllDialog } from './AssignAllDialog'
 import { AssignDialog } from './AssignDialog'
@@ -28,6 +29,7 @@ import {
   statesOf,
   tabCount,
   tabsOf,
+  waitingCount,
   type DiskTab,
 } from './diskText'
 import { FolderGroup } from './FolderGroup'
@@ -37,8 +39,12 @@ import { pickedFromProposal, type PickedMovie } from './pickedMovie'
 import { RestoreDialog } from './RestoreDialog'
 import { RootList } from './RootList'
 import { SeriesAssignDialog } from './SeriesAssignDialog'
+import { SetupSteps } from './SetupSteps'
 import { useDiskJob } from './useDiskJob'
 import type { FolderListing } from './useFolderList'
+
+/** Der Abschnitt mit den eingelesenen Ordnern; "Zur Liste" springt dorthin. */
+const LIST_ID = 'disk-folders'
 
 /** Gesucht wird erst, wenn so lange nichts getippt wurde. */
 export const DISK_SEARCH_DELAY_MS = 300
@@ -77,6 +83,7 @@ export function DiskPage() {
   const [version, setVersion] = useState(0)
   const [dialog, setDialog] = useState<DialogState>(null)
   const [listings, setListings] = useState<Partial<Record<DiskFolderState, FolderListing | null>>>({})
+  const { versions, reload: reloadVersions } = useVersions(kind)
 
   const reload = useCallback(() => {
     diskApi.overview().then(
@@ -86,10 +93,19 @@ export function DiskPage() {
   }, [])
 
   // A job ended: the roots carry new counts, and the rows may have moved between the tabs.
+  // Nach dem ersten Einlesen stand die Seite sonst auf dem leeren Reiter Wiederherstellen, und "Zur Liste" zeigte nichts
+  // (Befund vom 15.10.2026): Ist der gewaehlte Reiter leer, geht es zum ersten mit Inhalt.
   const finished = useCallback(() => {
-    reload()
+    diskApi.overview().then(
+      (result) => {
+        setOverview(result)
+        const ofKind = rootsOfKind(result.roots, kind)
+        setTab((chosen) => (chosen !== null && tabCount(ofKind, chosen, null, kind) > 0 ? chosen : initialTab(ofKind, kind)))
+      },
+      () => undefined,
+    )
     setVersion((count) => count + 1)
-  }, [reload])
+  }, [kind])
   const { job, lost, error: jobError, follow, dismiss } = useDiskJob(overview?.job ?? null, finished)
   const busy = job !== null && job.state === 'running'
 
@@ -240,6 +256,19 @@ export function DiskPage() {
     setVersion((count) => count + 1)
   }
 
+  // Gleich hier angelegt (SetupSteps): Der Ordner gehoert jetzt womoeglich zur Fassung, die Wurzeln zeigen das.
+  function versionCreated(created: Version, folderProblem: unknown) {
+    reloadVersions()
+    reload()
+    setVersion((count) => count + 1)
+    if (folderProblem !== null) fail(folderProblem)
+    else notify(created.folder ? t('disk.setup.createdWithFolder', { label: created.label, folder: created.folder }) : t('disk.setup.created', { label: created.label }))
+  }
+
+  function showList() {
+    document.getElementById(LIST_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   async function removeRoot(root: DiskRoot) {
     try {
       await diskApi.removeRoot(root.id)
@@ -297,16 +326,9 @@ export function DiskPage() {
 
       <Segmented value={kind} options={DISK_KINDS} onChange={changeKind} label={(option) => kindLabel(option === 'album' ? 'music' : option)} ariaLabel={t('disk.kindLabel')} />
 
-      {!overview.tmdb_ready && !music && (
-        <FormMessage tone="info">
-          {t('disk.noTmdb')}{' '}
-          <Link to={TMDB_TAB_PATH} className="font-medium text-accent-400 hover:underline">
-            {t('disk.noTmdbLink')}
-          </Link>
-        </FormMessage>
-      )}
+      <SetupSteps kind={kind} tmdbReady={overview.tmdb_ready} versions={versions} roots={roots} onVersionCreated={versionCreated} />
 
-      <JobNote job={job} lost={lost} error={jobError} onDismiss={dismiss} kind={kind} />
+      <JobNote job={job} lost={lost} error={jobError} onDismiss={dismiss} kind={kind} waiting={waitingCount(roots)} onShowList={showList} />
 
       <RootList
         roots={roots}
@@ -318,7 +340,7 @@ export function DiskPage() {
         onAsSeries={(root) => void readAsSeries(root)}
       />
 
-      <section className="flex flex-col gap-4" aria-label={t('disk.tabs.label')}>
+      <section id={LIST_ID} className="flex scroll-mt-6 flex-col gap-4" aria-label={t('disk.tabs.label')}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <TabRow label={t('disk.tabs.label')} tabs={tabs} active={tab} onChange={setTab} />
           <div className="flex shrink-0 flex-wrap gap-2">

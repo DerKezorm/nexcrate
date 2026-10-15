@@ -110,5 +110,13 @@
     "tb": "{{value}} TB",
     "minutes": "{{value}} min"
   },
-  "beta": "Beta"
+  "beta": "Beta",
+  "crash": {
+    "title": "This page could not be shown.",
+    "text": "Something went wrong while drawing the page. nexcrate wrote it into its log (Settings, System, Log). Reload the page; the other pages keep working.",
+    "reload": "Reload",
+    "library": "Back to the library",
+    "report": "If it happens again, please report it with the text below:",
+    "issues": "Report it on GitHub"
+  }
 }

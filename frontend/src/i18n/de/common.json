@@ -110,5 +110,13 @@
     "tb": "{{value}} TB",
     "minutes": "{{value}} Min."
   },
-  "beta": "Beta"
+  "beta": "Beta",
+  "crash": {
+    "title": "Diese Seite ließ sich nicht anzeigen.",
+    "text": "Beim Zeichnen der Seite ist ein Fehler passiert. nexcrate hat ihn in sein Protokoll geschrieben (Einstellungen, System, Protokoll). Lade die Seite neu; die übrigen Seiten gehen weiter.",
+    "reload": "Neu laden",
+    "library": "Zur Bibliothek",
+    "report": "Kommt das wieder, melde es bitte mit dem Text darunter:",
+    "issues": "Fehler auf GitHub melden"
+  }
 }

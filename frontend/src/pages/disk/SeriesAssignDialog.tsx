@@ -14,8 +14,9 @@ import { Symbol } from '../../components/Symbol'
 import { Badge, Button, FormMessage, Spinner, Toggle } from '../../components/ui'
 import { formatList, formatNumber } from '../../lib/format'
 import { WATCH_RULES } from '../library/seriesChoice'
-import { SERIES_VERSIONS_TAB_PATH, TMDB_TAB_PATH } from '../settings/tabs'
+import { TMDB_TAB_PATH } from '../settings/tabs'
 import { definitionOf, isFromSource } from '../title/versionDefinitions'
+import { QuickVersion } from '../versions/QuickVersion'
 import { useVersions } from '../versions/useVersions'
 import { fromText, shownSeasons } from './diskText'
 import { pickedFromProposal, pickedFromResult, type PickedMovie } from './pickedMovie'
@@ -75,6 +76,8 @@ export function SeriesAssignDialog({
   const [picked, setPicked] = useState<PickedMovie | null>(proposals.length > 0 ? pickedFromProposal(proposals[0]) : null)
   const [detail, setDetail] = useState<TitleDetail | null>(null)
   const [versionId, setVersionId] = useState<number | null>(rootVersions.length === 1 ? rootVersions[0].id : null)
+  // Die Fassung ist gleich hier angelegt, nur ihr Standardordner liess sich nicht setzen.
+  const [versionProblem, setVersionProblem] = useState<unknown>(null)
   const [rule, setRule] = useState<WatchRule>('all')
   const [fromSeason, setFromSeason] = useState(1)
   const [busy, setBusy] = useState(false)
@@ -332,6 +335,7 @@ export function SeriesAssignDialog({
         <section className="flex flex-col gap-2" aria-label={t('disk.series.assign.version')}>
           <Heading>{t('disk.series.assign.version')}</Heading>
           {versionsError !== null && <FormMessage>{errorText(t, versionsError)}</FormMessage>}
+          {versionProblem !== null && <FormMessage>{errorText(t, versionProblem)}</FormMessage>}
           {versions === null ? (
             versionsError === null && (
               <p className="flex items-center gap-2 text-sm text-mist-500" role="status">
@@ -342,10 +346,15 @@ export function SeriesAssignDialog({
           ) : versions.length === 0 ? (
             <div className="flex flex-col items-start gap-2 rounded-xl border border-dashed border-ink-600 p-4">
               <p className="text-sm text-mist-300">{t('disk.series.assign.noVersions')}</p>
-              <Link to={SERIES_VERSIONS_TAB_PATH} onClick={close} className="inline-flex items-center gap-2 text-sm font-semibold text-accent-400 hover:underline">
-                {t('disk.assign.noVersionsAction')}
-                <Symbol name="arrow" />
-              </Link>
+              <QuickVersion
+                kind="series"
+                folder={root?.path ?? null}
+                onCreated={(created, folderProblem) => {
+                  reloadVersions()
+                  setVersionId(created.id)
+                  setVersionProblem(folderProblem)
+                }}
+              />
             </div>
           ) : fixed !== null ? (
             <div className="flex flex-col gap-0.5">

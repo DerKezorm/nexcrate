@@ -1,9 +1,11 @@
-"""Read, download and clear the log, and switch the log mode."""
+"""Read, download and clear the log, switch the log mode, and take the crash reports of the web interface."""
 
 from __future__ import annotations
 
 import logging
+import re
 import tempfile
+import time
 import zipfile
 from collections.abc import Iterator
 from datetime import UTC, datetime
@@ -13,10 +15,12 @@ from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from .. import __version__
 from ..meldungen import error, error_responses
 from ..services import logs
 
 logger = logging.getLogger("nexcrate.logs")
+ui_logger = logging.getLogger("nexcrate.ui")
 
 router = APIRouter(prefix="/api/logs", tags=["logs"])
 
@@ -152,3 +156,60 @@ def _chunks(spool: IO[bytes]) -> Iterator[bytes]:
 def clear_logs() -> None:
     logs.clear()
     logger.info("Log files cleared")
+
+
+# --- What the browser reports ------------------------------------------------- #
+
+#: At most this many reports per window; the rest are dropped without a line. A page that crashes in a loop must not
+#: fill the log.
+CLIENT_REPORTS_PER_WINDOW = 20
+CLIENT_WINDOW_SECONDS = 600
+#: Longest stack kept, in lines.
+CLIENT_STACK_LINES = 15
+
+_client_reports: list[float] = []
+_CONTROL = re.compile(r"[\x00-\x1f\x7f]+")
+
+
+class ClientErrorIn(BaseModel):
+    message: str = Field(max_length=2000, description="The error message the browser saw.")
+    stack: str | None = Field(default=None, max_length=8000, description="The stack, if the browser had one.")
+    path: str = Field(max_length=500, description="The page address without host, e.g. /ordner.")
+
+
+def _one_line(text: str, limit: int) -> str:
+    return _CONTROL.sub(" ", text).strip()[:limit]
+
+
+def _client_allowed(now: float) -> bool:
+    while _client_reports and now - _client_reports[0] > CLIENT_WINDOW_SECONDS:
+        _client_reports.pop(0)
+    if len(_client_reports) >= CLIENT_REPORTS_PER_WINDOW:
+        return False
+    _client_reports.append(now)
+    return True
+
+
+@router.post(
+    "/client",
+    status_code=204,
+    response_model=None,
+    summary="Report a crash of the web interface",
+    description=(
+        "The web interface calls this when a page could not be drawn, so the crash stands in the log next to the "
+        "server's own lines. Writes one ERROR line from `nexcrate.ui` with the stack below it. At most "
+        f"{CLIENT_REPORTS_PER_WINDOW} reports in {CLIENT_WINDOW_SECONDS // 60} minutes are written; the rest are "
+        "dropped and still answered with 204."
+    ),
+)
+def report_client_error(payload: ClientErrorIn) -> None:
+    if not _client_allowed(time.monotonic()):
+        return
+    message = _one_line(payload.message, 500) or "no message"
+    path = _one_line(payload.path, 200) or "/"
+    lines = [f"The page {path} could not be drawn in the browser (nexcrate {__version__}): {message}"]
+    if payload.stack:
+        # Indented, so no line of the stack can pass for a line of the log of its own.
+        stack = [_one_line(line, 300) for line in payload.stack.splitlines()]
+        lines.extend(f"    {line}" for line in stack if line and line != message)
+    ui_logger.error("\n".join(lines[: CLIENT_STACK_LINES + 1]))

@@ -59,7 +59,12 @@
     "importAction": "Zum Import",
     "diskTitle": "Filme von der Platte",
     "diskText": "Liegen deine Filme schon in Ordnern, liest nexcrate sie ein. Du bestätigst, welcher Film welcher ist.",
-    "diskAction": "Ordner einlesen"
+    "diskAction": "Ordner einlesen",
+    "waiting_one": "Ein eingelesener Ordner wartet darauf, dass du ihn zuordnest. Erst dann steht der Film hier.",
+    "waiting_other": "{{count}} eingelesene Ordner warten darauf, dass du sie zuordnest. Erst dann stehen die Filme hier.",
+    "waitingSeries_one": "Ein eingelesener Ordner wartet darauf, dass du ihn zuordnest. Erst dann steht die Serie hier.",
+    "waitingSeries_other": "{{count}} eingelesene Ordner warten darauf, dass du sie zuordnest. Erst dann stehen die Serien hier.",
+    "waitingAction": "Ordner zuordnen"
   },
   "add": {
     "open": "Hinzufügen",

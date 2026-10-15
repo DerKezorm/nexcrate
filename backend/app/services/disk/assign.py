@@ -145,6 +145,8 @@ class FileFacts:
     error_code: str | None
     release_group: str | None
     edition: str | None
+    #: Where the source came from: name, folder, tag, or extension when no name says one (Radarr's rule by file type).
+    source_from: str = "none"
 
 
 def facts_of(located: Located, read: media.Read, original_language: str | None) -> FileFacts:
@@ -161,6 +163,7 @@ def facts_of(located: Located, read: media.Read, original_language: str | None) 
         error_code=read.error_code,
         release_group=parsed.group,
         edition=parsed.edition,
+        source_from=decision.source_from,
     )
 
 
@@ -386,6 +389,7 @@ def media_answer(row_id: int, file_name: str | None) -> dict[str, Any]:
         "name_quality": facts.name_quality,
         "languages": facts.languages,
         "error_code": facts.error_code,
+        "source_from": facts.source_from,
     }
 
 

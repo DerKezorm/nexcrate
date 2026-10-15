@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { URL_BASE } from './lib/base'
 
 import App from './App'
+import { CrashBoundary } from './components/CrashBoundary'
 import { AuthProvider } from './auth/AuthProvider'
 import { startI18n } from './i18n'
 import './styles/index.css'
@@ -13,9 +14,11 @@ function startApp(): void {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <BrowserRouter basename={URL_BASE || undefined}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <CrashBoundary scope="app">
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </CrashBoundary>
       </BrowserRouter>
     </StrictMode>,
   )
