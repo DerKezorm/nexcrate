@@ -2370,7 +2370,11 @@ export type DiskJob = {
 export type DiskOverview = { roots: DiskRoot[]; job: DiskJob | null; tmdb_ready: boolean }
 
 /** A video inside a scanned folder, largest first. `name_quality` is the quality its name gives, or null. */
-export type DiskVideo = { name: string; size_bytes: number; name_quality: string | null }
+/**
+ * `name_quality`: was beim Zuordnen gespeichert wuerde, bevor die Datei gelesen ist. `quality_by_type`: kein Name nennt
+ * eine Quelle, der Dateityp hat entschieden (wie Radarr: .mkv ist WEBDL). Fehlt bei Ordnern, die eine aeltere Fassung las.
+ */
+export type DiskVideo = { name: string; size_bytes: number; name_quality: string | null; quality_by_type?: boolean }
 
 /** How a proposal was found (decision 17). */
 export type ProposalFrom = 'companion' | 'name_number' | 'nfo_number' | 'title_year' | 'library'

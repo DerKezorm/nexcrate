@@ -113,7 +113,13 @@ export function FolderRow({ folder, actions, busy, kind = 'movie' }: { folder: D
             <p className="font-mono leading-5 wrap-anywhere text-mist-300">{video.name}</p>
             <p className="flex flex-wrap gap-x-2 text-mist-500">
               <span className="tabular-nums">{sizeText(t, video.size_bytes, language)}</span>
-              <span>{video.name_quality ? t('disk.row.nameQuality', { quality: video.name_quality }) : t('disk.row.noNameQuality')}</span>
+              <span>
+                {!video.name_quality
+                  ? t('disk.row.noNameQuality')
+                  : video.quality_by_type
+                    ? t('disk.row.typeQuality', { quality: video.name_quality })
+                    : t('disk.row.nameQuality', { quality: video.name_quality })}
+              </span>
               {more > 0 && <span>{t('disk.row.moreVideos', { count: more })}</span>}
             </p>
           </div>

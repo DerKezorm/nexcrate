@@ -70,7 +70,8 @@ class DiskFolder(Base):
     kind: Mapped[str] = mapped_column(String(16), default="folder")
     state: Mapped[str] = mapped_column(String(16), default="unknown", index=True)
     ignored: Mapped[bool] = mapped_column(Boolean, default=False)
-    #: The videos of the folder, largest first, at most 20: ``name``, ``size_bytes``, ``modified_at``, ``name_quality``.
+    #: The videos of the folder, largest first, at most 20: ``name``, ``size_bytes``, ``modified_at``,
+    #: ``name_quality``, ``quality_by_type``.
     videos: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     parsed_title: Mapped[str | None] = mapped_column(String(512), nullable=True)
     parsed_year: Mapped[int | None] = mapped_column(Integer, nullable=True)

@@ -130,7 +130,15 @@ class Video(BaseModel):
     name: str
     size_bytes: int
     modified_at: str | None = Field(default=None, description="UTC, ISO 8601.")
-    name_quality: str = Field(description="What the file name alone says, Unknown without a source or resolution.")
+    name_quality: str = Field(
+        description=(
+            "The quality assigning would record before the file is read, by Radarr's rules from the names of the video "
+            "and its folder. Folders read by an older version carry the name's own guess until they are read again."
+        )
+    )
+    quality_by_type: bool = Field(
+        default=False, description="True when no name names a source and the file type decided it (an .mkv is WEB-DL)."
+    )
 
 
 class Parsed(BaseModel):

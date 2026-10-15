@@ -26,7 +26,7 @@ from typing import Any
 
 from defusedxml import ElementTree as SafeElementTree
 
-from .. import companions, schreibweisen
+from .. import companions, media, schreibweisen
 from ..downloads import files
 from ..releases import parser as release_parser
 
@@ -95,7 +95,7 @@ class Candidate:
     path: Path
     #: ``file``, ``disc``, ``no_video``, ``unreadable``, or None for a movie folder the matching decides.
     fixed_state: str | None = None
-    #: Largest first, at most 20: name, size_bytes, modified_at, name_quality.
+    #: Largest first, at most 20: name, size_bytes, modified_at, name_quality, quality_by_type.
     videos: list[dict[str, Any]] = field(default_factory=list)
     #: Every video name found, for the library check, in NFC.
     video_names: set[str] = field(default_factory=set)
@@ -153,22 +153,29 @@ def _iso(timestamp: float) -> str:
     return datetime.fromtimestamp(timestamp, UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def video_entry(path: Path, size: int) -> dict[str, Any]:
+def video_entry(path: Path, size: int, folder_name: str | None = None) -> dict[str, Any]:
+    """One video of a candidate. Its quality is the one assigning would record before the file is read: by Radarr's
+    rules from the names, and where no name names a source from the file type (an .mkv is WEB-DL). The parser's own
+    guess for a bare resolution (HDTV) said something else than the dialog did."""
     try:
         modified = _iso(path.lstat().st_mtime)
     except OSError:
         modified = None
+    decision = media.quality_of(path.name, folder_name, None)
     return {
         "name": path.name,
         "size_bytes": int(size),
         "modified_at": modified,
-        "name_quality": release_parser.parse_movie(path.name).quality.name,
+        "name_quality": decision.quality,
+        "quality_by_type": decision.source_from == "extension",
     }
 
 
 def _fill_videos(candidate: Candidate, found: list[tuple[Path, int]]) -> None:
     ordered = sorted(found, key=lambda item: (-item[1], str(item[0])))
-    candidate.videos = [video_entry(path, size) for path, size in ordered[:MAX_VIDEOS]]
+    # As the dialog does: the names of the video and of its movie folder; a file without a folder has none.
+    folder_name = candidate.path.name if candidate.kind != "file" else None
+    candidate.videos = [video_entry(path, size, folder_name) for path, size in ordered[:MAX_VIDEOS]]
     for path, size in ordered:
         key = schreibweisen.nfc(path.name)
         candidate.video_names.add(key)

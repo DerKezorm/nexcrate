@@ -136,6 +136,7 @@
     "moreVideos_one": "and one more video",
     "moreVideos_other": "and {{count}} more videos",
     "nameQuality": "From the name: {{quality}}",
+    "typeQuality": "By file type: {{quality}}",
     "noNameQuality": "From the name: no quality",
     "companionMovie": "release.nex: {{title}}",
     "companionVersion_one": "Version {{labels}}",
