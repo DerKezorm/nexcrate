@@ -93,6 +93,7 @@ from .routers import v1 as v1_router
 from .routers import v1_back as v1_back_router
 from .routers import v1_pairing as v1_pairing_router
 from .routers import v1_round as v1_round_router
+from .routers import v1_search as v1_search_router
 from .routers import v1_write as v1_write_router
 from .routers import waiting as waiting_router
 from .routers import webhooks as webhooks_router
@@ -258,6 +259,10 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
     ),
     (totp_router.public_router, "The code step of the sign-in runs between the password and the session."),
     (discover_router.router, None),
+    (
+        v1_search_router.router,
+        "The contract for other programs: finding a title by its name to request it; the scope read is enough.",
+    ),
 ]
 
 # Background jobs, started in the lifespan. The first one takes an expired deep log mode back.
