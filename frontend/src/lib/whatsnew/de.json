@@ -472,6 +472,26 @@
       "small": [
         "Die Bibliothek der Schnittstelle bleibt dabei unverändert: die Übersicht steht nur beim einzelnen Titel, ihre Änderungsnummern wandern nicht."
       ]
+    },
+    "1.2.0": {
+      "lead": "Lingarr übersetzt Untertitel und kennt nur Radarr und Sonarr. nexcrate antwortet ihm jetzt als beides, so wie schon Bazarr.",
+      "sections": [
+        {
+          "title": "Lingarr (Beta)",
+          "body": "Lingarr liest Filme und Serien jetzt direkt aus nexcrate. Trag dafür in Lingarr unter Einstellungen, Integrationen statt Radarr und Sonarr die beiden Adressen ein, die nexcrate dir zeigt, mit einem Schlüssel nur mit „Lesen“. Jede Fassung ist dort ein eigener Eintrag. Getestet mit Lingarr 1.4.0.",
+          "where": "Einstellungen › System › Bazarr und Lingarr"
+        },
+        {
+          "title": "Untertitel gehen mit",
+          "body": "Einmal am Tag sieht nexcrate nach Untertiteln, die neben den Videos liegen. Was Lingarr oder Bazarr dort geschrieben hat, geht danach mit seinem Video: beim Umbenennen, bei einem Upgrade und beim Entfernen.",
+          "where": "Einstellungen › System › Bazarr und Lingarr"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Der Reiter „Bazarr“ heißt jetzt „Bazarr und Lingarr“; Schalter und Schlüssel gelten für beide.",
+        "Serien nennen Programmen, die nexcrate als Sonarr lesen, jetzt ihre Staffeln, und Folgen lassen sich je Staffel abfragen."
+      ]
     }
   }
 }

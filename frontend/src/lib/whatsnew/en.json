@@ -472,6 +472,26 @@
       "small": [
         "The interface's library stays as it is: the overview stands only with a single title, so its change numbers do not move."
       ]
+    },
+    "1.2.0": {
+      "lead": "Lingarr translates subtitles and only knows Radarr and Sonarr. nexcrate now answers it as both, as it already does for Bazarr.",
+      "sections": [
+        {
+          "title": "Lingarr (beta)",
+          "body": "Lingarr now reads movies and series straight from nexcrate. In Lingarr, under Settings, Integrations, enter the two addresses nexcrate shows you instead of Radarr and Sonarr, with a key that has nothing but read. Every version is an entry of its own there. Tested with Lingarr 1.4.0.",
+          "where": "Settings › System › Bazarr and Lingarr"
+        },
+        {
+          "title": "Subtitles come along",
+          "body": "Once a day nexcrate looks for subtitles next to the videos. What Lingarr or Bazarr wrote there then goes with its video: when it is renamed, upgraded or removed.",
+          "where": "Settings › System › Bazarr and Lingarr"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The tab Bazarr is now called Bazarr and Lingarr; the switch and the key work for both.",
+        "Series now name their seasons to programs that read nexcrate as Sonarr, and episodes can be asked for season by season."
+      ]
     }
   }
 }
