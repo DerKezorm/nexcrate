@@ -492,6 +492,20 @@
         "Der Reiter „Bazarr“ heißt jetzt „Bazarr und Lingarr“; Schalter und Schlüssel gelten für beide.",
         "Serien nennen Programmen, die nexcrate als Sonarr lesen, jetzt ihre Staffeln, und Folgen lassen sich je Staffel abfragen."
       ]
+    },
+    "1.2.1": {
+      "lead": "Ein kleines Release aus Issue #15: Lingarr nimmt jetzt den Schlüssel von nexcrate.",
+      "sections": [
+        {
+          "title": "Schlüssel für Lingarr",
+          "body": "Lingarrs Einstellungsseite nimmt nur einen Radarr- oder Sonarr-Schlüssel mit genau 32 Zeichen, die Schlüssel von nexcrate hatten 47. Lingarr lehnte sie deshalb mit „API Key must be 32 characters“ ab. Neue Schlüssel haben jetzt 32 Zeichen. Für Lingarr legst du einen neuen an, nur mit „Lesen“, und trägst ihn in beide Felder ein.",
+          "where": "Einstellungen › System › API-Schlüssel"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Schlüssel, die du schon hast, gelten überall weiter; nur ab jetzt angelegte sind kürzer."
+      ]
     }
   }
 }

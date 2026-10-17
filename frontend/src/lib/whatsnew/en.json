@@ -492,6 +492,20 @@
         "The tab Bazarr is now called Bazarr and Lingarr; the switch and the key work for both.",
         "Series now name their seasons to programs that read nexcrate as Sonarr, and episodes can be asked for season by season."
       ]
+    },
+    "1.2.1": {
+      "lead": "A small release from issue #15: Lingarr now takes nexcrate's key.",
+      "sections": [
+        {
+          "title": "Keys for Lingarr",
+          "body": "Lingarr's settings page only takes a Radarr or Sonarr key of exactly 32 characters, and nexcrate's keys had 47, so Lingarr refused them with API Key must be 32 characters. New keys now have 32 characters. To connect Lingarr, make a new key with nothing but read and enter it in both fields.",
+          "where": "Settings › System › API keys"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Keys you already have keep working everywhere; only keys made from now on are shorter."
+      ]
     }
   }
 }
