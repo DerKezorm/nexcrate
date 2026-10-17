@@ -6,8 +6,6 @@ Lidarr side by side.
 
 ![The library: movies with their versions and states](docs/screenshots/library-movies.png)
 
-Website: [nexcrate.nexapps.dev](https://nexcrate.nexapps.dev)
-
 The screenshots show a throwaway instance with public-domain movies, a few shows and artists,
 and made-up releases. On the Discover screenshot the list is a hand-picked set of public-domain
 silent films with their real TMDB data, in place of TMDB's answer of the day.
