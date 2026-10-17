@@ -203,7 +203,7 @@
     "inLingarr": "In Lingarr",
     "inLingarrIntro": "In Lingarr, under Settings, Integrations, enter these addresses for Radarr and for Sonarr instead of Radarr's and Sonarr's. When Lingarr runs in the same Docker network, the container name often fits better than this page's address.",
     "lingarrUrl": "URL",
-    "lingarrKey": "API key: the same as for Bazarr or one of its own with nothing but Read, the same in both fields.",
+    "lingarrKey": "API key: one with nothing but Read, the same in both fields. Lingarr takes only keys of 32 characters, as long as Radarr's. Keys made before nexcrate 1.2.1 are longer, so make a new one for Lingarr.",
     "lingarrPaths": "If Lingarr sees the media under other paths than nexcrate, enter a path mapping in Lingarr."
   },
   "signIn": {

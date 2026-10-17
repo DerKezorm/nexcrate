@@ -286,6 +286,8 @@ Lingarr picks up new movies and episodes on its next sync.
 - **Every version is an entry of its own**, as in Bazarr.
 - **Subtitles Lingarr writes** are found once a day and from then on go where the video goes.
 - **Paths:** if Lingarr sees the media elsewhere, set a path mapping in Lingarr.
+- **Key length:** Lingarr only takes keys of 32 characters. Keys made before nexcrate 1.2.1 are
+  longer, so make a new one for Lingarr.
 - **Beta:** tested against Lingarr 1.4.0. A Lingarr update may break it until nexcrate catches up.
 
 ## Run from source

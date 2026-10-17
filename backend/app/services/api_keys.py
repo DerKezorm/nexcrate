@@ -27,6 +27,9 @@ logger = logging.getLogger("nexcrate.api_keys")
 
 #: Every key starts with it, so a key found somewhere says where it belongs.
 PREFIX = "nxc_"
+#: As long as a key of Radarr or Sonarr: Lingarr's settings page takes no other length (issue #15). 21 random bytes
+#: are 28 characters of base64url, 168 bits. Keys made before 1.2.1 are longer and keep working.
+KEY_LENGTH = 32
 NAME_MAX_LENGTH = 100
 #: More keys than this nobody needs; the limit keeps a broken script from filling the table.
 KEYS_MAX = 50
@@ -40,8 +43,8 @@ _used: dict[int, datetime] = {}
 
 
 def new_key() -> str:
-    """``nxc_`` and 43 characters of base64url. Leaves the backend once, in the answer that created it."""
-    return PREFIX + secrets.token_urlsafe(32)
+    """``nxc_`` and 28 characters of base64url, 32 in all. Leaves the backend once, in the answer that created it."""
+    return PREFIX + secrets.token_urlsafe((KEY_LENGTH - len(PREFIX)) * 3 // 4)
 
 
 def clean_name(raw: str) -> str | None:

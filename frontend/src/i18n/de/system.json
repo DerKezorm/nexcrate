@@ -203,7 +203,7 @@
     "inLingarr": "In Lingarr",
     "inLingarrIntro": "In Lingarr unter Einstellungen, Integrationen bei Radarr und bei Sonarr diese Adressen eintragen, statt der von Radarr und Sonarr. Läuft Lingarr im selben Docker-Netz, passt oft der Containername statt der Adresse dieser Seite.",
     "lingarrUrl": "URL",
-    "lingarrKey": "API-Schlüssel: derselbe wie für Bazarr oder ein eigener, nur mit Lesen, in beiden Feldern derselbe.",
+    "lingarrKey": "API-Schlüssel: einer nur mit Lesen, in beiden Feldern derselbe. Lingarr nimmt nur Schlüssel mit 32 Zeichen, so lang wie die von Radarr. Schlüssel von vor nexcrate 1.2.1 sind länger, also für Lingarr einen neuen anlegen.",
     "lingarrPaths": "Sieht Lingarr die Medien unter anderen Pfaden als nexcrate, in Lingarr eine Pfadzuordnung eintragen."
   },
   "signIn": {
