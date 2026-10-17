@@ -24,7 +24,7 @@ const STORAGE_KEY = 'nexcrate.language'
 
 const LOADERS = import.meta.glob<{ default: Record<string, unknown> }>('./*/*.json')
 /**
- * Die Texte der gemeinsamen Anmeldung (Bauplan 04) kommen unveraendert aus `vendor/nexoidc` und stehen unter `oidc`.
+ * Die Texte der gemeinsamen Anmeldung kommen unveraendert aus `vendor/nexoidc` und stehen unter `oidc`.
  * `{{app}}` und `{{slug}}` darin sind immer nexcrate (`oidcVariables`). nexcrate hat ein Konto und keine Einladungen:
  * `oidcWording` setzt die Saetze fuer Apps mit einem Konto (`oidc.single`) und ohne Einladungen an die Stelle der
  * allgemeinen.

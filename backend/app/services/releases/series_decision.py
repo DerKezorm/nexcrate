@@ -50,7 +50,7 @@ Crime" carries no language of its own.
 **Below the target** (``below_target``) as for movies, plus ``below_target_in_group`` (decision 28): the release
 lies below the target resolution *and* shares a quality group with it. In TRaSH's German profiles 720p and 1080p
 lie in one group, where only the score decides, so a 720p Blu-ray of a top tier group replaces a 1080p WEB file.
-That is what the owner decided on 16.09.2026; the interface says so in its own words.
+The interface says so in its own words.
 """
 
 from __future__ import annotations

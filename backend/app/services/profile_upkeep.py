@@ -1,7 +1,7 @@
 """Stored profiles after a change of the questions or of the rules: rebuilt once on start.
 
-Step 2b retired a question and hid another one where it has no effect ("Changes after the
-owner's test"). A profile saved before keeps its old answers and the rules built from them. On 14.09.2026 the rules
+Step 2b retired a question and hid another one where it has no effect. A profile saved before keeps
+its old answers and the rules built from them. On 14.09.2026 the rules
 changed as well (``take_now`` at 2160p goes down to 1080p only, and the rules carry ``target_resolution``), which the
 builder marks with a higher ``rules_version``; stored rules without the field count as version 1.
 

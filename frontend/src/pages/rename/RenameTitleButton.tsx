@@ -11,7 +11,7 @@ import { skipText } from './renameText'
 import { useRenameJob } from './useRenameJob'
 
 /**
- * "Umbenennen" auf der Seite eines Films, einer Serie oder eines Albums (Antwort G1): das Fenster
+ * "Umbenennen" auf der Seite eines Films, einer Serie oder eines Albums: das Fenster
  * zeigt "vorher, nachher" dieses einen Titels und benennt auf Knopfdruck um. Ein Album bleibt in seinem Kuenstlerordner.
  */
 export function RenameTitleButton({ titleId, name, onRenamed }: { titleId: number; name: string; onRenamed?: () => void }) {

@@ -12,7 +12,7 @@ import { skipText, splits, unitSub } from './renameText'
 import { useRenameJob } from './useRenameJob'
 
 /**
- * Unterreiter "Umbenennen" unter "Ordner und Benennung" (Antwort G1): je Medienart die Vorschau
+ * Unterreiter "Umbenennen" unter "Ordner und Benennung": je Medienart die Vorschau
  * "vorher, nachher", Auswahl je Titel (Musik je Kuenstler), Bestaetigen, Fortschritt, Ergebnis und der letzte Lauf mit
  * "Rueckgaengig machen". Die Vorschau rechnet der Server im Hintergrund und behaelt sie bis zum naechsten Lauf.
  */

@@ -2,8 +2,8 @@
 (N39).
 
 **IMDb** hands out ``title.ratings.tsv.gz`` daily, for personal and non-commercial use, with a credit
-(``ATTRIBUTION``). Every installation fetches it itself; nexcrate never ships it. On by default (the owner's answer of
-21.09.2026), switched off under Settings, Online services: then nexcrate never reaches IMDb.
+(``ATTRIBUTION``). Every installation fetches it itself; nexcrate never ships it. On by default, switched off under
+Settings, Online services: then nexcrate never reaches IMDb.
 
 **Where it lies:** a SQLite file of its own, ``data/ratings/imdb.db``, built as a new file and put in place only when it
 is whole. The daily read never holds the lock of the main database (N37), and a failure leaves yesterday's values.

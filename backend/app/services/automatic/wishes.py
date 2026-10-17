@@ -2,9 +2,9 @@
 
 A program that requests a title with ``search_now``, or asks ``/api/v1/.../search``, sets ``titles.search_wish_at``.
 Since 22.09.2026 a wish searches **at once**, as "search automatically now" in nexcrate does, for movies, series and
-albums, **also with the automatic of its kind off** (the owner's answer): its own runner here, not the automatic's
+albums, **also with the automatic of its kind off**: its own runner here, not the automatic's
 order, budget, 80 percent stop or hourly cap. At most ``MAX_RUNNING`` wished searches run at the same time; the rest
-start right after, oldest wish first (the owner's choice of 22.09.2026, for a program that asks 50 titles at once).
+start right after, oldest wish first (for a program that asks 50 titles at once).
 Pauses of an indexer and all of its request limit still hold (``budget.rss_stop``), and so does its grab limit when
 loading. The search may then load with the switch off. After the search the wish is fulfilled; a title that wants
 nothing any more loses its wish.
@@ -26,9 +26,9 @@ from . import planning
 logger = logging.getLogger("nexcrate.automatic")
 
 #: The kinds a wish counts for: every kind since 22.09.2026 (albums waited before and were never searched with the
-#: music switch off, the owner's finding 21 in erfahrungen-nexbeat.md).
+#: music switch off).
 KINDS = ("movie", "series", "album")
-#: Wished searches at the same time; the rest start as one ends (the owner's answer of 22.09.2026).
+#: Wished searches at the same time; the rest start as one ends.
 MAX_RUNNING = 5
 JOB_NAME = "search_wishes"
 #: How often the runner looks for wishes; a request also starts it at once (``kick``).

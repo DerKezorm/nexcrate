@@ -76,7 +76,7 @@ TRACKS_MAX = 500
 class SeriesScope:
     """The scope under ``series`` (rule 4). ``seasons`` None means every season but the specials, unless episodes are
     named: then it is those episodes alone (Nexview's round of 25.09.2026). ``future_seasons`` None means: only the
-    whole series brings later seasons (the owner's answer of 25.09.2026)."""
+    whole series brings later seasons."""
 
     seasons: tuple[int, ...] | None = None
     future_seasons: bool | None = None
@@ -570,7 +570,7 @@ def _apply_request(title_id: int, definitions: list[int], payload: RequestIn, ca
         if search == "queued":
             from ..automatic import wishes as automatic_wishes
 
-            # At once, not with the automatic's order (the owner's answer of 22.09.2026).
+            # At once, not with the automatic's order.
             automatic_wishes.kick()
         notes = _notes(db, [rows[definition_id] for definition_id in definitions])
         if anime_waits:

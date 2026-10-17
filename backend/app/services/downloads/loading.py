@@ -76,7 +76,7 @@ CONFIRMABLE = ("not_fitting", "blocklisted", "no_gain")
 #: refusal names its short form as ``confirm``.
 CONFIRMED_BY_CODE = {f"release_{value}": value for value in CONFIRMABLE}
 #: Stored with ``not_fitting`` when the release the owner confirmed had a name that fits none of the movie's titles:
-#: the import then files it without asking again (the owner's decision of 26.09.2026).
+#: the import then files it without asking again.
 TITLE_MISMATCH = "title_mismatch"
 _LOAD_MESSAGES = {
     "version_fed_by_source": (

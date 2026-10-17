@@ -23,7 +23,7 @@ type Props = {
   versions: readonly TitleVersion[]
   /** Nach jeder Aenderung die Antwort des Servers, die Folgen enthaelt. */
   onChanged: (detail: TitleDetail) => void
-  /** "In den Papierkorb" fuer eine Datei ohne Folge, unklar oder ausgelassen (entschieden am 25.09.2026). */
+  /** "In den Papierkorb" fuer eine Datei ohne Folge, unklar oder ausgelassen. */
   onDeleteFiles?: (target: DeleteTarget) => void
 }
 

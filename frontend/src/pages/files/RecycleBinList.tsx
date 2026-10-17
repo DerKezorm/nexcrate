@@ -16,7 +16,7 @@ import { Loading } from './PatternFields'
 type Asked = { kind: 'purge'; entry: RecycleBinEntry } | { kind: 'empty' } | null
 
 /**
- * Was im Papierkorb liegt (Antwort 2): geloescht vom Besitzer oder von einem Programm mit
+ * Was im Papierkorb liegt: geloescht vom Besitzer oder von einem Programm mit
  * Schluessel. Zurueckholen legt die Datei an ihren alten Platz; endgueltig loeschen und leeren fragen vorher nach.
  * Ist der Titel oder die Fassung weg, legt Zurueckholen sie wieder an, ohne Ueberwachung. Nur was sich nicht wieder
  * anlegen laesst, kann bloss noch endgueltig geloescht werden.

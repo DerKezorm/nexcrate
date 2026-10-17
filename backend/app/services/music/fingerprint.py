@@ -3,7 +3,7 @@
 * **Only** for files that tags, position and name leave open, at most ``MAX_FILES`` per download.
 * ``fpcalc`` (Chromaprint, a package of the image) runs in a child process: an argument list, no shell, stdin closed, a
   small environment, a timeout. Without it: ``fpcalc_missing``, said on the settings page, never guessed.
-* **AcoustID** with the installation's own application key (the owner's answer of 18.09.2026, decision 41): stored
+* **AcoustID** with the installation's own application key (decision 41): stored
   encrypted, never in an answer or a log line. Without one, nexcrate's shipped key (``acoustid_app``, the owner's
   answer of 19.09.2026). A key is checked when it is stored (``check_key``). Without any key, with the switch off, or
   AcoustID not reachable, nothing is asked and the owner assigns by hand.

@@ -25,7 +25,7 @@ function decisionText(t: (key: string) => string, decision: string): string {
 }
 
 /**
- * Unter "Album abgelegt" im Verlauf (Wunsch des Besitzers, 19.09.2026): auf Klick, welche Datei des Downloads auf
+ * Unter "Album abgelegt" im Verlauf: auf Klick, welche Datei des Downloads auf
  * welchen Titel kam und wie. Liest `GET /api/downloads/{id}/album-files`, das auch fertige Downloads beantwortet.
  */
 export function AlbumFiledMapping({ downloadId }: { downloadId: number }) {

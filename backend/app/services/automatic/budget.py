@@ -239,7 +239,7 @@ def charge(standing: Standing, amount: float, now: datetime) -> None:
 
 
 def take_first(standing: Standing, cost: int, now: datetime) -> int | None:
-    """Take requests for a replacement, which goes ahead of the planned searches (the owner's decision of 27.09.2026).
+    """Take requests for a replacement, which goes ahead of the planned searches.
     Returns how many it took, or None when it has to wait.
 
     Without a known limit it never waits: it takes ``cost``, below zero down to ``floor``, and at the floor only what

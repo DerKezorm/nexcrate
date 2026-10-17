@@ -46,7 +46,7 @@ function takeReturn(): { error: string | null; code: boolean } {
  * (`login_throttled` mit `retry_after`). Die Seite zaehlt sie sichtbar herunter
  * und gibt den Knopf erst danach wieder frei, statt jeden Klick scheitern zu lassen.
  *
- * Aufbau wie in jeder nex-App (Bauplan 04): Passwortformular, darunter "oder", darunter je aktivem Anbieter ein Knopf
+ * Aufbau wie in jeder nex-App: Passwortformular, darunter "oder", darunter je aktivem Anbieter ein Knopf
  * in der Reihenfolge der Liste. Ist die Anmeldung mit Passwort aus, bleiben nur die Knoepfe; der Rueckweg ist dann
  * `NEXCRATE_PASSWORD_LOGIN=1`. Mit zweitem Faktor folgt auf das Passwort (oder einen Anbieter, dem der zweite Faktor
  * nicht anvertraut ist) der Code.

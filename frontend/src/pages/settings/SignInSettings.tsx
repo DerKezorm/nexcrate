@@ -30,14 +30,14 @@ import {
 const BLUEPRINT = withBase('/api/oidc/authentik/blueprint')
 
 /**
- * Einstellungen, System, Anmeldung: drei Karten untereinander wie in jeder nex-App (Bauplan 04). Aufbau, Reihenfolge
- * und Woerter kommen aus dem Bauplan (`oidc.*`), die Bauteile aus nexcrate.
+ * Einstellungen, System, Anmeldung: drei Karten untereinander wie in jeder nex-App. Aufbau, Reihenfolge
+ * und Woerter kommen aus dem gemeinsamen Modul (`oidc.*`), die Bauteile aus nexcrate.
  *
  * 1. Anmeldung: Anmeldung mit Passwort (an, solange kein aktiver Anbieter verknuepft ist), oeffentliche Adresse.
  * 2. Anmeldeanbieter: die Liste mit Marken und Ziehgriff, das Formular als Dialog.
  * 3. authentik in einem Schritt: Adresse, Token, Einrichten, Blueprint, die Schritte mit dem Grund eines Fehlers.
  *
- * nexcrate hat ein Konto (Bauplan 06): "Neue Personen bekommen ein Konto" fehlt im Formular, und der zweite Faktor
+ * nexcrate hat ein Konto: "Neue Personen bekommen ein Konto" fehlt im Formular, und der zweite Faktor
  * steht unter Konto.
  */
 export function SignInSettings() {
@@ -362,7 +362,7 @@ function sameIssuer(a: string, b: string): boolean {
   return a.trim().replace(/\/+$/, '') === b.trim().replace(/\/+$/, '')
 }
 
-/** Das Formular als Dialog, die Felder in der Reihenfolge des Bauplans. */
+/** Das Formular als Dialog, die Felder in der Reihenfolge der Anbieterliste. */
 function ProviderDialog({
   entry,
   address,

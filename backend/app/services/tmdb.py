@@ -631,7 +631,7 @@ EXTERNAL_TTL = timedelta(days=30)
 
 async def imdb_of(token: str, kind: str, tmdb_id: int) -> str | None:
     """The IMDb number TMDB knows for a movie or series (``/external_ids``), kept 30 days; None when there is none.
-    For ratings of titles outside the library (Nexview's wish of 24.09.2026). Raises ``TmdbError`` but for 404."""
+    For ratings of titles outside the library (as Nexview reads them). Raises ``TmdbError`` but for 404."""
     path = f"/{'movie' if kind == 'movie' else 'tv'}/{tmdb_id}/external_ids"
     try:
         data = await _cached(

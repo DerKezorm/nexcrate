@@ -1,7 +1,7 @@
 """Profiles for movies: the questions, the decision table, and the rules built from the answers.
 
-The approved contract is the design notes ("Questions", "Building the rules" and "Changes after the owner's
-test", which wins where they differ); Nexview's wizard is the groundwork for the tables. Same answers and same
+The approved contract is the design notes ("Questions" and "Building the rules",
+which wins where they differ); Nexview's wizard is the groundwork for the tables. Same answers and same
 TRaSH state give the same rules. A missing table row, profile, group or custom format is a loud
 ``ProfileBuildError``, never a fallback.
 
@@ -81,7 +81,7 @@ RESOLUTIONS = building.RESOLUTIONS
 MAX_GB_PER_HOUR = building.MAX_GB_PER_HOUR
 #: The version of the rules this builder writes. Stored rules without the field count as 1; a stored profile of the
 #: TRaSH state in use with a lower version is rebuilt on start (``services/profile_upkeep.py``).
-#: * 2 (14.09.2026, after the owner's test of step 2c): ``take_now`` at 2160p goes down to 1080p only, and the rules
+#: * 2 (14.09.2026): ``take_now`` at 2160p goes down to 1080p only, and the rules
 #:   carry ``target_resolution``.
 RULES_VERSION = 2
 #: The lower resolutions ``take_now`` adds, by target resolution: the next lower one only.
@@ -91,7 +91,7 @@ QUALITIES = building.MOVIE_QUALITIES
 
 #: Ids of questions that were asked once. Stored answers and imported files may still carry them; normalization
 #: drops them without an error, whatever their value, and the schema stays 1.
-#: * ``regional_groups`` ("prefer German release groups"), retired 13.09.2026 after the owner's test of step 2b.
+#: * ``regional_groups`` ("prefer German release groups"), retired 13.09.2026.
 #:   It changed no score in any answer set: TRaSH's German profiles already carry the German tier formats, and
 #:   the answer only added formats that can never apply at the allowed qualities.
 RETIRED_QUESTIONS = frozenset({"regional_groups"})

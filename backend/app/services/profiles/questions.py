@@ -1,8 +1,7 @@
 """Questions of a profile wizard and their answers, for every kind.
 
 The wizard in the interface renders the list the server sends, so a new kind needs questions here and texts
-in the frontend, not a new wizard. The shapes are the contract of the design notes, "Questions" and
-"Changes after the owner's test":
+in the frontend, not a new wizard. The shapes are the contract of the design notes, "Questions":
 
 * ``choice`` has ``options``, ``boolean`` has none, ``languages`` has ``codes`` and ``roles``, ``number`` has
   ``min``, ``max`` and ``nullable``.

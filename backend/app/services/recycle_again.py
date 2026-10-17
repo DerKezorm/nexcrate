@@ -1,5 +1,4 @@
-"""Putting a file back whose title or version left the library: they are added again first (the owner's decision of
-26.09.2026).
+"""Putting a file back whose title or version left the library: they are added again first.
 
 A program that takes back what it brought, the interface's "remove", removing several titles at once: each may leave a
 title's files in the recycle bin while the title itself goes. Restoring such a file adds the title again from TMDB (an

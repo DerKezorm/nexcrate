@@ -1,6 +1,5 @@
 """Backups: made by hand, on a schedule and before a schema change; downloaded as an encrypted archive; restored at
-the next start (the owner's wish of 24.09.2026: "Backup und Restore wie bei Nexview, gleiches look and feel",
-the design notes).
+the next start.
 
 Built after Nexview's ``services/sicherung.py``, with its lessons:
 
@@ -57,7 +56,7 @@ AUTOMATIC_KINDS = (SCHEDULED, UPDATE)
 KEEP_DEFAULT = 5
 KEEP_MIN, KEEP_MAX = 2, 50
 SCHEDULES = ("off", "daily", "weekly", "monthly")
-#: The owner's answer of 24.09.2026: weekly, at night.
+#: Weekly, at night.
 SCHEDULE_DEFAULT = "weekly"
 SETTING_SCHEDULE = "backup_schedule"
 SETTING_KEEP = "backup_keep"

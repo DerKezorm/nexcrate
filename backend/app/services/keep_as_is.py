@@ -1,4 +1,4 @@
-"""What an import brought is not upgraded (the owner's wish of 24.09.2026).
+"""What an import brought is not upgraded.
 
 The takeover of a Radarr, Sonarr or Lidarr connection and the page "Ordner" offer "keep what is there as it is"
 (``keep_as_is``). It does what the owner did by hand for his whole library that morning, only for what the import

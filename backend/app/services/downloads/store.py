@@ -523,7 +523,7 @@ def pending_downloads(db: OrmSession, title_id: int) -> list[Download]:
     """The title's downloads still in their client and not filed away: queued to importing, or a problem (hints too).
 
     ⚠️ One place for this set: removing a title or a version checks and removes exactly these, and the library counts
-    them per version as ``pending_downloads`` ("Changes after the owner's live test", B).
+    them per version as ``pending_downloads``.
     """
     return list(
         db.scalars(

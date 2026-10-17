@@ -11,7 +11,7 @@ stdout and nothing else.
 * A failure gives ``{"ok": false, "reason": ..., "error": <exception class or null>}``, ``reason`` being ``encrypted``,
   ``incomplete``, ``unsupported``, ``unsafe`` or ``broken``.
 
-Kinds, as measured on 14.09.2026 (session fact file ``unpacking.md``):
+Kinds, as measured on 14.09.2026:
 
 * ``rar``: rarfile with the tool ``unrar`` only, in the image the free ``unrar-free``. rarfile would otherwise fall back
   to bsdtar or 7z, which unpack RAR wrongly or not at all. ``needs_password()`` also catches encrypted headers, where

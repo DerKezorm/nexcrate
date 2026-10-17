@@ -444,7 +444,7 @@ GIL_SWITCH_SECONDS = 0.0005
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     logs.setup()
     sys.setswitchinterval(GIL_SWITCH_SECONDS)
-    # A backup laid out by /api/backups/restore is swapped in before anything opens the database (plan-sicherung).
+    # A backup laid out by /api/backups/restore is swapped in before anything opens the database.
     try:
         restored = backups.apply_pending()
     except Exception:

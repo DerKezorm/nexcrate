@@ -6,11 +6,11 @@ The movie search of step 2c runs the indexers; this module gives it the series' 
 
 **Scope.** ``series`` searches every regular season in which a version watches an aired episode, plus the watched
 specials one by one (decision 19). When no version watches an aired episode, it searches every regular season that
-has aired, so the owner sees what exists; nothing is taken then, as nothing is watched (changed after the owner's test,
-16.09.2026). ``season`` searches one TMDB season, ``episode`` one episode.
+has aired, so the owner sees what exists; nothing is taken then, as nothing is watched (since 16.09.2026).
+``season`` searches one TMDB season, ``episode`` one episode.
 
 **One release twice:** an indexer that lists the same release under two ids (same name, same size) shows it once, the
-newest of them (the owner's decision, 16.09.2026).
+newest of them.
 
 **Queries** per indexer and target, as Sonarr builds them (decisions 16 to 22):
 
@@ -54,7 +54,7 @@ The number asked is the scene's count through when the episode has one, else the
 (``SceneAbsoluteEpisodeNumber ?? AbsoluteEpisodeNumber``, measured at the bench on 23.09.2026: Frieren's S02E02 is
 asked as ``02`` with the scene names of season 2, not as 30; the design notes, B6).
 
-**A pack for a few episodes** (the owner's answer of 17.09.2026): a season pack that would bring fewer than half of its
+**A pack for a few episodes**: a season pack that would bring fewer than half of its
 episodes gives way to releases of fewer episodes ranked after it, when those bring every one of them and are no worse:
 the same quality or better, and the same score or more once the pack's bonus for being one ("Season Pack") is left out.
 Without such releases the pack stays. The decision names the packs left out (``packs_left_out``). Sonarr asks for a
@@ -943,7 +943,7 @@ def _smaller_instead(
     later: list[tuple[_Candidate, list[int]]],
     by_type: frozenset[str],
 ) -> bool:
-    """Whether a pack gives way to smaller releases (the owner's answer of 17.09.2026): it brings fewer than half of its
+    """Whether a pack gives way to smaller releases: it brings fewer than half of its
     episodes, and releases ranked after it that are no pack, of the same quality or better and with the same score or
     more once the pack's bonus for being one is left out, bring every one of them. Otherwise the pack stays."""
     if len(new) * 2 >= size:

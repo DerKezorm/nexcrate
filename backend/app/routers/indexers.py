@@ -1487,7 +1487,7 @@ async def create_from_source(payload: FromSourceIn) -> Indexer:
     existing = await asyncio.to_thread(_indexer_with_url, url)
     categories = [category for category in found.categories if 1 <= category <= CATEGORY_MAX_ID]
     if source.app == "lidarr":
-        # Music videos and audiobooks stay out, as in the default from the caps (the owner's answer, 19.09.2026).
+        # Music videos and audiobooks stay out, as in the default from the caps.
         categories = [category for category in categories if category not in album_search.LEFT_OUT_CATEGORIES]
     categories = categories[:CATEGORIES_MAX]
     # Sonarr's anime categories, as Sonarr keeps them per indexer (empty unless the user or Prowlarr filled them).

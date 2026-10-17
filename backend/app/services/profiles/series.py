@@ -9,7 +9,7 @@ What differs from movies
   answer could add nothing (decision 6).
 * **Resolution** starts at 1080p and **source** offers WEB and Remux only. TRaSH has no series profile of Blu-ray
   encodes and WEB for anything but German, where "HD Bluray + WEB" *is* the WEB profile: German with ``web``
-  keeps Blu-ray encodes allowed, as TRaSH means it (decision 7, the owner's answer of 16.09.2026). Movies have
+  keeps Blu-ray encodes allowed, as TRaSH means it (decision 7). Movies have
   their own ``encodes`` answer and therefore forbid them under ``web``; series have no such answer.
 * **Streaming services** are not a question: General, UK, Miscellaneous and Dutch (+75 each) and the HD/UHD
   Streaming Boost are in every profile that TRaSH's ``include`` names, Asian stays the detailed question, because
@@ -24,9 +24,9 @@ What differs from movies
 
 Anime (A4)
 ------------------------------
-Every series profile carries a second set of rules under ``anime``, which judges the version's anime series (the
-owner's answer of 22.09.2026: every version can do anime, nothing to reorder). It is built from TRaSH's anime profile
-of the family: ``[Anime] Remux-1080p``, or ``[German] Anime HD Bluray + WEB`` when German is among the languages.
+Every series profile carries a second set of rules under ``anime``, which judges the version's anime series
+(every version can do anime, nothing to reorder). It is built from TRaSH's anime profile of the family:
+``[Anime] Remux-1080p``, or ``[German] Anime HD Bluray + WEB`` when German is among the languages.
 TRaSH has anime at 1080p only, so the anime rules aim at 1080p whatever the resolution answer says; ``take_now``,
 ``good_enough``, the size limit and the detailed answers where TRaSH's groups list the anime profile count as for the
 series. The languages do not: TRaSH's anime profiles ask for no language and score them with their own formats

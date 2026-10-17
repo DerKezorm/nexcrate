@@ -53,7 +53,7 @@ type Column = keyof typeof COLUMNS
 
 /**
  * Bei Serien stehen nur diese Spalten neben Release; alles andere steht unter dem Namen. Namen von Serien-Releases
- * sind lang, und in schmalen Spalten brach er auf vier Zeilen um (Test des Besitzers, 16.09.2026).
+ * sind lang, und in schmalen Spalten brach er auf vier Zeilen um.
  */
 const SERIES_COLUMNS: readonly Column[] = ['rank', 'score', 'result']
 

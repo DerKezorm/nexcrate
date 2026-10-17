@@ -193,7 +193,7 @@ async def request_artist(raw: str, scope: ArtistScope, search_now: bool, origin:
             if search == "queued":
                 from ..automatic import wishes as automatic_wishes
 
-                # At once, not with the automatic's order (the owner's answer of 22.09.2026).
+                # At once, not with the automatic's order.
                 automatic_wishes.kick()
             definition = music_store.definition(db)
             notes = writing._notes(db, [definition]) if definition is not None else []

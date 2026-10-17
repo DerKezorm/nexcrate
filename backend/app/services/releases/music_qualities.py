@@ -1,5 +1,4 @@
-"""The quality steps of music (part M2.2, decisions 10 to 12; the owner chose five steps on
-18.09.2026).
+"""The quality steps of music (part M2.2, decisions 10 to 12).
 
 Five steps, best first, and ``unknown``. MP3 320 and V0 are one step: both are transparent to the ear, and a name
 that says "320" is not better than one that says "V0" (research a). FLAC, ALAC, WAV, APE and WavPack are all

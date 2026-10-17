@@ -1,7 +1,7 @@
 """The MusicBrainz client (M1.1): one gate for every request in the process.
 
 MusicBrainz allows about one request per second per address and refuses every request, not just the surplus, when
-a client exceeds it (measured 16.09.2026, planungsgrundlage-musik.md, c). So there is exactly one gate here, shared
+a client exceeds it (measured 16.09.2026). So there is exactly one gate here, shared
 by every thread and event loop: at least ``PACE_SECONDS`` between two requests, never two at once, and a request
 of the owner (``OWNER`` lane: a search, a preview, an album page) takes the next free slot before any background
 request (``BACKGROUND`` lane: loading and refreshing artists), decisions 12 and 13.

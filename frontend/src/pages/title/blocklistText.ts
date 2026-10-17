@@ -25,7 +25,7 @@ export function blockReasonText(t: TFunction, reason: string): string {
 /**
  * Warum ein Download fehlgeschlagen ist, im Verlauf des Titels: Dort steht der Grund als Code im Detail eines
  * `failed`. Die bekannten Gruende sagen dasselbe wie in der Sperrliste. Ein unbekannter bekommt einen allgemeinen
- * Satz, nie den rohen Code (gefunden in der Sichtpruefung gegen den echten Server, 14.09.2026).
+ * Satz, nie den rohen Code.
  */
 export function failureReasonText(t: TFunction, code: string): string {
   switch (code) {

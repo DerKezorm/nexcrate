@@ -21,7 +21,7 @@ the design notes, C1, C4, C6, C8, decisions 1, 6 to 10, 13 and 14.
    its title queries, fresh caps 1 more. Taking is all or none: when one bucket is short, what was taken is given back
    and the title waits, reason ``limit``, until the latest time a short bucket holds its requests; with every indexer
    left out, until the first stop point ends. Without any indexer for automatic search the titles stay due. **A
-   replacement goes first in the budget** (the owner's decision of 27.09.2026): at an indexer without a known limit it
+   replacement goes first in the budget**: at an indexer without a known limit it
    waits for no bucket, only for the stop points; its requests are taken below zero, so the planned searches after it
    wait for them. At an indexer with a known limit (its ``apiMax`` or the owner's daily limit) it never goes below
    zero: it takes first what the bucket holds, and while it waits, the planned searches wait behind it. Programs'
@@ -297,7 +297,7 @@ def start_due(now: datetime, kinds: Collection[str] = ("movie",)) -> int:
                             Title.next_search_at <= now,
                             Title.next_search_reason.in_(planning.SEARCHING_REASONS),
                         ),
-                        # A replacement after a failure also with the switch off (the owner's answer of 22.09.2026).
+                        # A replacement after a failure also with the switch off.
                         and_(Title.next_search_at <= now, Title.next_search_reason == "replacement"),
                     )
                 )
@@ -485,7 +485,7 @@ def _wait_for_limit(title_id: int, until: datetime) -> None:
 
 def usable_now(rows: list[Indexer], now: datetime, *, switch: bool) -> list[int]:
     """The indexers a search at once asks: not paused. A program's wish (``switch`` False) also leaves out an indexer
-    whose whole request limit is used (``budget.rss_stop``): its limits still hold (the owner's answer, 22.09.2026)."""
+    whose whole request limit is used (``budget.rss_stop``): its limits still hold."""
     found = []
     for row in rows:
         if row.paused_until is not None and row.paused_until > now:
@@ -598,7 +598,7 @@ def _load(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> di
     title_id = search.title_id
     with SessionLocal() as db:
         # A program's wish may load with the switch off (answer 3).
-        # A replacement after a failure too (the owner's answer of 22.09.2026, as Radarr's "Redownload failed").
+        # A replacement after a failure too (as Radarr's "Redownload failed").
         enabled = settings.load_enabled(db) or wishes.wished(db, title_id) or search.origin == "replacement"
         fact = planning.load_facts(db, [title_id], now).get(title_id)
     wanting = {version.definition_id: version for version in (fact.versions if fact else ()) if version.wants}

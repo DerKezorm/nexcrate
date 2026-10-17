@@ -33,7 +33,7 @@ export const SERIES_PATTERNS: readonly (keyof SeriesNamingPatterns)[] = ['series
 /** Was der Besitzer im Ergebnis einer Pruefung angehakt hat. Die Bestaetigungen beginnen leer. */
 export type TakeoverChoices = { missing: boolean; queue: boolean; naming: boolean; folder: boolean; keep: boolean }
 
-/** `keep` ab Werk an (entschieden am 24.09.2026): eine Uebernahme soll keine Welle von Verbesserungen ausloesen. */
+/** `keep` ab Werk an: eine Uebernahme soll keine Welle von Verbesserungen ausloesen. */
 export const DEFAULT_CHOICES: TakeoverChoices = { missing: false, queue: false, naming: true, folder: true, keep: true }
 
 /** Selbst gewaehlte Ordner: Stammordner in Radarr auf den Ordner, unter dem nexcrate ihn sieht. */

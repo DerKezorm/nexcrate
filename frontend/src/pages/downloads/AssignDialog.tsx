@@ -47,7 +47,7 @@ const DECISION_KEYS: Record<string, string> = {
  * Seit der Durchsicht: Abgelegt wird nur, was eine Folge hat; die uebrigen Dateien bleiben offen fuer spaeter. Beim Verdacht
  * auf eine andere Serie und bei einem Paket, das anders zaehlt als TMDB, ist nichts vorgewaehlt. Eine Doppelfolge geht nur
  * ganz. Ist eine Datei nicht besser als die vorhandene, fragt der Dialog einmal nach, auch "Nur die anderen ablegen".
- * Dateien ohne lesbaren Namen bekommen Folgen nur auf Knopfdruck (Antwort des Besitzers vom 17.09.2026).
+ * Dateien ohne lesbaren Namen bekommen Folgen nur auf Knopfdruck.
  *
  * Seit 09.10.2026: Traegt eine Datei den Namen einer Folge, ist diese vorgewaehlt ("nach Folgenname"). Zaehlt das Paket
  * anders, nimmt der Knopf den Vorschlag statt der rohen Nummern. Neben jeder Datei steht der Name der gewaehlten Folge,

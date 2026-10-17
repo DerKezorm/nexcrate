@@ -26,7 +26,7 @@ function takeReturn(): { linked: string | null; error: string | null } {
 }
 
 /**
- * Mein Konto, Sicherheit, Anmeldeanbieter (Bauplan 04): je aktivem Anbieter eine Zeile mit Zustand und "Verknuepfen"
+ * Mein Konto, Sicherheit, Anmeldeanbieter: je aktivem Anbieter eine Zeile mit Zustand und "Verknuepfen"
  * oder "Loesen". Verknuepfen fragt das Passwort noch einmal; danach geht es zum Anbieter und zurueck hierher.
  */
 export function MyProviders() {

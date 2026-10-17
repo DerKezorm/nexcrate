@@ -8,8 +8,7 @@ back the ``versions`` and ``releases`` parts of the ``Search`` answer ("API").
   and is not evaluated.
 * A release that belongs by its number while the title read from its name fits none of the movie's names
   (``matching.title_fits``) keeps ``title_mismatch`` with that title and year, and every version with a profile rejects
-  it as ``title_mismatch``: the automatic never takes it, the owner loads it after a question (the owner's decision
-  of 26.09.2026).
+  it as ``title_mismatch``: the automatic never takes it, the owner loads it after a question.
 * A release that belongs is evaluated for every version with a profile: the title's original language and runtime,
   the release size, its indexer flags, the version's file and the MULTi languages. A torrent with known seeders below
   its indexer's minimum also gets ``not_enough_seeders`` and does not fit, a Usenet release older than the news

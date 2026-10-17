@@ -11,7 +11,7 @@ The rules
   ``target``, ``for_now`` (taken while nothing of the target is there, the file counts as one to be replaced),
   ``waits`` (not the target, and ``take_now`` is off) or ``never``. Mid and low lossy are never taken.
 * ``target_floor``: the worst step that still is the target. A file below it can be improved.
-* ``hires`` and ``source`` only order releases, they never shut one out (the owner's answer of 18.09.2026: 86 % of
+* ``hires`` and ``source`` only order releases, they never shut one out (86 % of
   the measured releases are WEB, "CD only" would lock nearly everything out).
 * Fixed and said, no question (decision 14): an album as one file with a cue sheet, several albums in one release
   and audiobooks are refused by ``releases/music_decision.py``.

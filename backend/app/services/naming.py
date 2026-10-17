@@ -9,10 +9,10 @@ Radarr is used, only its behaviour, as in ``releases/parser.py``:
   ``...``, ``:-N`` keeps the end. ``{imdb-{ImdbId}}``, ``{tmdb-{TmdbId}}`` and ``{edition-{Edition Tags}}`` keep their
   braces around the value and vanish without one.
 * **Filling:** title, original title and year from the title; edition, proper and group from the release name. Quality,
-  codec, HDR type and audio of a filed file from its media data as Radarr names them (the owner's answer of
-  17.09.2026): the codec spelled x264 or x265 when the file's encoder says so, else as the release name spells it; 3D
-  from the release name. Without media data all of it from the release name, and media info tokens stay empty where
-  the name says nothing. Media data an Arr handed over (its own flat shape) counts as media data, and its spelling of
+  codec, HDR type and audio of a filed file from its media data as Radarr names them: the codec spelled x264
+  or x265 when the file's encoder says so, else as the release name spells it; 3D from the release name. Without
+  media data all of it from the release name, and media info tokens stay empty where the name says nothing. Media
+  data an Arr handed over (its own flat shape) counts as media data, and its spelling of
   the codec is kept. ``{Release Group}`` is the one stored with the file when the release name gives none, and empty
   when both do (Radarr writes "Radarr" there).
 * **Characters:** ": " becomes " - " and any other colon "-"; backslash and slash "+", "?" "!", "*" "-", and ``< > |``
@@ -594,8 +594,8 @@ def _arr_codec(video: dict[str, Any]) -> str:
 
 
 def file_media_facts(media: dict[str, Any], masked: str) -> dict[str, str]:
-    """The same tokens as ``media_facts``, from the file's media data as Radarr and Sonarr name them (the owner's answer
-    of 17.09.2026): codec, HDR type and the first audio stream's codec and channels. The media data knows no 3D; the
+    """The same tokens as ``media_facts``, from the file's media data as Radarr and Sonarr name them:
+    codec, HDR type and the first audio stream's codec and channels. The media data knows no 3D; the
     release name says it."""
     video = media.get("video") if isinstance(media.get("video"), dict) else {}
     tracks = [track for track in (media.get("audio") or []) if isinstance(track, dict)]

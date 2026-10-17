@@ -9,7 +9,7 @@ that fits a title decides. A rule looks at one thing of the title:
 * ``tag``: one of the title's tags, by id.
 * ``series_type``: ``standard``, ``daily`` or ``anime``; series only.
 
-The owner's answer: rules hold for new titles only. They are read where the folder is chosen today, when the first file
+Rules hold for new titles only. They are read where the folder is chosen today, when the first file
 of a version is filed (``downloads/importing.py``, ``series_import``); a version with a file stays where it lies.
 
 **Moving by the rules** (M2, the owner's button "Nach Regel umziehen"): ``relocations`` lists every title of the version

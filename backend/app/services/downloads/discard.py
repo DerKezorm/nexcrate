@@ -17,7 +17,7 @@ its client's to delete.
   a foreign job, points at the same folder (``shared``): an old download the client lost and a new one of the same
   release name share it.
 * **Deleting** never follows a link: ``rmtree`` removes a link inside the job, not what it points to.
-* **A broken archive** (``broken_reason``, the owner's decision of 26.09.2026): a finished download whose archive is
+* **A broken archive** (``broken_reason``): a finished download whose archive is
   certainly broken fails as a failure its client reported would, as in Radarr: volumes are missing by their names (the
   problem ``packed`` with ``incomplete`` and ``volumes_missing``, see ``unpacking``) or it wants a password
   (``encrypted``). The release goes on the blocklist, the history

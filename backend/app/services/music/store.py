@@ -105,7 +105,7 @@ def definition(db: OrmSession) -> VersionDefinition | None:
 
 
 def incomplete(version: Version) -> bool:
-    """An album with files that lacks tracks of its target release (the owner's answer of 19.09.2026)."""
+    """An album with files that lacks tracks of its target release."""
     counts = version.track_counts or {}
     wanted = counts.get("wanted") or 0
     return bool(version.has_file) and wanted > 0 and (counts.get("present") or 0) < wanted
@@ -955,7 +955,7 @@ def refresh_targets_of_title(db: OrmSession, title: Title, *, moment: datetime, 
         refresh_target(db, title, version, moment=moment, language=language)
 
 
-#: The state an artist row shows, most pressing first (the owner's answer of 20.09.2026).
+#: The state an artist row shows, most pressing first.
 ROW_STATES = ("problem", "downloading", "wanted", "incomplete", "upgrade")
 
 

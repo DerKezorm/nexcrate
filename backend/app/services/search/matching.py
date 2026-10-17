@@ -15,7 +15,7 @@ Decisions taken here:
   fits but whose year is two or more years off. Radarr tries the name in that case; the plan does not.
 * With numbers, a title without a year accepts any year.
 
-**The name against the number** (``title_fits``, the owner's decision of 26.09.2026: never automatically). An indexer
+**The name against the number** (``title_fits``: never automatically). An indexer
 may list a release under the wrong movie's number, and a movie of that number would be replaced by another movie, as in
 Radarr. A release that belongs by its number still belongs, but when the title read from its name fits none of the
 movie's names, the search marks it ``title_mismatch``: the automatic never takes it, the owner may. The import checks
@@ -28,17 +28,15 @@ numbers as digits, and without a trailing edition or release tag ("Extended", "D
 * equals a title or the original title,
 * or equals an alternative or translated title from TMDB (stored as keys, without their language) or from Radarr (whose
   alternative titles come from TMDB; nexcrate keeps no alias of the owner's own for a movie), but only with a year in
-  the name that fits the movie's: TMDB lists the name of a whole series as a translation of its first movie (the
-  owner's decision of 27.09.2026),
+  the name that fits the movie's: TMDB lists the name of a whole series as a translation of its first movie,
 * or one part of such a title split at a colon, a dash, a slash or a bracket ("Example Hunters – Die Beispieljäger" is
   "Example Hunters" and "Die Beispieljäger"), but only with a year in the name that fits the movie's (at most one
-  off, as for the number): a part alone is often the name of another movie of the series (the owner's decision of
-  26.09.2026),
+  off, as for the number): a part alone is often the name of another movie of the series,
 * or such a title with one number put in or left out inside it ("Examplezilla 2 King of the Examples" for
   "Examplezilla: King of the Examples"), never at its end: "Example 2" is not "Example",
 * or such a title of at least two words followed by more words (a subtitle the title lacks), but only with a year in
-  the name that fits the movie's, as the name of a series with the subtitle of another of its movies looks the same
-  (the owner's decision of 27.09.2026); never by fewer words: "The Example" is not "The Example Circle",
+  the name that fits the movie's, as the name of a series with the subtitle of another of its movies looks the same;
+  never by fewer words: "The Example" is not "The Example Circle",
 * or such a title followed by the part number 1 ("Example Harry 1", "Example Harry I", "Example Harry Part 1"),
 * or the movie's names one after the other, each whole or as a part, each with or without a leading article: an
   original title followed by the German one, "Zehn - Ten - T3n", or "Examplia Preis der Beispiele" for "Examplia -

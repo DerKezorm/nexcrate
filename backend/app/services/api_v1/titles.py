@@ -382,8 +382,8 @@ def items(db: OrmSession, title_ids: Iterable[int]) -> dict[int, dict[str, Any]]
     rows = list(
         db.execute(select(*TITLE_COLUMNS).where(Title.id.in_(title_ids_wanted), Title.kind.in_(TITLE_KINDS), NAMEABLE))
     )
-    # A series lists its seasons everywhere, so the change marker moves when only a season changed (Nexview's wish of
-    # 24.09.2026): the marker hashes exactly what is listed.
+    # A series lists its seasons everywhere, so the change marker moves when only a season changed:
+    # the marker hashes exactly what is listed.
     seasons, series_oldest = _seasons_many(db, [row.id for row in rows if row.kind == "series"], public)
     versions = _versions_of(db, title_ids_wanted, public, series_oldest)
     albums = _album_blocks(db, [row for row in rows if row.kind == "album"])
@@ -529,7 +529,7 @@ def _seasons_many(
 
     Size and date count each file once: one file that holds two episodes, and both halves of a double episode TMDB
     lists as one. A season with a file of unknown date has no date: a guessed one would make
-    an old season look new (Nexview's wish of 24.09.2026, as it reads Sonarr's oldest ``dateAdded``).
+    an old season look new (Nexview reads Sonarr's oldest ``dateAdded``).
     """
     found: dict[int, list[dict[str, Any]]] = {}
     oldest_of_version: dict[int, datetime | None] = {}

@@ -3,7 +3,7 @@
 nexcrate knows the album from loading; tags and folder names decide only the release and the order, never whether a
 download is refused (research A4). Everything comes from the database; nothing asks MusicBrainz (research A10).
 
-**A file is clear** (decision 10, the owner's choice E3 (b)) when exactly one track of the release fits and no other
+**A file is clear** (decision 10) when exactly one track of the release fits and no other
 file claims the same track, by one of these ways:
 
 * ``id``: the recording or release track id of its tags. Beats the other ways: a file with the right id and a wrong

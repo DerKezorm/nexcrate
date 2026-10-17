@@ -260,7 +260,7 @@ def album_folder_name(current: MusicNaming, album: AlbumFacts, addition: str | N
     )
 
 
-#: Which album keeps the plain folder name when several share it (the owner's answer G2 in the design notes).
+#: Which album keeps the plain folder name when several share it.
 TYPE_RANK = {"album": 0, "ep": 1, "single": 2, "broadcast": 3, "other": 4}
 
 

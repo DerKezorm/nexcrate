@@ -1,5 +1,4 @@
-"""Upgrades held back: paused for what was there before, and at most so many a day (the owner's wish of 24.09.2026,
-the design notes).
+"""Upgrades held back: paused for what was there before, and at most so many a day (the design notes).
 
 An owner's SABnzbd had loaded upgrades of files already there for two days. Two settings bound the automatic upgrades:
 

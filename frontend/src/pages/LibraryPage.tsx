@@ -72,8 +72,8 @@ export function LibraryPage() {
   const navigationType = useNavigationType()
   // ⚠️ Was die Seite zeigt, steht im Zustand und von dort in der Adresse, nicht umgekehrt.
   // Der Router schreibt die Adresse als Transition, einen Schritt spaeter. Baut die zweite von
-  // zwei schnellen Aenderungen auf der Adresse auf, geht die erste verloren: In der
-  // Sichtpruefung am 13.09.2026 verschwand so die Sortierung beim Klick auf "Mehr laden".
+  // zwei schnellen Aenderungen auf der Adresse auf, geht die erste verloren: So
+  // verschwand die Sortierung beim Klick auf "Mehr laden".
   const [address, setAddress] = useState<LibraryAddress>(() => readAddress(params))
   const { kind, sort } = address
   const stateFilter = address.state

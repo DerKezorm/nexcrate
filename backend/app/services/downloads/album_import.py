@@ -562,7 +562,7 @@ def _covered(context: Context, track_ids: Iterable[int]) -> int:
 def split_completing(
     context: Context, current: list[CurrentFile], fresh: list[Planned]
 ) -> tuple[list[Planned], list[Planned], list[CurrentFile]]:
-    """Which new files complete the album and which replace what it has (the owner's answer of 19.09.2026).
+    """Which new files complete the album and which replace what it has.
 
     Returns ``(adds, swaps, old)``: ``adds`` are files for a song the album has no file of (and files without a
     track), ``swaps`` files for a song it has (same recording, or same name, ``same_song``), and ``old`` the album's
@@ -763,7 +763,7 @@ def _track(context: Context, edition_id: int, track_id: int) -> fm.Track | None:
 def target_tracks(context: Context, edition: fm.Edition) -> tuple[fm.Edition | None, dict[int, int]]:
     """The album's target edition and, per track of the filed edition, the track of the target that is the same song.
 
-    Empty when the filed edition is the target, or the album has none. The owner's answer of 20.09.2026: a file that
+    Empty when the filed edition is the target, or the album has none. A file that
     completes an album takes the name and the tags of the target, so an album is not half numbered one way and half
     the other.
     """
@@ -1297,7 +1297,7 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
         _mark(row_id, "not_filed", target=None)
     spot = prepare_spot(context, root)
     # A file that completes an album is named and tagged after the album's target edition, not after the edition it
-    # was downloaded in (the owner's answer of 20.09.2026). A song the target does not have keeps its own, and a
+    # was downloaded in. A song the target does not have keeps its own, and a
     # download that fills an empty album keeps the names of its own release (decision of M4).
     own = {row.track_file_id for row in context.stored if row.track_file_id is not None}
     current = [item for item in context.current if item.id not in own]
@@ -1355,7 +1355,7 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
         if (worse is not None and not confirmed) or keep:
             if not adds:
                 raise Problem("album_not_better", **(worse or {}))
-            # Completing (the owner's answer of 19.09.2026): the missing tracks go in, the ones the album has stay.
+            # Completing: the missing tracks go in, the ones the album has stay.
             logger.info(
                 "Album download %d: %d missing tracks completed, %d tracks the album has are kept",
                 context.download_id,

@@ -1,7 +1,7 @@
 import { ApiError } from '../api/client'
 
 /**
- * Die Rueckfrage, bevor eine neue oeffentliche Adresse gespeichert wird (Bauplan 04, Karte 1 und 3): Sie liesse eine
+ * Die Rueckfrage, bevor eine neue oeffentliche Adresse gespeichert wird: Sie liesse eine
  * Rueckleitadresse zurueck, die authentik (`count`, die vom Knopf eingerichteten) oder ein von Hand eingetragener
  * Anbieter (`hand`) kennt. Der Server antwortet dann 409 `public_url_change` und speichert nichts.
  */

@@ -146,7 +146,7 @@ def _tracks_of(db: OrmSession, version: Version | None, release: Release | None)
                         "size": file.size,
                         "quality": file.quality,
                         "tags_state": file.tags_state,
-                        # Where the file came from (the owner's wish of 19.09.2026): a download of nexcrate with the
+                        # Where the file came from: a download of nexcrate with the
                         # file's name there and how it was matched, or a Lidarr import.
                         "source": (
                             "lidarr"

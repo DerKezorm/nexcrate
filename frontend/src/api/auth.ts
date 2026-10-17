@@ -42,7 +42,7 @@ export const totpApi = {
   recovery: (password: string) => api.post<RecoveryCodes>('/auth/totp/recovery', { password }),
 }
 
-/** Anmeldung ueber Anbieter (OpenID Connect), gemeinsam mit allen nex-Apps (Bauplan 04). */
+/** Anmeldung ueber Anbieter (OpenID Connect), gemeinsam mit allen nex-Apps. */
 export const oidcApi = {
   /** Oeffentlich: was die Anmeldeseite zeigt. */
   state: () => api.get<OidcState>('/oidc/state', { ignoreSessionLost: true }),

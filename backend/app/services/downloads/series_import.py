@@ -14,8 +14,7 @@
    episode this download does not bring or does not file (decision 26), or when a video nexcrate does not know lies
    in the season folder for the same episode. A multi-episode file goes to the recycle folder only with its last
    episode replaced.
-   The media data is read before the video moves: the name and the stored file carry its quality, codec and audio
-   (the owner's answer of 17.09.2026).
+   The media data is read before the video moves: the name and the stored file carry its quality, codec and audio.
    **Safe against a stop at any moment:** before a video moves, its row says ``placing`` and the download's
    ``imported_path`` names the target; the file is recorded right after its final rename, the subtitles follow. The
    next round finds a ``placing`` row and takes over the file at the target (or finishes its temporary name) instead
@@ -851,8 +850,8 @@ def prepare(
         if not _plain_part(season_name):
             raise Problem("import_failed", reason="destination_outside")
         target_dir = _ensure_folder(folder / season_name, folder)
-    # The media data before anything moves: the name carries the file's quality, codec and audio (the owner's answer
-    # of 17.09.2026), and the window between moving and recording stays short.
+    # The media data before anything moves: the name carries the file's quality, codec and audio,
+    # and the window between moving and recording stays short.
     answer = found.reads[video.key] if video.key in found.reads else read_media(source)
     if answer.error_code == media.MEDIA_TRUNCATED:
         # This episode stays where it is and replaces nothing; the other videos of the download are filed.
@@ -1011,9 +1010,8 @@ def read_media(path: Path) -> media.Read:
 
 
 def file_media(context: Context, answer: media.Read, folder_name: str, path: str) -> FileMedia:
-    """The quality of a video from its media data by Radarr's rule (plan-library-from-disk, decision 22) in Sonarr's
-    names, else as ``_file_quality`` reads its names. The name and the stored file carry the same (the owner's answer of
-    17.09.2026)."""
+    """The quality of a video from its media data by Radarr's rule (decision 22) in Sonarr's
+    names, else as ``_file_quality`` reads its names. The name and the stored file carry the same."""
     return media_quality(context.release_title, context.original_language, answer, folder_name, path)
 
 
@@ -1145,7 +1143,7 @@ def record_one(context: Context, filed: Filed, row_id: int, moment: datetime) ->
             release_type = "seasonPack"
         parsed = releases.parse_series(context.release_title, context.original_language)
         measured = filed.measured
-        # Known audio stream languages win over the release name's (plan-library-from-disk, decision 24).
+        # Known audio stream languages win over the release name's (decision 24).
         kept = media.file_languages(measured.media, list(context.languages))
         episode_file = EpisodeFile(
             version_id=version.id,

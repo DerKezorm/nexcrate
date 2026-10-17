@@ -1226,7 +1226,7 @@ def save(
     return {"versions": len(versions), "with_file": with_file, "missing": missing, "titles": titles}
 
 
-# --- Undoing a takeover ("Changes after the owner's live test", finding 12) ---------------- #
+# --- Undoing a takeover (finding 12) ---------------- #
 
 
 class NotTakenOver(Exception):

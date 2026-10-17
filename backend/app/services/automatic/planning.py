@@ -404,8 +404,8 @@ def plans(db: OrmSession, title_ids: Collection[int], now: datetime) -> dict[int
     """The plans of these titles next to the stored ones, only read. The round compares them without the write lock
     and plans again under it only the titles whose plan changed (``replan``).
 
-    ⚠️ Until 22.09.2026 the round read the facts of 500 titles under the write lock: 2.6 to 13.7 s on the owner's quiet
-    Synology (measured on a copy of its database), and on 21.09.2026, with 14 downloads and their imports on the same
+    ⚠️ Until 22.09.2026 the round read the facts of 500 titles under the write lock: 2.6 to 13.7 s on a quiet
+    NAS (measured on a copy of its database), and on 21.09.2026, with 14 downloads and their imports on the same
     disks, long enough for the tracking and an import to give up with "database is locked".
     """
     # Series have a plan of their own; imported here, it imports this module.
@@ -559,7 +559,7 @@ def _movie_search_plan(db: OrmSession, title: Title, now: datetime) -> dict[str,
     else:
         plan = title_plan(fact, now)
     reason = plan.reason
-    # A replacement runs with the switch off as well (the owner's answer of 22.09.2026).
+    # A replacement runs with the switch off as well.
     if not enabled and plan.wanted and plan.next_at is not None and plan.next_at <= now and reason != "replacement":
         reason = "off"
     return {

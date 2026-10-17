@@ -21,7 +21,7 @@ clean characters and umlauts. What series add:
 * **Length:** each part within 255 bytes, the episode title shortened first, then the series title.
 * **Unknown stays empty:** ``{Release Group}`` is the group the release name says, else the one stored with the
   file, and empty when neither knows one (Sonarr writes "Sonarr").
-* **Quality and media info** of a filed file from its media data, as for movies (the owner's answer of 17.09.2026):
+* **Quality and media info** of a filed file from its media data, as for movies:
   the name says what the file is, and what nexcrate stores.
 """
 
@@ -60,7 +60,7 @@ DEFAULTS: dict[str, str] = {
     "episode_file": "{Series CleanTitleWithoutYear} {(Series Year)} - S{season:00}E{episode:00} - "
     "{Episode CleanTitle:90} " + _FILE_TAIL,
     "daily_file": "{Series CleanTitleWithoutYear} {(Series Year)} - {Air-Date} - {Episode CleanTitle:90} " + _FILE_TAIL,
-    # TRaSH's anime format with the number counted through (the owner's answer to fork 5 of the design notes).
+    # TRaSH's anime format with the number counted through.
     "anime_file": "{Series CleanTitleWithoutYear} {(Series Year)} - S{season:00}E{episode:00} - {absolute:000} - "
     "{Episode CleanTitle:90} " + _FILE_TAIL,
 }

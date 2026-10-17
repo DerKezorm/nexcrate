@@ -11,7 +11,7 @@ import { downloadOriginSymbol, downloadOriginText, downloadStateText, scopeText,
  * Der Kopf eines Downloads: Film mit Jahr, Fassung, Zustand und Programm. Lange Namen brechen um,
  * statt die Karte am Telefon zu verbreitern. `children` stehen rechts daneben, etwa ein Knopf.
  * `hint` steht auf Karten unter "Hinweise": Dort ist kein Zustand rosa, und `problem` heisst "Hinweis". Sonst sah ein
- * Hinweis wie etwas aus, das den Besitzer braucht (gefunden in der Sichtpruefung gegen den echten Server, 14.09.2026).
+ * Hinweis wie etwas aus, das Aufmerksamkeit braucht.
  * Seit Schritt 3c eine kleine Marke, wenn nexcrate den Download von selbst gestartet hat; von Hand geladene haben keine.
  */
 export function DownloadHead({ download, hint = false, children }: { download: Download; hint?: boolean; children?: ReactNode }) {

@@ -1,4 +1,4 @@
-"""One album, one release in names and tags (the owner's answer of 19.09.2026, the design notes, "Zu bestätigen").
+"""One album, one release in names and tags.
 
 Completing an album can leave files of two releases side by side: ``1-01 ….flac`` of a double CD next to ``29 ….mp3``
 of the anniversary edition, each tagged as its own release. When the files of an album come from more than one

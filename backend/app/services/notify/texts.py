@@ -1,7 +1,7 @@
 """What a message says, in the mailbox's language.
 
-A mailbox has no reader nexcrate knows, so its language is set on it, not taken from the interface. The owner's words:
-"Alles was oben steht, aber pro Kanal auswählbar": twelve events in four groups, each switched and levelled per mailbox.
+A mailbox has no reader nexcrate knows, so its language is set on it, not taken from the interface.
+Twelve events in four groups, each switched and levelled per mailbox.
 """
 
 from __future__ import annotations

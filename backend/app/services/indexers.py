@@ -235,7 +235,7 @@ def normalize_url(raw: str | None, *, add_api_path: bool = True) -> str:
 
     An address the owner typed without any path gets ``/api``. Radarr keeps URL and API path apart
     (default ``/api``); an owner who copied the URL from there reached the indexer's web site and
-    got ``indexer_not_newznab`` (found in the owner's test on 13.09.2026). An endpoint read from
+    got ``indexer_not_newznab`` (found on 13.09.2026). An endpoint read from
     Radarr already carries its path as Radarr builds it; there an explicitly empty ``apiPath``
     means the root, so ``add_api_path=False`` keeps it.
     """
@@ -468,7 +468,7 @@ def default_series_categories(caps: dict[str, Any] | None) -> list[int]:
 
 def default_anime_categories(caps: dict[str, Any] | None) -> list[int]:
     """5070 and its subcategories as the caps list them; 5070 alone without caps; none when the caps list categories
-    but not 5070 (the owner's answer to fork 2 of the design notes: by itself, changeable per indexer).
+    but not 5070 (by itself, changeable per indexer).
 
     Sonarr leaves its ``animeCategories`` empty and asks no anime category until the user or Prowlarr fills them
     (measured at the bench, 22.09.2026).

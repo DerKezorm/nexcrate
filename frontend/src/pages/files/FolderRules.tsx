@@ -180,7 +180,7 @@ function skipText(t: T, skip: string): string {
 }
 
 /**
- * "Nach Regel umziehen" (entschieden am 25.09.2026): zuerst die Vorschau, welcher vorhandene Titel woanders
+ * "Nach Regel umziehen": zuerst die Vorschau, welcher vorhandene Titel woanders
  * hingehoerte und warum einer nicht umziehen kann; umgezogen wird erst auf den Knopf, je Titel der ganze Ordner.
  */
 function MoveDialog({ version, onClose }: { version: Version; onClose: () => void }) {

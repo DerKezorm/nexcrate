@@ -398,7 +398,7 @@ class ClientBase:
 
     async def add_nzb(self, content: bytes, file_name: str, urgent: bool | None = None) -> str:
         """``urgent``: True for a release that brings something missing, False for an upgrade, None for neither
-        (the owner's wish of 24.09.2026: new titles go before upgrades in the client's queue)."""
+        (new titles go before upgrades in the client's queue)."""
         raise refused()
 
     async def add_torrent(

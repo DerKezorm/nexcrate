@@ -12,7 +12,7 @@ moves along. An album that shares its folder with other albums (Lidarr filed the
 artist folder) takes its own files out: its tracks, their ``.lrc``, and images from a folder whose audio is all its
 own. The rest stays. With the artist folder renamed, whatever else lies in it follows with its place kept.
 
-Tags are never written here (the owner's answer in M6).
+Tags are never written here.
 """
 
 from __future__ import annotations

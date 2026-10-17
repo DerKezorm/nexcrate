@@ -1,4 +1,4 @@
-"""The tables of the machine interface ``/api/v1`` (plan-api-v3.md): the keys programs sign
+"""The tables of the machine interface ``/api/v1``: the keys programs sign
 in with, the change marker of the library, and the event feed.
 
 ⚠️ All tables come from ``create_all``. A change of a column here needs a new migration or the missing-column upkeep,

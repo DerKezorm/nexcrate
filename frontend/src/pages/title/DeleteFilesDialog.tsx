@@ -56,7 +56,7 @@ function binWay(t: TFunction): { settings: string; tab: string; topic: string } 
 }
 
 /**
- * "In den Papierkorb?" (Antwort 2). Sagt, was geht, wie lange es im Papierkorb bleibt und dass die
+ * "In den Papierkorb?". Sagt, was geht, wie lange es im Papierkorb bleibt und dass die
  * Ueberwachung bleibt. Die Tage kommen vom Server; ohne Antwort fehlt nur dieser Satz.
  */
 export function DeleteFilesDialog({ titleId, target, onClose, onDeleted }: { titleId: number; target: DeleteTarget; onClose: () => void; onDeleted: () => void }) {

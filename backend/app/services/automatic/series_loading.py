@@ -295,7 +295,7 @@ def load(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> tup
         enabled = (
             settings.load_enabled(db, "series")
             or wishes.wished(db, search.title_id)
-            # A replacement after a failure too (the owner's answer of 22.09.2026).
+            # A replacement after a failure too.
             or search.origin == "replacement"
         )
     wanting = wanting_versions(search.title_id, now)

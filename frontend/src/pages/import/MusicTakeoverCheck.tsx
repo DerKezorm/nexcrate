@@ -47,7 +47,7 @@ function MusicRootRow({ root, pendingLocal, onPick }: { root: TakeoverRoot; pend
 /**
  * Das Ergebnis der Pruefung einer Lidarr-Verbindung (Musik M6): Ordner mit Zuordnung, Alben und Dateien, was danach
  * gesucht, verbessert und eingelesen wird, Lidarrs laufende Downloads, die Fassung und die Bestaetigungen. Eine Benennung
- * aus Lidarr gibt es nicht: die Dateien bleiben, wo sie liegen (Antwort des Besitzers).
+ * aus Lidarr gibt es nicht: die Dateien bleiben, wo sie liegen.
  */
 export function MusicTakeoverCheck({
   result,

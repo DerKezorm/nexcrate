@@ -1,6 +1,6 @@
 """The stored judgement of nexcrate's own files follows the rules.
 
-See the design notes, "Changes after the owner's live test", finding 15.
+See the design notes, finding 15.
 
 * **Episode files** of a series version of nexcrate's own are judged again as well (``episode_files``, A6 of
   the design notes): a changed profile reaches the files that were filed before it.

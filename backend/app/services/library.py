@@ -626,7 +626,7 @@ def detail(db: OrmSession, title_id: int) -> dict[str, Any] | None:
             "languages": list(version.languages or []),
             "release_group": version.release_group,
             "relative_path": version.relative_path,
-            # The release the file came from, to find a wrong file later (the owner's wish of 26.09.2026).
+            # The release the file came from, to find a wrong file later.
             "release_title": version.release_title if version.has_file else None,
             "file_origin": file_origin(version),
             "source_name": source_name,

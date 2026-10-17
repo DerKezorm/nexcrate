@@ -34,10 +34,10 @@ WORKDIR /app
 # curl for the healthcheck, gosu to drop root rights at start.
 # unrar-free (the tool rarfile uses as "unrar") and 7zip for unpacking downloads: free packages of Debian main only.
 # mediainfo (MediaInfoLib 25.04, BSD-2) reads media data of files in a child process; not pymediainfo, which would load
-# the library into nexcrate's own process (docs/plan-library-from-disk.md, decision 21).
+# the library into nexcrate's own process.
 # ⚠️ Never bsdtar or libarchive for RAR: bsdtar exited 0 on multi-volume RAR5 with a missing or wrong file.
-# libchromaprint-tools brings fpcalc for fingerprinting music files nexcrate cannot map otherwise (docs/plan-music-m4.md,
-# M4.9), in a child process like mediainfo. It pulls FFmpeg's libraries: measured 146 MB.
+# libchromaprint-tools brings fpcalc for fingerprinting music files nexcrate cannot map otherwise,
+# in a child process like mediainfo. It pulls FFmpeg's libraries: measured 146 MB.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl gosu unrar-free 7zip mediainfo libchromaprint-tools \
     && rm -rf /var/lib/apt/lists/*

@@ -1,4 +1,4 @@
-"""Media data of a video file through ``mediainfo``, and the quality rule of decision 22 (plan-library-from-disk, L7).
+"""Media data of a video file through ``mediainfo``, and the quality rule of decision 22.
 
 * **The tool** runs as a child process: ``mediainfo --Output=JSON <absolute path>``, an argument list and no shell,
   stdin closed, a small environment (``PATH`` and ``LANG=C.UTF-8``), its own process group, a timeout after which it

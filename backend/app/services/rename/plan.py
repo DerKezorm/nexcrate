@@ -27,7 +27,7 @@ from ..downloads import files
 #: their folder, so the undo brings them back; the folders (``@eaDir``, Synology's thumbnails) stay and go to the
 #: recycle folder with the old folder.
 SYSTEM_NAMES = frozenset({".ds_store", "thumbs.db", "desktop.ini", "@eadir", ".appledouble", "._.ds_store"})
-#: Images and lyrics follow an album out of a shared folder (the owner's answer G3).
+#: Images and lyrics follow an album out of a shared folder.
 IMAGE_ENDINGS = frozenset({".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"})
 AUDIO_ENDINGS = frozenset(
     {".flac", ".mp3", ".m4a", ".aac", ".ogg", ".opus", ".wav", ".aiff", ".aif", ".wma", ".ape", ".wv", ".alac", ".dsf"}
@@ -138,8 +138,7 @@ MEDIA_ENDINGS = AUDIO_ENDINGS | {".mkv", ".mp4", ".m4v", ".avi", ".ts", ".m2ts",
 
 
 def holds_media(folder: Path) -> bool:
-    """Whether any media file lies in the folder or below it. A folder without one is a rest an album may move into
-    (the owner's answer of 19.09.2026)."""
+    """Whether any media file lies in the folder or below it. A folder without one is a rest an album may move into."""
     if not folder.is_dir() or files.is_link(folder):
         return False
     for _current, folder_names, file_names in os.walk(folder, followlinks=False):

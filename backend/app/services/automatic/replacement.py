@@ -4,8 +4,8 @@
 
 * **After a failure** (the client failed the download, it was encrypted, or it was refused for a dangerous file or an
   archive with a password): the version's replacement times of the last 24 hours are counted. Below 3 the time is
-  added and the title is due at once with the reason ``replacement``, **also with the switch off** (the owner's answer
-  of 22.09.2026, as Radarr's "Redownload failed": a download the owner started by hand is replaced as well). Otherwise
+  added and the title is due at once with the reason ``replacement``, **also with the switch off**
+  (as Radarr's "Redownload failed": a download the owner started by hand is replaced as well). Otherwise
   the title is planned again by the next round, which shows ``replacement_limit`` and the version's schedule.
   ``after_failure`` says who takes care: ``replacement``, ``schedule`` (the switch is on), or ``owner`` (nothing
   happens by itself: the failure is a problem for the owner).

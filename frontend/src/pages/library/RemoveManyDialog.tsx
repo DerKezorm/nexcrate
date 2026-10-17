@@ -18,7 +18,7 @@ export type RemoveScope = {
 }
 
 /**
- * "Entfernen" fuer die Auswahl (entschieden am 24.09.2026). Ohne Haken verschwinden nur die Eintraege, die Dateien
+ * "Entfernen" fuer die Auswahl. Ohne Haken verschwinden nur die Eintraege, die Dateien
  * bleiben liegen; mit Haken kommen die Dateien vorher in den Papierkorb, von wo sie fuer die eingestellte Zeit
  * zurueckgeholt werden koennen. Laufende Downloads der Titel gehen mit.
  */

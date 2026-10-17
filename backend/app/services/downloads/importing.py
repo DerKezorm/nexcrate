@@ -11,7 +11,7 @@
 * **The file:** see ``files``. A dangerous file refuses the download: its release goes on the blocklist. A certainly
   broken archive (volumes missing, a password) fails the download as a failure the client reported, and its job goes
   with its files (``discard``).
-* **The names** (the owner's decision of 26.09.2026): before anything moves, the title read from the release name or
+* **The names**: before anything moves, the title read from the release name or
   from the chosen video's name must fit the movie (``search.matching.name_fits``). When neither does, nothing is filed
   and nothing replaced: the problem ``title_mismatch``, with the titles read and, as a hint only, the video's runtime
   next to TMDB's (an extended cut runs longer). The owner files it anyway (``title_mismatch`` in ``confirmed``, also
@@ -673,8 +673,8 @@ def _file(context: Context, folder: Path, job: Path, origin: Path, source: Path,
     if files.is_link(target_dir) or not files.strictly_inside(target_dir, folder):
         raise Problem("import_failed", reason="destination_outside")
     target_dir = files.resolved(target_dir) or target_dir
-    # The media data before the movie moves: the name carries the file's quality, codec and audio as Radarr's does
-    # (the owner's answer of 17.09.2026), and recording stores the same without reading again.
+    # The media data before the movie moves: the name carries the file's quality, codec and audio as Radarr's does,
+    # and recording stores the same without reading again.
     answer = _read_media(source)
     if answer.error_code == media.MEDIA_TRUNCATED:
         # Nothing has moved yet: a cut off movie is never filed and never replaces the one there.

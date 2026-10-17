@@ -533,7 +533,7 @@ def episode_files(db: OrmSession, version: Version, scope: Scope) -> list[tuple[
     for row, episode in rows:
         chosen.setdefault(row.id, (row, []))[1].append(episode)
     if scope.episode_file_ids:
-        # A file without an episode, unclear or left out, goes by its id alone (the owner's answer of 25.09.2026).
+        # A file without an episode, unclear or left out, goes by its id alone.
         for row in db.scalars(
             select(EpisodeFile).where(
                 EpisodeFile.version_id == version.id, EpisodeFile.id.in_(scope.episode_file_ids)

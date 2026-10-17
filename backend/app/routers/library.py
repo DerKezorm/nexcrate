@@ -1857,7 +1857,7 @@ async def run_series_type_proposals(payload: SeriesTypeRunIn) -> SeriesTypeRunOu
     return SeriesTypeRunOut(**type_proposals.state())
 
 
-# --- Running downloads ("Changes after the owner's live test", B) ---------------------- #
+# --- Running downloads ---------------------- #
 
 #: What removing a running download can answer: a download being filed away, or the client's error.
 _DOWNLOAD_ERRORS = ((409, "download_finished"), *downloaders.ERRORS)

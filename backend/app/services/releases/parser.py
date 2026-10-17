@@ -1,6 +1,6 @@
 """Reading a movie release name: title and year, group, quality, revision, edition, subtitles, languages.
 
-nexcrate's own reading, written from the rules in the design notes and the owner's notes on how Radarr
+nexcrate's own reading, written from the rules in the design notes on how Radarr
 reads a name. Nothing is taken from Radarr's source (GPL-3.0): no code, no pattern, no test. Where TRaSH's
 scores depend on Radarr's reading, nexcrate reads the same way, because TRaSH tested its scores there.
 

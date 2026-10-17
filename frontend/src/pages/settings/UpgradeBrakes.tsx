@@ -14,7 +14,7 @@ import { Loading } from '../files/PatternFields'
 const PER_DAY_MAX = 10000
 
 /**
- * "Verbesserungen bremsen" im Reiter Automatik (entschieden am 24.09.2026): die Pause gilt fuer alles, was beim
+ * "Verbesserungen bremsen" im Reiter Automatik: die Pause gilt fuer alles, was beim
  * Einschalten schon da ist; was danach kommt, wird wie gewohnt verbessert. Dazu eine Obergrenze fuer automatische
  * Verbesserungen in 24 Stunden. Fehlendes haelt beides nie auf, eigene Downloads von Hand auch nicht.
  */

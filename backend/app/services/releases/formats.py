@@ -23,8 +23,8 @@ unknown type never matches.
 ⚠️ ``source`` holds the number of the kind the rules were built for: Radarr's for movies, Sonarr's for series
 (``qualities_series.py``). The same goes for the quality tables the summary check walks (``table``).
 
-**Whether a format can apply at all** (``can_match_allowed``) is a separate, pure check for the profile summary
-("Changes after the owner's test"): the same group rule over the quality-bound types only
+**Whether a format can apply at all** (``can_match_allowed``) is a separate, pure check for the profile summary:
+the same group rule over the quality-bound types only
 (Resolution, Source, QualityModifier), against each allowed quality. Every other type counts as satisfiable,
 because a release name can carry anything. It takes no part in a score.
 """
@@ -266,7 +266,7 @@ def explain(custom_format: dict[str, Any], data: FormatInput, commit: str) -> di
 
 # --- Prepared formats ---------------------------------------------------------------------------------- #
 #
-# Measured on the owner's Synology on 16.09.2026: the series checker with 50 names and four versions scores 400 times
+# Measured on a NAS on 16.09.2026: the series checker with 50 names and four versions scores 400 times
 # over some 72 formats each, and only a fifth of the time went into the regex search itself. The rest was looking up
 # each pattern again (a lock and two dictionaries per search) and reading the same fields out of the same dictionaries.
 # ``score`` therefore prepares a rule set once: patterns compiled, numbers read, specifications grouped by type. The

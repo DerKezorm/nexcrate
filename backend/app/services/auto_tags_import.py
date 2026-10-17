@@ -1,7 +1,7 @@
 """Auto tag rules from Radarr, Sonarr and Lidarr: read there, turned into nexcrate's rules here.
 
 Nothing is stored in this module. It answers each rule of the app in the fields of ``POST /api/auto-tags`` and says
-whether it can be taken. The owner's answers (22.09.2026):
+whether it can be taken. The rules for taking one:
 
 - A rule whose name the kind already has is not taken (``exists``); the one there stays as it is.
 - A rule with a condition nexcrate cannot rebuild is not taken at all, with the reason. Without the condition it would
