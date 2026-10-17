@@ -6,9 +6,8 @@ Lidarr side by side.
 
 ![The library: movies with their versions and states](docs/screenshots/library-movies.png)
 
-The screenshots show a throwaway instance with public-domain movies, a few shows and artists,
-and made-up releases. On the Discover screenshot the list is a hand-picked set of public-domain
-silent films with their real TMDB data, in place of TMDB's answer of the day.
+The screenshots show a throwaway demo instance with a few movies, shows and artists and made-up
+releases. Posters and covers in them are placeholder artwork.
 
 ## What it does
 
