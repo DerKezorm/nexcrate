@@ -43,8 +43,8 @@ silent films with their real TMDB data, in place of TMDB's answer of the day.
   Apprise, e-mail), **Plex, Jellyfin and Emby** told about new files, **backups** with an
   encrypted download.
 - **An API for other programs** (`/api/v1`) with keys, an event feed and webhooks.
-- **Bazarr** (beta) reads nexcrate as Radarr and Sonarr, live, and the subtitles it writes move
-  with their video.
+- **Bazarr and Lingarr** (beta) read nexcrate as Radarr and Sonarr, and the subtitles they write
+  move with their video.
 - **Sign-in through authentik**, Microsoft Entra ID or any other OpenID Connect provider, several side by
   side, authentik set up with one button, and
   a **second factor** (authenticator app plus recovery codes) for the sign-in with a password.
@@ -245,7 +245,7 @@ Webhooks send the same events signed with HMAC-SHA256.
 ### Bazarr (beta)
 
 Bazarr only knows Radarr and Sonarr, so nexcrate answers it as both. Switch it on under Settings,
-System, Bazarr, make a key with nothing but `read` under API keys, and enter nexcrate in Bazarr
+System, Bazarr and Lingarr, make a key with nothing but `read` under API keys, and enter nexcrate in Bazarr
 twice, under Radarr and under Sonarr, with the same address, port and key:
 
 | In Bazarr | Base URL |
@@ -267,6 +267,26 @@ keeps a live connection and hears of a new or replaced file within seconds.
 - **Beta:** nexcrate imitates the part of Radarr's and Sonarr's API that Bazarr reads, tested
   against Bazarr 1.6.2. A Bazarr update may break it until nexcrate catches up.
 - Bazarr sends the key in the address, as it does to Radarr; nexcrate's log masks it.
+
+### Lingarr (beta)
+
+Lingarr translates subtitles and, like Bazarr, only knows Radarr and Sonarr. It answers from
+its own addresses, with the same switch and the same kind of key: in Lingarr under Settings,
+Integrations, enter nexcrate instead of Radarr and Sonarr, with a key that has nothing but `read`
+in both fields.
+
+| In Lingarr | URL |
+|---|---|
+| Radarr | `http://<nexcrate>:8390/lingarr/radarr` |
+| Sonarr | `http://<nexcrate>:8390/lingarr/sonarr` |
+
+With `NEXCRATE_URL_BASE` the sub path comes first, for example `/nexcrate/lingarr/radarr`.
+Lingarr picks up new movies and episodes on its next sync.
+
+- **Every version is an entry of its own**, as in Bazarr.
+- **Subtitles Lingarr writes** are found once a day and from then on go where the video goes.
+- **Paths:** if Lingarr sees the media elsewhere, set a path mapping in Lingarr.
+- **Beta:** tested against Lingarr 1.4.0. A Lingarr update may break it until nexcrate catches up.
 
 ## Run from source
 

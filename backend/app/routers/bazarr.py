@@ -38,6 +38,7 @@ router = APIRouter(include_in_schema=False)
 settings_router = APIRouter(prefix="/api/bazarr", tags=["bazarr"])
 
 PREFIX = "/bazarr"
+LINGARR = "/lingarr"
 
 
 # --- The key and the switch ----------------------------------------------------------------------------------- #
@@ -65,7 +66,11 @@ def check_key(db: Any, offered: str | None) -> ApiKey:
     if "read" not in (row.scopes or []):
         raise error("scope_missing", "This key lacks the scope read.", 403, scope="read")
     if not bazarr_settings.load_enabled(db):
-        raise error("bazarr_off", "The connection for Bazarr is off in nexcrate (Settings, System, Bazarr).", 404)
+        raise error(
+            "bazarr_off",
+            "The connection for Bazarr and Lingarr is off in nexcrate (Settings, System, Bazarr and Lingarr).",
+            404,
+        )
     api_keys.mark_used(row.id)
     return row
 
@@ -166,6 +171,10 @@ def _rescan_one(version_id: int, kind: str) -> None:
 
 @router.get(PREFIX + "/{part}/api/v3/MediaCover/{version_id}/{file_name}")
 async def media_cover(part: str, version_id: int, file_name: str, _key: Key) -> Response:
+    return await _cover(part, version_id)
+
+
+async def _cover(part: str, version_id: int) -> Response:
     kind = live.KIND_OF_PART[part]
     title_id = await asyncio.to_thread(_title_of, version_id, kind)
     found = await images.poster(title_id) if title_id is not None else None
@@ -195,6 +204,7 @@ def quality_profiles(part: str, _key: Key, db: DbSession) -> list[dict[str, Any]
 
 
 @router.get(PREFIX + "/{part}/api/v3/movie", dependencies=[Movies])
+@router.get(PREFIX + "/{part}/api/v3/movie/", dependencies=[Movies])
 def movies(part: str, _key: Key, db: DbSession) -> list[dict[str, Any]]:
     return library.movies(db)
 
@@ -231,9 +241,14 @@ def one_series(part: str, version_id: int, _key: Key, db: DbSession) -> dict[str
 
 @router.get(PREFIX + "/{part}/api/v3/episode", dependencies=[Series])
 def episodes(
-    part: str, _key: Key, db: DbSession, series_id: Annotated[int, Query(alias="seriesId")]
+    part: str,
+    _key: Key,
+    db: DbSession,
+    series_id: Annotated[int, Query(alias="seriesId")],
+    season: Annotated[int | None, Query(alias="seasonNumber")] = None,
 ) -> list[dict[str, Any]]:
-    return library.episodes(db, series_id)
+    # Lingarr asks season by season; Bazarr asks for the whole series.
+    return library.episodes(db, series_id, season=season)
 
 
 @router.get(PREFIX + "/{part}/api/v3/episode/{number}", dependencies=[Series])
@@ -343,11 +358,94 @@ async def _close(websocket: WebSocket) -> None:
         await websocket.close()
 
 
-# --- Everything else below /bazarr ----------------------------------------------------------------------------- #
+# --- Lingarr ---------------------------------------------------------------------------------------------------- #
+#
+# Lingarr (subtitle translation) reads the same lists, below /lingarr: it keeps an episode's number in 32 bits, too
+# small for Bazarr's (``ids.lingarr_episode_id``), and reads the series of a single episode as a whole one. Read from
+# Lingarr's source (``Services/Integration``, ``Models/Integrations``); the same key and the same switch as Bazarr.
+
+
+def lingarr_key(request: Request, db: DbSession, part: str) -> ApiKey:
+    _part(part)
+    row = check_key(db, _offered_key(dict(request.query_params), {k.lower(): v for k, v in request.headers.items()}))
+    live.lingarr_seen(part)
+    return row
+
+
+LingarrKey = Annotated[ApiKey, Depends(lingarr_key)]
+
+
+@router.get(LINGARR + "/{part}/api/v3/system/status")
+def lingarr_status(part: str, _key: LingarrKey) -> dict[str, Any]:
+    return {
+        "appName": "nexcrate",
+        "instanceName": "nexcrate",
+        "version": library.COMPAT_VERSION,
+        "nexcrateVersion": __version__,
+        "urlBase": get_settings().url_base + LINGARR + "/" + part,
+        "isDocker": True,
+    }
+
+
+@router.get(LINGARR + "/{part}/api/v3/MediaCover/{version_id}/{file_name}")
+async def lingarr_cover(part: str, version_id: int, file_name: str, _key: LingarrKey) -> Response:
+    return await _cover(part, version_id)
+
+
+@router.get(LINGARR + "/{part}/api/v3/movie", dependencies=[Movies])
+@router.get(LINGARR + "/{part}/api/v3/movie/", dependencies=[Movies])
+def lingarr_movies(part: str, _key: LingarrKey, db: DbSession) -> list[dict[str, Any]]:
+    return library.movies(db)
+
+
+@router.get(LINGARR + "/{part}/api/v3/movie/{version_id}", dependencies=[Movies])
+def lingarr_movie(part: str, version_id: int, _key: LingarrKey, db: DbSession) -> dict[str, Any]:
+    found = library.movie(db, version_id)
+    if found is None:
+        raise error("not_found", "This does not exist, or not any more.", 404)
+    return found
+
+
+@router.get(LINGARR + "/{part}/api/v3/series", dependencies=[Series])
+@router.get(LINGARR + "/{part}/api/v3/series/", dependencies=[Series])
+def lingarr_all_series(part: str, _key: LingarrKey, db: DbSession) -> list[dict[str, Any]]:
+    return library.all_series(db)
+
+
+@router.get(LINGARR + "/{part}/api/v3/series/{version_id}", dependencies=[Series])
+def lingarr_one_series(part: str, version_id: int, _key: LingarrKey, db: DbSession) -> dict[str, Any]:
+    found = library.one_series(db, version_id)
+    if found is None:
+        raise error("not_found", "This does not exist, or not any more.", 404)
+    return found
+
+
+@router.get(LINGARR + "/{part}/api/v3/episode", dependencies=[Series])
+def lingarr_episodes(
+    part: str,
+    _key: LingarrKey,
+    db: DbSession,
+    series_id: Annotated[int, Query(alias="seriesId")],
+    season: Annotated[int | None, Query(alias="seasonNumber")] = None,
+) -> list[dict[str, Any]]:
+    return library.episodes(db, series_id, season=season, lingarr=True)
+
+
+@router.get(LINGARR + "/{part}/api/v3/episode/{number}", dependencies=[Series])
+def lingarr_episode(part: str, number: int, _key: LingarrKey, db: DbSession) -> dict[str, Any]:
+    found = library.lingarr_episode(db, number)
+    if found is None:
+        raise error("not_found", "This does not exist, or not any more.", 404)
+    return found
+
+
+# --- Everything else below /bazarr and /lingarr ----------------------------------------------------------------- #
 
 
 @router.api_route(PREFIX, methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"])
 @router.api_route(PREFIX + "/{rest:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"])
+@router.api_route(LINGARR, methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"])
+@router.api_route(LINGARR + "/{rest:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"])
 def nothing_here(request: Request) -> JSONResponse:
     """Not the interface's page: Bazarr would read it as an answer and stumble over the HTML."""
     detail = meldung("not_found", "This does not exist, or not any more.")
@@ -363,11 +461,17 @@ class PartStatus(BaseModel):
     last_request: datetime | None = Field(description="When Bazarr last asked anything of this part since the start.")
 
 
+class LingarrStatus(BaseModel):
+    radarr: datetime | None = Field(description="When Lingarr last asked for movies since the start; null if never.")
+    sonarr: datetime | None = Field(description="When Lingarr last asked for series since the start; null if never.")
+
+
 class BazarrOut(BaseModel):
-    enabled: bool = Field(description="Whether nexcrate answers Bazarr below /bazarr.")
-    url_base: str = Field(description="The sub path nexcrate started with; Bazarr's base URL starts with it.")
+    enabled: bool = Field(description="Whether nexcrate answers Bazarr below /bazarr and Lingarr below /lingarr.")
+    url_base: str = Field(description="The sub path nexcrate started with; the base URLs start with it.")
     radarr: PartStatus
     sonarr: PartStatus
+    lingarr: LingarrStatus
 
 
 class BazarrIn(BaseModel):
@@ -381,14 +485,18 @@ def _out(enabled: bool) -> BazarrOut:
         url_base=get_settings().url_base,
         radarr=PartStatus(**status["radarr"]),
         sonarr=PartStatus(**status["sonarr"]),
+        lingarr=LingarrStatus(**live.lingarr_status()),
     )
 
 
 @settings_router.get(
     "",
     response_model=BazarrOut,
-    summary="The connection for Bazarr",
-    description="Whether nexcrate answers Bazarr as Radarr and Sonarr, and whether Bazarr is connected.",
+    summary="The connection for Bazarr and Lingarr",
+    description=(
+        "Whether nexcrate answers Bazarr and Lingarr as Radarr and Sonarr, whether Bazarr is connected, and when "
+        "Lingarr last asked."
+    ),
 )
 def read_bazarr(db: DbSession) -> BazarrOut:
     return _out(bazarr_settings.load_enabled(db))
@@ -397,11 +505,11 @@ def read_bazarr(db: DbSession) -> BazarrOut:
 @settings_router.put(
     "",
     response_model=BazarrOut,
-    summary="Turn the connection for Bazarr on or off",
+    summary="Turn the connection for Bazarr and Lingarr on or off",
     description=(
-        "On, nexcrate answers Bazarr below /bazarr/radarr and /bazarr/sonarr, and records the subtitle files Bazarr "
-        "writes so they move with their video. Switching it on looks once for subtitles already next to the files. "
-        "Off closes every live connection."
+        "On, nexcrate answers Bazarr below /bazarr/radarr and /bazarr/sonarr and Lingarr below /lingarr/radarr and "
+        "/lingarr/sonarr, and records the subtitle files they write so they move with their video. Switching it on "
+        "looks once for subtitles already next to the files, and again every night. Off closes every live connection."
     ),
 )
 async def change_bazarr(payload: BazarrIn) -> BazarrOut:
@@ -425,6 +533,7 @@ def _save(enabled: bool) -> bool:
 
 def _rescan_everything() -> None:
     try:
+        rescan.mark_done()
         rescan.everything()
     except Exception:
         logger.exception("The first Bazarr rescan failed")

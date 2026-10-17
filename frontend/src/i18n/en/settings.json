@@ -26,7 +26,7 @@
     "webhooks": "Webhooks",
     "tags": "Tags",
     "notifications": "Notifications",
-    "bazarr": "Bazarr"
+    "bazarr": "Bazarr and Lingarr"
   },
   "versions": {
     "title": "Versions",

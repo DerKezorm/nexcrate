@@ -83,9 +83,11 @@ export type BazarrSettings = {
   url_base: string
   radarr: BazarrPart
   sonarr: BazarrPart
+  /** Wann Lingarr zuletzt je Teil gefragt hat, seit dem Start; null, wenn nie. */
+  lingarr: { radarr: string | null; sonarr: string | null }
 }
 
-/** System, "Bazarr": nexcrate antwortet Bazarr wie Radarr und Sonarr (Issue #8). */
+/** System, "Bazarr und Lingarr": nexcrate antwortet beiden wie Radarr und Sonarr (Issues #8 und #15). */
 export const bazarrApi = {
   get: () => api.get<BazarrSettings>('/bazarr'),
   save: (enabled: boolean) => api.put<BazarrSettings>('/bazarr', { enabled }),

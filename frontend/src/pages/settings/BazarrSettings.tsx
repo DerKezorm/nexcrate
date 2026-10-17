@@ -18,9 +18,9 @@ const STATUS_MS = 10_000
 type PartName = 'radarr' | 'sonarr'
 
 /**
- * System, "Bazarr" (Issue #8, Beta): nexcrate antwortet Bazarr wie Radarr und Sonarr, unter eigenen Basis-URLs je Teil.
- * Die Seite sagt, was man in Bazarr eintraegt, aus der Adresse, unter der sie selbst gerade laeuft, und ob Bazarr schon
- * fragt oder live verbunden ist.
+ * System, "Bazarr und Lingarr" (Issues #8 und #15, Beta): nexcrate antwortet beiden wie Radarr und Sonarr, unter
+ * eigenen Basis-URLs je Teil. Die Seite sagt, was man in Bazarr und in Lingarr eintraegt, aus der Adresse, unter der sie
+ * selbst gerade laeuft, und ob Bazarr schon fragt oder live verbunden ist und wann Lingarr zuletzt gefragt hat.
  */
 export function BazarrSettings() {
   const { t } = useTranslation()
@@ -93,6 +93,23 @@ export function BazarrSettings() {
           </ul>
         </Section>
       )}
+      {setting.enabled === true && (
+        <Section title={t('system.bazarr.inLingarr')} intro={t('system.bazarr.inLingarrIntro')}>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <LingarrCard part="radarr" urlBase={state?.url_base ?? null} asked={state ? state.lingarr.radarr : undefined} />
+            <LingarrCard part="sonarr" urlBase={state?.url_base ?? null} asked={state ? state.lingarr.sonarr : undefined} />
+          </div>
+          <p className="text-sm text-mist-400">
+            {t('system.bazarr.lingarrKey')}{' '}
+            <Link to={KEYS_TAB_PATH} className="font-medium text-accent-400 hover:underline">
+              {t('system.bazarr.keyLink')}
+            </Link>
+          </p>
+          <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-mist-400">
+            <li>{t('system.bazarr.lingarrPaths')}</li>
+          </ul>
+        </Section>
+      )}
     </div>
   )
 }
@@ -128,6 +145,30 @@ function PartCard({ part, urlBase, status }: { part: PartName; urlBase: string |
             <dd className="min-w-0 break-all font-mono text-mist-200">{value}</dd>
           </div>
         ))}
+      </dl>
+    </div>
+  )
+}
+
+/** Lingarr will die ganze Adresse in einem Feld; ohne Live-Verbindung zeigt die Karte nur, wann es zuletzt fragte. */
+function LingarrCard({ part, urlBase, asked }: { part: PartName; urlBase: string | null; asked: string | null | undefined }) {
+  const { t, i18n } = useTranslation()
+  const url = urlBase === null ? '…' : `${window.location.origin}${urlBase}/lingarr/${part}`
+  const state =
+    asked === undefined
+      ? null
+      : asked
+        ? { tone: 'info' as const, text: t('system.bazarr.asked', { at: formatDateTime(asked, i18n.language) }) }
+        : { tone: 'neutral' as const, text: t('system.bazarr.notYet') }
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-ink-700 bg-ink-900/60 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-mist-100">{t(part === 'radarr' ? 'system.bazarr.asRadarr' : 'system.bazarr.asSonarr')}</h3>
+        {state && <Badge tone={state.tone}>{state.text}</Badge>}
+      </div>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+        <dt className="text-mist-500">{t('system.bazarr.lingarrUrl')}</dt>
+        <dd className="min-w-0 break-all font-mono text-mist-200">{url}</dd>
       </dl>
     </div>
   )

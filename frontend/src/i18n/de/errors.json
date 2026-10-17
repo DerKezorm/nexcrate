@@ -331,7 +331,7 @@
   "totp_off": "Der zweite Faktor ist ausgeschaltet.",
   "totp_pending_missing": "Melde dich noch einmal mit deinem Passwort an.",
   "totp_unreadable": "Der zweite Faktor lässt sich nicht lesen. Das Protokoll nennt den Grund und den Ausweg.",
-  "bazarr_off": "Die Verbindung für Bazarr ist aus. Einschalten unter Einstellungen, System, Bazarr.",
+  "bazarr_off": "Die Verbindung für Bazarr und Lingarr ist aus. Einschalten unter Einstellungen, System, Bazarr und Lingarr.",
   "oidc_provider_error": "Der Anbieter hat die Anmeldung abgebrochen.",
   "oidc_token_refused": "Der Anbieter hat den Code nicht eingelöst.",
   "oidc_no_signing_key": "Der Anbieter unterschreibt ohne Schlüssel. Wähl dort einen Signierschlüssel für den Provider.",

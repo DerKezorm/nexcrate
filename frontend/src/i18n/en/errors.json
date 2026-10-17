@@ -331,7 +331,7 @@
   "totp_off": "The second factor is off.",
   "totp_pending_missing": "Sign in with your password again.",
   "totp_unreadable": "The second factor cannot be read. The log names the reason and the way out.",
-  "bazarr_off": "The connection for Bazarr is off. Switch it on under Settings, System, Bazarr.",
+  "bazarr_off": "The connection for Bazarr and Lingarr is off. Switch it on under Settings, System, Bazarr and Lingarr.",
   "oidc_provider_error": "The provider stopped the sign-in.",
   "oidc_token_refused": "The provider did not redeem the code.",
   "oidc_no_signing_key": "The provider signs without a key. Choose a signing key for the provider there.",

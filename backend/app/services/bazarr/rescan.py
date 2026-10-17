@@ -10,19 +10,23 @@ From then on the subtitle goes where the video goes: renamed with it, into the r
 a removal, back with it from the recycle folder. A file named after no video stays as it is and is never touched.
 
 ``everything`` does the same for every version Bazarr sees, once, when the owner switches the connection on: Bazarr
-may have written subtitles before, next to files that came over from Radarr or Sonarr.
+may have written subtitles before, next to files that came over from Radarr or Sonarr. And again once a day while it is
+on (``run_job``): Lingarr writes its translations next to the video and never says so, and Bazarr may have written one
+while nexcrate was down.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import time
 from pathlib import Path, PurePosixPath
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session as OrmSession
 
 from ... import db as database
+from ...db import get_setting, set_setting
 from ...models import EpisodeFile, ExtraFile, Title, Version, utcnow
 from .. import folders
 from ..downloads import files
@@ -31,6 +35,12 @@ from ..subtitles import names
 from ..subtitles.records import KIND, belongs_to_file
 
 logger = logging.getLogger("nexcrate.bazarr")
+
+JOB_NAME = "subtitle_rescan"
+INTERVAL_SECONDS = 3600
+EVERY_SECONDS = 24 * 3600
+#: When ``everything`` last started, in seconds since the epoch.
+SETTING_LAST = "bazarr_rescan_at"
 
 
 def _root(raw: str | None) -> Path | None:
@@ -211,3 +221,35 @@ def everything() -> tuple[int, int]:
             added, dropped = added + counts[0], dropped + counts[1]
     logger.info("Bazarr rescan of %d versions: %d subtitle(s) recorded, %d gone", len(wanted), added, dropped)
     return added, dropped
+
+
+def mark_done(now: float | None = None) -> None:
+    with database.SessionLocal() as db:
+        set_setting(db, SETTING_LAST, repr(time.time() if now is None else now))
+        db.commit()
+
+
+def due(now: float) -> bool:
+    """Whether a day passed since the last look. Without a stamp the day starts now: no look over the whole library
+    right after the start of an update."""
+    from . import settings
+
+    with database.SessionLocal() as db:
+        if not settings.load_enabled(db):
+            return False
+        try:
+            last = float(get_setting(db, SETTING_LAST, ""))
+        except ValueError:
+            last = None
+    if last is None:
+        mark_done(now)
+        return False
+    return now - last >= EVERY_SECONDS
+
+
+def run_job() -> None:
+    now = time.time()
+    if not due(now):
+        return
+    mark_done(now)
+    everything()

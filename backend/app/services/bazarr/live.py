@@ -229,6 +229,8 @@ class Hub:
         self.task: asyncio.Task[None] | None = None
         #: When Bazarr last asked anything of each part, for the settings page.
         self.last_request: dict[str, datetime] = {}
+        #: The same for Lingarr, which has no live connection.
+        self.lingarr_request: dict[str, datetime] = {}
 
     # -- Negotiation -- #
 
@@ -369,3 +371,11 @@ def handshake_ok(raw: str) -> bool:
 PING = json.dumps({"type": 6}) + RS
 HANDSHAKE_ANSWER = "{}" + RS
 HANDSHAKE_REFUSED = json.dumps({"error": "nexcrate speaks the JSON protocol, version 1, only."}) + RS
+
+
+def lingarr_seen(part: str) -> None:
+    hub.lingarr_request[part] = utcnow()
+
+
+def lingarr_status() -> dict[str, datetime | None]:
+    return {part: hub.lingarr_request.get(part) for part in PARTS}

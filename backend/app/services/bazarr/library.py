@@ -230,7 +230,28 @@ def _series_query():  # type: ignore[no-untyped-def]
     )
 
 
-def _series(version: Version, title: Title, folder: str, title_tags: list[int]) -> dict[str, Any]:
+def _seasons(db: OrmSession, version_ids: list[int]) -> dict[int, list[dict[str, Any]]]:
+    """The seasons each series version holds episodes of, as Sonarr lists them. Lingarr walks them one by one."""
+    found: dict[int, dict[int, bool]] = {}
+    if not version_ids:
+        return {}
+    rows = db.execute(
+        select(EpisodeVersion.version_id, Episode.season_number, EpisodeVersion.watched)
+        .join(Episode, Episode.id == EpisodeVersion.episode_id)
+        .where(EpisodeVersion.version_id.in_(version_ids))
+    ).tuples()
+    for version_id, season, watched in rows:
+        seasons = found.setdefault(version_id, {})
+        seasons[season] = seasons.get(season, False) or bool(watched)
+    return {
+        version_id: [{"seasonNumber": number, "monitored": watched} for number, watched in sorted(seasons.items())]
+        for version_id, seasons in found.items()
+    }
+
+
+def _series(
+    version: Version, title: Title, folder: str, title_tags: list[int], seasons: list[dict[str, Any]]
+) -> dict[str, Any]:
     series_type = (title.series_type or "standard").casefold()
     return {
         "id": version.id,
@@ -254,13 +275,20 @@ def _series(version: Version, title: Title, folder: str, title_tags: list[int]) 
         "tags": [version.version_definition_id, *title_tags],
         "originalLanguage": _original(title),
         "added": title.added.isoformat() if title.added else None,
+        # Lingarr reads both and fails on a series without them; nexcrate files episodes in season folders.
+        "seasonFolder": True,
+        "seasons": seasons,
     }
 
 
 def all_series(db: OrmSession) -> list[dict[str, Any]]:
     rows = [(v, t, folder) for v, t in db.execute(_series_query()).tuples() if (folder := series_folder(v)) is not None]
     title_tags = _title_tags(db, (title.id for _version, title, _folder in rows))
-    return [_series(version, title, folder, title_tags.get(title.id, [])) for version, title, folder in rows]
+    seasons = _seasons(db, [version.id for version, _title, _folder in rows])
+    return [
+        _series(version, title, folder, title_tags.get(title.id, []), seasons.get(version.id, []))
+        for version, title, folder in rows
+    ]
 
 
 def one_series(db: OrmSession, version_id: int) -> dict[str, Any] | None:
@@ -271,7 +299,8 @@ def one_series(db: OrmSession, version_id: int) -> dict[str, Any] | None:
     folder = series_folder(version)
     if folder is None:
         return None
-    return _series(version, title, folder, _title_tags(db, [title.id]).get(title.id, []))
+    seasons = _seasons(db, [version.id]).get(version.id, [])
+    return _series(version, title, folder, _title_tags(db, [title.id]).get(title.id, []), seasons)
 
 
 @dataclass(frozen=True)
@@ -319,8 +348,14 @@ def _episode(
     link: EpisodeVersion,
     file_row: EpisodeFile | None,
     absolute: int | None,
-) -> dict[str, Any]:
-    number = ids.episode_id(owner.version.id, episode.id)
+    lingarr: bool = False,
+) -> dict[str, Any] | None:
+    if lingarr:
+        number = ids.lingarr_episode_id(episode.id, owner.version.version_definition_id)
+        if number is None:
+            return None
+    else:
+        number = ids.episode_id(owner.version.id, episode.id)
     out: dict[str, Any] = {
         "id": number,
         "seriesId": owner.version.id,
@@ -333,8 +368,10 @@ def _episode(
         "monitored": bool(link.watched),
         "hasFile": file_row is not None,
         "episodeFileId": episode_file_id(file_row) if file_row is not None else 0,
-        "series": {"id": owner.version.id, "title": owner.title.title or "", "year": owner.title.year or 0},
     }
+    if not lingarr:
+        # Lingarr reads a series here as a whole one and fails on this short form; Sonarr's list has none either.
+        out["series"] = {"id": owner.version.id, "title": owner.title.title or "", "year": owner.title.year or 0}
     if absolute is not None:
         out["absoluteEpisodeNumber"] = absolute
     if file_row is not None:
@@ -355,8 +392,16 @@ def _absolute_numbers(db: OrmSession, title_id: int) -> dict[int, int]:
     return found
 
 
-def episodes(db: OrmSession, version_id: int, *, episode_row_id: int | None = None) -> list[dict[str, Any]]:
-    """The episodes of a series version (or the one named), each with its file when it has one."""
+def episodes(
+    db: OrmSession,
+    version_id: int,
+    *,
+    episode_row_id: int | None = None,
+    season: int | None = None,
+    lingarr: bool = False,
+) -> list[dict[str, Any]]:
+    """The episodes of a series version (or the one named, or those of one season), each with its file when it has
+    one."""
     owner = series_version(db, version_id)
     if owner is None:
         return []
@@ -372,11 +417,14 @@ def episodes(db: OrmSession, version_id: int, *, episode_row_id: int | None = No
     )
     if episode_row_id is not None:
         query = query.where(Episode.id == episode_row_id)
+    if season is not None:
+        query = query.where(Episode.season_number == season)
     absolute = _absolute_numbers(db, owner.title.id) if owner.title.series_type == "anime" else {}
-    return [
-        _episode(owner, episode, link, file_row, absolute.get(episode.id))
+    found = (
+        _episode(owner, episode, link, file_row, absolute.get(episode.id), lingarr)
         for episode, link, file_row in db.execute(query).tuples()
-    ]
+    )
+    return [item for item in found if item is not None]
 
 
 def episode(db: OrmSession, number: int) -> dict[str, Any] | None:
@@ -385,6 +433,33 @@ def episode(db: OrmSession, number: int) -> dict[str, Any] | None:
         return None
     found = episodes(db, parts[0], episode_row_id=parts[1])
     return found[0] if found else None
+
+
+def lingarr_episode(db: OrmSession, number: int) -> dict[str, Any] | None:
+    """One episode by Lingarr's number, with its whole series as Sonarr gives it."""
+    parts = ids.split_lingarr_episode_id(number)
+    if parts is None:
+        return None
+    episode_row_id, definition_id = parts
+    row = db.get(Episode, episode_row_id)
+    if row is None:
+        return None
+    version_id = db.scalar(
+        select(Version.id).where(
+            Version.title_id == row.title_id,
+            Version.version_definition_id == definition_id,
+            Version.source_id.is_(None),
+        )
+    )
+    if version_id is None:
+        return None
+    found = episodes(db, version_id, episode_row_id=episode_row_id, lingarr=True)
+    if not found:
+        return None
+    whole = one_series(db, version_id)
+    if whole is not None:
+        found[0]["series"] = whole
+    return found[0]
 
 
 def episode_files(db: OrmSession, version_id: int) -> list[dict[str, Any]]:

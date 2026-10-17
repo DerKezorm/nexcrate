@@ -125,6 +125,7 @@ from .services.automatic import rss as automatic_rss
 from .services.automatic import scheduler as automatic_scheduler
 from .services.automatic import waiting as automatic_waiting
 from .services.automatic import wishes as automatic_wishes
+from .services.bazarr import rescan as bazarr_rescan
 from .services.downloads import arrival as download_arrival
 from .services.downloads import importing as download_importing
 from .services.downloads import retention as download_retention
@@ -255,8 +256,9 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
     (
         bazarr_router.router,
         (
-            "Bazarr reads nexcrate as Radarr and Sonarr below /bazarr: a key with the scope read in the address or a "
-            "header, never the session, and only while the owner has the connection turned on."
+            "Bazarr and Lingarr read nexcrate as Radarr and Sonarr below /bazarr and /lingarr: a key with the scope "
+            "read in the address or a header, never the session, and only while the owner has the connection turned "
+            "on."
         ),
     ),
     (totp_router.public_router, "The code step of the sign-in runs between the password and the session."),
@@ -337,6 +339,8 @@ v1_events.install()
 jobs.register(ratings.JOB_NAME, ratings.INTERVAL_SECONDS, ratings.run_job)
 jobs.register(updates.JOB_NAME, updates.INTERVAL_SECONDS, updates.run_job)
 jobs.register(webhooks.JOB_NAME, webhooks.INTERVAL_SECONDS, webhooks.run_job, ready=judging.idle)
+# Bazarr and Lingarr: once a day the subtitles next to the videos are recorded, so they move with them (issue #15).
+jobs.register(bazarr_rescan.JOB_NAME, bazarr_rescan.INTERVAL_SECONDS, bazarr_rescan.run_job, ready=judging.idle)
 # Notifications to the owner's services read the same feed.
 jobs.register(notify_outbox.JOB_NAME, notify_outbox.INTERVAL_SECONDS, notify_outbox.run_job, ready=judging.idle)
 
