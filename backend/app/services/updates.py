@@ -64,7 +64,20 @@ def _state(db: Any) -> dict[str, Any]:
 
 
 def status(db: Any) -> dict[str, Any]:
-    """What is known, without asking anybody: ``available`` is null while the newest release is unknown."""
+    """What is known, without asking anybody: ``available`` is null while the newest release is unknown.
+
+    Switched off, only the running version: a release found before the switch tells nobody of itself any more.
+    """
+    if not enabled(db):
+        return {
+            "enabled": False,
+            "current": __version__,
+            "latest": None,
+            "available": None,
+            "checked_at": None,
+            "problem": None,
+            "url": RELEASES_URL,
+        }
     state = _state(db)
     latest = state.get("latest") if isinstance(state.get("latest"), str) else None
     checked = state.get("checked_at")
