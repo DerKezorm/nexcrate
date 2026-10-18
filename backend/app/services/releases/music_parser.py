@@ -49,7 +49,7 @@ _BRACKET_GROUP = re.compile(r"[ ._-]*\[([A-Za-z0-9_]{2,24})\]$")
 _LAST_WORD = re.compile(r"([^-._ \[\]()]+)[\])]*$")
 #: The scene's ending: the year as the last field in front of the group.
 _TAIL_YEAR = re.compile(r"(?<! )-\d{4}$")
-#: "1 file", "als 1 flac": the album as one file (decision 14), in the spellings posters use. Never "Vol 1 FLAC".
+#: "1 file", "als 1 flac": the album as one file, in the spellings posters use. Never "Vol 1 FLAC".
 _ONE_FILE = re.compile(
     r"(?<![0-9A-Za-z])(?:(?:als|as|elk|each|in)[ ._-]1[ ._-]?(?:file|flac)|1[ ._-]?file)(?![A-Za-z])", _I
 )
@@ -187,17 +187,17 @@ class ParsedAlbum:
     release_title: str
     #: The text in front of the features, as it stands in the name.
     head: str = ""
-    #: A proposal only (decision 3); ``unsure`` when the head has more than one hyphen and no clearer divider.
+    #: A proposal only; ``unsure`` when the head has more than one hyphen and no clearer divider.
     artist: str = ""
     album: str = ""
     unsure: bool = False
     various_artists: bool = False
-    #: The first year is the album's, the last before the group the edition's (decision 6); equal when there is one.
+    #: The first year is the album's, the last before the group the edition's; equal when there is one.
     year: int | None = None
     edition_year: int | None = None
     #: ``FLAC``, ``MP3``, ``AAC``, ``ALAC``, ``Vorbis``, ``Opus``, ``WAV``, ``APE``, ``WavPack``, ``WMA``, ``DSD``.
     format: str | None = None
-    #: True when the format is not in the name and follows from the scene's shape (decision 4).
+    #: True when the format is not in the name and follows from the scene's shape.
     format_assumed: bool = False
     #: ``320``, ``256``, ..., ``V0``, ``V2``: only what the name says.
     bitrate: str | None = None

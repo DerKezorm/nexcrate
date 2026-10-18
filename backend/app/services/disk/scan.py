@@ -503,7 +503,7 @@ def run_scan(job: DiskJob, root_ids: list[int] | None) -> dict[str, Any]:
         series_roots = [
             root.id for root in every if (root_ids is None or root.id in root_ids) and root.kind == "series"
         ]
-        # Music roots after them (decision 17).
+        # Music roots after them.
         album_roots = [root.id for root in every if (root_ids is None or root.id in root_ids) and root.kind == "album"]
         installation = companions.installation_id(db)
         all_paths = {root.id: Path(root.path) for root in every}

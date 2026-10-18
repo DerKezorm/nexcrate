@@ -26,7 +26,7 @@ import { pickedFromProposal, pickedFromResult, type PickedMovie } from './picked
 /** Gesucht wird erst, wenn so lange nichts getippt wurde. */
 export const ASSIGN_SEARCH_DELAY_MS = 300
 
-/** A version of the chosen movie that has a file, or that a source feeds, cannot take this folder (decision 20). */
+/** A version of the chosen movie that has a file, or that a source feeds, cannot take this folder. */
 function takenBy(version: TitleVersion): 'file' | 'source' | null {
   if (isFromSource(version)) return 'source'
   const hasFile = (typeof version.relative_path === 'string' && version.relative_path !== '') || version.state === 'available' || version.state === 'upgrade'

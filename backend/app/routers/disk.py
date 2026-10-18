@@ -68,7 +68,7 @@ class DiskRootOut(BaseModel):
         description="Rows per state after the last scan; `ignored` counts the rows the owner marked, whatever their "
         "state. Empty before the first scan."
     )
-    missing_files: int = Field(description="Own files below this folder the last scan did not find (decision 25).")
+    missing_files: int = Field(description="Own files below this folder the last scan did not find.")
     missing_examples: list[str] = Field(description="Up to 20 movie folders of such files, relative to the root.")
     radarr_unmapped: list[str] = Field(
         description="Names of Radarr connections whose root folders the scan could not map by files; their movie "
@@ -240,10 +240,10 @@ class MediaOut(BaseModel):
     file: str
     media: dict[str, Any] | None = Field(description="nexcrate's media shape (schema 1), or null when unreadable.")
     summary: str | None = Field(description="One line for the dialog.")
-    quality: str = Field(description="What would be recorded (decision 22).")
+    quality: str = Field(description="What would be recorded.")
     quality_from: Literal["media", "name"]
     name_quality: str = Field(description="What the names alone say.")
-    languages: list[str] = Field(description="Radarr's language names (decision 24).")
+    languages: list[str] = Field(description="Radarr's language names.")
     error_code: Literal["media_unreadable", "media_timeout", "media_truncated"] | None = Field(
         description="Set when the tool failed or found the file cut off (media_truncated); the name decides then."
     )
@@ -837,7 +837,7 @@ def start_assign_many(payload: AssignManyIn | None = None) -> DiskJobOut:
 
 def _with_series(kind: str, ids: list[int] | None, movie_work: Any, state: str, keep: bool = False) -> Any:
     """A job over movie folders as before, then series folders (P2), then album folders
-    (decision 19). With ``keep`` what the job brings stays as it is (``keep_as_is``)."""
+   . With ``keep`` what the job brings stays as it is (``keep_as_is``)."""
 
     def work(job: disk_jobs.DiskJob) -> dict[str, Any]:
         started = utcnow()
@@ -902,7 +902,7 @@ class AlbumAssignIn(BaseModel):
     response_model=TitleDetail,
     summary="Assign an album folder",
     description=(
-        "A row below a music root (decision 19): the album's version, or a new one, gets this "
+        "A row below a music root: the album's version, or a new one, gets this "
         "folder as its album folder, the album's releases are loaded when they are not yet, and the folder is read: "
         "files linked by their tags and names, the rest unclear on the album page. Nothing is moved or renamed. 409 "
         "`album_fed_by_source`, `album_has_folder` (the version has files in another folder), `album_folder_known`."

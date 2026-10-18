@@ -6,7 +6,7 @@ lossless; 24 bit is a step of its own because the files are about three times th
 
 Two readings end in a step: a parsed release name, and the quality a Lidarr connection reports for a file. Lidarr's
 names are read by their pattern (``MP3-320``, ``MP3-VBR-V0``, ``AAC-256``, ``OGG Vorbis Q8``, ``FLAC 24bit``), not
-from a table: a name this does not understand stays ``unknown``, never guessed (decision 12).
+from a table: a name this does not understand stays ``unknown``, never guessed.
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ def _by_bitrate(fmt: str, kbit: int) -> str:
 
 def step_of(parsed: ParsedAlbum) -> str:
     """The step a release name says. Lossy without a bitrate is ``unknown``, but for the scene's MP3 names, which
-    never carry one and whose rules ask for V0 or 320 (decision 4)."""
+    never carry one and whose rules ask for V0 or 320."""
     fmt = parsed.format
     if fmt is None:
         return UNKNOWN
@@ -89,6 +89,6 @@ def step_of_lidarr(name: str | None) -> str:
 
 
 def lowest(steps: list[str]) -> str:
-    """The step of an album is the worst of its files (decision 22); nothing known is ``unknown``."""
+    """The step of an album is the worst of its files; nothing known is ``unknown``."""
     known = [step for step in steps if step in STEPS]
     return max(known, key=rank) if known else UNKNOWN

@@ -149,7 +149,7 @@ _LENGTH = re.compile(r"-?\d{1,4}")
 #: The values shortened first when a name is too long.
 SHORTENED_KEYS = TITLE_KEYS | {ORIGINAL_KEY, ORIGINAL_FILENAME_KEY}
 #: Tokens whose modifier is a number format of zeros (``{season:00}``), not a length: Sonarr's numbers, and Lidarr's
-#: ``{medium:0}`` and ``{track:00}`` (decision 14).
+#: ``{medium:0}`` and ``{track:00}``.
 PAD_KEYS = frozenset({"season", "episode", "absolute", "medium", "track"})
 _PAD = re.compile(r"0{1,4}")
 
@@ -157,7 +157,7 @@ _PATTERN = re.compile(
     r"(?P<wrapper>\{(?P<wrap>imdb|imdbid|tmdb|tmdbid|tvdb|tvdbid|edition)-"
     r"\{(?P<inner>[A-Za-z0-9]+(?:[- ._]+[A-Za-z0-9]+)?)\}\})"
     # A server's id addition in square brackets, such as Jellyfin's [tmdbid-{TmdbId}] or Emby's [tvdbid={TvdbId}]: it
-    # vanishes as a whole without the id (decision 9).
+    # vanishes as a whole without the id.
     r"|(?P<bracket>\[(?P<bwrap>imdbid|tmdbid|tvdbid|imdb|tmdb|tvdb)(?P<bsep>[-=])\{(?P<binner>[A-Za-z]+Id)\}\])"
     r"|(?P<token>\{(?P<prefix>[-{ ._\[(]*)(?P<name>[A-Za-z0-9]+(?:(?P<separator>[- ._]+)[A-Za-z0-9]+)?)"
     r"(?::(?P<modifier>[ ,A-Za-z0-9|+-]*[,A-Za-z0-9|+]))?(?P<suffix>[-} ._)\]]*)\})"

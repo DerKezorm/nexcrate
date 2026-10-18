@@ -534,7 +534,7 @@ class LidarrClient:
             timeout=self._timeout,
             headers={"X-Api-Key": self._api_key},
             follow_redirects=False,
-            # Its answers carry names and paths: never in the log, not even in trace mode (decision 44).
+            # Its answers carry names and paths: never in the log, not even in trace mode.
             log_bodies=False,
         )
         return self

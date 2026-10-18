@@ -15,7 +15,7 @@
   with the labels of the versions and nothing is written. Otherwise both files are written next to their target
   and renamed over them, and the cache is cleared. Profiles keep their rules until they are saved again and are
   ``outdated`` meanwhile.
-* **Unchanged rules keep no old commit** (decision 3): a profile whose freshly built rules equal the stored ones
+* **Unchanged rules keep no old commit**: a profile whose freshly built rules equal the stored ones
   except for ``trash_commit`` quietly takes the new commit, so a change in Radarr's data does not mark every
   series profile outdated, or the other way round. Nothing about its rules changes.
 
@@ -230,7 +230,7 @@ async def _latest_under(path: tuple[str, ...]) -> tuple[str, str]:
 
 
 async def latest_commit() -> tuple[str, str]:
-    """The newest commit that touched the data of either app, and its date (decision 2): one API call per app."""
+    """The newest commit that touched the data of either app, and its date: one API call per app."""
     newest: tuple[str, str] | None = None
     for path in trash_data.DATA_PATHS.values():
         found = await _latest_under(path)
@@ -295,7 +295,7 @@ async def _download(commit: str) -> bytes:
 
 
 def _same_rules(stored: Any, built: dict[str, Any]) -> bool:
-    """Whether two rule sets differ in nothing but their ``trash_commit`` (decision 3)."""
+    """Whether two rule sets differ in nothing but their ``trash_commit``."""
     if not isinstance(stored, dict):
         return False
     left = {key: value for key, value in stored.items() if key != "trash_commit"}
@@ -345,7 +345,7 @@ def broken_profiles(snapshot: TrashSnapshot) -> list[str]:
 
 
 def _stamp_unchanged(profile_ids: list[int], commit: str) -> int:
-    """Write the new commit onto the profiles whose rules did not change (decision 3)."""
+    """Write the new commit onto the profiles whose rules did not change."""
     if not profile_ids:
         return 0
     with SessionLocal() as db:

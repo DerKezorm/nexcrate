@@ -1,16 +1,16 @@
 """What the owner does with an album download nexcrate could not file by itself (M4.6).
 
 * ``files_of`` is the dialog "Von Hand zuordnen": the audio files with what nexcrate read and proposes, the releases of
-  the album with loaded tracks, the tracks of one release with what the album holds for each (decision 31). Files are
+  the album with loaded tracks, the tracks of one release with what the album holds for each. Files are
   named by a number (``key``), never by a path the browser could send back. Tracks of the album's target release
   whose song that release lacks are offered as well (``target_tracks``): once files
   lie in the album folder the release cannot change, and a bonus track of the target would stay out for good.
 * ``assign`` files what the owner chose: a track, "fits no track, file anyway" (``loose``, decision 32), or nothing.
   Each track once, only tracks of the chosen release or tracks only its target has. The release can be changed only
   while no file of the download lies in the album folder. ``confirm: ["not_better"]`` replaces an album whose files
-  are not worse (decision 20). The choice holds for this download only; the target release stays as it is
-  (decision 33).
-* ``finish`` is "Rest nicht ablegen" (decision 34): the download is ``imported`` with what is filed; afterwards
+  are not worse. The choice holds for this download only; the target release stays as it is
+ .
+* ``finish`` is "Rest nicht ablegen": the download is ``imported`` with what is filed; afterwards
   SABnzbd's job folder goes. A torrent keeps its files.
 """
 

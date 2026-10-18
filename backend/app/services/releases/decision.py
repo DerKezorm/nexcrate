@@ -355,7 +355,7 @@ def _file_reason(rules: dict[str, Any], order: _Order, quality: q.Quality, score
     rank = _rank(order, quality.name)
     if rank < cutoff or _below_target(rules, quality):
         return "quality"
-    # Exactly at the cutoff: a quality above it stays whatever its score (finding 9).
+    # Exactly at the cutoff: a quality above it stays whatever its score.
     if upgrades_allowed and cutoff >= 0 and rank == cutoff and score() < int(rules.get("upgrade_until") or 0):
         return "score"
     return None

@@ -1,6 +1,6 @@
 """Newznab and Torznab indexers: caps, the connection test, a test search. XML only, read with defusedxml.
 
-What the specs, Radarr's source and the test bench taught (13.09.2026, see the design notes):
+What the specs, Radarr's source and the test bench taught:
 
 * ⚠️ **The key travels as the query parameter ``apikey``**, the one exception to the header rule:
   the Newznab and Torznab specs and Jackett accept nothing else. ``http_log`` masks it in every log
@@ -69,7 +69,7 @@ MAX_PAUSE_SECONDS = 24 * 3600
 CAPS_MAX_AGE = timedelta(days=7)
 SEARCH_LIMIT = 50
 DEFAULT_CATEGORIES = (2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060)
-#: Sonarr's default series categories plus UHD, which Sonarr leaves out (decision 5).
+#: Sonarr's default series categories plus UHD, which Sonarr leaves out.
 DEFAULT_SERIES_CATEGORIES = (5030, 5040, 5045)
 #: Newznab's anime category. It stays out of the series default; an anime series asks it as well
 #: (``default_anime_categories``, the design notes, A3).
@@ -77,11 +77,11 @@ ANIME_CATEGORY = 5070
 DEFAULT_CAPS: dict[str, Any] = {
     "movie_search": True,
     "movie_params": ["q", "imdbid"],
-    # Sonarr's defaults when caps are missing or broken: practically a text search (decision 3).
+    # Sonarr's defaults when caps are missing or broken: practically a text search.
     "tv_search": True,
     "tv_params": ["q", "rid", "season", "ep"],
     "search_params": ["q"],
-    # Lidarr's default: without caps it searches music as plain text (decision 5).
+    # Lidarr's default: without caps it searches music as plain text.
     "music_search": False,
     "music_params": [],
     "search_engine": "sphinx",

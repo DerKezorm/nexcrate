@@ -293,7 +293,7 @@ async def run_round() -> None:
         # An import that met a locked database pauses before its next try (``importing.waits``).
         if not importing.waits(download_id):
             importing.request(download_id)
-    # Nothing stays filed away halfway: 30 minutes without a change is a problem with a way out (S4, decision 33).
+    # Nothing stays filed away halfway: 30 minutes without a change is a problem with a way out.
     from . import assigning
 
     await asyncio.to_thread(assigning.watch)

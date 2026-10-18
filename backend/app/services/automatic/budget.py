@@ -1,6 +1,6 @@
 """The request budget per indexer and the escalation after failures (C4, decisions 7 and 8).
 
-**The allowance a day for planned searches,** counted in requests, not titles (decision 17):
+**The allowance a day for planned searches,** counted in requests, not titles:
 
 * the known limit: the ``apiMax`` of an indexer that sent ``newznab:apilimits``, else the daily limit the owner set;
 * from a known limit a fifth stays free for the owner's own searches, and RSS reserves ``min(96, max(1, floor(limit *

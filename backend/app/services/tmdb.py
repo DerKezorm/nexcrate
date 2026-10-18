@@ -940,7 +940,7 @@ async def refresh_titles(limit: int = REFRESH_BATCH) -> int:
     if due:
         refreshed = await _refresh_due(token, due, "refresh")
         logger.info("TMDB refresh: %d of %d due titles refreshed", refreshed, len(due))
-    # Series since S1, with their own due rules (decision 18). Imported here: it builds on this.
+    # Series since S1, with their own due rules. Imported here: it builds on this.
     from .series import refresh as series_refresh
 
     return refreshed + await series_refresh.refresh_series(token, limit)

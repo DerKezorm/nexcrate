@@ -7,17 +7,17 @@ of the owner (``OWNER`` lane: a search, a preview, an album page) takes the next
 request (``BACKGROUND`` lane: loading and refreshing artists), decisions 12 and 13.
 
 A 503 is MusicBrainz saying "slow down" and came for 11 of 89 requests on the bench even at 1.1 s (plan, B1). The
-background retries five times with growing waits; the owner twice, then ``musicbrainz_busy`` (decision 14).
+background retries five times with growing waits; the owner twice, then ``musicbrainz_busy``.
 
 ⚠️ A merged id answers **301** with the surviving id in ``Location`` (measured 18.09.2026 on the owner's library; the
 first measurement said 200 because its tool followed the redirect without a word). The client follows it itself,
 through the gate like any request, and only within MusicBrainz's own API.
 
 Answers are cached in the TMDB cache table under ``mb_`` keys: a search for 30 minutes, a lookup or a page of a browse
-for 24 hours (decision 17). The data itself lives in the music tables; the cache only stops the same question twice
+for 24 hours. The data itself lives in the music tables; the cache only stops the same question twice
 in one run. Only the core data (CC0) is asked for: no ratings, tags or genres.
 
-The switch under Settings, Privacy (decision 16): off means no request at all; every call raises
+The switch under Settings, Privacy: off means no request at all; every call raises
 ``musicbrainz_disabled``, and what is stored stays visible.
 
 ``clock`` and ``sleep`` are module attributes so that tests can replace them, as for the indexers.
@@ -88,9 +88,9 @@ SETTING_LAST_ERROR = "musicbrainz_last_error_code"
 
 #: A release with this many release events is a worldwide one: MusicBrainz names its ``country`` as the first of
 #: them alphabetically (Afghanistan for a digital release in 190 countries, measured on the owner's Lidarr and in
-#: the recording of Nevermind), which would rank it last in the country order (decision 28).
+#: the recording of Nevermind), which would rank it last in the country order.
 WORLDWIDE_EVENTS = 10
-#: The includes of a release page with tracks (decision 6); the bench showed they do not shorten the page (B1).
+#: The includes of a release page with tracks; the bench showed they do not shorten the page (B1).
 RELEASE_INCLUDES = "recordings+artist-credits+labels+media"
 _LUCENE_SPECIAL = re.compile(r'([+\-!(){}\[\]^"~*?:\\/]|&&|\|\|)')
 _MBID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
@@ -245,7 +245,7 @@ class Gate:
     lock: threading.Lock = field(default_factory=threading.Lock)
     #: The clock value at which the next request may go.
     next_free: float = 0.0
-    #: How many owner requests wait for a slot: while one does, the background stands back (decision 13).
+    #: How many owner requests wait for a slot: while one does, the background stands back.
     owner_waiting: int = 0
     #: Wall-clock moments of requests sent and 503 answers received, for the loading status.
     sent: deque[datetime] = field(default_factory=deque)
@@ -751,7 +751,7 @@ def _page(
 
 async def search_artists(query: str, lane: str = OWNER) -> list[ArtistData]:
     """Up to 10 artists for a free text. MusicBrainz folds umlauts and accents itself (B1). Various Artists is never a
-    hit (decision 18)."""
+    hit."""
     text = _escaped(query)
     if not text:
         return []
@@ -761,7 +761,7 @@ async def search_artists(query: str, lane: str = OWNER) -> list[ArtistData]:
 
 
 async def lookup_artist(mbid: str, lane: str = OWNER) -> ArtistData:
-    """One artist with its aliases. A merged id answers with the surviving id in ``mbid`` (B1, decision 22)."""
+    """One artist with its aliases. A merged id answers with the surviving id in ``mbid``."""
     data = await _get("artist", f"/artist/{mbid}", {"inc": "aliases"}, lane, LOOKUP_TTL, lookup=True)
     artist = artist_of(data)
     if not artist.mbid:
@@ -770,7 +770,7 @@ async def lookup_artist(mbid: str, lane: str = OWNER) -> ArtistData:
 
 
 async def browse_release_groups(artist_mbid: str, offset: int = 0, lane: str = BACKGROUND) -> Page[ReleaseGroupData]:
-    """One page of an artist's release groups, 100 at a time, with their types and credits (decision 3).
+    """One page of an artist's release groups, 100 at a time, with their types and credits.
 
     ⚠️ ``release-group-status=website-default`` is what MusicBrainz's own artist page shows: without it every release
     group with nothing but bootlegs, promotions and pseudo-releases comes along, typed "Album" like a studio album
@@ -827,7 +827,7 @@ async def browse_releases(
     limit: int = PAGE,
     waits: tuple[float, ...] | None = None,
 ) -> Page[ReleaseData]:
-    """One page of the official releases of a release group (decision 5), with media and tracks when ``tracks``.
+    """One page of the official releases of a release group, with media and tracks when ``tracks``.
     A page ends after about 500 tracks, never inside a release (c). ``limit`` asks for a smaller page and ``waits``
     sets the patience with 503: the loading job's way with an album MusicBrainz stays busy for."""
     size = max(1, min(limit, PAGE))

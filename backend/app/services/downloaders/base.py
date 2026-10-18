@@ -50,7 +50,7 @@ def longest_retention(values: list[int | None]) -> int | None:
 DEFAULT_CATEGORY = "nexcrate"
 #: Every call to a client has its own 10 seconds (plan, "Download clients").
 TIMEOUT = httpx.Timeout(10.0)
-#: Handing over a release waits longer (the owner's finding 1 of 22.09.2026): with 14 jobs unpacking the owner's
+#: Handing over a release waits longer: with 14 jobs unpacking the owner's
 #: SABnzbd took the NZB and answered after more than 10 seconds, five times in a day. Connecting gives up after 10.
 HAND_OVER_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
 #: Transport errors after the request went out: the client may have taken it, and only a look into its category says.

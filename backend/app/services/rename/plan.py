@@ -23,7 +23,7 @@ from ...models import Artist, EpisodeFile, ExtraFile, SeasonFolder, TrackFile, V
 from .. import naming
 from ..downloads import files
 
-#: System rests (decision 21): a folder holding only these counts as empty. Files of these names move along with
+#: System rests: a folder holding only these counts as empty. Files of these names move along with
 #: their folder, so the undo brings them back; the folders (``@eaDir``, Synology's thumbnails) stay and go to the
 #: recycle folder with the old folder.
 SYSTEM_NAMES = frozenset({".ds_store", "thumbs.db", "desktop.ini", "@eadir", ".appledouble", "._.ds_store"})

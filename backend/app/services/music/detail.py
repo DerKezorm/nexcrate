@@ -1,4 +1,4 @@
-"""The album block of the title page (decision 40): the credit, the target release with its
+"""The album block of the title page: the credit, the target release with its
 reasons, the suggestion, the tracks of the target with what lies on disk, and the releases without their tracks."""
 
 from __future__ import annotations
@@ -216,7 +216,7 @@ def album_block(db: OrmSession, title: Title, versions: list[Version]) -> dict[s
         "track_counts": version.track_counts if version is not None else None,
         "tracks": _tracks_of(db, version, target),
         "releases": [_release_head(release) for release in releases],
-        # Music M6 (decision 15): files of the album folder without a track, and whether the
+        # Music M6: files of the album folder without a track, and whether the
         # folder can be read again (an own version with an album folder).
         "unclear_files": _unclear_of(db, version),
         "can_read_folder": bool(version is not None and version.source_id is None and version.relative_path),

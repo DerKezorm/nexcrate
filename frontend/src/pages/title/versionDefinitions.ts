@@ -94,7 +94,7 @@ export function fileOriginText(t: TFunction, version: TitleVersion): string | nu
 }
 
 /**
- * What the profile still wants, in words (decision 20). A group of qualities shows its qualities, never its inner name
+ * What the profile still wants, in words. A group of qualities shows its qualities, never its inner name
  * such as "Merged QPs": members of one resolution read "Bluray, WEBRip oder WEBDL 1080p", others are listed whole.
  * Without members the name stays as the server sends it; null without a target.
  */
@@ -112,7 +112,7 @@ export function targetText(version: TitleVersion, language: string): string | nu
 }
 
 /**
- * The two numbers of an upgrade by score (decision 20): the file's score and the profile's upgrade-until. null for any
+ * The two numbers of an upgrade by score: the file's score and the profile's upgrade-until. null for any
  * other reason, for a version a source feeds, and when a number is missing, as from a server before decision 20.
  */
 export function scoreUpgradeOf(version: TitleVersion): { score: number; until: number } | null {

@@ -388,7 +388,7 @@ def _state_titles(db: OrmSession) -> dict[str, dict[str, int]]:
 
 def stats(db: OrmSession) -> dict[str, Any]:
     counts = dict(db.execute(select(Title.kind, func.count(Title.id)).group_by(Title.kind)).tuples().all())
-    # Albums count like the library lists them: with a version (M1, decision 2); the catalogue behind them does not.
+    # Albums count like the library lists them: with a version; the catalogue behind them does not.
     albums = db.scalar(
         select(func.count(Title.id)).where(Title.kind == "album", exists().where(Version.title_id == Title.id))
     )
@@ -485,7 +485,7 @@ def _last_failure(db: OrmSession, title_id: int, definition_id: int) -> dict[str
 
 
 def location(version: Version, version_folder: str | None, series: bool = False) -> dict[str, str] | None:
-    """Where the movie of a version lies or goes (finding 13), read from the database only.
+    """Where the movie of a version lies or goes, read from the database only.
 
     * ``radarr``: a version a source feeds, with Radarr's movie folder as Radarr sees it; None before an import kept it.
     * ``file``: a version of nexcrate's own with a file, with the folder holding it (``root_folder`` joined with every
@@ -540,7 +540,7 @@ def target_items(upgrade_to: str | None) -> list[str]:
 
 
 def upgrade_facts(version: Version, rules: dict[str, Any] | None, original_language: str | None) -> dict[str, Any]:
-    """Why a version's file can still be upgraded (decision 20), read from the database and the rules, nothing written.
+    """Why a version's file can still be upgraded, read from the database and the rules, nothing written.
 
     A version a source feeds keeps what the source stored: its ``upgrade_to``, no reason and no score. A version of
     nexcrate's own is judged by its profile as ``judging`` judges it; reason and target show only while the stored
@@ -659,7 +659,7 @@ def detail(db: OrmSession, title_id: int) -> dict[str, Any] | None:
             # Series: what the version watches and its counts; null for a movie.
             "watch": series_detail.version_watch(db, version) if title.kind == "series" else None,
             "counts": series_detail.counts_from(version.episode_counts) if title.kind == "series" else None,
-            # Episodes only the feeding Sonarr knows, mostly specials (decision 47).
+            # Episodes only the feeding Sonarr knows, mostly specials.
             "source_only_episodes": series_detail.source_only_episodes(db, version) if title.kind == "series" else [],
         }
         for version, label, version_folder, source_name in rows
@@ -704,7 +704,7 @@ def detail(db: OrmSession, title_id: int) -> dict[str, Any] | None:
             if title.kind == "series"
             else None
         ),
-        # Music (decision 40): the credit, the target release, its tracks, the releases.
+        # Music: the credit, the target release, its tracks, the releases.
         "album": (
             music_detail.album_block(db, title, [version for version, *_rest in rows])
             if title.kind == "album"

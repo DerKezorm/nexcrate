@@ -232,7 +232,7 @@ export function VersionCard({
     // Mit einem Ort sagt die Zeile oben genauer, wo die Fassung liegt. Der Stammordner stuende sonst doppelt da.
     { label: t('title.version.folder'), value: location === null ? version.root_folder || null : null, mono: true },
     { label: t('title.version.quality'), value: qualityText(t, version) },
-    // A group of qualities shows its qualities, not its inner name (decision 20).
+    // A group of qualities shows its qualities, not its inner name.
     { label: t('title.version.upgradeTo'), value: version.state === 'upgrade' ? targetText(version, language) : null },
     // Ohne Datei schickt der Server 0. "0,0 GB" waere nur Rauschen.
     { label: t('title.version.size'), value: version.size_bytes ? sizeText(t, version.size_bytes, language) : null },

@@ -327,7 +327,7 @@ def assign(
 
 def adopt_companion(folder: Path) -> bool:
     """A ``release.nex`` of another installation in a folder the owner took over becomes this installation's
-    (decision 4): the same document, written with this installation's id. Returns whether it was rewritten."""
+   : the same document, written with this installation's id. Returns whether it was rewritten."""
     installation = companions.installation_id()
     existing = companions.read(folder, installation)
     if existing.outcome != companions.OTHER_INSTALLATION or existing.movie is None:

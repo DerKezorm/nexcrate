@@ -1,4 +1,4 @@
-"""What the owner can set about how releases are ordered (finding 7b).
+"""What the owner can set about how releases are ordered.
 
 One setting so far: ``search_prefer_indexer_flags``, Radarr's "Prefer Indexer Flags" (Settings, Indexers, Options).
 ``1`` on, anything else off; nothing stored means off, as in Radarr. It concerns movies only: measured on 20.09.2026,

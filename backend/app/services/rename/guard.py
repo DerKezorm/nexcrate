@@ -1,4 +1,4 @@
-"""Filing and renaming never touch one title at the same time (decision 19).
+"""Filing and renaming never touch one title at the same time.
 
 Filing a download, renaming a TBA file and reading a folder again call ``filing(title_id)``; renaming holds
 ``renaming(title_ids)``. Whoever comes second waits for the next round: a download goes back to ``completed``, a

@@ -6,16 +6,16 @@ clean characters and umlauts. What series add:
 * **Six patterns and a style:** series folder, season folder, specials folder, episode file, file of a daily show,
   file of an anime series (A5), and the style of multi-episode files. Per series version each
   pattern may be its own; an empty one is the default. The umlaut rule is the one of movies.
-* **Tokens** in Sonarr's names (decision 10). ``{season:00}``, ``{episode:00}`` and ``{absolute:000}`` are zero
+* **Tokens** in Sonarr's names. ``{season:00}``, ``{episode:00}`` and ``{absolute:000}`` are zero
   padded numbers. ``{absolute}`` is the number an anime series counts through (scheme ``absolute``), and only the
   anime pattern takes it, as in Sonarr; a file of several episodes names the first and the last (``001-003``) in the
   range styles and every number in the others (``001-002-003``), as Sonarr's naming examples show.
   ``{TvMazeId}`` stays empty: nexcrate has no such number.
-* **Titles** in the account language with the English fallback (decision 13). A placeholder ("Folge 9") is no title;
-  a missing title is ``TBA`` as in Sonarr, and the file is marked for renaming later (decision 27). Several episodes:
+* **Titles** in the account language with the English fallback. A placeholder ("Folge 9") is no title;
+  a missing title is ``TBA`` as in Sonarr, and the file is marked for renaming later. Several episodes:
   ``{Episode Title}`` joins with " + ", ``{Episode CleanTitle}`` with " and "; titles that only differ by "(1)", "(2)"
   become one.
-* **Numbers** after TMDB or TVDB, per version (decision 14). Without a TVDB number for every episode of a file, the
+* **Numbers** after TMDB or TVDB, per version. Without a TVDB number for every episode of a file, the
   file is named after TMDB. The season folder follows the number of the name.
 * **Multi-episode styles** as Sonarr's six: the block ``S{season:00}E{episode:00}`` is written out for every episode.
 * **Length:** each part within 255 bytes, the episode title shortened first, then the series title.
@@ -48,7 +48,7 @@ PATTERNS = ("series_folder", "season_folder", "specials_folder", "episode_file",
 SETTING_KEYS = {which: f"naming_{which}" for which in PATTERNS}
 SETTING_STYLE = "naming_multi_episode_style"
 
-#: TRaSH's recommendation for Sonarr (TRaSH-Guides, MIT), the series folder without an id (decision 9).
+#: TRaSH's recommendation for Sonarr (TRaSH-Guides, MIT), the series folder without an id.
 _FILE_TAIL = (
     "{[Custom Formats]}{[Quality Full]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}"
     "{[MediaInfo VideoDynamicRangeType]}{[Mediainfo VideoCodec]}{-Release Group}"
@@ -69,7 +69,7 @@ STYLES = ("extend", "duplicate", "repeat", "scene", "range", "prefixed_range")
 DEFAULT_STYLE = "prefixed_range"
 NUMBERINGS = ("tmdb", "tvdb")
 DEFAULT_NUMBERING = "tmdb"
-#: The additions for the series folder the dialog offers, measured in B1 (decision 9). Each fits its server only.
+#: The additions for the series folder the dialog offers, measured in B1. Each fits its server only.
 FOLDER_ADDITIONS = {"plex": "{tmdb-{TmdbId}}", "jellyfin": "[tmdbid-{TmdbId}]", "emby": "[tvdbid={TvdbId}]"}
 TBA = "TBA"
 
@@ -171,7 +171,7 @@ _NEEDS = {
 
 def check(pattern: str, which: str) -> None:
     """Raises ``NamingError`` for an empty pattern, an unknown token (``{absolute}`` outside the anime pattern too), a
-    file token in a folder, or what the pattern needs (decision 11)."""
+    file token in a folder, or what the pattern needs."""
     if not pattern.strip():
         raise NamingError(meldung("naming_pattern_empty", "A naming pattern must not be empty.", pattern=which))
     absolute = _ABSOLUTE.search(pattern)
@@ -532,7 +532,7 @@ def _keys_of(pattern: str) -> set[str]:
     return keys
 
 
-# --- The preview (decision 53) ---------------------------------------------------------------------------------- #
+# --- The preview ---------------------------------------------------------------------------------- #
 
 PREVIEW_SERIES = SeriesFacts(title="Beispielserie", year=2019, tmdb_id=900002, tvdb_id=800002, imdb_id="tt0000002")
 PREVIEW_DAILY = SeriesFacts(title="Example Late Show", year=2015, tmdb_id=900003, tvdb_id=800003)

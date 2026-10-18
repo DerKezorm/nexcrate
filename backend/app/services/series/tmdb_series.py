@@ -52,7 +52,7 @@ logger = logging.getLogger("nexcrate.tmdb")
 
 APPEND_LIMIT = 20
 EXTRAS = ("external_ids", "alternative_titles", "translations", "episode_groups", "keywords")
-#: TMDB's types of a series whose releases are named by date (decision 20).
+#: TMDB's types of a series whose releases are named by date.
 DAILY_TYPES = frozenset({"News", "Talk Show"})
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _IMDB = re.compile(r"^tt\d{7,10}$")
@@ -116,7 +116,7 @@ class SeriesData:
     next_air_date: str | None
     episode_groups: list[dict[str, Any]]
     seasons: list[SeasonData]
-    #: TMDB's English name of the series, for queries (S3, decision 14); None when TMDB has none.
+    #: TMDB's English name of the series, for queries; None when TMDB has none.
     title_en: str | None = None
     #: TMDB's keywords and genre ids say anime (A1).
     looks_anime: bool = False
@@ -318,7 +318,7 @@ def _season(
 
 async def fetch_episode_group(token: str, group_id: str, *, refresh: bool = False) -> dict[str, Any]:
     """The contents of a TMDB episode group: ``groups`` with ``order``, ``name`` and ``episodes`` (id and order).
-    Raises ``TmdbError``. Only the fields the numbering reads are kept (S3, decision 11)."""
+    Raises ``TmdbError``. Only the fields the numbering reads are kept."""
     data = _dict(
         await _cached(
             token,
@@ -408,7 +408,7 @@ async def fetch_series(token: str, tmdb_id: int, locale: str, *, refresh: bool =
             )
             title = title or _text(english.get("name"))
             overview = overview or _text(english.get("overview"))
-        # Every season is asked in English: specials are searched by their English name (S3, decision 21), and
+        # Every season is asked in English: specials are searched by their English name, and
         # matching checks Sonarr's titles against the English names (plan S6, "Befund: falsche Brücken"). Up to 20
         # seasons per call, as for the account language.
         for chunk in chunks(sorted(local)):
@@ -429,7 +429,7 @@ async def fetch_series(token: str, tmdb_id: int, locale: str, *, refresh: bool =
             item,
             local.get(number) if number is not None else None,
             english_season,
-            # Every season asked in English keeps its English names: a placeholder shows them (decision 49).
+            # Every season asked in English keeps its English names: a placeholder shows them.
             english_complete=english_season is not None,
         )
         if season is not None and all(existing.tmdb_id != season.tmdb_id for existing in seasons):

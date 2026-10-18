@@ -486,7 +486,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         rename_apply.recover()
     except Exception:
         logger.exception("Taking back a stopped rename failed; its files may lie under their new names")
-    # Series versions are counted again once after the counting rules changed (decision 46).
+    # Series versions are counted again once after the counting rules changed.
     try:
         counted = series_watching.recount_all_once()
         if counted:
@@ -494,7 +494,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     except Exception:
         logger.exception("Counting the series versions again failed; they keep their counts")
     # nexcrate's own files are judged again with the rules in use, after the profile upkeep, in a thread of its own:
-    # neither the start nor the health check waits for it (finding 15).
+    # neither the start nor the health check waits for it.
     try:
         judging.start()
     except Exception:
@@ -542,7 +542,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             logger.info("After the start: %d failed downloads closed, an import after them succeeded", closed)
     except Exception:
         logger.exception("Closing the moot failed downloads failed; they keep waiting in the problems")
-    # Releases the indexer's grab limit held back are searched again now, not a month later (finding 6 of 22.09.2026).
+    # Releases the indexer's grab limit held back are searched again now, not a month later.
     try:
         repaired = automatic_scheduler.repair_grab_limits(automatic_clock.now())
         if repaired:
@@ -556,7 +556,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             logger.info("After the start: %d files linked as the half of a double episode", linked)
     except Exception:
         logger.exception("Linking the halves of double episodes failed; the files stay as they are")
-    # Series folders not read yet are read before their versions want anything (decision 23).
+    # Series folders not read yet are read before their versions want anything.
     try:
         series_folder_read.resume()
     except Exception:
@@ -702,7 +702,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
     )
     base = get_settings().url_base
     if base:
-        # Under a sub path "Try it out" in /api/docs sends to it (decision 2).
+        # Under a sub path "Try it out" in /api/docs sends to it.
         schema["servers"] = [{"url": base}]
     components = schema.setdefault("components", {}).setdefault("schemas", {})
     error_schema = ErrorResponse.model_json_schema(ref_template="#/components/schemas/{model}")

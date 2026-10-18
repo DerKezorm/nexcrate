@@ -1,7 +1,7 @@
 """The plan of a series: which episodes want something, when each season is searched next, and how
 (S5.2 to S5.4, decisions 2 to 10).
 
-**An episode wants something in a version** (decision 2) when no source feeds the version, its profile has series rules,
+**An episode wants something in a version** when no source feeds the version, its profile has series rules,
 its definition has a folder, the series is searched (anime only since A6 of the design notes), the version
 watches the episode, no running download of the
 version holds it (``downloads.store.downloading_episodes``, problems that need the owner included), no problem at the
@@ -14,8 +14,8 @@ unclear files (a file of its own with no episode that the owner did not leave ou
 something only when it aired on or after the day the version became nexcrate's (``versions.own_since``); upgrades go
 on.
 
-**The anchor of an episode** (decision 4) is the day after its air date, 00:00 in the container's time zone: from then
-on it has aired, as ``series.watching.aired`` counts. Without an air date it is never searched by plan (decision 5).
+**The anchor of an episode** is the day after its air date, 00:00 in the container's time zone: from then
+on it has aired, as ``series.watching.aired`` counts. Without an air date it is never searched by plan.
 
 **Its next search** (decisions 6 and 7), in whole days since the anchor, as for movies: never searched since the anchor
 (``episodes.last_search_at``), at the anchor plus the spread; else the last search plus the interval of its tier plus
@@ -25,10 +25,10 @@ the rate. The spread comes from a hash of the title, the season and the base tim
 **A season** is due once its first searchable episode (wanting and aired) is due; the search then asks for every
 searchable episode of the season. A replacement after a failure of the season (``versions.series_replacements``) that
 no search followed makes it due at that time, reason ``replacement``; after three in 24 hours with a failure no search
-followed, the season shows ``replacement_limit`` on its schedule (decision 22). Wanting episodes that have not aired
+followed, the season shows ``replacement_limit`` on its schedule. Wanting episodes that have not aired
 yet wait with ``air_date``, episodes without a date show ``no_date``.
 
-**The title** takes the earliest season with its reason (decision 8); a stored ``limit`` stays while its time lies after
+**The title** takes the earliest season with its reason; a stored ``limit`` stays while its time lies after
 the plan's.
 
 **What one search asks** (decisions 9 and 10): at most ``MAX_SEASONS`` due seasons, replacements first, then seasons
@@ -68,7 +68,7 @@ from . import planning, settings, upgrade_guard
 MAX_SEASONS = 5
 MAX_EPISODES = 5
 DAILY_DAYS = 14
-#: Problems at the place: every further load of the version would fail the same way (decision 3).
+#: Problems at the place: every further load of the version would fail the same way.
 PLACE_PROBLEMS = ("path_not_found", "no_space", "client_error")
 #: Of two seasons due at the same time, the reason shown.
 _PRIORITY = {**planning._PRIORITY, "air_date": 5}
@@ -111,10 +111,10 @@ class VersionFacts:
     replacements: tuple[tuple[datetime, int], ...] = ()
     #: The newest failed or refused download of the last 24 hours per season.
     last_failures: dict[int, datetime] = field(default_factory=dict)
-    #: The series folder was read (decision 23).
+    #: The series folder was read.
     files_read: bool = True
     #: With unclear files: the day the version became nexcrate's, as an ISO date; missing episodes that aired before it
-    #: wait (decision 18). None without unclear files.
+    #: wait. None without unclear files.
     missing_from: str | None = None
     #: Unclear files of the version.
     unclear: int = 0

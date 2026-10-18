@@ -1,4 +1,4 @@
-"""Renaming episode files named with ``TBA`` once TMDB has a title (decision 27).
+"""Renaming episode files named with ``TBA`` once TMDB has a title.
 
 After a series is refreshed, each file nexcrate filed with ``TBA`` in its name gets the name its version's naming
 builds now, with its subtitles, and the season folder's ``release.nex`` follows. Only a file that still carries the

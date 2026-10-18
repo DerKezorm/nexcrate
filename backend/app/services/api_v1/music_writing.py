@@ -1,8 +1,8 @@
 """What other programs may change about an artist through ``/api/v1``.
 
 An artist is no title: it has no version of its own, its albums have. Requesting one is "Add artist" of the interface
-with every choice Lidarr offers (fork 1); taking it back takes back every album of it and stops new ones; freezing is
-Lidarr's unmonitoring (fork 3): nothing of it is searched on its own, its albums keep their switches.
+with every choice Lidarr offers; taking it back takes back every album of it and stops new ones; freezing is
+Lidarr's unmonitoring: nothing of it is searched on its own, its albums keep their switches.
 
 Every change goes through the functions the interface uses: ``routers.music._create_artist``, ``store.apply_choice``,
 ``routers.music.freeze`` and ``remove_artist``, the recycle bin.
@@ -126,7 +126,7 @@ def _apply_existing(artist_id: int, scope: ArtistScope, origin: str | None, call
 
 def _wish(db: OrmSession, artist: Artist) -> str:
     """A search wish on every album of the artist that wants something; each searches at once (``wishes``), a frozen
-    artist's albums too (V5, fork 3)."""
+    artist's albums too."""
     moment = utcnow()
     wished = 0
     for title in _albums(db, artist):

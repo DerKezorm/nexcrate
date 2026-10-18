@@ -278,7 +278,7 @@ class Qbittorrent(ClientBase):
             )
         except ClientError as exc:
             # ⚠️ Sent, but no answer in time: qBittorrent may have taken it. Its id is the info hash nexcrate computed,
-            # and the tracking looks for it (the owner's finding 1 of 22.09.2026).
+            # and the tracking looks for it.
             if sent_but_unanswered(exc) and info_hash:
                 raise HandOverUnsure(self.target.url, info_hash.lower()) from exc
             raise

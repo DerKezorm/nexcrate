@@ -9,7 +9,7 @@ Order of work
 1. As for movies: the file extension goes, then dashes and underscores at the ends, then ``<>?*|``. What is left is
    the release title.
 2. From the left, the first place after at least one title word where a numbering form matches ends the title
-   (decision 13). At that place the most exact form wins, in the order of ``_FORMS``. A year right before the number
+  . At that place the most exact form wins, in the order of ``_FORMS``. A year right before the number
    belongs to the title and is returned as ``year``. A subgroup in brackets at the very front is no title word.
 3. Group, languages, quality, revision and hardcoded subtitles as for movies. Group and languages are read with the
    series title masked, so "German" in a series title is no language.
@@ -28,7 +28,7 @@ Forms
 * ``mini_series``: ``Part.3``, ``Part.Three``, ``3of6``, ``Teil.3`` and ``Folge.5``: only an episode, no season. The
   mapping (S2.4) takes it only for a series with exactly one regular season.
 
-Refused, each with its own code in ``refused`` (decision 15): ``multi_season`` (``S01-S03``, ``S01-03``,
+Refused, each with its own code in ``refused``: ``multi_season`` (``S01-S03``, ``S01-03``,
 ``Season.1-3``, ``Staffel.1-3``, ``S01.S02``; seasons in ``seasons``), ``complete_series`` (``Complete.Series``,
 ``Die.komplette.Serie``, ``Komplett`` without a season), ``split_episode`` (``S01E05a``), ``partial_season``
 (``S01.Part.1``, ``S01.Vol.1``, ``Staffel.1.Teil.1``), ``season_extras`` (``S01.Extras``, ``S01.SUBPACK``,
@@ -63,16 +63,16 @@ linearly with the length of the name.
 Deviations from Sonarr, as the plan states them
 -----------------------------------------------
 * The German forms ``Staffel N``, ``Staffel N Folge M``, ``Folge M``, ``Staffel N-M``, ``komplette Serie``,
-  ``Komplett`` and ``Teil`` after a season: Sonarr knows none of them (decision 14).
+  ``Komplett`` and ``Teil`` after a season: Sonarr knows none of them.
 * Multi season packs, complete series, split episodes, partial packs, bonus material and anime numbering are
-  recognised and refused with a code of their own, so the checker can show what was found (decision 15). A name
+  recognised and refused with a code of their own, so the checker can show what was found. A name
   counted through is taken for an anime series (see above).
 
 Kept open here, decided elsewhere
 ---------------------------------
 * Masking: the title is replaced by "A Series" ("A.Series" with dots) before group and languages are read. Whether
-  Sonarr masks the series title is not measured yet (decision 18); the placeholder follows the measurement.
-* Quality is the movie reader's ``Quality``; the mapping to Sonarr's names (decision 16) is a separate part.
+  Sonarr masks the series title is not measured yet; the placeholder follows the measurement.
+* Quality is the movie reader's ``Quality``; the mapping to Sonarr's names is a separate part.
 * Languages are left as found (``ORIGINAL`` and ``UNKNOWN`` unresolved), as in the movie parser; the series'
   original language fills in later through ``parser.aggregate_languages``.
 * No title is read from a name without a numbering form.
@@ -258,7 +258,7 @@ class ParsedSeries:
     @property
     def is_pack(self) -> bool:
         """A season pack, or a batch of an anime series counted through (``01-12``): nexcrate's own pack rules treat
-        both alike (decision 10). ``release_type`` stays Sonarr's: a batch is a multi episode."""
+        both alike. ``release_type`` stays Sonarr's: a batch is a multi episode."""
         return self.release_type == "season_pack" or (
             self.form == "anime" and self.refused is None and len(self.absolute) > 1
         )
@@ -615,7 +615,7 @@ def _find(
 
 
 #: Forms that name episodes exactly. One of them later in the name takes a weaker form before it into the title
-#: (decision 1).
+#:.
 _EXACT_FORMS = frozenset({"standard", "multi_episode", "daily"})
 #: A word that starts the features: resolution, source, language, codec or release tag.
 _FEATURE = re.compile(
@@ -640,7 +640,7 @@ def _exact_later(
     return None
 
 
-#: Title words a known series title may hold at most, when it is read past (decision 2).
+#: Title words a known series title may hold at most, when it is read past.
 _MAX_TITLE_WORDS = 16
 
 

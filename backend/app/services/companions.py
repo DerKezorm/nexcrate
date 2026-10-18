@@ -85,7 +85,7 @@ STATES = (
     "file_missing",
     "failed",
 )
-#: States "replace" may act on (decision 5).
+#: States "replace" may act on.
 REPLACEABLE = frozenset({FOREIGN, BROKEN, NEWER_FORMAT, OTHER_INSTALLATION, "changed"})
 #: What is written when nothing is wrong: the answer of ``write_version`` when the switch is off.
 OFF = "off"
@@ -128,7 +128,7 @@ def installation_id(db: OrmSession | None = None) -> str:
 
 
 def enabled(db: OrmSession) -> bool:
-    """The switch "Begleitdateien schreiben", on by default (decision 10)."""
+    """The switch "Begleitdateien schreiben", on by default."""
     return get_setting(db, SETTING_ENABLED, "1") != "0"
 
 
@@ -506,7 +506,7 @@ def entry_of(db: OrmSession, version: Version, definition: VersionDefinition) ->
 
 
 def document(title: Title, entries: list[dict[str, Any]], installation: str, written_at: datetime) -> dict[str, Any]:
-    """The whole file, keys in the fixed order (decision 3)."""
+    """The whole file, keys in the fixed order."""
     return {
         "format": FORMAT,
         "format_version": FORMAT_VERSION,
@@ -830,7 +830,7 @@ def plan_removal(db: OrmSession, versions: Iterable[Version]) -> list[Removal]:
     """Collect before the transaction that hands the versions away; ``remove`` acts after its commit.
 
     Only versions with a stored hash: nexcrate removes what it knows it wrote, and only while the file is unchanged
-    (decision 8). A version without a hash never had an entry written by this database, or its state was cleared
+   . A version without a hash never had an entry written by this database, or its state was cleared
     already; ``remove`` could not tell a changed file from an unchanged one for it.
     """
     removals: list[Removal] = []

@@ -898,7 +898,7 @@ async def stream_events(
     )
 
 
-# --- Foreign jobs (the owner's finding 2 of 22.09.2026) ------------------------------------------------------------- #
+# --- Foreign jobs ------------------------------------------------------------- #
 
 
 class ForeignProposalOut(BaseModel):

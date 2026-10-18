@@ -11,7 +11,7 @@ import { formatList } from '../../lib/format'
 import { versionLabelsOf } from './diskText'
 
 /**
- * "Alle eindeutigen zuordnen" (decision 18): the loaded proposals whose proposal is unambiguous, counted and with the
+ * "Alle eindeutigen zuordnen": the loaded proposals whose proposal is unambiguous, counted and with the
  * versions of their roots. With every proposal loaded, `POST /api/disk/assign` gets their ids; with rows not loaded
  * yet it gets `all`, and the server takes every unambiguous proposal, so nobody has to load thousands of rows first.
  *

@@ -127,7 +127,7 @@ class Search:
     covered: tuple[int, ...] = ()
     skip_titles: frozenset[int] = frozenset()
     #: An album search (M3): ``{"kind": "album", "aliases": bool}``; None for a movie or a series. Loaded from with
-    #: M4 (decision 1).
+    #: M4.
     album_scope: dict[str, Any] | None = None
     #: A movie that is in no library, asked before a request (N25): its title, the versions to
     #: judge by and the indexers, made from TMDB; ``title_id`` is then below 0. Nothing loads from such a search.
@@ -322,7 +322,7 @@ def keep_found(title_id: int, *, origin: str, states: list[runner.IndexerState])
 
 
 def keep_found_album(title_id: int, *, origin: str, states: list[runner.IndexerState]) -> Search | None:
-    """``keep_found`` for an album (Music M5, decision 13): the releases RSS matched to it, judged as an album search
+    """``keep_found`` for an album: the releases RSS matched to it, judged as an album search
     judges them. None when the album is gone."""
     loaded = load_album(title_id, only=())
     if loaded is None:
@@ -353,7 +353,7 @@ def keep_found_album(title_id: int, *, origin: str, states: list[runner.IndexerS
 def keep_found_series(
     title_id: int, *, origin: str, states: list[runner.IndexerState], episode_ids: Collection[int]
 ) -> Search | None:
-    """``keep_found`` for a series (S5, decision 21): the releases RSS fetched, judged for these episodes as a series
+    """``keep_found`` for a series: the releases RSS fetched, judged for these episodes as a series
     search judges them. None when the series is gone or none of the episodes is left."""
     scope = {"kind": series_search.RSS, "episodes": sorted(set(episode_ids))}
     try:
@@ -387,7 +387,7 @@ def keep_found_series(
 
 
 def rejudge_series(search_id: str, excluded: Collection[str]) -> bool:
-    """Judge a finished series search of the automatic lane again without the releases ``excluded`` (S5, decision 16).
+    """Judge a finished series search of the automatic lane again without the releases ``excluded``.
     The series is read again, so episodes a download of this search holds by now count as covered. False when the
     search is gone, no automatic series search, or the series no longer fits its scope."""
     with _lock:
@@ -492,13 +492,13 @@ class FoundRelease:
     origin: str = "manual"
     #: The scope of a series search (S4); None for a movie.
     scope: dict[str, Any] | None = None
-    #: A release of an album search (decision 1): ``verdict`` instead of ``versions``.
+    #: A release of an album search: ``verdict`` instead of ``versions``.
     album: bool = False
 
 
 def series_takes(search_id: str, definition_id: int) -> list[tuple[str, frozenset[str]]]:
-    """What a finished series search would take for a version, in order (S4, decision 3): each release key with the
-    codes of the episodes it was taken for, never those an earlier release of the set covers (decision 2).
+    """What a finished series search would take for a version, in order: each release key with the
+    codes of the episodes it was taken for, never those an earlier release of the set covers.
 
     Raises ``SearchGone``; an empty list for a movie search or a version without takes.
     """
@@ -534,7 +534,7 @@ def find_release(search_id: str, release_key: str) -> FoundRelease:
         if search.state != "done":
             raise SearchGone
         album = search.album_scope is not None
-        # A release of an album search loads only when it is this album (decision 2): it has a
+        # A release of an album search loads only when it is this album: it has a
         # verdict. One of another album or of none never has.
         entry = next(
             (

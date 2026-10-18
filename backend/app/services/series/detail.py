@@ -186,7 +186,7 @@ def series_block(db: OrmSession, title: Title, versions: list[Version], on: str)
 
 
 def _episode_state(row: EpisodeVersion, air_date: str | None, on: str, upgradable: bool = False) -> str:
-    """The state of one episode in one version. ``upgrade`` (decision 32) stands between ``wanted`` and
+    """The state of one episode in one version. ``upgrade`` stands between ``wanted`` and
     ``available``: the file is there, and the profile would still take a better one."""
     if row.queue_state == "problem":
         return "problem"
@@ -200,7 +200,7 @@ def _episode_state(row: EpisodeVersion, air_date: str | None, on: str, upgradabl
 
 
 def source_only_episodes(db: OrmSession, version: Version) -> list[dict[str, Any]]:
-    """Episodes the source feeding a version knows and TMDB does not (decision 47)."""
+    """Episodes the source feeding a version knows and TMDB does not."""
     if version.source_id is None:
         return []
     rows = db.scalars(
@@ -238,8 +238,8 @@ def season_episodes(
 ) -> dict[str, Any] | None:
     """The episodes of one season with their numbers and every version's switch, state and file. None without it.
 
-    A placeholder name ("Folge 9") shows the English name where one is stored (decision 49). In the specials, each
-    episode says whether a source feeding a version knows it (decision 48); null without such a version.
+    A placeholder name ("Folge 9") shows the English name where one is stored. In the specials, each
+    episode says whether a source feeding a version knows it; null without such a version.
     """
     season = db.get(Season, season_id)
     if season is None or season.title_id != title.id:

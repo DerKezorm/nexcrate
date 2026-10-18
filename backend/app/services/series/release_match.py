@@ -1,4 +1,4 @@
-"""Which episodes of a series a parsed release name means (S2.4, decision 19).
+"""Which episodes of a series a parsed release name means.
 
 The parser gives numbers, a date or the scope of a pack; this maps them onto the episodes nexcrate stores,
 through the numberings S1 kept. The order is fixed:
@@ -516,7 +516,7 @@ def match(
     """The episodes the release means. Refused forms match nothing.
 
     ``prefer`` puts the reading of one scheme first when it has one: filing a download reads its files through the
-    numbering its release matched when it was loaded (decision 19). ``counting``, from
+    numbering its release matched when it was loaded. ``counting``, from
     ``group_counting`` over the same answer, puts the numbering the release's group counts by first. ``scene`` false
     leaves the scene's count through out: a file already on the disk, as in Sonarr.
     """
@@ -598,7 +598,7 @@ def match(
             readings.insert(0, chosen)
             notes.append("group_counting")
     via, ids, missing = readings[0]
-    # A correction of the owner decides: no other reading makes it ambiguous (decision 13). So does a scene name that
+    # A correction of the owner decides: no other reading makes it ambiguous. So does a scene name that
     # says the season of a name counted through (B6).
     settled = via == "owner" or (decisive and via == "scene") or by_name
     other = None if settled else next((entry for entry in readings[1:] if set(entry[1]) != set(ids)), None)

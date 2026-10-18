@@ -15,7 +15,7 @@
   with Radarr's thresholds, source and resolution from a container title tag, source, modifier and revision from the
   file name and then the folder name, Radarr's source by extension when no name says one, ``qualities.find`` and then
   the nearest quality as Radarr's ``QualityFinder`` picks it, and where the quality came from.
-* **Languages** (decision 24): the known audio stream languages win; ``und`` and unknown codes are left out; without
+* **Languages**: the known audio stream languages win; ``und`` and unknown codes are left out; without
   one, the name's languages as the release checker resolves them.
 
 Log lines carry codes and counts, never names or paths.
@@ -59,7 +59,7 @@ MEDIA_UNREADABLE = "media_unreadable"
 #: The container says it holds more than the file has: cut off, as by a copy that stopped (24.09.2026).
 MEDIA_TRUNCATED = "media_truncated"
 
-#: Radarr's source by extension for a name without a source (decision 22): source and the resolution Radarr's fallback
+#: Radarr's source by extension for a name without a source: source and the resolution Radarr's fallback
 #: quality carries, which counts only when neither the media data nor a name gives one.
 EXTENSION_SOURCES: dict[str, tuple[int, int]] = {
     ".mkv": (q.WEBDL, 720),
@@ -491,7 +491,7 @@ def read(path: Path) -> Read:
     return Read(media, None)
 
 
-# --- Quality (decision 22) ------------------------------------------------------------------------------------------ #
+# --- Quality ------------------------------------------------------------------------------------------ #
 
 
 def resolution_of(media: dict[str, Any] | None) -> int:
@@ -553,7 +553,7 @@ class QualityDecision:
 
 
 def quality_of(file_name: str, folder_name: str | None, media: dict[str, Any] | None) -> QualityDecision:
-    """The quality of a file as Radarr decides it (decision 22), in one place for assigning, restoring and filing
+    """The quality of a file as Radarr decides it, in one place for assigning, restoring and filing
     away."""
     parsed_file = release_parser.parse_movie(file_name)
     parsed_folder = release_parser.parse_movie(folder_name) if folder_name else None
@@ -636,7 +636,7 @@ def quality_of(file_name: str, folder_name: str | None, media: dict[str, Any] | 
     )
 
 
-# --- Languages (decision 24) ---------------------------------------------------------------------------------------- #
+# --- Languages ---------------------------------------------------------------------------------------- #
 
 
 def audio_languages(media: dict[str, Any] | None) -> list[str]:
@@ -656,7 +656,7 @@ def audio_languages(media: dict[str, Any] | None) -> list[str]:
 
 
 def file_languages(media: dict[str, Any] | None, named: list[str]) -> list[str]:
-    """What a file keeps as its languages (decision 24): the audio streams' known languages, else ``named`` (the
+    """What a file keeps as its languages: the audio streams' known languages, else ``named`` (the
     languages of its release or its name). Since 17.09.2026, when one stream carries no language (``und``, nothing), the
     named ones are added: Radarr keeps only the tagged ones, so an untagged English stream of a DL release makes the
     file look worse than it is, and every DL release is loaded again (measured against Radarr 6.3)."""

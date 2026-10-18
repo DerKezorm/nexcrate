@@ -3,14 +3,14 @@
 ``evaluate(parsed, rules)`` answers with the step the name says, whether the profile takes it, the reasons where it
 does not, notes on the order, and a rank. A pure function: no network, no database.
 
-* **Refused, whatever the answers** (decision 14): several albums in one release, an album as one file with a cue
+* **Refused, whatever the answers**: several albums in one release, an album as one file with a cue
   sheet, an audiobook. Then the step: unknown, never taken (mid and low lossy), or not the target while "take what is
   there first" is off.
-* **The order** (decision 17): the role of the step (the target before what is only taken for now), then lossless
+* **The order**: the role of the step (the target before what is only taken for now), then lossless
   before lossy where both have the same role, then 24 bit by the answer, then the source by the answer, then the
   revision (a REPACK before the first try). Lower ranks first; ``rank`` is a list so it sorts as it stands.
-* **Only noted, never refused here** (decision 18): tribute, karaoke. M3 refuses them when the album asked for is none.
-  Editions and media counts are not judged at all (decision 19): M3 compares them with the album's target release.
+* **Only noted, never refused here**: tribute, karaoke. M3 refuses them when the album asked for is none.
+  Editions and media counts are not judged at all: M3 compares them with the album's target release.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def usable(rules: Any) -> bool:
 
 
 def upgrade_possible(step: str, rules: Any) -> bool:
-    """Whether files of this step lie below the target of the rules (decision 22). ``unknown`` says nothing, and
+    """Whether files of this step lie below the target of the rules. ``unknown`` says nothing, and
     neither do rules this code cannot read."""
     if not usable(rules) or step not in mq.STEPS:
         return False

@@ -78,11 +78,11 @@ PROPOSE_SHOWN = 5
 PROPOSE_SHOWN_MOUNTS = 10
 COPY_CHUNK = 8 * MIB
 _SAMPLE = re.compile(r"(?<![a-z0-9])sample(?![a-z0-9])", re.IGNORECASE)
-#: Extras in a series pack by name (decision 17).
+#: Extras in a series pack by name.
 _EXTRA_NAME = re.compile(
     r"(?<![a-z0-9])(?:extras?|featurettes?|bonus|behind[ ._-]?the[ ._-]?scenes)(?![a-z0-9])", re.IGNORECASE
 )
-#: A part of a movie split over several files: CD1, Part2, Disc1, pt2 (decision 38).
+#: A part of a movie split over several files: CD1, Part2, Disc1, pt2.
 _PART = re.compile(r"(?<![a-z0-9])(?P<kind>cd|disc|disk|part|pt)[ ._-]?(?P<number>\d{1,2})(?![0-9])", re.IGNORECASE)
 _DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
 #: A volume of a split 7z or zip set: ``.7z.001``, ``.zip.002`` and so on.
@@ -362,7 +362,7 @@ def _look_at(scan: Scan, path: Path, name: str, *, candidate: bool, series: bool
 def scan(root: Path, *, series: bool = False) -> Scan:
     """Walk a download: dangerous files anywhere, archives, and the videos that may be imported. Links are skipped.
 
-    ``series``: names of extras (``EXTRAS``, ``Featurette``) are left out too (decision 17).
+    ``series``: names of extras (``EXTRAS``, ``Featurette``) are left out too.
     """
     result = Scan()
     if is_link(root):
@@ -405,7 +405,7 @@ def part_of(name: str) -> tuple[str, int] | None:
 
 
 def multi_part(videos: list[tuple[Path, int]]) -> bool:
-    """At least two videos with the same kind of part and different numbers: a movie in pieces (decision 38)."""
+    """At least two videos with the same kind of part and different numbers: a movie in pieces."""
     numbers: dict[str, set[int]] = {}
     for path, _size in videos:
         part = part_of(path.name)
@@ -415,7 +415,7 @@ def multi_part(videos: list[tuple[Path, int]]) -> bool:
 
 
 def several(videos: list[tuple[Path, int]]) -> bool:
-    """No clear largest video: the largest is not at least twice the second (decision 38)."""
+    """No clear largest video: the largest is not at least twice the second."""
     if len(videos) < 2:
         return False
     sizes = sorted((size for _path, size in videos), reverse=True)
@@ -467,7 +467,7 @@ def _remove_partial(partial: Path) -> None:
 def place(source: Path, target_dir: Path, file_name: str, *, protocol: str, link: bool = True) -> Placed:
     """The source under the temporary name in the target folder: hardlink or copy for a torrent, rename or copy else.
 
-    ``link=False``: a torrent is copied, never linked; its file gets tags written (decision 18).
+    ``link=False``: a torrent is copied, never linked; its file gets tags written.
     """
     partial = _free_partial(target_dir, file_name)
     size = source.stat().st_size
@@ -583,7 +583,7 @@ def remove_job_folder(
 
     Only a folder that is a direct child of a folder named like the category, lies strictly inside a mount point, holds
     no other video (samples do not count) and does not hold ``keep``, the version folder. ``known`` are videos of this
-    download it did not use, which a series download may leave (decision 30).
+    download it did not use, which a series download may leave.
     ⚠️ Never through a link: ``rmtree`` removes links inside without following them.
     """
     if is_link(folder) or not folder.is_dir():

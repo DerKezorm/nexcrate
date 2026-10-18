@@ -1,4 +1,4 @@
-"""What a failed or a filed away download changes in its title's plan (C4 and C7, decision 11).
+"""What a failed or a filed away download changes in its title's plan.
 
 ``downloads/tracking`` and ``downloads/importing`` call these inside their transaction; the caller commits.
 
@@ -41,7 +41,7 @@ def after_failure(db: OrmSession, row: Download, moment: datetime) -> str:
     title = db.get(Title, row.title_id)
     if title is not None and title.kind == "series":
         return _after_series_failure(db, row, title, moment)
-    # Albums since Music M5 (decision 10), under their own switch.
+    # Albums since Music M5, under their own switch.
     kind = title.kind if title is not None else None
     if kind not in ("movie", "album"):
         return "owner"
@@ -135,7 +135,7 @@ def _after_series_failure(db: OrmSession, row: Download, title: Title, moment: d
 def after_series_file(
     db: OrmSession, title_id: int, episode_ids: Collection[int], reason: str | None, moment: datetime
 ) -> None:
-    """A filed episode file (decision 25): below the target by its quality, its episodes are due at once; by score only,
+    """A filed episode file: below the target by its quality, its episodes are due at once; by score only,
     nothing changes here."""
     if reason != "quality" or not episode_ids:
         return

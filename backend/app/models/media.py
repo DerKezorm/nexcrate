@@ -89,7 +89,7 @@ class VersionDefinition(Base):
     __tablename__ = "version_definitions"
     __table_args__ = (
         UniqueConstraint("kind", "label", name="uq_version_definitions_kind_label"),
-        # Music has exactly one version (decision 10): two requests at once cannot make two.
+        # Music has exactly one version: two requests at once cannot make two.
         Index("uq_version_definitions_one_album", "kind", unique=True, sqlite_where=text("kind = 'album'")),
         {"sqlite_autoincrement": True},
     )
@@ -126,7 +126,7 @@ class VersionDefinition(Base):
     naming_daily_file: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     # Added by the column upkeep (A5), no migration.
     naming_anime_file: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    #: ``tmdb`` or ``tvdb``: the numbers in the names of this series version (decision 14). Null means ``tmdb``.
+    #: ``tmdb`` or ``tvdb``: the numbers in the names of this series version. Null means ``tmdb``.
     episode_numbering: Mapped[str | None] = mapped_column(String(8), nullable=True)
     #: The countries that break a tie for the target release of an album version, in order (the design notes,
     #: decision 28). Null means the list of the interface language. ⚠️ From migration 14.
@@ -207,7 +207,7 @@ class Title(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     kind: Mapped[str] = mapped_column(String(16), default="movie")
-    #: TMDB's number of a movie or series. ⚠️ Null for an album since migration 14 (decision 1);
+    #: TMDB's number of a movie or series. ⚠️ Null for an album since migration 14;
     #: a title of kind ``album`` never has one.
     tmdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     imdb_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
@@ -279,16 +279,16 @@ class Title(Base):
     next_air_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
     #: TMDB's episode groups of the series: id, name, type, episode and group count. Their contents come with S3.
     episode_groups: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
-    #: How the source counts against TMDB (decision 25), computed at import and refresh; null when both agree.
+    #: How the source counts against TMDB, computed at import and refresh; null when both agree.
     numbering_note: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     # ⚠️ From migration 10; a change needs a new migration.
-    #: TMDB's English name of the series, for queries: scene releases mostly carry it (decision 14).
+    #: TMDB's English name of the series, for queries: scene releases mostly carry it.
     title_en: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     #: When TheXEM's mapping of the series was last fetched, and what came of it: ``mapped``, ``not_listed``,
     #: ``bridge_failed``, or the code of a failure.
     xem_checked_at: Mapped[datetime | None] = mapped_column(nullable=True)
     xem_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    #: The TMDB episode group the owner chose as the release numbering; null means TMDB's own (decision 11).
+    #: The TMDB episode group the owner chose as the release numbering; null means TMDB's own.
     episode_group_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     #: Whether releases are read through the scene numbering (Sonarr's ``useSceneNumbering``, the design notes,
     #: B6). Null means on, as Sonarr has it for every series with a mapping; only the owner sets false. ⚠️ From the
@@ -296,33 +296,33 @@ class Title(Base):
     use_scene_numbering: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     # ⚠️ From migration 12 (S5.0); a change needs a new migration.
     #: Per indexer id the last time its search by number found releases of the series: automatic searches leave the
-    #: title queries out for 30 days after it (decision 11). ``{"<indexer id>": "<ISO time>"}``.
+    #: title queries out for 30 days after it. ``{"<indexer id>": "<ISO time>"}``.
     id_search_seen: Mapped[dict[str, str] | None] = mapped_column(JSON, nullable=True)
     # ⚠️ The thirteen columns below come from migration 14 (M1.0); a change needs a new
     # migration. Null for movies and series. An album is one MusicBrainz release group.
     mbid: Mapped[str | None] = mapped_column(String(36), nullable=True)
-    #: Earlier ids MusicBrainz merged into this one (decision 22).
+    #: Earlier ids MusicBrainz merged into this one.
     mbid_old: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
-    #: The artist the album belongs to: the first of its credit that is in the library (decision 3).
+    #: The artist the album belongs to: the first of its credit that is in the library.
     artist_id: Mapped[int | None] = mapped_column(
         ForeignKey("artists.id", ondelete="SET NULL"), nullable=True, index=True
     )
     #: MusicBrainz's credit as it comes: ``[{"mbid": ..., "name": ..., "join": ...}]``.
     artist_credit: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
-    #: MusicBrainz's primary and secondary types as text (decision 25): ``Album``, ``EP``, ``Single``, ``Broadcast``,
+    #: MusicBrainz's primary and secondary types as text: ``Album``, ``EP``, ``Single``, ``Broadcast``,
     #: ``Other``, or null; ``["Live", "Compilation"]``.
     primary_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     secondary_types: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     first_release_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
     release_group_disambiguation: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    #: When the releases of the album were last loaded, and when they are due again (decision 21).
+    #: When the releases of the album were last loaded, and when they are due again.
     releases_refreshed_at: Mapped[datetime | None] = mapped_column(nullable=True)
     releases_due_at: Mapped[datetime | None] = mapped_column(nullable=True, index=True)
     #: See ``music.RELEASES_STATES``: ``none``, ``heads``, ``tracks``, ``failed``.
     releases_state: Mapped[str | None] = mapped_column(String(16), nullable=True)
-    #: When MusicBrainz stopped listing the release group; the album stays (decision 22).
+    #: When MusicBrainz stopped listing the release group; the album stays.
     mb_gone_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    #: When nexcrate saw the release group for the first time: "new" means seen at a later load (decision 24).
+    #: When nexcrate saw the release group for the first time: "new" means seen at a later load.
     first_seen_at: Mapped[datetime | None] = mapped_column(nullable=True)
     # ⚠️ The three columns below come from the missing-column upkeep; nullable and without a
     # default on purpose, or every INSERT of an older table shape would carry them.
@@ -439,14 +439,14 @@ class Version(Base):
     series_replacements: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
     # ⚠️ From migration 13; a change needs a new migration.
     #: When a series version became nexcrate's own: taken over, assigned, restored or added. Old missing episodes of a
-    #: version with unclear files wait; episodes aired after this time do not (decision 18).
+    #: version with unclear files wait; episodes aired after this time do not.
     own_since: Mapped[datetime | None] = mapped_column(nullable=True)
-    #: When the series folder of a version of nexcrate's own was read; until then it wants nothing (decision 23).
+    #: When the series folder of a version of nexcrate's own was read; until then it wants nothing.
     files_read_at: Mapped[datetime | None] = mapped_column(nullable=True)
     # ⚠️ The eight columns below come from migration 14 (M1.0); a change needs a new migration.
     # Null for movies and series.
-    #: The release the album version aims at (decision 7), who chose it (``music.TARGET_SET_BY``) and why, as codes
-    #: with values (decision 27, step 5).
+    #: The release the album version aims at, who chose it (``music.TARGET_SET_BY``) and why, as codes
+    #: with values.
     target_release_id: Mapped[int | None] = mapped_column(
         ForeignKey("releases.id", ondelete="SET NULL"), nullable=True
     )
@@ -456,7 +456,7 @@ class Version(Base):
     actual_release_id: Mapped[int | None] = mapped_column(
         ForeignKey("releases.id", ondelete="SET NULL"), nullable=True
     )
-    #: A release the rule would choose now while the target is frozen by a file (decision 29).
+    #: A release the rule would choose now while the target is frozen by a file.
     target_suggestion_id: Mapped[int | None] = mapped_column(
         ForeignKey("releases.id", ondelete="SET NULL"), nullable=True
     )

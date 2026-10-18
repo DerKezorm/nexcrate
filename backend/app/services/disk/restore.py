@@ -71,7 +71,7 @@ def _time(value: Any, fallback: datetime) -> datetime:
 
 
 def write_companion(version_id: int) -> str:
-    """The version's ``release.nex`` after a commit, a file of another installation taken over first (decision 4)."""
+    """The version's ``release.nex`` after a commit, a file of another installation taken over first."""
     from .assign import write_companion as write
 
     return write(version_id)

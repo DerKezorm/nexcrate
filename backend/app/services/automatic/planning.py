@@ -1,7 +1,7 @@
 """The plan per title: which versions want something, when the title is searched next, and why (the design notes,
 C2, C3, C4, C7, C8, decisions 2 to 6, 11 and 12).
 
-**A version wants something** (decision 3) when no source feeds it, it is monitored, its definition has a profile with
+**A version wants something** when no source feeds it, it is monitored, its definition has a profile with
 movie rules and a default folder, no download blocks it (queued to importing, or a problem that needs the owner), and it
 has no file or its file can still be upgraded (``cutoff_not_met``: by its quality, or since decision 20 by its score at
 the cutoff quality; both want the same way, at the same rates). Only movies take part.

@@ -15,7 +15,7 @@
   one candidate passes. A mapping the owner chose (the longest matching remote prefix) wins; its samples are counted.
 * **Names** are compared in NFC. A name not found as it is is looked for once in a listing of its folder, compared in
   NFC: a NAS share can hold NFD names. The names found on disk are what the version keeps.
-* **Root folders without files** (finding 13) are listed and never block. Unless the owner chose
+* **Root folders without files** are listed and never block. Unless the owner chose
   a folder, one derives its folder from another root folder's mapping: the remote prefix that mapping replaces
   (``/data`` of ``/data/Movies`` seen as ``/media/Movies``) leads ``/data/Kinderfilme`` to ``/media/Kinderfilme`` when
   exactly one such folder exists (``derived``); otherwise it has none.
@@ -694,7 +694,7 @@ def look_at_files(job: Job, sight: Sight, items: list[Item], roots: dict[str, Ro
 def target_folders(
     sight: Sight, items: list[Item], roots: dict[str, RootState], found: dict[int, Found]
 ) -> dict[int, str]:
-    """The folder each version without a found file keeps as its ``root_folder`` (finding 13).
+    """The folder each version without a found file keeps as its ``root_folder``.
 
     nexcrate's folder of its Radarr root folder, when that root folder has a mapping and the folder exists; a movie
     outside every root folder counts under its parent folder and takes that folder's mapping. Versions without such a
@@ -1145,7 +1145,7 @@ def save(
             }
             # ``monitored`` and ``minimum_availability`` stay as Radarr had them.
             if located is not None:
-                # Judged by nexcrate's rules through the one judgement of stored files (finding 15), which names the
+                # Judged by nexcrate's rules through the one judgement of stored files, which names the
                 # file as the search does; without a profile nothing to judge.
                 cutoff = bool(verdicts[version_id]) if rules is not None and version_id in verdicts else False
                 if rules is not None and version_id not in verdicts:
@@ -1162,7 +1162,7 @@ def save(
                 with_file += 1
             else:
                 missing += 1 if had_file and version_id not in (of_other_versions or set()) else 0
-                # The folder of its root folder when that has one: its next file goes there (finding 13).
+                # The folder of its root folder when that has one: its next file goes there.
                 root = targets.get(version_id)
                 kept += 1 if root else 0
                 values.update(
@@ -1226,7 +1226,7 @@ def save(
     return {"versions": len(versions), "with_file": with_file, "missing": missing, "titles": titles}
 
 
-# --- Undoing a takeover (finding 12) ---------------- #
+# --- Undoing a takeover ---------------- #
 
 
 class NotTakenOver(Exception):

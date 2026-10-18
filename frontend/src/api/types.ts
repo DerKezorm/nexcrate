@@ -2328,7 +2328,7 @@ export type DiskRoot = {
   last_scan_at: string | null
   /** null before the first scan. */
   counts: DiskCounts | null
-  /** Own files whose video was not found in this root (decision 25). */
+  /** Own files whose video was not found in this root. */
   missing_files: number
   /** Names of Radarr connections whose root folder could not be mapped into this root. */
   radarr_unmapped: string[]
@@ -2376,7 +2376,7 @@ export type DiskOverview = { roots: DiskRoot[]; job: DiskJob | null; tmdb_ready:
  */
 export type DiskVideo = { name: string; size_bytes: number; name_quality: string | null; quality_by_type?: boolean }
 
-/** How a proposal was found (decision 17). */
+/** How a proposal was found. */
 export type ProposalFrom = 'companion' | 'name_number' | 'nfo_number' | 'title_year' | 'library'
 
 export type Proposal = {
@@ -2517,7 +2517,7 @@ export type CompanionReplaceResult = { state: CompanionState | string }
 
 export type SeriesType = 'standard' | 'daily' | 'anime'
 
-/** The rule of a series version (decision 9). */
+/** The rule of a series version. */
 export type WatchRule = 'all' | 'future' | 'missing' | 'from_season' | 'none'
 
 export type SeriesVersionChoice = { version_id: number; rule: WatchRule; from_season?: number | null }
@@ -2576,7 +2576,7 @@ export type SeasonBrief = {
 
 export type NumberingPart = { seasons: number; episodes: number; sizes: number[] }
 
-/** How a Sonarr connection counts against TMDB (decision 25). */
+/** How a Sonarr connection counts against TMDB. */
 export type NumberingNote = {
   tmdb: NumberingPart
   source: NumberingPart & { name: string }

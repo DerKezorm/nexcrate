@@ -13,7 +13,7 @@ that fails, per version (without the client) and per release and version.
 5. The enabled clients of the protocol, lowest priority number first, then lowest id: the category is checked (created
    when missing) and the file handed over. A client that fails gets its error code and the next one is asked; when all
    fail, the first client's error is the answer. ⚠️ A client that got the request and did not answer in time may have
-   taken the release (the owner's finding 1 of 22.09.2026): the download is recorded all the same, marked
+   taken the release: the download is recorded all the same, marked
    ``handed_unsure_at``, and no other client is asked; ``foreign`` finds the job by its name or ends the download as
    ``not_taken``.
 6. The download is recorded as ``queued`` with a history entry ``grabbed``; tracking asks the client 5 seconds later.
@@ -131,7 +131,7 @@ class TitleFacts:
     protocols: frozenset[str]
     blocklist: list[BlocklistEntry]
     kind: str = "movie"
-    #: Series: version definition id to the episode ids a blocking download of it holds (decision 5).
+    #: Series: version definition id to the episode ids a blocking download of it holds.
     downloading: dict[int, frozenset[int]] = field(default_factory=dict)
 
 
@@ -202,8 +202,8 @@ def release_block(facts: TitleFacts, definition_id: int, protocol: str) -> str |
 
 
 def load_episodes(result: dict[str, Any] | None, confirm: Collection[str] = ()) -> dict[int, str]:
-    """The episodes a series release loads for a version, with their action (decision 2): what it fills or replaces;
-    with ``no_gain`` confirmed and nothing to fill or replace, every watched episode it holds (decision 4)."""
+    """The episodes a series release loads for a version, with their action: what it fills or replaces;
+    with ``no_gain`` confirmed and nothing to fill or replace, every watched episode it holds."""
     rows = [row for row in (result or {}).get("episodes") or [] if isinstance(row.get("episode_id"), int)]
     chosen = {int(row["episode_id"]): str(row["state"]) for row in rows if row.get("state") in ("fills", "replaces")}
     if chosen or "no_gain" not in confirm:
@@ -280,7 +280,7 @@ def decorate(body: dict[str, Any], info_hashes: dict[str, str]) -> None:
 
 
 def decorate_album(body: dict[str, Any], info_hashes: dict[str, str]) -> None:
-    """An album search's answer (decision 1): ``load_block`` on the music version, and per
+    """An album search's answer: ``load_block`` on the music version, and per
     release of this album ``blocklisted``, ``can_load`` and ``load_block``. A release of another album never loads."""
     with SessionLocal() as db:
         facts = title_facts(db, int(body["title_id"]))
@@ -869,7 +869,7 @@ async def _grab_album(found: search_jobs.FoundRelease, definition_id: int, confi
 
 def _after_album_grab(download_id: int, found: search_jobs.FoundRelease) -> None:
     """The album download's scope and step, and its album's tracks moved to the front of the loading job
-    (decision 4): filing waits for them, not the other way round."""
+   : filing waits for them, not the other way round."""
     from ..music import loading as music_loading
 
     with SessionLocal() as db:
@@ -900,7 +900,7 @@ class TakeResult:
 
 
 async def grab_takes(search_id: str, definition_id: int, confirm: list[str]) -> list[TakeResult]:
-    """Load every release a series search would take for a version, one after the other (decision 3).
+    """Load every release a series search would take for a version, one after the other.
 
     A release that fails leaves the others; each result names its download or its error. Each release is loaded for
     the episodes the set took it for, so a pack does not claim an episode a single release of the set brings.

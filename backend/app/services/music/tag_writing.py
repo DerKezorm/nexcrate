@@ -1,6 +1,6 @@
 """The tags nexcrate writes into filed music, and the retag preview (decisions 24 to 30).
 
-* **What:** Picard's fields (``tags.FIELDS``) for the **actual** release, built from the database only (decision 25).
+* **What:** Picard's fields (``tags.FIELDS``) for the **actual** release, built from the database only.
   A field MusicBrainz leaves empty is left out, so a value the download had stays; ``compilation`` is always set.
 * **When:** right after a file is filed and before it gets its final name, or from the preview. Only with the switch
   on, only into a file with one link (research T1), only in the formats ``tags.WRITABLE``.
@@ -31,7 +31,7 @@ SETTING_WRITE = "music_write_tags"
 
 
 def write_enabled(db: OrmSession) -> bool:
-    """Ab Werk an (decision 24)."""
+    """Ab Werk an."""
     return get_setting(db, SETTING_WRITE, "1") != "0"
 
 
@@ -75,7 +75,7 @@ def album_tags(db: OrmSession, release: Release, title: Title) -> AlbumTags:
 
 
 def wanted(album: AlbumTags, track: ReleaseTrack) -> dict[str, list[str]]:
-    """The fields for one track of the album's actual release (decision 25)."""
+    """The fields for one track of the album's actual release."""
     release, title = album.release, album.title
     medium = album.media.get(track.medium_id)
     track_credit = track.artist_credit or title.artist_credit or []

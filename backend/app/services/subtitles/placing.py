@@ -173,7 +173,7 @@ def plan(candidates: Sequence[Candidate], *, video_name: str, videos: int, group
     chosen: list[Subtitle] = []
     for members in _grouped(candidates):
         stem = _stem(members[0].path.name)
-        # A subtitle in a folder named like the video belongs to it: Subs/<video>/2_German.srt (S4, decision 29). Not
+        # A subtitle in a folder named like the video belongs to it: Subs/<video>/2_German.srt. Not
         # the download's own folder, which is often named like its video.
         first = members[0]
         named = first.path.parent.name.casefold() == video_name.casefold()

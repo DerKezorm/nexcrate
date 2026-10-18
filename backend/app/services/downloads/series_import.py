@@ -5,13 +5,13 @@
 1. **Checks** as for movies: the version exists, no source feeds it, the job folder is visible, nothing dangerous.
 2. **The series folder:** the stored one of the version (``root_folder`` and ``relative_path``), else a new one below
    the version's ``root_folder`` when it is writable, or the version folder, named by the series folder pattern. Its
-   name is fixed once the first file lies in it (decision 15). Archives are unpacked next to it, every first volume.
+   name is fixed once the first file lies in it. Archives are unpacked next to it, every first volume.
 3. **Assigning** (``episodes.assign``), or the owner's assignment for ``POST /api/downloads/{id}/assign``. Every video
    is kept in ``download_files`` with its decision before anything moves, so the dialog can show them.
 4. **Filing file by file**, each recorded in its own transaction: the season folder (named once, decision 15), the
    name after the version's numbering, a replaced file into the recycle folder of the root folder. A file is not
-   filed when the episode has a file that is not worse by now (decision 25), when the file it would replace holds an
-   episode this download does not bring or does not file (decision 26), or when a video nexcrate does not know lies
+   filed when the episode has a file that is not worse by now, when the file it would replace holds an
+   episode this download does not bring or does not file, or when a video nexcrate does not know lies
    in the season folder for the same episode. A multi-episode file goes to the recycle folder only with its last
    episode replaced.
    The media data is read before the video moves: the name and the stored file carry its quality, codec and audio.
@@ -84,7 +84,7 @@ MAX_FILES = 10_000
 MAX_DURATION_READS = 100
 #: The path prefix of a video that came out of the download's archives.
 UNPACKED_PREFIX = "unpacked:"
-#: Subtitle limits per video and per download (decision 29).
+#: Subtitle limits per video and per download.
 SUBTITLES_PER_VIDEO = 50
 SUBTITLES_PER_DOWNLOAD = 1_000
 #: The decision of a video while it moves, and of one not filed because the episode's file is not worse.
@@ -750,9 +750,9 @@ def _remaining(context: Context, entry: CurrentFile) -> set[int]:
 def plan_replacements(context: Context, filed: list[episodes.Decision], *, manual: bool) -> dict[int, str]:
     """Video key to the reason it is not filed.
 
-    * ``not_better``: a file it would replace is not worse (decision 25); not when the owner confirmed no gain, and not
+    * ``not_better``: a file it would replace is not worse; not when the owner confirmed no gain, and not
       for the owner's own assignment, whose dialog asked already.
-    * ``covers_more``: a file it would replace holds an episode that no video of this download files (decision 26). A
+    * ``covers_more``: a file it would replace holds an episode that no video of this download files. A
       multi-episode file is replaced by all its parts or by none: when one part is not better, the others stay too.
     """
     reasons: dict[int, str] = {}
@@ -1010,7 +1010,7 @@ def read_media(path: Path) -> media.Read:
 
 
 def file_media(context: Context, answer: media.Read, folder_name: str, path: str) -> FileMedia:
-    """The quality of a video from its media data by Radarr's rule (decision 22) in Sonarr's
+    """The quality of a video from its media data by Radarr's rule in Sonarr's
     names, else as ``_file_quality`` reads its names. The name and the stored file carry the same."""
     return media_quality(context.release_title, context.original_language, answer, folder_name, path)
 
@@ -1143,7 +1143,7 @@ def record_one(context: Context, filed: Filed, row_id: int, moment: datetime) ->
             release_type = "seasonPack"
         parsed = releases.parse_series(context.release_title, context.original_language)
         measured = filed.measured
-        # Known audio stream languages win over the release name's (decision 24).
+        # Known audio stream languages win over the release name's.
         kept = media.file_languages(measured.media, list(context.languages))
         episode_file = EpisodeFile(
             version_id=version.id,
@@ -1195,7 +1195,7 @@ def record_one(context: Context, filed: Filed, row_id: int, moment: datetime) ->
                 context.original_language,
             )
             episode_file.cutoff_not_met = judged is not None and judged.reason is not None
-            # Below the target by quality: the season is searched again at once (decision 25).
+            # Below the target by quality: the season is searched again at once.
             replacement.after_series_file(
                 db, version.title_id, filed.episode_ids, judged.reason if judged is not None else None, moment
             )
@@ -1811,7 +1811,7 @@ async def _clean_usenet(context: Context, found: Found, root: Path) -> None:
 
 
 def after_finish(download_id: int) -> None:
-    """After "Rest nicht ablegen" (decision 30): the unpack folder goes, and SABnzbd's job folder as after a filed
+    """After "Rest nicht ablegen": the unpack folder goes, and SABnzbd's job folder as after a filed
     download, holding no video but this download's own. A torrent keeps its files. Never raises."""
     try:
         with SessionLocal() as db:

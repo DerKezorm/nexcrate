@@ -1,4 +1,4 @@
-"""Where a file of an album lies (decision 6).
+"""Where a file of an album lies.
 
 ``track_files.relative_path`` is relative to the album folder: a bare name for what nexcrate filed, and for files taken
 over from Lidarr possibly with a medium folder in front (``CD 01/…``). Every reader joins it here, so a name with a

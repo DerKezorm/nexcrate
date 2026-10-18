@@ -9,7 +9,7 @@ A version a source feeds takes its switches from the source and has no rule; eve
 
 Watching changes nothing in S1 but the counts and the state: nexcrate does not search series yet.
 
-"Aired" means an air date before today in the container's time zone (decision 15). ``today`` is a function so tests can
+"Aired" means an air date before today in the container's time zone. ``today`` is a function so tests can
 fix the date.
 """
 
@@ -270,9 +270,9 @@ def custom(db: OrmSession, version: Version) -> bool:
 def counts_of(rows: list[tuple[Any, ...]], on: str) -> dict[str, Any]:
     """Counts from rows of (watched, has_file, air_date, upgradable, special), episodes TMDB still lists only.
 
-    ``upgrade`` counts watched episodes whose file the profile would still improve on (decision 32);
+    ``upgrade`` counts watched episodes whose file the profile would still improve on;
     ``upgradable_files`` every regular episode with such a file, watched or not, which the state goes by. Only regular
-    episodes count, as in Sonarr's progress (decision 46); a watched special that aired without
+    episodes count, as in Sonarr's progress; a watched special that aired without
     a file is ``specials_missing``, a line of its own.
     """
     files = watched = aired_watched = have = total = upgrade = upgradable_files = specials_missing = 0
@@ -315,7 +315,7 @@ def counts_of(rows: list[tuple[Any, ...]], on: str) -> dict[str, Any]:
 
 
 def recount(db: OrmSession, version: Version, on: str) -> None:
-    """Counts, size and state of a series version (decision 14), written onto the version."""
+    """Counts, size and state of a series version, written onto the version."""
     db.flush()
     rows = (
         db.execute(

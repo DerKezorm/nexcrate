@@ -136,7 +136,7 @@ class NamingOut(BaseModel):
     tokens: list[str] = Field(description="The tokens nexcrate fills, in Radarr's names.")
     versions: list[NamingVersion] = Field(description="One entry per movie version, in the order of their ids.")
     series: SeriesNamingOut = Field(description="The naming of series (S4).")
-    music: MusicNamingOut = Field(description="The naming of music (decision 14).")
+    music: MusicNamingOut = Field(description="The naming of music.")
 
 
 class SeriesNamingIn(SeriesPatterns):

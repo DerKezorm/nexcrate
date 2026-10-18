@@ -13,7 +13,7 @@ The rules
 * ``target_floor``: the worst step that still is the target. A file below it can be improved.
 * ``hires`` and ``source`` only order releases, they never shut one out (86 % of
   the measured releases are WEB, "CD only" would lock nearly everything out).
-* Fixed and said, no question (decision 14): an album as one file with a cue sheet, several albums in one release
+* Fixed and said, no question: an album as one file with a cue sheet, several albums in one release
   and audiobooks are refused by ``releases/music_decision.py``.
 """
 

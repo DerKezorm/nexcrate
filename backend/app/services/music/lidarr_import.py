@@ -1,7 +1,7 @@
 """Reading a Lidarr connection (M1.6, decisions 44 to 53): artists, albums, releases, the
 tracks of the release Lidarr watches, the files, the files it could not map, and its queue. Nothing is written to
-Lidarr, and not one request goes to MusicBrainz during the run (decision 46): the catalogue behind Lidarr's albums
-and the tracks of the other releases follow in the background at the priority of an import (decision 20).
+Lidarr, and not one request goes to MusicBrainz during the run: the catalogue behind Lidarr's albums
+and the tracks of the other releases follow in the background at the priority of an import.
 
 Measured on the bench (plan, B3): ``track?artistId=`` carries only the tracks of the watched release; a track has
 ``foreignTrackId`` and ``foreignRecordingId`` and no release id; one file can hold several tracks (two tracks with
@@ -65,11 +65,11 @@ SETTING_SEEN = "lidarr_seen_{source_id}"
 SETTING_FULL_READ = "lidarr_full_read_{source_id}"
 #: A scheduled run reads every artist again after this long, whatever Lidarr's numbers say.
 FULL_READ_EVERY = timedelta(hours=24)
-#: Lidarr's ``monitorNewItems``: ``all`` watches new albums, ``none`` and ``new`` do not (decision 47).
+#: Lidarr's ``monitorNewItems``: ``all`` watches new albums, ``none`` and ``new`` do not.
 MONITOR_NEW = {"all": "all"}
 #: A release Lidarr lists in this many countries is a worldwide one (see ``musicbrainz.WORLDWIDE_EVENTS``).
 WORLDWIDE_COUNTRIES = 10
-#: Lidarr names the country of a release; MusicBrainz and the target rule use the ISO code (decision 28).
+#: Lidarr names the country of a release; MusicBrainz and the target rule use the ISO code.
 COUNTRY_CODES = {
     "united states": "US",
     "united kingdom": "GB",
@@ -238,7 +238,7 @@ async def _import(url: str, api_key: str, source_id: int, run_id: int, light: bo
             language = store.account_language(db)
             definition = store.ensure_definition(db, language)
             if definition.id != source.version_id:
-                # The connection feeds the one music definition (decision 11).
+                # The connection feeds the one music definition.
                 source.version_id = definition.id
             before = _seen_before(db, source_id) if light else {}
             seen: dict[str, Any] = {}

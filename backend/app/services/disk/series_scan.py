@@ -5,7 +5,7 @@ folder the owner added as a series folder) every direct subfolder is a series fo
 reading a video: how many videos reading it would look at (``folder_read``), its season folders, the TMDB number of a
 season folder's ``release.nex``, numbers in its name and in ``tvshow.nfo``, and its title and year.
 
-**Matching**, in this order (decision 26): the stored series folder of an own version (``library``); ``release.nex``
+**Matching**, in this order: the stored series folder of an own version (``library``); ``release.nex``
 (``restorable``, or ``conflict`` when that version has a series folder elsewhere); the series folder of a version a
 Sonarr connection feeds, by its folder name (``sonarr``, never offered); numbers in the name or ``tvshow.nfo``; title
 and year, the library first. The last two are proposals; TMDB is asked after the matching at the pace of the movie

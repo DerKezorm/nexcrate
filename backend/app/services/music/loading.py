@@ -1,12 +1,12 @@
 """Loading artists from MusicBrainz in the background (M1.2).
 
 A job every 5 seconds, working up to 60 seconds per run, in fixed steps per artist with the state stored
-(decision 19): ``queued``, ``groups`` (the release groups are browsed, page by page), ``releases`` (the releases and
+: ``queued``, ``groups`` (the release groups are browsed, page by page), ``releases`` (the releases and
 tracks of the albums that need them, album by album), ``ready``, or ``failed`` with the code. A restart goes on at
 the stored step; every page and every album is committed on its own. A browse interrupted by the budget starts
 again at page one: the pages come from the cache for a day, so nothing is asked twice.
 
-Order (decision 20): what the owner just added (priority 0), an album page waiting for its releases (1), an import
+Order: what the owner just added (priority 0), an album page waiting for its releases (1), an import
 (2), a due refresh (3); within a priority the oldest first. Refreshes follow decision 21 and are marked due by
 ``groups_due_at`` and ``releases_due_at``.
 
@@ -133,8 +133,8 @@ def now() -> datetime:
 
 
 def next_artist(db: OrmSession, moment: datetime) -> Artist | None:
-    """The artist to work on: an unfinished one by priority and age, else a due refresh (decision 20)."""
-    # Various Artists is never browsed (decision 35), but its samplers need their releases like any album: it waits
+    """The artist to work on: an unfinished one by priority and age, else a due refresh."""
+    # Various Artists is never browsed, but its samplers need their releases like any album: it waits
     # in the step ``releases`` only.
     pending = db.scalar(
         select(Artist)
@@ -165,7 +165,7 @@ def next_artist(db: OrmSession, moment: datetime) -> Artist | None:
 
 
 def queue(db: OrmSession, artist: Artist, priority: int) -> None:
-    """Put an artist (back) into the queue: for "refresh now" (decision 39), a waiting page, a due refresh."""
+    """Put an artist (back) into the queue: for "refresh now", a waiting page, a due refresh."""
     if artist.load_state == ADDING:
         if being_added(artist.mbid):
             # Its adding goes on to ``releases`` itself; the queue would browse it a second time meanwhile.
@@ -183,7 +183,7 @@ def queue(db: OrmSession, artist: Artist, priority: int) -> None:
 
 
 def albums_needing_releases(db: OrmSession, artist_id: int, moment: datetime) -> list[Title]:
-    """Albums whose releases are missing or due (decision 6): watched or with files, never a gone one."""
+    """Albums whose releases are missing or due: watched or with files, never a gone one."""
     rows = db.execute(
         select(Title, Version)
         .outerjoin(Version, Version.title_id == Title.id)
@@ -201,7 +201,7 @@ def albums_needing_releases(db: OrmSession, artist_id: int, moment: datetime) ->
     )
     wanted: list[Title] = []
     for title, version in rows:
-        # An album with a running download needs its tracks to be filed (decision 4).
+        # An album with a running download needs its tracks to be filed.
         needs = title.id in loading or (version is not None and (version.monitored or version.has_file))
         # An album that did not load waits for its next try (``releases_due_at``): every run would ask again else.
         missing = title.releases_state in (None, "none", "heads") or (
@@ -214,7 +214,7 @@ def albums_needing_releases(db: OrmSession, artist_id: int, moment: datetime) ->
 
 
 def hurry_album(title_id: int) -> None:
-    """An album was loaded before its tracks are known (decision 4): its artist moves to the
+    """An album was loaded before its tracks are known: its artist moves to the
     front of the queue, so the tracks come before the download is filed. Never raises."""
     try:
         with SessionLocal() as db:
@@ -248,14 +248,14 @@ def _fail(db: OrmSession, artist: Artist, code: str, moment: datetime) -> None:
 def load_groups(db: OrmSession, artist: Artist, *, budget_end: float, lane: str = mb.BACKGROUND) -> bool:
     """Browse the release groups page by page; True when the step is complete.
 
-    The first load of an artist the owner added happens in the add dialog with its choice (decision 33); here a
+    The first load of an artist the owner added happens in the add dialog with its choice; here a
     first load only happens for an artist without stored groups, and watches studio albums when ``monitor_new``
     is ``all``.
     """
     definition = store.definition(db)
     moment = now()
     if artist.is_various:
-        # Never browsed (decision 35), whatever queued it: straight to the releases of its samplers.
+        # Never browsed, whatever queued it: straight to the releases of its samplers.
         artist.load_state = "releases"
         db.commit()
         return True
@@ -265,7 +265,7 @@ def load_groups(db: OrmSession, artist: Artist, *, budget_end: float, lane: str 
     artist.load_error = None
     db.commit()
     first_load = artist.groups_refreshed_at is None
-    # An imported artist keeps Lidarr's watching (decision 47); the owner's own gets studio albums when it wants new
+    # An imported artist keeps Lidarr's watching; the owner's own gets studio albums when it wants new
     # ones and never had its groups stored (the add dialog stores them itself, decision 33).
     watch = "studio" if artist.monitor_new == "all" and artist.added_by == "owner" else "none"
     seen: set[str] = set()

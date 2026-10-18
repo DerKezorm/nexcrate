@@ -431,7 +431,7 @@ def remove_profile(version_id: int, db: DbSession) -> None:
         db.delete(row)
     db.commit()
     logger.info("Profile of version %d removed", version_id)
-    # Without rules nothing is upgraded: the version's own files follow (finding 15).
+    # Without rules nothing is upgraded: the version's own files follow.
     judging.after_profile_change(version_id)
 
 
@@ -686,7 +686,7 @@ def choose_profile(db: DbSession, version_id: int, payload: ProfileChoice) -> Pr
     profile_store.assign(db, version_id, chosen)
     db.commit()
     logger.info("Version %d judges by profile %s now", version_id, payload.profile_id)
-    # What it judges by changed, so its own files are judged again (finding 15).
+    # What it judges by changed, so its own files are judged again.
     judging.after_profile_change(version_id)
     return None if chosen is None else _brief(chosen, _used_by(db))
 

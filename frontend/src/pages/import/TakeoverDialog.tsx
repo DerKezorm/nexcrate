@@ -140,7 +140,7 @@ export function TakeoverDialog({ source, onClose, onTaken }: { source: Source; o
             music ? t('import.takeover.music.intro.noRead') : series ? t('import.takeover.series.intro.noRead') : t('import.takeover.intro.noRead'),
             music ? t('import.takeover.music.intro.loads') : series ? t('import.takeover.series.intro.loads') : t('import.takeover.intro.loads'),
             // Library from disk: the takeover writes a release.nex into every movie folder afterwards. For Sonarr it
-            // reads the series folders first (decision 8).
+            // reads the series folders first.
             music ? t('import.takeover.music.intro.companion') : series ? t('import.takeover.series.intro.companion') : t('import.takeover.intro.companion'),
           ].map((line) => (
             <li key={line} className="flex items-start gap-2">

@@ -63,7 +63,7 @@ FAILURE_HANDLINGS = ("replacement", "schedule", "owner")
 #: Why a release is on a title's blocklist.
 BLOCK_REASONS = (*FAILED_REASONS, "dangerous_file", "multi_part", "removed_by_owner")
 #: Series downloads: what the download covers.
-#: ``album`` since M4 (decision 3).
+#: ``album`` since M4.
 SCOPES = ("episode", "season", "series", "album")
 #: Why an episode belongs to a download: it fills a gap, replaces a file, or the owner loaded a release without gain.
 EPISODE_ACTIONS = ("fills", "replaces", "confirmed")
@@ -187,7 +187,7 @@ class Download(Base):
     #: For a failed download: who takes care of it, see ``FAILURE_HANDLINGS``. Only ``owner`` makes it a problem.
     #: ⚠️ From the missing-column upkeep (22.09.2026).
     failure_handling: Mapped[str | None] = mapped_column(String(16), nullable=True)
-    #: The client did not answer in time when it was handed the release (finding 1 of 22.09.2026): nexcrate looks for
+    #: The client did not answer in time when it was handed the release: nexcrate looks for
     #: the job by its name until the client shows it. Null once confirmed. ⚠️ From the missing-column upkeep.
     handed_unsure_at: Mapped[datetime | None] = mapped_column(nullable=True)
     grabbed_at: Mapped[datetime] = mapped_column(default=utcnow)
@@ -208,7 +208,7 @@ class Download(Base):
     open_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     absent_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     # ⚠️ From migration 16; a change needs a new migration.
-    #: For an album download: the release the files turned out to be (decision 9); null until they were read.
+    #: For an album download: the release the files turned out to be; null until they were read.
     release_id: Mapped[int | None] = mapped_column(ForeignKey("releases.id", ondelete="SET NULL"), nullable=True)
     # The columns below come from the missing-column upkeep (seed goals, 02.10.2026), no migration.
     #: The seed goal of the indexer when the torrent was loaded, kept here: the indexer may change or go later. A
@@ -255,7 +255,7 @@ class ExtraFile(Base):
 
 
 class DownloadEpisode(Base):
-    """An episode a series download is for, fixed when it was loaded (decision 2).
+    """An episode a series download is for, fixed when it was loaded.
 
     ⚠️ From ``create_all`` with migration 11; a change of a column needs a new migration.
     """
@@ -334,12 +334,12 @@ class DownloadAudioFile(Base):
     via: Mapped[str | None] = mapped_column(String(16), nullable=True)
     #: Tracks proposed for an open file, best first.
     proposal: Mapped[list[int] | None] = mapped_column(JSON, nullable=True)
-    #: The album another album's file belongs to (decision 12).
+    #: The album another album's file belongs to.
     other_title_id: Mapped[int | None] = mapped_column(ForeignKey("titles.id", ondelete="SET NULL"), nullable=True)
     track_file_id: Mapped[int | None] = mapped_column(
         ForeignKey("track_files.id", ondelete="SET NULL"), nullable=True
     )
-    #: While ``placing``: the name it gets, relative to the album folder (decision 19).
+    #: While ``placing``: the name it gets, relative to the album folder.
     target: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     #: What AcoustID said (M4.9): ``{"state": "matched"|"none"|"failed", "recordings": [...]}``.
     fingerprint: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)

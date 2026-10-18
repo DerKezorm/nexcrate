@@ -4,21 +4,21 @@
 
 1. **Checks** as for movies: the version exists, no connection feeds it, the job folder is visible, nothing dangerous.
    Without loaded tracks the download waits (``waiting_tracks``) and its artist moves to the front of the loading job
-   (decision 4); after 24 hours it is the problem ``album_tracks_missing``.
+  ; after 24 hours it is the problem ``album_tracks_missing``.
 2. **The audio files** of the job, archives unpacked next to the album folder, each read with ``tags`` (length, codec,
-   tags). The rules of movies for samples and extras do not hold: a track called "Sample" is music (decision 7).
+   tags). The rules of movies for samples and extras do not hold: a track called "Sample" is music.
 3. **Which release, which track** (``music.file_matching``); one file per medium as long as the medium is a single
-   file with a cue sheet: refused and blocked (decision 13). Every file is kept in ``download_audio_files`` with its
+   file with a cue sheet: refused and blocked. Every file is kept in ``download_audio_files`` with its
    decision before anything moves, so the dialog can show them.
 4. **An album with files** is replaced only when neither the step nor the count of target tracks gets worse
    (decisions 20, E2, E11): then every old file goes into the recycle folder first. Otherwise nothing is filed and the
    problem ``album_not_better`` says why; the owner may confirm.
 5. **Filing file by file**, each in its own transaction: the album folder (fixed once, decision 16), the name after the
    patterns, a copy instead of a hardlink for a torrent while tags are written, the tags written into the temporary
-   file before its rename (decision 18), the ``track_files`` row right after the rename. Before a file moves its row
-   says ``placing`` with its target; the next round takes over a file found there (decision 19).
+   file before its rename, the ``track_files`` row right after the rename. Before a file moves its row
+   says ``placing`` with its target; the next round takes over a file found there.
 6. **Afterwards:** ``folder.jpg``, the version's release, step and counts, and the state: a file nobody assigned makes
-   the problem ``files_unassigned`` (decision 31), otherwise ``imported`` and SABnzbd's job folder goes.
+   the problem ``files_unassigned``, otherwise ``imported`` and SABnzbd's job folder goes.
 
 ⚠️ Every path written or deleted lies in the album folder or the job folder after resolving links; folder names come
 only from the patterns. Logs carry ids and counts, never names or paths.
@@ -68,10 +68,10 @@ logger = logging.getLogger("nexcrate.import")
 
 #: At most this many audio files per download; more is ``too_many_files``.
 MAX_AUDIO = 500
-#: How long a download waits for the tracks of its album (decision 4).
+#: How long a download waits for the tracks of its album.
 WAIT_FOR_TRACKS = timedelta(hours=24)
 UNPACKED_PREFIX = "unpacked:"
-#: Folders and files left out of an album download: hidden ones and those of NAS systems. Nothing else (decision 7).
+#: Folders and files left out of an album download: hidden ones and those of NAS systems. Nothing else.
 _LEFT_OUT_FOLDERS = frozenset({"@eadir", ".@__thumb"})
 _LEFT_OUT_FILES = frozenset({".ds_store", "thumbs.db", "desktop.ini"})
 _IMAGE_EXTENSIONS = frozenset({".jpg", ".jpeg", ".png"})
@@ -360,7 +360,7 @@ def _key(path: str) -> str:
 
 def album_folder(db: OrmSession, context: Context, root: Path) -> tuple[str, str]:
     """The artist folder and the album folder names: the stored ones, else from the patterns, with an addition when
-    another album of the library or a folder nexcrate did not make has the name already (decision 15)."""
+    another album of the library or a folder nexcrate did not make has the name already."""
     if context.album_relative:
         parts = [part for part in context.album_relative.replace("\\", "/").split("/") if part]
         if len(parts) == 2 and all(_plain(part) for part in parts):
@@ -591,7 +591,7 @@ def _better_step(old: list[CurrentFile], reads: list[tags.Read]) -> bool:
 def not_worse(
     context: Context, old: list[CurrentFile], reads: list[tags.Read], track_ids: list[int]
 ) -> dict[str, Any] | None:
-    """None when the new files may replace the album's ``old`` ones (decision 20); else what would get worse."""
+    """None when the new files may replace the album's ``old`` ones; else what would get worse."""
     if not old:
         return None
     before = album_quality.step_of_files(item.quality for item in old)
@@ -611,7 +611,7 @@ def not_worse(
 
 
 def with_fingerprints(context: Context, found: Found, result: fm.Result) -> tuple[fm.Result, dict[int, str]]:
-    """The last fallback (M4.9, decision 38): the open files fingerprinted and looked up at AcoustID; a recording id
+    """The last fallback: the open files fingerprinted and looked up at AcoustID; a recording id
     of the answer is read like one of the tags, and the files are matched again against the same release."""
     edition = result.edition
     if edition is None or context.fingerprint_key is None:
@@ -725,7 +725,7 @@ class Spot:
 
 def prepare_spot(context: Context, root: Path) -> Spot:
     """The album folder, made and stored on the version before the first file moves: a stop in the middle finds the
-    same folder again instead of taking its own files for a stranger's (decision 16)."""
+    same folder again instead of taking its own files for a stranger's."""
     with SessionLocal() as db:
         artist, album = album_folder(db, context, root)
     artist_path = _ensure_folder(root / artist, root)
@@ -807,7 +807,7 @@ def _file_name(
     extension = source.suffix.lower()
     wanted_track = track_id if track_id is not None else planned.track_id
     if wanted_track is None:
-        # A file that fits no track keeps its own name (decision 32).
+        # A file that fits no track keeps its own name.
         return naming._cut_bytes(naming.clean(source.stem), naming.MAX_PART_BYTES - 40) + extension
     track = next(item for item in edition.tracks if item.id == wanted_track)
     facts = naming_music.TrackFacts(
@@ -841,7 +841,7 @@ def _cover(context: Context, release_mbid: str | None, size: str) -> tuple[bytes
 
 
 def recycle_current(old: list[CurrentFile], spot: Spot) -> int:
-    """Every old file of the album into the recycle folder, each with its row gone (decision 20, E11). Returns how
+    """Every old file of the album into the recycle folder, each with its row gone. Returns how
     many went."""
     moment = store.now()
     moved = 0
@@ -999,7 +999,7 @@ def replace_album(
     named: list[tuple[Planned, str, dict[str, list[str]] | None]],
     cover: tuple[bytes, str] | None,
 ) -> int:
-    """An upgrade (decision 20, E11) that never leaves the album with fewer files (finding of the review): every new
+    """An upgrade that never leaves the album with fewer files (finding of the review): every new
     file is first copied or linked into a staging folder in the album folder, never moved, its tags written there;
     only when all of them are there do the old files go into the recycle folder and the new ones take their names.
     A failure while staging leaves the album as it was. A stop at any point: the job still holds every source, the
@@ -1052,7 +1052,7 @@ def adopt_placing(
     spot: Spot,
     wanted_of: Callable[[int | None], dict[str, list[str]] | None] = lambda _track_id: None,
 ) -> set[str]:
-    """A round after a stop between moving a file and recording it (decision 19): a file at its target is taken over,
+    """A round after a stop between moving a file and recording it: a file at its target is taken over,
     a finished temporary file whose source is gone gets its name. Returns the paths taken over.
 
     The tags of a taken-over file are written once more when writing is on (the stop may have come before or after
@@ -1096,7 +1096,7 @@ def adopt_placing(
 
 
 def _folder_image(context: Context, spot: Spot, found: Found, release_mbid: str | None) -> None:
-    """``folder.jpg`` in the album folder (decision 28): the archive's cover, else a cover of the download. Never
+    """``folder.jpg`` in the album folder: the archive's cover, else a cover of the download. Never
     replaces one that is there. Never raises."""
     target = spot.folder / FOLDER_IMAGE
     if os.path.lexists(target):
@@ -1174,7 +1174,7 @@ def record_problem(download_id: int, problem: Problem) -> None:
 
 
 def _waiting(context: Context) -> None:
-    """No tracks yet: wait, and after ``WAIT_FOR_TRACKS`` the problem (decision 4)."""
+    """No tracks yet: wait, and after ``WAIT_FOR_TRACKS`` the problem."""
     from ..music import loading as music_loading
 
     completed = context.completed_at
@@ -1400,7 +1400,7 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
     if filed_now and context.version_id is not None:
         _align(context, spot)
     if context.version_id is not None and (filed_now or any(row.placed for row in context.stored)):
-        # After the commit: a failing write never undoes the filing (decision 37).
+        # After the commit: a failing write never undoes the filing.
         companions_album.write_version(context.version_id)
     if filed_now:
         # After the commit, in a thread of its own: a media server never holds up or fails an import.
@@ -1517,7 +1517,7 @@ async def _clean_usenet(context: Context, found: Found) -> None:
 
 
 def clean_after_owner(download_id: int) -> None:
-    """After "Rest nicht ablegen" (decision 34): the unpack folder and SABnzbd's job folder go. Never raises."""
+    """After "Rest nicht ablegen": the unpack folder and SABnzbd's job folder go. Never raises."""
     with SessionLocal() as db:
         context = load(db, download_id)
     if context is None:

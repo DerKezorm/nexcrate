@@ -287,7 +287,7 @@ def create_version(payload: VersionIn, db: DbSession) -> Version:
     if payload.kind == "album" and db.scalar(
         select(media.VersionDefinition.id).where(media.VersionDefinition.kind == "album")
     ):
-        # Music has exactly one version (decision 10).
+        # Music has exactly one version.
         raise error("music_version_exists", "Music has one version; a second one cannot be added yet.", 409)
     if _label_taken(db, payload.kind, label, None):
         raise error("version_label_taken", "A version with this name already exists for this type.", 409)

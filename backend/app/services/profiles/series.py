@@ -6,21 +6,21 @@ ones movies use (``building.py``); only what TRaSH's Sonarr data does differentl
 What differs from movies
 ------------------------
 * **No ``special_cuts``.** TRaSH's "Series Versions" group (Hybrid, Remaster) is in the base profile only, so the
-  answer could add nothing (decision 6).
+  answer could add nothing.
 * **Resolution** starts at 1080p and **source** offers WEB and Remux only. TRaSH has no series profile of Blu-ray
   encodes and WEB for anything but German, where "HD Bluray + WEB" *is* the WEB profile: German with ``web``
-  keeps Blu-ray encodes allowed, as TRaSH means it (decision 7). Movies have
+  keeps Blu-ray encodes allowed, as TRaSH means it. Movies have
   their own ``encodes`` answer and therefore forbid them under ``web``; series have no such answer.
 * **Streaming services** are not a question: General, UK, Miscellaneous and Dutch (+75 each) and the HD/UHD
   Streaming Boost are in every profile that TRaSH's ``include`` names, Asian stays the detailed question, because
-  its scores run from 10 to 75. French carries no scores at all in TRaSH's Sonarr data (decision 8).
+  its scores run from 10 to 75. French carries no scores at all in TRaSH's Sonarr data.
 * **Season packs** are fixed: the group ``optional-season-packs`` (Season Pack +10) is in every series profile,
   and TRaSH lists all eight profiles of the table in its ``include``. "Multi-Episode" and "Single Episode" carry
-  no scores and are left out (decision 9).
+  no scores and are left out.
 * **``audio``** is shown where TRaSH's ``audio-formats`` group acts: Remux + WEB, and not in the German profiles,
   which the group does not list. That is the ``excludes`` condition of decision 11.
 * **Sizes** come from TRaSH's ``series`` set and are measured against the runtime of the episodes a release
-  covers, not a movie's runtime; that is the engine's part (decision 23).
+  covers, not a movie's runtime; that is the engine's part.
 
 Anime (A4)
 ------------------------------
@@ -95,7 +95,7 @@ QUESTIONS: tuple[Question, ...] = (
     Question("anime", "choice", "trash", options=("trash", "same")),
 )
 
-#: (family, resolution, source) to TRaSH's Sonarr profile file (decision 7).
+#: (family, resolution, source) to TRaSH's Sonarr profile file.
 PROFILE_TABLE: dict[tuple[str, str, str], str] = {
     ("standard", "1080p", "web"): "web-1080p",
     ("standard", "1080p", "remux"): "remux-web-1080p",

@@ -84,7 +84,7 @@ from . import album_import, discard, files, series_import, store, unpacking
 #: found on disk and assigned or restored (the library from disk).
 KNOWN_FILE_REFS = ("nexcrate:", "taken:", "disk:")
 #: Problems that refuse the download: its release goes on the blocklist and the history says ``failed``. A movie in
-#: several parts (CD1, CD2) too: one file would be half a movie (decision 38).
+#: several parts (CD1, CD2) too: one file would be half a movie.
 REFUSED = ("dangerous_file", "encrypted", "multi_part")
 #: The path prefix of a video that came out of the download's archives, in ``download_files``.
 UNPACKED_PREFIX = "unpacked:"
@@ -329,7 +329,7 @@ class Context:
     subtitles_enabled: bool = True
     #: The recorded subtitles of the current file as ``(id, relative_path)``; they go into the recycle folder with it.
     current_subtitles: tuple[tuple[int, str], ...] = ()
-    #: The video the owner chose of several (decision 39), relative to the download; None to choose by size.
+    #: The video the owner chose of several, relative to the download; None to choose by size.
     chosen: str | None = None
     #: The movie's names, for the check of the release and video names; None when the title is gone.
     names: TitleInfo | None = None
@@ -531,7 +531,7 @@ def writable_root(root_folder: str | None) -> Path | None:
 
 
 def destination(context: Context) -> Path:
-    """The folder a version without a current file is filed and unpacked into (finding 13).
+    """The folder a version without a current file is filed and unpacked into.
 
     Its ``root_folder`` when that is set, visible and writable: a taken-over movie without a file goes into the folder
     of its Radarr root folder. Otherwise the version folder, as before. Raises ``Problem``.
@@ -622,7 +622,7 @@ def _named(path: Path, job: Path, origin: Path) -> str:
 
 
 def _pick(context: Context, found: files.Scan, job: Path, origin: Path) -> Path:
-    """The video to file (decision 38): the owner's choice, else the largest one.
+    """The video to file: the owner's choice, else the largest one.
 
     Parts of one movie with different numbers refuse the download (``multi_part``); two videos where the largest is
     not twice the second ask the owner (``several_videos``).
@@ -935,7 +935,7 @@ def _record_import(context: Context, outcome: Outcome) -> bool:
             _apply_media(version, row, outcome, moment)
             # The old file's subtitles that left go, the placed ones come (C9).
             subtitle_records.record(db, version, row.id, outcome.subtitles, outcome.subtitles_gone, moment)
-            # Judged by the profile as every stored file is (finding 15), not by ``below_target`` alone. After a flush:
+            # Judged by the profile as every stored file is, not by ``below_target`` alone. After a flush:
             # it takes the write lock, so the profile is read as it stands when this commits.
             db.flush()
             version.cutoff_not_met = judging.judge(db, version)
@@ -1220,7 +1220,7 @@ def run(download_id: int) -> None:
         with rename_guard.filing(_title_of(download_id)):
             _run(download_id)
     except rename_guard.Busy:
-        # The title's files are being renamed (decision 19): the next round files it.
+        # The title's files are being renamed: the next round files it.
         logger.info("Download %d waits: its title is being renamed", download_id)
 
 
@@ -1269,7 +1269,7 @@ def _own_folders() -> list[Path]:
 
     Every version folder, and every ``root_folder`` of a version no source feeds, with a file or without one: an upgrade
     of a file outside the version folder is unpacked and recycled there, and a version without a file is filed and
-    unpacked into its ``root_folder`` (finding 13).
+    unpacked into its ``root_folder``.
     """
     with SessionLocal() as db:
         paths = {folder for folder in db.scalars(select(VersionDefinition.folder)) if folder}

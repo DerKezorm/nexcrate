@@ -6,11 +6,11 @@ The jobs, the mapping of root folders by files, the blockers and the undo are th
 * **Reading** is a Sonarr import (``sonarr_import.run``), then Sonarr's naming and media management. When Sonarr does
   not answer, the stored state serves, provided a run finished once and every version with files kept its series
   folder; otherwise the job ends with ``takeover_needs_import`` and Sonarr's code as ``reason``.
-* **Samples** for the mapping are one file per series, spread over the series (decision 2): all samples in one series
+* **Samples** for the mapping are one file per series, spread over the series: all samples in one series
   folder would prove nothing about the others. Then every episode file is looked at.
 * **The takeover** writes in one transaction per connection: every version becomes nexcrate's own with its series
   folder as nexcrate sees it, its switches as in Sonarr (set by the owner), a rule for new episodes from Sonarr's
-  ``monitorNewItems`` (decision 5), its found files with ``taken:<Sonarr's file id>`` and nexcrate's judgement, its
+  ``monitorNewItems``, its found files with ``taken:<Sonarr's file id>`` and nexcrate's judgement, its
   season folders from the paths; missing files go with their links. ``own_since`` is now, ``files_read_at`` empty
   while the series folder exists.
 * **Afterwards**, phase ``reading_folders``: every taken-over version's series folder is read for files Sonarr did not
@@ -108,7 +108,7 @@ def source_naming(config: SeriesNamingConfig, current_style: str) -> dict[str, A
 
 
 def media_notes(media: MediaManagement | None) -> list[dict[str, Any]]:
-    """Radarr's notes with Sonarr's codes (decision 12)."""
+    """Radarr's notes with Sonarr's codes."""
     return [
         {"code": "sonarr_" + note["code"].removeprefix("radarr_"), "values": note["values"]}
         for note in takeover.media_notes(media)

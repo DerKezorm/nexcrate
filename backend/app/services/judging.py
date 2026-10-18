@@ -319,7 +319,7 @@ def _after_start() -> None:
         except Exception:
             logger.exception("Judging the episode files again after the start failed; they keep their judgement")
         try:
-            # Albums follow the music profile (decision 22). Imported here: music builds on
+            # Albums follow the music profile. Imported here: music builds on
             # this module's neighbours, not the other way round.
             from .music import album_quality
 

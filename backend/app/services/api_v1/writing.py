@@ -436,7 +436,7 @@ def _check_request(payload: RequestIn) -> tuple[Title | None, list[VersionDefini
     with SessionLocal() as db:
         title = find_title(db, payload.kind, payload.ref)
         if payload.kind == "album" and not payload.versions:
-            # Music has one version (decision 10); naming it is not needed.
+            # Music has one version; naming it is not needed.
             only = music_store.definition(db)
             if only is None:
                 raise error("version_not_available", "nexcrate has no music version yet.", 409, kind="album")
@@ -669,7 +669,7 @@ async def _fetch_and_create(kind: str, value: str) -> tuple[int, bool]:
     data = await fetch(kind, value)
     if kind == "album":
         # Made as "Add album" in the interface makes it: with its version, and with the artists of its credit that
-        # the library lacks, whose new albums are not watched (decision 34).
+        # the library lacks, whose new albums are not watched.
         from ...routers import music as music_router
 
         return await asyncio.to_thread(music_router._create_album, *data)

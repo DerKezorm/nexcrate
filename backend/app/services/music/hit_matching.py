@@ -2,7 +2,7 @@
 
 A pure function: ``match`` gets the parsed name, the artist and every album of the artist, and reads no database.
 
-**Exact, as the owner chose (decision 10).** The head of the name (the text in front of the features, see
+**Exact, as the owner chose.** The head of the name (the text in front of the features, see
 ``music_parser``) must be the artist followed by the album, word for word once both are spelling keys
 (``schreibweisen.keys``: umlauts in three forms, punctuation as spaces, "&" as "and" and "und"). The parser's split
 between artist and album is not trusted: an artist with a hyphen makes it guess. A leading "The" may be missing on
@@ -18,12 +18,12 @@ unsure: the artist part may name further artists after the artist ("A & B", "A, 
 and the album part must be the album. An artist whose own name holds such a word ("A and the B") still matches, as
 the parts are tried from the left.
 
-**Against every album of the artist (decision 11),** not only the one searched: a release of another album says so
+**Against every album of the artist,** not only the one searched: a release of another album says so
 with that album. Two albums of the artist with the same name: the one whose year the name gives, else the one
-searched (decision 12). The kind the name gives (single, EP, live, soundtrack, compilation) picks among albums of the
+searched. The kind the name gives (single, EP, live, soundtrack, compilation) picks among albums of the
 same name as well: a single of the same name is a single, not the album.
 
-**Not this album (decision 13):** several albums in one release, a tribute or karaoke release when the album's own
+**Not this album:** several albums in one release, a tribute or karaoke release when the album's own
 title does not say so, a sampler for an album of one artist, another artist.
 """
 

@@ -1,4 +1,4 @@
-"""Matching a source's episodes to TMDB's (decision 24).
+"""Matching a source's episodes to TMDB's.
 
 Sonarr counts by TVDB, nexcrate by TMDB. Per series, each episode is used once, in this order:
 
@@ -12,8 +12,8 @@ Sonarr counts by TVDB, nexcrate by TMDB. Per series, each episode is used once, 
    dates lie one day apart. When one TMDB episode stands alone on a date and every source episode of that date shares
    one file, all of them land on it (``shared_file``: TVDB splits what TMDB keeps whole).
    ⚠️ Specials are matched by date apart from regular episodes: by title, or when a day has exactly one on each side.
-   Never one day apart: promotional specials often come out on neighbouring days (decision 54);
-3c. ``title_en``: a special by its title against TMDB's English name of a special, unique on both sides (decision 51);
+   Never one day apart: promotional specials often come out on neighbouring days;
+3c. ``title_en``: a special by its title against TMDB's English name of a special, unique on both sides;
 4. ``title``: the same title through the spelling keys, unique on both sides;
 5. ``numbers``: the same season and number when neither side has a date and both seasons have as many episodes.
 
@@ -291,7 +291,7 @@ def match(source: list[SourceEpisode], tmdb: list[TmdbEpisode]) -> Matched:
             open_tmdb.pop(targets[0].id, None)
             used.add(targets[0].id)
 
-    # 3b. Single regular episodes one day apart, unique on both sides. Never specials (decision 54).
+    # 3b. Single regular episodes one day apart, unique on both sides. Never specials.
     near: dict[int, list[TmdbEpisode]] = {}
     for episode in open_source.values():
         if not episode.air_date or episode.season == 0:
@@ -309,7 +309,7 @@ def match(source: list[SourceEpisode], tmdb: list[TmdbEpisode]) -> Matched:
         if len(candidates) == 1 and claimed[candidates[0].id] == 1 and source_id in open_source:
             pair(open_source[source_id], candidates[0], "date")
 
-    # 3c. Specials by TMDB's English name, unique on both sides; both sides specials only (decision 51).
+    # 3c. Specials by TMDB's English name, unique on both sides; both sides specials only.
     english = [
         TmdbEpisode(
             id=item.id, season=item.season, episode=item.episode, air_date=item.air_date, name=item.name_en or ""
@@ -427,7 +427,7 @@ def numbering_note(
             "episodes": sum(source_sizes.values()),
             "sizes": _sizes(source_sizes),
         },
-        # Specials count in, told apart (decision 47); alone they are no reason for the line.
+        # Specials count in, told apart; alone they are no reason for the line.
         "unmatched": unmatched + unmatched_specials,
         "unmatched_specials": unmatched_specials,
         "differences": differences,

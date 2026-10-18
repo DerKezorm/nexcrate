@@ -16,7 +16,7 @@ Kinds, as measured on 14.09.2026:
 * ``rar``: rarfile with the tool ``unrar`` only, in the image the free ``unrar-free``. rarfile would otherwise fall back
   to bsdtar or 7z, which unpack RAR wrongly or not at all. ``needs_password()`` also catches encrypted headers, where
   extracting silently writes nothing. An old RAR4 archive packed as one solid block fails with unrar-free:
-  ``unsupported`` (decision 19).
+  ``unsupported``.
 * ``7z``: 7z archives and split ``.7z.001`` and ``.zip.001`` archives, always with a dummy password: without ``-p`` 7z
   waits for one on a terminal.
 * ``zip``: zipfile; flag bit 1 or strong encryption is encrypted.

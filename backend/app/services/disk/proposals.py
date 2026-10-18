@@ -6,7 +6,7 @@
 * **Title and year** through the spelling keys: the library first (titles sharing a key with the year at most one year
   away), then TMDB's search with title and year, and without the year when nothing came; results sharing a key with
   their title or original title rank first, the same year before one year off. At most 5 proposals.
-* **Unambiguous** (decision 18): a number that names exactly one movie, or exactly one candidate that shares a key and
+* **Unambiguous**: a number that names exactly one movie, or exactly one candidate that shares a key and
   has the same year.
 * A proposal: ``tmdb_id``, ``imdb_id``, ``title``, ``year``, ``poster_file``, ``from`` (``companion``, ``name_number``,
   ``nfo_number``, ``title_year``, ``library``), ``title_id``, ``unambiguous``.

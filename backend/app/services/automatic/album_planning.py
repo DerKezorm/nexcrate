@@ -3,7 +3,7 @@
 The rules and intervals are the movies' (``planning``): a version wants when it is its own, monitored, has the music
 profile and a default folder, no download blocks it, and it has no file or its step is below the profile's target
 (``cutoff_not_met``, Music M2). An album whose tracks are incomplete but whose step reaches the target does not search
-by itself (decision 3): before a download nexcrate cannot know which tracks a release holds.
+by itself: before a download nexcrate cannot know which tracks a release holds.
 
 **The anchor** is the album's release date (``first_release_date`` of the release group, else the target release's
 date): a full date from that day, a month from its first day, a year alone as a movie with only a year, nothing as a
@@ -81,7 +81,7 @@ def load_facts(db: OrmSession, title_ids: Collection[int], now: datetime) -> dic
     if not ids:
         return {}
     titles = list(db.scalars(select(Title).where(Title.id.in_(ids), Title.kind == "album")))
-    # A frozen artist (fork 3): its albums keep their switches but want nothing on their own; a
+    # A frozen artist: its albums keep their switches but want nothing on their own; a
     # program's search wish still goes, as a search by hand does.
     owners = {title.artist_id for title in titles if title.artist_id is not None}
     frozen_artists = (
@@ -116,7 +116,7 @@ def load_facts(db: OrmSession, title_ids: Collection[int], now: datetime) -> dic
         select(Download).where(Download.title_id.in_(ids), Download.state.in_(store.UNFINISHED_STATES))
     )
     blocked = {(row.title_id, row.version_definition_id) for row in unfinished if store.blocks_loading(row)}
-    # An album with unclear files waits for the owner (decision 15).
+    # An album with unclear files waits for the owner.
     unclear = set(
         db.scalars(
             select(Version.id)

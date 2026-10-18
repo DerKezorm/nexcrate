@@ -40,7 +40,7 @@ logger = logging.getLogger("nexcrate.companions")
 
 KINDS = ("check", "backfill")
 KEEP_FINISHED = timedelta(minutes=30)
-#: The pause after every written file; the bench measurement of the media servers' watchers sets it (decision 11).
+#: The pause after every written file; the bench measurement of the media servers' watchers sets it.
 WRITE_PAUSE_SECONDS = 0.02
 #: Example folders per state in the report.
 EXAMPLES = 20

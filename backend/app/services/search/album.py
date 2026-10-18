@@ -45,19 +45,19 @@ from ..releases.music_parser import ParsedAlbum, parse_album
 from . import plan, ranking
 from .model import IndexerInfo
 
-#: Queries per indexer and album search (decision 9).
+#: Queries per indexer and album search.
 MAX_QUERIES = 4
-#: Further names of the artist asked on request (decision 8).
+#: Further names of the artist asked on request.
 MAX_ALIASES = 2
 SEARCH_SECONDS = 180.0
 SKIPPED_CODE = "indexer_no_music_categories"
-#: The music categories when an indexer lists none in its caps (decision 4).
+#: The music categories when an indexer lists none in its caps.
 DEFAULT_MUSIC_CATEGORIES = (3000, 3010, 3040)
 #: Never asked: video and audiobooks.
 LEFT_OUT_CATEGORIES = (3020, 3030)
 LOSSLESS_CATEGORY = 3040
 MP3_CATEGORY = 3010
-#: Below this bitrate over the whole length a release cannot be the whole album (decision 16).
+#: Below this bitrate over the whole length a release cannot be the whole album.
 FLOOR_KBIT = 96
 #: The bitrate below which a step looks too small to be what the name says: a hint only.
 STEP_FLOOR_KBIT = {mq.LOSSLESS_24: 900, mq.LOSSLESS_16: 400, mq.LOSSY_HIGH: 180, mq.LOSSY_MID: 110}
@@ -117,7 +117,7 @@ class AlbumSearch:
     #: The step of the album's files; None without files.
     current_step: str | None
     has_file: bool
-    #: Asking with the further names too (decision 8).
+    #: Asking with the further names too.
     aliases: bool = False
     search_seconds: float = SEARCH_SECONDS
     scope: dict[str, Any] = field(default_factory=dict)
@@ -216,7 +216,7 @@ def load(db: OrmSession, title_id: int, *, aliases: bool = False) -> AlbumSearch
 
 
 def music_query(caps: dict[str, Any] | None, album: AlbumSearch) -> plan.Query | None:
-    """``t=music`` with artist and album, when the caps offer music search with both (decision 5)."""
+    """``t=music`` with artist and album, when the caps offer music search with both."""
     used = plan.caps_in_use(caps)
     params = set(used.get("music_params") or [])
     if not used.get("music_search") or "album" not in params or (not album.artist.various and "artist" not in params):
@@ -237,7 +237,7 @@ def _texts(album: AlbumSearch, artist_names: list[str]) -> list[str]:
     texts = []
     for name in artist_names:
         if schreibweisen.share_a_key(name, album.title):
-            # Named like the artist: the year narrows it (decision 7).
+            # Named like the artist: the year narrows it.
             texts.append(f"{name} {album.year}" if album.year else name)
         else:
             texts.append(f"{name} {album.title}")
@@ -319,7 +319,7 @@ def _size_notes(
 
 
 def _edition_notes(parsed: ParsedAlbum, target: TargetInfo | None) -> list[dict[str, Any]]:
-    """A name that says another edition than the target release: a hint, never a rejection (decision 14)."""
+    """A name that says another edition than the target release: a hint, never a rejection."""
     if target is None:
         return []
     notes: list[dict[str, Any]] = []
@@ -334,7 +334,7 @@ def _edition_notes(parsed: ParsedAlbum, target: TargetInfo | None) -> list[dict[
 
 #: Editions naming a whole extra collection, not a bigger studio album (E1, "Deluxe ja, Box nein" of ``music.target``,
 #: applied here to a found release instead of the target release): rejected outright, unlike a deluxe or expanded
-#: edition, which stays a hint (decision 14). Found on the owner's library, 25.09.2026: the automatic loaded whole
+#: edition, which stays a hint. Found on the owner's library, 25.09.2026: the automatic loaded whole
 #: box sets for single-disc albums, and 33 of their tracks did not fit on import.
 BOX_EDITIONS = frozenset({"box", "complete", "collection"})
 #: Without one of the words above, media alone counts as a box only past this many extra discs over the target: a
@@ -478,7 +478,7 @@ def _verdict(
     if box is not None:
         rejections.append(box)
     if album.rules is None:
-        # Without a profile only what nexcrate never takes (decision 3): no step is judged.
+        # Without a profile only what nexcrate never takes: no step is judged.
         fixed = [{"code": "cue_single_file"}] if "cue" in parsed.warnings else []
         if "audiobook" in parsed.warnings:
             fixed.append({"code": "audiobook"})

@@ -5,7 +5,7 @@ memory until the next preview or run of that kind; a run computes each chosen ti
 (the disk may have changed since the preview) and records itself in ``rename_runs``; the undo takes back the last run.
 None starts while ``release.nex`` files are checked or written for the whole library, and that job waits for this one.
 
-The unit of a kind is a title for movies and series, an artist for music (decision 24). A single album from its page
+The unit of a kind is a title for movies and series, an artist for music. A single album from its page
 is renamed inside its artist folder.
 """
 

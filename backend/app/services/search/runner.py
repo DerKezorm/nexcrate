@@ -138,7 +138,7 @@ async def _run_series(
     """Per target: by number, else or when that found nothing by title; a special also by its name.
 
     ``skip_titles``: an automatic search of a series whose search by number found it at this indexer lately asks no
-    title queries where a search by number is possible (decision 11).
+    title queries where a search by number is possible.
     """
     limit = plan.page_size(caps)
     categories = series_search.categories_for(series, state.info)
@@ -274,7 +274,7 @@ async def run_indexers(
     skip_titles: frozenset[int] = frozenset(),
 ) -> None:
     """Every indexer at once, within ``SEARCH_TIMEOUT_SECONDS``; a series search within its own time (S3). The indexers
-    in ``skip_titles`` ask a series by number only, where they can (S5, decision 11)."""
+    in ``skip_titles`` ask a series by number only, where they can."""
     if not states:
         return
     timed = isinstance(title, series_search.SeriesSearch | album_search.AlbumSearch)

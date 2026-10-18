@@ -157,7 +157,7 @@ class Context:
     titles: tuple[str, ...]
     #: The comparison keys of every title of the series.
     keys: frozenset[str]
-    #: The episodes the download is for (decision 2).
+    #: The episodes the download is for.
     expected: frozenset[int]
     #: The numbering the release matched through when it was loaded.
     via: str | None = None
@@ -273,7 +273,7 @@ def _parse(text: str, context: Context) -> Any:
 
 
 def read(video: Video, context: Context, *, single: bool) -> Reading | None:
-    """What a video is, by file name, then folder name, then the download (decision 19)."""
+    """What a video is, by file name, then folder name, then the download."""
     texts = [("file", PurePosixPath(video.path.removeprefix(UNPACKED_PREFIX)).stem)]
     if video.folder_name and video.folder_videos == 1:
         texts.append(("folder", video.folder_name))
@@ -359,7 +359,7 @@ def other_series(
     short: frozenset[str] = frozenset(),
     inside: frozenset[str] = frozenset(),
 ) -> bool:
-    """Every video with a readable title reads a title of no title of the series (decision 21). A title that is the
+    """Every video with a readable title reads a title of no title of the series. A title that is the
     initials of a title of the series counts as the series.
 
     ⚠️ A scene pack names its folders after the series and its files after the group: ``Friends.S08E01.Das.Geruecht``

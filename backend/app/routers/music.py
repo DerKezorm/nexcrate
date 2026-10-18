@@ -3,7 +3,7 @@ status, the target release of an album, and the switches for MusicBrainz and the
 
 Every call to MusicBrainz here runs on the owner lane: it takes the next free slot before the background (decision
 13). Adding an artist loads its release groups right away from the preview's cache and creates the artist with
-every group as a title and the watched albums as versions (decision 33); the releases follow in the background.
+every group as a title and the watched albums as versions; the releases follow in the background.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ router = APIRouter(prefix="/api/music", tags=["music"])
 
 QUERY_MAX = 200
 _COUNTRY = re.compile(r"^[A-Z]{2}$")
-#: The groups of an artist page that start open (decision 39).
+#: The groups of an artist page that start open.
 OPEN_GROUPS = ("studio", "ep")
 
 
@@ -85,7 +85,7 @@ class ArtistIn(BaseModel):
     mbid: str = Field(max_length=36)
     monitor: WatchChoice = Field(
         default="studio",
-        description="What to watch (decision 32): every album of the types, only future ones, "
+        description="What to watch: every album of the types, only future ones, "
         "none, those without files, those with files, the first or the latest album.",
     )
     types: list[AlbumType] | None = Field(
@@ -154,7 +154,7 @@ class ArtistSummary(BaseModel):
         description="The one state the row shows, most pressing first: problem, downloading, wanted, incomplete, "
         "upgrade; null when every album is there and good.",
     )
-    cover_title_id: int | None = Field(description="The album whose cover the tile shows (decision 38).")
+    cover_title_id: int | None = Field(description="The album whose cover the tile shows.")
     cover_url: str | None
     mb_gone_at: datetime | None
 
@@ -220,7 +220,7 @@ class LoadingStatus(BaseModel):
 
 
 class TargetIn(BaseModel):
-    release_id: int | None = Field(description="A release of the album, or null for the rule again (decision 30).")
+    release_id: int | None = Field(description="A release of the album, or null for the rule again.")
 
 
 class WatchIn(BaseModel):
@@ -236,7 +236,7 @@ class WatchOut(BaseModel):
 
 class CountriesOut(BaseModel):
     countries: list[str] | None = Field(description="The owner's order, or null for the default of the language.")
-    default: list[str] = Field(description="The order the language gives (decision 28).")
+    default: list[str] = Field(description="The order the language gives.")
 
 
 class CountriesIn(BaseModel):
@@ -360,7 +360,7 @@ def _artist_or_404(db: OrmSession, artist_id: int) -> Artist:
 
 
 def _cover_of(db: OrmSession, artist_id: int) -> Title | None:
-    """The newest studio album with a file, else the newest studio album (decision 38)."""
+    """The newest studio album with a file, else the newest studio album."""
     return _covers_of(db, [artist_id]).get(artist_id)
 
 
@@ -596,7 +596,7 @@ async def search_artists(
     summary="Preview an artist before adding it",
     description=(
         "Reads every page of the artist's release groups (Radiohead: 585 groups, six pages, a few seconds) and "
-        "counts them per group of the artist page, with how many albums the choice studio would watch (decision 31)."
+        "counts them per group of the artist page, with how many albums the choice studio would watch."
     ),
     responses=error_responses((422, "invalid_input"), *mb.ERRORS),
 )
@@ -780,7 +780,7 @@ def _write_groups(artist_id: int, part: list[mb.ReleaseGroupData], moment: datet
 
 def _albums_to_watch(artist_id: int, groups: list[mb.ReleaseGroupData], monitor: str, moment: datetime) -> list[int]:
     """The albums the choice watches, read without the write lock. ``studio`` names every group of the artist's types
-    without a version, a joint album another artist owns too, as the groups come (decision 33); the other choices go
+    without a version, a joint album another artist owns too, as the groups come; the other choices go
     by ``store.albums_to_watch``."""
     with SessionLocal() as db:
         artist = _adding(db, artist_id)
@@ -865,7 +865,7 @@ def _finish_artist(
     summary="Add an artist",
     description=(
         "Creates the artist with every release group as a title and, for the choice studio, one version per studio "
-        "album or EP (decision 33). The releases follow in the background. 201 when the artist came with this call; "
+        "album or EP. The releases follow in the background. 201 when the artist came with this call; "
         "an artist that is in the library already answers 200 with it: a second click adds nothing twice."
     ),
     responses=error_responses((422, "invalid_input"), *mb.ERRORS),
@@ -900,7 +900,7 @@ def _auto_tag_artist(artist_id: int) -> None:
     summary="Search albums at MusicBrainz",
     description=(
         "Up to ten release groups for a title, optionally of one artist (`artist` is a MusicBrainz id) and of one "
-        "kind: album, compilation, single or any. Without a kind, singles of other artists come first (decision 34)."
+        "kind: album, compilation, single or any. Without a kind, singles of other artists come first."
     ),
     responses=error_responses((422, "invalid_input"), *mb.ERRORS),
 )
@@ -941,7 +941,7 @@ async def search_albums(
 
 
 def _create_album(group: mb.ReleaseGroupData, artists: list[mb.ArtistData]) -> tuple[int, bool]:
-    """One album with its version, watched; its artist made with ``monitor_new`` none when new (decision 34)."""
+    """One album with its version, watched; its artist made with ``monitor_new`` none when new."""
     with SessionLocal() as db:
         moment = utcnow()
         language = store.account_language(db)
@@ -965,7 +965,7 @@ def _create_album(group: mb.ReleaseGroupData, artists: list[mb.ArtistData]) -> t
 def new_album(db: OrmSession, group: mb.ReleaseGroupData, artists: list[mb.ArtistData], moment: datetime,
               definition: VersionDefinition) -> Title:  # fmt: skip
     """A release group the library lacks as its album, without a version, and its artist's loading queued. An artist
-    of the credit that is not in the library is made with ``monitor_new`` none (decision 34). The caller commits."""
+    of the credit that is not in the library is made with ``monitor_new`` none. The caller commits."""
     language = store.account_language(db)
     home: Artist | None = None
     if any(part.get("mbid") == store.VARIOUS_ARTISTS_MBID for part in group.credit):
@@ -977,7 +977,7 @@ def new_album(db: OrmSession, group: mb.ReleaseGroupData, artists: list[mb.Artis
         if home is None:
             home = artist
         if artist.load_state == "queued" and artist.groups_refreshed_at is None:
-            # A new artist made for its album: its catalogue is not loaded, only this album (decision 34).
+            # A new artist made for its album: its catalogue is not loaded, only this album.
             artist.load_state = "ready"
     if home is None:
         raise error("invalid_input", "The input is not valid.", 422, fields=["mbid"])
@@ -1028,7 +1028,7 @@ async def add_album(payload: AlbumIn) -> AlbumCreated:
     "/artists",
     response_model=ArtistList,
     summary="List the artists",
-    description="The artists of the library with the counts of their tiles (decision 38), sorted by sort name.",
+    description="The artists of the library with the counts of their tiles, sorted by sort name.",
     responses=error_responses((422, "invalid_input")),
 )
 def list_artists(
@@ -1062,7 +1062,7 @@ def list_artists(
     summary="Read an artist page",
     description=(
         "The artist with its albums in the groups of decision 26; studio albums and EPs come open, the others closed "
-        "with their count. Joint albums of other artists of the library appear too (decision 3)."
+        "with their count. Joint albums of other artists of the library appear too."
     ),
     responses=error_responses((404, "not_found")),
 )
@@ -1128,7 +1128,7 @@ def change_artists_monitor(db: DbSession, payload: ArtistsMonitorIn) -> ArtistsM
     response_model=ArtistSummary,
     summary="Change an artist",
     description=(
-        "`monitor_new`: all watches new albums of the artist's types, none nothing (decision 24). `monitored` false "
+        "`monitor_new`: all watches new albums of the artist's types, none nothing. `monitored` false "
         "freezes the artist as unmonitoring one in Lidarr: nothing of it is searched on its own any more, and the "
         "albums keep their switches, so thawing brings back what was watched."
     ),
@@ -1150,7 +1150,7 @@ def change_artist(db: DbSession, artist_id: int, payload: ArtistPatch) -> Artist
 
 
 def freeze(db: OrmSession, artist: Artist, frozen: bool) -> list[int]:
-    """Freeze or thaw an artist (fork 3). The albums keep their switches; the planned search
+    """Freeze or thaw an artist. The albums keep their switches; the planned search
     passes by every album of a frozen artist, so thawing brings back exactly what was watched.
 
     Returns the artist's albums. The plan of each changes with it (a frozen artist's album is not due, a thawed one is
@@ -1169,7 +1169,7 @@ def freeze(db: OrmSession, artist: Artist, frozen: bool) -> list[int]:
     "/artists/{artist_id}/refresh",
     response_model=ArtistSummary,
     summary="Refresh an artist now",
-    description="Queues the artist ahead of every background load (decision 39); the job takes it within 30 seconds.",
+    description="Queues the artist ahead of every background load; the job takes it within 30 seconds.",
     responses=error_responses((404, "not_found"), (422, "invalid_input")),
 )
 def refresh_artist(db: DbSession, artist_id: int) -> ArtistSummary:
@@ -1192,7 +1192,7 @@ class ArtistRemoved(BaseModel):
     response_model=ArtistRemoved,
     summary="Remove an artist",
     description=(
-        "Removes the artist and every album of it from the library; files stay where they are (decision 43). "
+        "Removes the artist and every album of it from the library; files stay where they are. "
         "A joint album another artist of the library also claims stays with that artist. Various Artists cannot be "
         "removed; a sampler goes like any other title."
     ),
@@ -1201,7 +1201,7 @@ class ArtistRemoved(BaseModel):
 def remove_artist(db: DbSession, artist_id: int) -> ArtistRemoved:
     artist = _artist_or_404(db, artist_id)
     if artist.is_various:
-        # The collection point of every sampler (decision 35) stays; a sampler goes like any other title.
+        # The collection point of every sampler stays; a sampler goes like any other title.
         raise error("invalid_input", "The input is not valid.", 422, fields=["artist_id"])
     albums, versions = store.remove_artist(db, artist)
     db.commit()
@@ -1289,7 +1289,7 @@ def read_release(db: DbSession, release_id: int) -> ReleaseDetail:
 
 
 def _load_now(title_id: int) -> None:
-    """The releases of one album on the owner lane, for an album page that waits (decision 20)."""
+    """The releases of one album on the owner lane, for an album page that waits."""
     with SessionLocal() as db:
         title = db.get(Title, title_id)
         if title is None or title.kind != "album" or not title.mbid:
@@ -1335,7 +1335,7 @@ class TargetOut(BaseModel):
     summary="Choose the target release",
     description=(
         "The owner picks any official release of the album, a box too; the rule never changes it afterwards. Null "
-        "hands the choice back to the rule (decision 30)."
+        "hands the choice back to the rule."
     ),
     responses=error_responses((404, "not_found"), (422, "invalid_input")),
 )
@@ -1413,7 +1413,7 @@ def _countries_out(db: OrmSession) -> CountriesOut:
     "/settings/countries",
     response_model=CountriesOut,
     summary="Read the country order for the target release",
-    description="The countries that break a tie between releases with the same number of tracks (decision 28).",
+    description="The countries that break a tie between releases with the same number of tracks.",
 )
 def read_countries(db: DbSession) -> CountriesOut:
     return _countries_out(db)
@@ -1467,7 +1467,7 @@ def read_musicbrainz(db: DbSession) -> MusicBrainzState:
     summary="Switch MusicBrainz or the Cover Art Archive",
     description=(
         "MusicBrainz off: nothing is asked; adding and refreshing answer musicbrainz_disabled; everything stored stays "
-        "visible. Cover Art Archive off: only covers already on disk are shown (decision 16)."
+        "visible. Cover Art Archive off: only covers already on disk are shown."
     ),
 )
 def change_musicbrainz(db: DbSession, payload: MusicBrainzIn) -> MusicBrainzState:
@@ -1623,7 +1623,7 @@ def _retag_error(exc: retag.RetagRefused) -> Exception:
     summary="Preview the tags of an album",
     description=(
         "Per file of an album nexcrate filed the fields that would change, the MusicBrainz ids included, and whether "
-        "the file can be written (decision 29). Nothing is written."
+        "the file can be written. Nothing is written."
     ),
     responses=error_responses(*((409, code) for code in _RETAG_MESSAGES)),
 )
@@ -1687,7 +1687,7 @@ class SettleOut(BaseModel):
     response_model=FolderReadOut,
     summary="Read the album folder again",
     description=(
-        "Only an own album with a folder (decision 12): new files are linked by their tags and "
+        "Only an own album with a folder: new files are linked by their tags and "
         "names or stay unclear, files gone from the disk are forgotten. Files are never moved or renamed."
     ),
     responses=error_responses((404, "not_found"), (409, "album_fed_by_source"), (409, "album_folder_missing")),
@@ -1706,7 +1706,7 @@ async def read_album_folder(title_id: int) -> FolderReadOut:
     summary="Settle an unclear file of an album",
     description=(
         "Links an unclear file to a track of the album, or with track_id null leaves it in the folder without a track "
-        "(decision 15). A track whose song holds a file already is refused."
+        ". A track whose song holds a file already is refused."
     ),
     responses=error_responses(*((status, code) for code, (_, status) in _FOLDER_MESSAGES.items())),
 )

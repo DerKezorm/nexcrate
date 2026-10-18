@@ -1,9 +1,9 @@
-"""Refreshing series from TMDB (decision 18), part of the TMDB refresh job.
+"""Refreshing series from TMDB, part of the TMDB refresh job.
 
 Running series (``Returning Series``, ``In Production``, ``Planned``, ``Pilot``, or no status) are due after one day,
 ended and canceled ones after 30 days. Every series is refreshed, whether a Sonarr connection feeds it or not: TMDB is
 the anchor, Sonarr delivers no series data. A refresh fetches every season, then TheXEM's numbers of the series and,
-once a day, TheXEM's scene names (decision 15).
+once a day, TheXEM's scene names.
 
 A series TMDB no longer knows keeps its data. Any other TMDB error stops the round; the next one goes on.
 """
@@ -61,7 +61,7 @@ def _apply(title_id: int, data: tmdb_series.SeriesData | None) -> bool:
             title.tmdb_refreshed_at = moment
         else:
             store.apply_series(db, title, data, moment, watching.today())
-            # New episodes from TMDB are planned at once (decision 24). Not in apply_series: the
+            # New episodes from TMDB are planned at once. Not in apply_series: the
             # Sonarr import calls it per series, and the round plans those versions anyway.
             db.flush()
             planning.replan(db, [title.id], clock.now())
@@ -85,7 +85,7 @@ def _store_group(title_id: int, group_id: str, places: dict[int, tuple[int, int]
 
 
 async def _group(token: str, title_id: int) -> None:
-    """A chosen TMDB episode group follows TMDB's episodes as well (S3, decision 11). A failure keeps the numbers."""
+    """A chosen TMDB episode group follows TMDB's episodes as well. A failure keeps the numbers."""
     group_id = await asyncio.to_thread(_chosen_group, title_id)
     if group_id is None:
         return
@@ -98,7 +98,7 @@ async def _group(token: str, title_id: int) -> None:
 
 
 def _rename_tba(title_id: int) -> None:
-    """Files named with TBA get their title once TMDB has one (decision 27). Never stops the
+    """Files named with TBA get their title once TMDB has one. Never stops the
     round."""
     from ..downloads import tba
 

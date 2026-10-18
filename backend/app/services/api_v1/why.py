@@ -81,7 +81,7 @@ def _because(
     if not version.monitored:
         return {"code": "unmonitored", "params": {}}
     if frozen and not wish:
-        # The album's artist is frozen, as unmonitored in Lidarr (fork 3).
+        # The album's artist is frozen, as unmonitored in Lidarr.
         return {"code": "artist_frozen", "params": {}}
     if ready is not None and not ready["ready"]:
         reasons = [reason["code"] for reason in ready["reasons"]]

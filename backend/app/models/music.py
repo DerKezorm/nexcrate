@@ -14,7 +14,7 @@ Dates are plain ``YYYY-MM-DD`` texts as MusicBrainz gives them, sometimes only `
 
 ⚠️ Ids are never reused (``sqlite_autoincrement``): history and later downloads point at a release for good.
 ⚠️ MusicBrainz merges entries. A merged id answers with the surviving id; the old one goes to ``mbid_old`` and must
-never count as deleted (decision 22).
+never count as deleted.
 """
 
 from __future__ import annotations
@@ -27,23 +27,23 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, utcnow
 
-#: The steps of loading an artist from MusicBrainz (decision 19): being added by the owner or a program (its release
+#: The steps of loading an artist from MusicBrainz: being added by the owner or a program (its release
 #: groups are written in parts), waiting, browsing its release groups, loading the releases and tracks of the albums
 #: that need them, done, or failed with ``load_error``.
 LOAD_STATES = ("adding", "queued", "groups", "releases", "ready", "failed")
-#: The rule for albums that appear later (decision 24): ``all`` watches new studio albums and EPs, ``none`` nothing.
+#: The rule for albums that appear later: ``all`` watches new studio albums and EPs, ``none`` nothing.
 MONITOR_NEW = ("all", "none")
 #: Who brought an artist: the owner, or an import from Lidarr.
 ARTIST_ADDED_BY = ("owner", "import")
-#: The state of an album's releases (decision 6): none loaded, only the heads, with tracks, or failed.
+#: The state of an album's releases: none loaded, only the heads, with tracks, or failed.
 RELEASES_STATES = ("none", "heads", "tracks", "failed")
-#: Who chose the target release of an album version (decision 7): the rule, the owner, or the source that feeds it.
+#: Who chose the target release of an album version: the rule, the owner, or the source that feeds it.
 TARGET_SET_BY = ("rule", "owner", "source")
-#: Where the tags of a filed file come from (decision 30): as the download had them, written by
+#: Where the tags of a filed file come from: as the download had them, written by
 #: nexcrate, not written because the file has a second link, because its format is read only, because writing is
 #: switched off, or because writing failed.
 TAG_STATES = ("download", "written", "linked", "format", "off", "failed")
-#: MusicBrainz's id of the collective artist for compilations (decision 35). Never a search hit, never browsed.
+#: MusicBrainz's id of the collective artist for compilations. Never a search hit, never browsed.
 VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377"
 
 
@@ -68,7 +68,7 @@ class Artist(Base):
     ended: Mapped[bool] = mapped_column(Boolean, default=False)
     #: MusicBrainz's aliases: name, sort name, locale, primary, type. Kept for the search and the second line.
     aliases: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
-    #: The primary alias in the language of the interface, shown as a second line (decision 36).
+    #: The primary alias in the language of the interface, shown as a second line.
     alias_display: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     #: Comparison keys of name and aliases, ``|key|key|``.
     search_keys: Mapped[str] = mapped_column(Text, default="")
@@ -86,12 +86,12 @@ class Artist(Base):
     #: Progress of the current step: pages while browsing groups, albums while loading releases.
     load_done: Mapped[int] = mapped_column(Integer, default=0)
     load_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    #: Lower runs first (decision 20): 0 the owner just added it, 1 an album page waits, 2 an import, 3 a refresh.
+    #: Lower runs first: 0 the owner just added it, 1 an album page waits, 2 an import, 3 a refresh.
     load_priority: Mapped[int] = mapped_column(Integer, default=0)
-    #: When the release groups were last browsed, and when they are due again (decision 21).
+    #: When the release groups were last browsed, and when they are due again.
     groups_refreshed_at: Mapped[datetime | None] = mapped_column(nullable=True)
     groups_due_at: Mapped[datetime | None] = mapped_column(nullable=True, index=True)
-    #: When MusicBrainz last answered 404 for the id; the artist stays (decision 22).
+    #: When MusicBrainz last answered 404 for the id; the artist stays.
     mb_gone_at: Mapped[datetime | None] = mapped_column(nullable=True)
     #: ``owner`` or ``import``, see ``ARTIST_ADDED_BY``.
     added_by: Mapped[str] = mapped_column(String(16), default="owner")
@@ -103,10 +103,10 @@ class Artist(Base):
     # ⚠️ The three columns below come from the missing-column upkeep; nullable and without a
     # default on purpose, or every INSERT of an older table shape would carry them.
     #: Set while the artist is frozen, as unmonitoring an artist in Lidarr: nothing of it is searched on its own, the
-    #: switches of its albums stay as they are (fork 3). Null is watched.
+    #: switches of its albums stay as they are. Null is watched.
     frozen_at: Mapped[datetime | None] = mapped_column(nullable=True)
     #: The groups of an artist page (``kinds.GROUPS``) whose new albums get watched, like Lidarr's metadata profile.
-    #: Null is studio albums and EPs (decision 25).
+    #: Null is studio albums and EPs.
     album_types: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     #: The program's own reference when a program added the artist through ``/api/v1`` (N19), and its key's name.
     origin: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -114,7 +114,7 @@ class Artist(Base):
 
 
 class AlbumArtist(Base):
-    """A further artist of an album's credit (decision 3): the album shows on this artist's page too."""
+    """A further artist of an album's credit: the album shows on this artist's page too."""
 
     __tablename__ = "album_artists"
 
@@ -127,7 +127,7 @@ class AlbumArtist(Base):
 
 
 class Release(Base):
-    """One official release of an album, as MusicBrainz cuts it (decision 4)."""
+    """One official release of an album, as MusicBrainz cuts it."""
 
     __tablename__ = "releases"
     __table_args__ = ({"sqlite_autoincrement": True},)
@@ -137,7 +137,7 @@ class Release(Base):
     mbid: Mapped[str] = mapped_column(String(36), unique=True)
     mbid_old: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     name: Mapped[str] = mapped_column(String(1024))
-    #: MusicBrainz's status, lower case: ``official`` here; others are never stored (decision 5).
+    #: MusicBrainz's status, lower case: ``official`` here; others are never stored.
     status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     date: Mapped[str | None] = mapped_column(String(10), nullable=True)
     country: Mapped[str | None] = mapped_column(String(8), nullable=True)
@@ -150,9 +150,9 @@ class Release(Base):
     track_count: Mapped[int] = mapped_column(Integer, default=0)
     #: The formats of the media in order, ``["CD", "CD"]``.
     formats: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
-    #: Whether every medium is audio (decision 27, step 1): no DVD, Blu-ray, video or data medium.
+    #: Whether every medium is audio: no DVD, Blu-ray, video or data medium.
     audio_only: Mapped[bool] = mapped_column(Boolean, default=True)
-    #: Whether the tracks of this release are stored (decision 6).
+    #: Whether the tracks of this release are stored.
     tracks_loaded: Mapped[bool] = mapped_column(Boolean, default=False)
     mb_gone_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
@@ -198,7 +198,7 @@ class ReleaseTrack(Base):
 
 
 class TrackFile(Base):
-    """One audio file of an album version (decision 8), with the track of the actual release when known."""
+    """One audio file of an album version, with the track of the actual release when known."""
 
     __tablename__ = "track_files"
     __table_args__ = (
@@ -221,23 +221,23 @@ class TrackFile(Base):
     audio: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     #: Lidarr's ``trackfile`` id, to notice a new file without reading it.
     source_file_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    #: Lidarr's track ids when one file covers several tracks (decision 49).
+    #: Lidarr's track ids when one file covers several tracks.
     source_track_ids: Mapped[list[int] | None] = mapped_column(JSON, nullable=True)
     #: The tracks of the actual release such a file covers (``release_tracks.id``), so each shows as present.
     track_ids: Mapped[list[int] | None] = mapped_column(JSON, nullable=True)
     added_at: Mapped[datetime] = mapped_column(default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(default=utcnow)
-    # ⚠️ The two columns below come from migration 16 (decision 30).
+    # ⚠️ The two columns below come from migration 16.
     #: Where the tags of the file come from: see ``TAG_STATES``; null for a file a source feeds.
     tags_state: Mapped[str | None] = mapped_column(String(16), nullable=True)
     tags_written_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    # ⚠️ From migration 17 (decision 15).
+    # ⚠️ From migration 17.
     #: A file of the album folder without a track that the owner has not settled yet.
     unclear: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("0"))
 
 
 class SourceUnmappedFile(Base):
-    """A file a Lidarr connection has but could not map to a track (decision 50)."""
+    """A file a Lidarr connection has but could not map to a track."""
 
     __tablename__ = "source_unmapped_files"
     __table_args__ = ({"sqlite_autoincrement": True},)

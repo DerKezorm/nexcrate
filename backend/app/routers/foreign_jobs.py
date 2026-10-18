@@ -1,4 +1,4 @@
-"""Jobs in nexcrate's category that no download follows (the owner's finding 2 of 22.09.2026): list, assign and import,
+"""Jobs in nexcrate's category that no download follows: list, assign and import,
 remove. The service is ``services/downloads/foreign.py``."""
 
 from __future__ import annotations

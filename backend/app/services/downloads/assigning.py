@@ -2,15 +2,15 @@
 
 * ``files`` lists the videos of a series download, or the candidates of a movie download with several videos, each by
   a number (``key``), never by a path the browser could send back. With them the episodes of the download and of the
-  series, so the dialog can offer every episode that has a TMDB episode (decision 52).
+  series, so the dialog can offer every episode that has a TMDB episode.
 * ``assign`` files videos with the episodes the owner chose (decisions 35 and 36): every episode once, only episodes of
   the series; replacing a file that is not worse needs ``confirm: ["not_better"]``. A video mapped to no episode is not
   filed. The filing runs in the import's thread; the answer is the download, ``importing``.
-* ``finish`` is "Rest nicht ablegen" (decision 37): the download is ``imported`` with what is filed; afterwards its
-  unpack folder goes, and SABnzbd's job folder as after a filed download (decision 30). A torrent keeps its files.
+* ``finish`` is "Rest nicht ablegen": the download is ``imported`` with what is filed; afterwards its
+  unpack folder goes, and SABnzbd's job folder as after a filed download. A torrent keeps its files.
 * An assignment while the import's thread still ends answers ``download_busy``; an assignment that replaces only part
-  of a multi-episode file answers ``assignment_covers_more`` with the episodes the file also holds (decision 26).
-* ``choose`` files the video the owner chose of several (decision 39).
+  of a multi-episode file answers ``assignment_covers_more`` with the episodes the file also holds.
+* ``choose`` files the video the owner chose of several.
 * ``watch`` is the guard of decision 33: a download ``completed`` or ``importing`` for 30 minutes without a change and
   without a running import becomes ``import_stalled``.
 """
@@ -391,7 +391,7 @@ def _covers_more(
     halves: dict[int, int | None] | None = None,
 ) -> list[str]:
     """Codes of the episodes a replaced multi-episode file also holds that neither this assignment nor the download
-    files: such a file is only replaced whole (decision 26), so the assignment would file nothing.
+    files: such a file is only replaced whole, so the assignment would file nothing.
 
     The same for a half of a double episode whose episode has a whole file: both halves come, or neither."""
     version = store.version_of(db, row.title_id, row.version_definition_id)
@@ -468,7 +468,7 @@ def _not_better(
     mapping: dict[int, tuple[int, ...]],
     halves: dict[int, int | None] | None = None,
 ) -> list[str]:
-    """Codes of chosen episodes whose current file the chosen video does not improve on (decision 36)."""
+    """Codes of chosen episodes whose current file the chosen video does not improve on."""
     profile = profile_store.of_version(db, row.version_definition_id)
     version = store.version_of(db, row.title_id, row.version_definition_id)
     title = db.get(Title, row.title_id)
@@ -579,13 +579,13 @@ def finish(download_id: int) -> dict[str, Any]:
         store.follow(db, row, moment)
         db.commit()
     logger.info("Download %d: the rest is not filed (%d episodes)", download_id, len(not_filed))
-    # The unpack folder and SABnzbd's job folder go in the background (decision 30): the download is finished.
+    # The unpack folder and SABnzbd's job folder go in the background: the download is finished.
     importing.request(download_id, work=lambda: series_import.after_finish(download_id))
     return read(download_id)
 
 
 def choose(download_id: int, key: int) -> dict[str, Any]:
-    """``POST /api/downloads/{id}/choose``: the chosen video of a movie download with several (decision 39)."""
+    """``POST /api/downloads/{id}/choose``: the chosen video of a movie download with several."""
     moment = store.now()
     with SessionLocal() as db:
         row = db.get(Download, download_id)
@@ -626,7 +626,7 @@ def _albums_waiting_for_tracks(db: Any, title_ids: list[int]) -> set[int]:
 
 def watch() -> int:
     """Downloads ``completed`` or ``importing`` for 30 minutes without a change and without a running import become
-    ``import_stalled`` (decision 33). Returns how many."""
+    ``import_stalled``. Returns how many."""
     moment = store.now()
     changed = 0
     with SessionLocal() as db:
@@ -642,7 +642,7 @@ def watch() -> int:
             if importing.running(row.id):
                 continue
             if row.state == "completed" and row.title_id in waiting:
-                # An album download waits for its tracks up to a day (decision 4).
+                # An album download waits for its tracks up to a day.
                 continue
             row.state, row.problem_code, row.problem_values = "problem", "import_stalled", {}
             row.completed_at = row.completed_at or moment

@@ -1,8 +1,8 @@
 """The folders the scan walks ("roots", the design notes, L4).
 
 The default folder of every movie version definition, every distinct ``root_folder`` of a version nexcrate owns, and the
-folders the owner added on the page. Since S6 (decision 25) the same for series, as roots of
-kind ``series``, and since Music M6 (decision 17) for albums, as roots of kind ``album``; a
+folders the owner added on the page. Since S6 the same for series, as roots of
+kind ``series``, and since Music M6 for albums, as roots of kind ``album``; a
 folder of more than one kind takes the first of movie, series, album. The rows in ``disk_roots`` follow before every
 scan: roots from definitions and versions come and go with those; the owner's roots stay until they are removed. Each
 root knows the definitions it belongs to: the one whose default folder it is, and those whose own versions have it as

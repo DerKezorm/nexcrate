@@ -1,4 +1,4 @@
-"""Album covers from the Cover Art Archive (decision 42).
+"""Album covers from the Cover Art Archive.
 
 ``release-group/<mbid>/front-250`` answers with two redirects to ``archive.org`` and a JPEG of 12 to 41 KB in about
 two seconds (plan, B2). The image is kept on disk like a TMDB poster; a 404 is remembered for seven days; at most
@@ -207,7 +207,7 @@ async def release_cover(release_mbid: str) -> tuple[Path, str] | None:
     return path, media_type
 
 
-#: The sizes for filed albums (decision 28): embedded in the files, and ``folder.jpg``.
+#: The sizes for filed albums: embedded in the files, and ``folder.jpg``.
 EMBED_SIZE = "front-500"
 FOLDER_SIZE = "front-1200"
 

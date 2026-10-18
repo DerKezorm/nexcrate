@@ -1,7 +1,7 @@
-"""The switches for everything automatic (C1, decision 1; the design notes, decision 1).
+"""The switches for everything automatic.
 
 Three settings, one per kind: ``automatic_enabled`` for movies, ``automatic_series_enabled`` for series and, since
-Music M5, ``automatic_music_enabled`` for albums (decision 1). ``1`` on,
+Music M5, ``automatic_music_enabled`` for albums. ``1`` on,
 anything else off; nothing stored means off. Off for a kind, nothing automatic of that kind reaches an indexer or a
 download client: no planned search, no replacement after a failure, no automatic grab. The plan is still computed.
 RSS runs while any is on and loads only for the kinds switched on. Budget, pauses and escalation per indexer are
@@ -16,7 +16,7 @@ from ...db import SessionLocal, get_setting, set_setting
 
 SETTING_ENABLED = "automatic_enabled"
 SETTING_SERIES_ENABLED = "automatic_series_enabled"
-#: Music M5 (decision 1): the third switch, for albums.
+#: Music M5: the third switch, for albums.
 SETTING_MUSIC_ENABLED = "automatic_music_enabled"
 KINDS = ("movie", "series", "album")
 _KEYS = {"movie": SETTING_ENABLED, "series": SETTING_SERIES_ENABLED, "album": SETTING_MUSIC_ENABLED}

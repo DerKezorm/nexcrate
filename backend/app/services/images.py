@@ -76,7 +76,7 @@ def tmdb_cache_key(poster_file: str) -> str:
 
 
 def cover_url(title: Title) -> str | None:
-    """The cover of an album from the Cover Art Archive (decision 42); None for other kinds."""
+    """The cover of an album from the Cover Art Archive; None for other kinds."""
     from .music import covers
 
     return covers.cover_url(title)

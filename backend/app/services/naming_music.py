@@ -14,7 +14,7 @@ of 255 bytes per path part (research T14). What music adds:
   landed flat beside them, the old folder left empty. ``file_name`` answers ``CD 02/03 Title.flac`` then, and
   ``track_files.relative_path`` has held a medium folder since M6.
 * **Tokens** in Lidarr's names where Lidarr has them. ``{Release Year}`` is the album's first year, not the year of
-  the release (decision 15), so a discography sorts by when albums came out, not by reissues.
+  the release, so a discography sorts by when albums came out, not by reissues.
 * **Length:** the track title is shortened first, then the album title, then the artist's name.
 """
 
@@ -253,7 +253,7 @@ def artist_folder_name(current: MusicNaming, album: AlbumFacts) -> str:
 
 def album_folder_name(current: MusicNaming, album: AlbumFacts, addition: str | None = None) -> str:
     """The album folder; ``addition`` goes in brackets at the end when two albums of an artist would share the name
-    (decision 15), kept within the limit by shortening the title first."""
+   , kept within the limit by shortening the title first."""
     pattern = current.album_folder + (f" ({naming.clean(addition)})" if addition else "")
     return naming.render(
         pattern, token_values(album, None), current.umlauts, max_bytes=naming.MAX_PART_BYTES, tiers=TIERS

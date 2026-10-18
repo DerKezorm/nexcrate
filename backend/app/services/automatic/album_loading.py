@@ -95,7 +95,7 @@ def start_planned(title_id: int, now: datetime, left: int = scheduler.MAX_STARTS
 
 
 def search_now(title_id: int, *, switch: bool = True) -> str:
-    """The album's automatic search at once, past the budget (decision 11). Raises like ``scheduler.search_now``."""
+    """The album's automatic search at once, past the budget. Raises like ``scheduler.search_now``."""
     now = clock.now()
     with SessionLocal() as db:
         if switch and not settings.load_enabled(db, "album"):
@@ -304,7 +304,7 @@ def prepare(body: dict[str, Any], search_id: str, title_id: int) -> None:
 
 
 def load_found(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> tuple[bool, str | None]:
-    """The load step for a prepared answer, a planned search's or one RSS made (decision 13)."""
+    """The load step for a prepared answer, a planned search's or one RSS made."""
     return _load(search, body, now)
 
 

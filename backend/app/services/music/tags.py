@@ -9,8 +9,8 @@ One table of fields serves reading and writing, so both speak the same names. Th
   from the name.
 * **Writing** sets only the fields of the table and the front cover; every other field stays (ReplayGain, lyrics,
   ISRC, other pictures: decision 26). An MP3 keeps its ID3 version: 2.3 stays 2.3, a file without ID3 gets 2.4.
-  Formats nexcrate writes: FLAC, MP3, M4A, Ogg Vorbis, Ogg Opus (decision 6); the others are read only.
-* **Comparing** covers every field of the table, the MusicBrainz ids included (decision 27), and the front cover by a
+  Formats nexcrate writes: FLAC, MP3, M4A, Ogg Vorbis, Ogg Opus; the others are read only.
+* **Comparing** covers every field of the table, the MusicBrainz ids included, and the front cover by a
   hash of its bytes.
 
 Values are lists of strings throughout, since several fields hold more than one value (``artists``,
@@ -41,7 +41,7 @@ from .. import schreibweisen
 
 logger = logging.getLogger("nexcrate.music")
 
-#: What counts as audio in a download (decision 6).
+#: What counts as audio in a download.
 AUDIO_EXTENSIONS = frozenset(
     {".flac", ".mp3", ".m4a", ".ogg", ".oga", ".opus", ".wav", ".aiff", ".aif", ".ape", ".wv", ".dsf", ".alac"}
 )
@@ -481,7 +481,7 @@ def read(path: Path) -> Read:
 def quality_name(audio: Audio | None) -> str | None:
     """The quality of a file in the shape Lidarr names it (``FLAC``, ``FLAC 24bit``, ``MP3-320``, ``MP3-VBR-V0``,
     ``AAC-256``, ``OGG Vorbis Q8``, ``OPUS-160``), so ``music_qualities.step_of_lidarr`` reads files of both sources
-    alike (decision 23). None when the stream says too little."""
+    alike. None when the stream says too little."""
     if audio is None or audio.codec is None:
         return None
     codec = audio.codec

@@ -5,7 +5,7 @@ The movie search of step 2c runs the indexers; this module gives it the series' 
 ``load`` reads the database once; everything else is pure.
 
 **Scope.** ``series`` searches every regular season in which a version watches an aired episode, plus the watched
-specials one by one (decision 19). When no version watches an aired episode, it searches every regular season that
+specials one by one. When no version watches an aired episode, it searches every regular season that
 has aired, so the owner sees what exists; nothing is taken then, as nothing is watched (since 16.09.2026).
 ``season`` searches one TMDB season, ``episode`` one episode.
 
@@ -24,11 +24,11 @@ newest of them.
 3. A special also asks ``t=search`` with the series title and the episode's English name.
 
 The numbers asked come from the first scheme that knows the episode among ``owner``, ``scene`` and ``tvdb``, else
-TMDB's own (decision 16): releases count by scene or TVDB. A TMDB season whose episodes lie in several release
+TMDB's own: releases count by scene or TVDB. A TMDB season whose episodes lie in several release
 seasons asks each of them, and, as Sonarr does, also its TVDB and its own season number when those differ (measured
 at B2, 16.09.2026); at most ``MAX_RELEASE_SEASONS``.
 
-**Belonging** (decision 26): a release whose ``tvdbid``, ``tmdbid`` or ``imdb`` equals the series' number belongs; one
+**Belonging**: a release whose ``tvdbid``, ``tmdbid`` or ``imdb`` equals the series' number belongs; one
 naming another series does not, whatever its name says. Without comparable numbers the title read from the name must
 share a spelling key with a title of the series (its titles, TMDB's alternative titles, the search titles, TheXEM's
 names), and a year in the name must be within one year of the series' year.
@@ -100,7 +100,7 @@ MAX_TITLE_QUERIES = 12
 MAX_ANIME_QUERIES = 6
 #: Release seasons one TMDB season is asked in.
 MAX_RELEASE_SEASONS = 3
-#: The time of a season, and of a whole series search at most (decision 23).
+#: The time of a season, and of a whole series search at most.
 SECONDS_PER_TARGET = 180.0
 MAX_SECONDS = 900.0
 #: A year in the name may be this far from the series' first year.
@@ -206,7 +206,7 @@ class SeriesSearch:
 
 
 def _release_numbers(numbering: release_match.Numbering) -> dict[int, tuple[int, int]]:
-    """Episode id to the numbers releases give it: owner, scene, tvdb, else TMDB's (decision 16)."""
+    """Episode id to the numbers releases give it: owner, scene, tvdb, else TMDB's."""
     found: dict[int, tuple[int, int]] = {}
     for scheme in ("owner", "scene", "tvdb"):
         for numbers, episode_id in numbering.schemes.get(scheme, release_match.Scheme()).by_number.items():
@@ -609,7 +609,7 @@ def categories_for(series: SeriesSearch, info: IndexerInfo) -> tuple[int, ...]:
 
 
 def name_query(caps: dict[str, Any] | None, series: SeriesSearch, target: Target) -> plan.Query | None:
-    """A special by the series title and its English name (decision 21)."""
+    """A special by the series title and its English name."""
     if target.special_name is None or "q" not in (plan.caps_in_use(caps).get("search_params") or []):
         return None
     words = next(iter(schreibweisen.query_spellings(f"{series.title_en or series.title} {target.special_name}")), None)

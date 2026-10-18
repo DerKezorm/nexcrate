@@ -1408,7 +1408,7 @@ async def _tag_names(client: Any) -> dict[int, str]:
         "minimum seeders, MULTi languages, remove year, whether RSS or automatic search is on), tests it with the key "
         "you type, since Radarr never returns it, and stores it. MULTi languages are kept by ISO code; Radarr's "
         "Original is left out. An empty feed answers 409 `indexer_categories_empty` unless `confirm_empty` is true. "
-        "An indexer with the same address is refused. From Sonarr (decision 14) its categories "
+        "An indexer with the same address is refused. From Sonarr its categories "
         "become the series categories, the movie categories are the indexer's defaults, and an indexer with the same "
         "address gets Sonarr's categories added to its series categories instead of a refusal. From Lidarr its "
         "categories without 3020 and 3030 become the music categories and the feed is probed there (`t=music`, or "

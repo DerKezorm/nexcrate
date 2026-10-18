@@ -8,13 +8,13 @@ the design notes, C1, C4, C6, C8, decisions 1, 6 to 10, 13 and 14.
    of the titles with a version no source feeds or with a plan stored.
 2. With the switch off that is all: nothing reaches an indexer or a download client.
 3. **Start** due titles, at most ``MAX_RUNNING`` automatic searches at once and at most ``MAX_STARTS_PER_HOUR`` starts
-   an hour, in this order (decision 21): first titles whose reason is ``replacement`` (a failed download waits for the
+   an hour, in this order: first titles whose reason is ``replacement`` (a failed download waits for the
    next release), then titles with an own, monitored version without a file (missing), then the rest (upgrades); within
    each group by the next time, then id. The due query sorts this way, so the batch of ``DUE_BATCH`` follows it and many
    due upgrades never hide a missing title. The order only decides which title is tried first; whether it wants
    something (profile, folder, a blocking download) is checked when it starts. ``limit`` is no rank of its own: a title
    waiting for the budget ranks by its versions until planning gives it its reason back. A planned search, a replacement
-   too, asks every enabled indexer with ``automatic_search`` or waits (decision 19): a search without one of them would
+   too, asks every enabled indexer with ``automatic_search`` or waits: a search without one of them would
    count as the title's search, and that indexer would not be asked again until the next planned time. Left out, while
    the search goes on, are only an indexer under a stop point (a request limit, the escalation, the 80 percent stop) and
    one whose planned allowance is 0. Every other indexer has to hold the requests the plan needs: an id search 1, else
@@ -388,9 +388,9 @@ def only_upgrades(fact: planning.TitleFacts) -> bool:
 
 
 def reserve(title_id: int, candidates: list[Planned], now: datetime, *, first: bool = False) -> dict[int, int] | None:
-    """Take the planned requests of every indexer that is not stopped, or make the title wait (decision 19). Returns
+    """Take the planned requests of every indexer that is not stopped, or make the title wait. Returns
     the requests taken per indexer, or None when the title waits. A plan larger than a bucket can hold takes what it
-    holds: paging is charged afterwards anyway (S5, decision 12). ``first``: a replacement, which goes ahead of the
+    holds: paging is charged afterwards anyway. ``first``: a replacement, which goes ahead of the
     planned searches (``budget.take_first``)."""
     asked: list[Planned] = []
     ends: list[datetime] = []
@@ -456,7 +456,7 @@ def _reserve_first(title_id: int, asked: list[Planned], now: datetime) -> dict[i
 
 
 def take_all(asked: list[Planned], now: datetime) -> list[Planned]:
-    """Take the planned requests of every indexer, or of none (decision 19). Returns the indexers whose bucket is short;
+    """Take the planned requests of every indexer, or of none. Returns the indexers whose bucket is short;
     when there is one, what was taken from the others is given back."""
     taken: list[Planned] = []
     short: list[Planned] = []

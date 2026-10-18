@@ -21,7 +21,7 @@ button "Ordner neu einlesen".
   (18.09.2026: the owner deleted duplicate season folders, and their left-out files stayed listed). A linked file is
   never dropped here: a missing episode file is for the owner to see, not to vanish.
 * **The end:** ``files_read_at`` is set, the version is counted and planned again, ``release.nex`` is written for the
-  season folders that got a file. Until then the version wants nothing (decision 23).
+  season folders that got a file. Until then the version wants nothing.
 
 One worker thread reads one version after another. Log lines carry ids and counts, never names or paths.
 """
@@ -380,7 +380,7 @@ def find_folder(
     facts: naming_series.SeriesFacts,
     taken: Any = None,
 ) -> tuple[Path, str] | None:
-    """The series folder a version of this definition would take (decision 31): the folder its naming gives below the
+    """The series folder a version of this definition would take: the folder its naming gives below the
     definition's folder, else the one series folder the last scan matched to the series. ``taken(root, name)`` says a
     folder is used by another version already. Nothing is staged."""
     base = _visible(definition.folder)
@@ -820,7 +820,7 @@ def _store(
                     (number,) = season_numbers
                     seasons.add(number)
                     named = season_of_folder(item.listed.folder)
-                    # ⚠️ The name of a season folder is fixed the first time (S4, decision 15): a file that lies in
+                    # ⚠️ The name of a season folder is fixed the first time: a file that lies in
                     # "Season 02" but holds an episode of season 1 must not make it the folder of season 1.
                     if number not in folders_known and named in (None, number):
                         db.add(SeasonFolder(version_id=version.id, season_number=number, name=item.listed.folder))

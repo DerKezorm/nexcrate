@@ -3,7 +3,7 @@
 nexcrate knows the album from loading; tags and folder names decide only the release and the order, never whether a
 download is refused (research A4). Everything comes from the database; nothing asks MusicBrainz (research A10).
 
-**A file is clear** (decision 10) when exactly one track of the release fits and no other
+**A file is clear** when exactly one track of the release fits and no other
 file claims the same track, by one of these ways:
 
 * ``id``: the recording or release track id of its tags. Beats the other ways: a file with the right id and a wrong
@@ -15,12 +15,12 @@ file claims the same track, by one of these ways:
 When position and name point at different tracks the file is not clear. The length is a check, never a reason alone
 (research A5).
 
-**The release** (decision 9): when most files name a release of the album in their tags and its track count fits the
+**The release**: when most files name a release of the album in their tags and its track count fits the
 files, that one. Otherwise the release with the most clear files, then the fewest gaps on both sides, then the target,
 then the closer track count, then the lowest id.
 
-A file whose tags name another album of the artist and that fits no track stays out as ``other_album`` (decision 12).
-One audio file per medium that runs as long as the whole medium is a single file with a cue sheet (decision 13).
+A file whose tags name another album of the artist and that fits no track stays out as ``other_album``.
+One audio file per medium that runs as long as the whole medium is a single file with a cue sheet.
 """
 
 from __future__ import annotations
@@ -35,9 +35,9 @@ from typing import Any
 
 from .. import schreibweisen
 
-#: How far a file's length may be off the track's (decision 10); Lidarr's distance starts counting at 10 s as well.
+#: How far a file's length may be off the track's; Lidarr's distance starts counting at 10 s as well.
 TOLERANCE_MS = 10_000
-#: A file this long compared to its whole medium is the medium in one piece (decision 13).
+#: A file this long compared to its whole medium is the medium in one piece.
 SINGLE_FILE_SHARE = 0.8
 #: A medium needs this many tracks before one file for it counts as a single file with a cue sheet.
 SINGLE_FILE_MIN_TRACKS = 3
@@ -414,7 +414,7 @@ class Result:
     edition: EditionResult | None
     #: Why this release: ``{"code": "by_tags"}``, ``{"code": "by_tracks", "filed": 12, "tracks": 12}``, ``owner``.
     reason: dict[str, Any]
-    #: Whether the files are single files with a cue sheet (decision 13).
+    #: Whether the files are single files with a cue sheet.
     single_file: bool = False
 
 
@@ -435,7 +435,7 @@ def _named_edition(files: Sequence[AudioFile], editions: Sequence[Edition]) -> E
 
 
 def single_file(files: Sequence[AudioFile], editions: Sequence[Edition], cue_sheet: bool) -> bool:
-    """One audio file per medium that runs as long as its medium (decision 13); with a cue sheet, one file for a whole
+    """One audio file per medium that runs as long as its medium; with a cue sheet, one file for a whole
     release of several tracks is enough."""
     if not files or not editions or len(files) > max(edition.media for edition in editions):
         return False

@@ -1,4 +1,4 @@
-"""Searching and loading by itself (the design notes): the switches for movies and series,
+"""Searching and loading by itself: the switches for movies and series,
 and searching one title automatically now.
 
 Both switches are off until the owner switches them on. Off, nothing automatic of that kind reaches an indexer or a

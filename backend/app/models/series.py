@@ -27,10 +27,10 @@ from .base import Base, utcnow
 
 #: How a series names its releases. Anime is stored and shown; its own handling comes with a later block.
 SERIES_TYPES = ("standard", "daily", "anime")
-#: The rule of a series version (decision 9). A version a source feeds has none.
+#: The rule of a series version. A version a source feeds has none.
 WATCH_RULES = ("all", "future", "missing", "from_season", "none")
 #: Who set a switch: the rule, the owner, the source that feeds the version, or ``late`` for an episode TMDB added
-#: long after it aired, which stays off (decision 11).
+#: long after it aired, which stays off.
 SET_BY = ("rule", "owner", "source", "late")
 #: The numbering schemes: ``tvdb`` and ``scene`` (from Sonarr or TheXEM), ``owner`` (a local correction) and ``group``
 #: (the chosen TMDB episode group), see the design notes, decisions 9 to 13; ``absolute`` (the number an anime
@@ -93,15 +93,15 @@ class Episode(Base):
     tvdb_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     imdb_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     first_seen_at: Mapped[datetime] = mapped_column(default=utcnow)
-    #: When TMDB stopped listing the episode; it stays while something hangs on it (decision 5).
+    #: When TMDB stopped listing the episode; it stays while something hangs on it.
     tmdb_gone_at: Mapped[datetime | None] = mapped_column(nullable=True)
     # ⚠️ From migration 12 (S5.0); a change needs a new migration.
-    #: When an automatic search last asked for the episode, as Sonarr's ``LastSearchTime`` (decision 7).
+    #: When an automatic search last asked for the episode, as Sonarr's ``LastSearchTime``.
     last_search_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
 
 class EpisodeNumber(Base):
-    """One numbering of an episode other than TMDB's aired one. No uniqueness on the values (decision 6)."""
+    """One numbering of an episode other than TMDB's aired one. No uniqueness on the values."""
 
     __tablename__ = "episode_numbers"
     __table_args__ = (
@@ -164,12 +164,12 @@ class EpisodeFile(Base):
     file_ref: Mapped[str | None] = mapped_column(String(64), nullable=True)
     #: ``name`` or ``media``: what decided the quality.
     quality_from: Mapped[str | None] = mapped_column(String(16), nullable=True)
-    #: The name was built with ``TBA`` for a missing episode title; renamed once TMDB has one (decision 27).
+    #: The name was built with ``TBA`` for a missing episode title; renamed once TMDB has one.
     named_tba: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
-    #: The numbering the name carries: ``tmdb`` or ``tvdb`` (decision 14).
+    #: The numbering the name carries: ``tmdb`` or ``tvdb``.
     name_numbering: Mapped[str | None] = mapped_column(String(8), nullable=True)
     # ⚠️ From migration 13; a change needs a new migration.
-    #: The owner said the file belongs to no episode; it stays on disk and is no longer unclear (decision 17).
+    #: The owner said the file belongs to no episode; it stays on disk and is no longer unclear.
     left_out: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     #: What reading the folder found in the name: ``season``, ``episodes``, ``numbering``, ``reason``; null for a file
     #: of a download or a source.
@@ -182,7 +182,7 @@ class EpisodeFile(Base):
 
 
 class SeasonVersion(Base):
-    """Whether a version watches a season: the switch new episodes of the season take (decision 9)."""
+    """Whether a version watches a season: the switch new episodes of the season take."""
 
     __tablename__ = "season_versions"
 
@@ -214,7 +214,7 @@ class EpisodeVersion(Base):
 
 
 class TitleAlias(Base):
-    """A search title the owner added to a series: asked for first and matched like its titles (decision 12)."""
+    """A search title the owner added to a series: asked for first and matched like its titles."""
 
     __tablename__ = "title_aliases"
     __table_args__ = (
@@ -244,8 +244,8 @@ class XemName(Base):
 
 
 class SeasonFolder(Base):
-    """The name of a season folder of a series version, fixed the first time a file is filed into it (decision 15),
-    and the state of its ``release.nex`` (decision 40).
+    """The name of a season folder of a series version, fixed the first time a file is filed into it,
+    and the state of its ``release.nex``.
 
     ⚠️ From ``create_all`` with migration 11; a change of a column needs a new migration.
     """
@@ -261,7 +261,7 @@ class SeasonFolder(Base):
 
 
 class SourceEpisode(Base):
-    """An episode a source knows and no TMDB episode matched, mostly specials (decision 47). Replaced per import.
+    """An episode a source knows and no TMDB episode matched, mostly specials. Replaced per import.
 
     ⚠️ From ``create_all`` with migration 11; a change of a column needs a new migration.
     """

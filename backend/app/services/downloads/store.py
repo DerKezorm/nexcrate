@@ -86,7 +86,7 @@ FAILED_CODE = "download_failed"
 UNFINISHED_STATES = (*ACTIVE_STATES, "problem")
 
 
-#: The scopes of series downloads; ``album`` is an album download (decision 3).
+#: The scopes of series downloads; ``album`` is an album download.
 SERIES_SCOPES = ("episode", "season", "series")
 ALBUM_SCOPE = "album"
 
@@ -319,7 +319,7 @@ def download_out(
             "title": title.title if title is not None else "",
             "year": title.year if title is not None else None,
             "kind": title.kind if title is not None else None,
-            # An album names its artist (decision 43).
+            # An album names its artist.
             "artist": artist,
         },
         "version": {"id": row.version_definition_id, "label": row.version_label},
@@ -435,7 +435,7 @@ def blocking_download(db: OrmSession, title_id: int, definition_id: int) -> Down
 
 
 def downloading_episodes(db: OrmSession, title_id: int, definition_id: int) -> dict[int, int]:
-    """Episode id to the series download of this version that holds it and blocks (decision 5). An episode the
+    """Episode id to the series download of this version that holds it and blocks. An episode the
     download filed already, left out or gave up is free for another download."""
     rows = db.execute(
         select(DownloadEpisode.episode_id, Download)

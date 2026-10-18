@@ -151,7 +151,7 @@ def read_version(version_id: int) -> dict[str, int]:
             decision = decisions.get(file.key)
             track_id = decision.track_id if decision is not None and decision.decision == fm.FILED else None
             if track_id is not None and keys.get(track_id, frozenset()) & held:
-                # A second file for a song the album holds: the owner decides (decision 15).
+                # A second file for a song the album holds: the owner decides.
                 track_id = None
             path = paths.file_in(folder, file.path)
             read = reads.get(file.key)
@@ -191,7 +191,7 @@ def read_version(version_id: int) -> dict[str, int]:
     return counts
 
 
-# --- The owner settles an unclear file (decision 15) ------------------------------------------------------------ #
+# --- The owner settles an unclear file ------------------------------------------------------------ #
 
 
 class Refused(Exception):

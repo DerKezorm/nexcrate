@@ -1,4 +1,4 @@
-"""Placeholder names of episodes (decision 49).
+"""Placeholder names of episodes.
 
 TMDB never gives an empty name in a language without a translation; it gives the word for episode and a number
 ("Folge 9", "Episode 9"). Such a name is no name: the English name is shown where one is stored, and a file name

@@ -14,7 +14,7 @@ empty and the format would match everything.
 What cannot be rebuilt is named, never guessed: a quality this kind does not know, a condition the engine has no
 type for, and Radarr's single profile language when it is not a plain language.
 
-**Sonarr's release profiles** (finding 6 of 20.09.2026) have no place of their own here and become custom formats,
+**Sonarr's release profiles** have no place of their own here and become custom formats,
 the way TRaSH itself writes "unwanted" ones: *must not contain* is a format that matches when one of the terms is in
 the release title, *must contain* is a format that matches when none of them is, and every profile taken over gives
 both ``REJECT_SCORE``. Measured against Sonarr 4.0.19: ``GET /api/v3/releaseprofile`` answers ``name``, ``enabled``,
@@ -23,7 +23,7 @@ A profile bound to an indexer or to tags there cannot be bound here (no tags, an
 its formats come over **without a score**, and the plan says so. One that is switched off does nothing there and
 becomes nothing here.
 
-**Repacks** (finding 4): there is no step for proper and repack here (``search/ranking.py``), so a profile gets a
+**Repacks**: there is no step for proper and repack here (``search/ranking.py``), so a profile gets a
 repack as an upgrade only through a format that scores it. The plan reads, with the engine itself, whether a profile
 scores such a format; one that does not says ``repack_unscored``, and TRaSH's own formats are offered with it.
 

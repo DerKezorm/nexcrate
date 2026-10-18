@@ -11,7 +11,7 @@ to ``run``):
    one transaction per series.
 3. Versions of series gone from Sonarr go, as for Radarr; titles left without versions go.
 
-Without a TMDB token the run fails with ``tmdb_not_configured``: series need TMDB (decision 23). A TMDB error other
+Without a TMDB token the run fails with ``tmdb_not_configured``: series need TMDB. A TMDB error other
 than an unknown series ends the run; series written so far stay.
 
 Log lines carry ids and counts, never titles, names or paths.
@@ -586,7 +586,7 @@ def _merge_episodes(
 
 
 def _merge_source_only(db: OrmSession, title: Title, version: Version, unmatched: list[EpisodeItem]) -> None:
-    """Sonarr's episodes no TMDB episode matched, visible with the version (decision 47).
+    """Sonarr's episodes no TMDB episode matched, visible with the version.
     Replaced on every run; they get no episode of their own."""
     db.execute(
         delete(SourceEpisode).where(SourceEpisode.version_id == version.id),
@@ -775,7 +775,7 @@ def detach(db: OrmSession, version: Version, moment: datetime, on: str) -> None:
 def release_series_source(db: OrmSession, source_id: int, moment: datetime) -> list[int]:
     """A Sonarr connection is deleted: the owner's versions it fed are detached; the importer removes the rest.
 
-    Returns the versions whose series folder wants reading after the commit (decision 23).
+    Returns the versions whose series folder wants reading after the commit.
     """
     on = watching.today()
     detached: list[int] = []

@@ -327,7 +327,7 @@ def _series_definitions(db: DbSession, wanted: list[int] | None) -> list[Version
 
 
 def _title_matches(title: Title, keys: tuple[str, ...]) -> bool:
-    """Whether the title in the name is one of the series' spellings; a hint only (decision 20)."""
+    """Whether the title in the name is one of the series' spellings; a hint only."""
     if not keys:
         return True
     stored = f"{title.search_keys or ''}{title.tmdb_search_keys or ''}"

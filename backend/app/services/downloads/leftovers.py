@@ -1,4 +1,4 @@
-"""Folders SABnzbd leaves behind after nexcrate removed a failed job (the owner's finding 5 of 22.09.2026).
+"""Folders SABnzbd leaves behind after nexcrate removed a failed job.
 
 The sweep looks at NZBGet too (every Usenet client); NZBGet needs its user name for that.
 

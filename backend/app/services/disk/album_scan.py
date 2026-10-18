@@ -5,7 +5,7 @@ folder the owner added as a music folder) the scan walks artist folders and albu
 every folder with audio files (directly or in a medium folder such as ``CD 01``) is an album folder. An artist folder
 Lidarr filed flat into is one too. The scan reads no file but the first audio file's tags and the ``release.nex``.
 
-**Matching**, in this order (decision 18): the stored album folder of an own version (``library``); ``release.nex``
+**Matching**, in this order: the stored album folder of an own version (``library``); ``release.nex``
 (``restorable``, or ``conflict`` when that album has a folder with files elsewhere); a release group or release id in
 the tags (Picard, Lidarr); artist and album from the tags, else from the folder names, against the library. An album a
 Lidarr connection feeds is ``lidarr`` and never offered. Unknown albums are added over MusicBrainz on the page.

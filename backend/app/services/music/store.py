@@ -3,11 +3,11 @@ refreshing and, later, the scan of a music folder.
 
 * An artist is one row in ``artists``; an album one ``Title`` of kind ``album`` per release group; an album that the
   owner watches or that has files has one ``Version`` in the one music definition (decisions 1, 2, 10).
-* Nothing is deleted because MusicBrainz stopped listing it: it gets ``mb_gone_at`` (decision 22). A merged id
+* Nothing is deleted because MusicBrainz stopped listing it: it gets ``mb_gone_at``. A merged id
   answers with the surviving id; the old one goes to ``mbid_old`` and still finds the row.
-* New means "seen for the first time at a later load" (decision 24): the first load takes the choice of the
+* New means "seen for the first time at a later load": the first load takes the choice of the
   add dialog, later loads the artist's ``monitor_new``.
-* The target release of an album version follows ``target.choose`` (decision 27) until a file lies there or the
+* The target release of an album version follows ``target.choose`` until a file lies there or the
   owner chose one (decisions 29, 30).
 """
 
@@ -48,9 +48,9 @@ from .musicbrainz import ArtistData, ReleaseData, ReleaseGroupData
 
 logger = logging.getLogger("nexcrate.music")
 
-#: The label of the one music definition when it is created (decision 10), by interface language.
+#: The label of the one music definition when it is created, by interface language.
 DEFINITION_LABELS = {"de": "Musik", "en": "Music"}
-#: The choices of the add dialog (decision 32), and since the design notes every choice Lidarr offers when adding
+#: The choices of the add dialog, and since the design notes every choice Lidarr offers when adding
 #: an artist: albums without files, albums with files, the first and the latest album.
 WATCH_CHOICES = ("studio", "future", "none", "missing", "existing", "first", "latest")
 #: The choices that are applied while the groups are made; the others after, over the whole catalogue.
@@ -82,7 +82,7 @@ def account_language(db: OrmSession) -> str:
 
 
 def ensure_definition(db: OrmSession, language: str) -> VersionDefinition:
-    """The one version definition of kind ``album``, created at the first music step (decision 10)."""
+    """The one version definition of kind ``album``, created at the first music step."""
     row = db.scalar(select(VersionDefinition).where(VersionDefinition.kind == "album").order_by(VersionDefinition.id))
     if row is not None:
         return row
@@ -179,7 +179,7 @@ def _history(
 
 
 def find_artist(db: OrmSession, mbid: str) -> Artist | None:
-    """By the current id, or by an old one MusicBrainz merged away (decision 22)."""
+    """By the current id, or by an old one MusicBrainz merged away."""
     row = db.scalar(select(Artist).where(Artist.mbid == mbid))
     if row is not None:
         return row
@@ -190,7 +190,7 @@ def find_artist(db: OrmSession, mbid: str) -> Artist | None:
 
 
 def alias_display(data: ArtistData, language: str) -> str | None:
-    """The primary alias in the language of the interface, when it differs from the name (decision 36)."""
+    """The primary alias in the language of the interface, when it differs from the name."""
     for alias in data.aliases:
         locale = str(alias.get("locale") or "").lower()
         if alias.get("primary") and locale[:2] == language and alias.get("name") and alias["name"] != data.name:
@@ -238,7 +238,7 @@ def upsert_artist(
     artist.mbid_old = old_ids or None
     if data.mbid == VARIOUS_ARTISTS_MBID:
         # ⚠️ However it arrives (a Lidarr import lists it like any artist): the collective artist has 290,000 release
-        # groups at MusicBrainz and is never browsed (decision 35). Found on the bench, 81 pages in.
+        # groups at MusicBrainz and is never browsed. Found on the bench, 81 pages in.
         artist.is_various = True
         artist.monitor_new = "none"
         if artist.load_state in ("queued", "groups"):
@@ -379,7 +379,7 @@ def made_by_adding_alone(db: OrmSession, artist: Artist) -> bool:
 
 
 def various_artist(db: OrmSession, moment: datetime) -> Artist:
-    """The collective artist for compilations (decision 35), made at the first sampler, never browsed."""
+    """The collective artist for compilations, made at the first sampler, never browsed."""
     row = db.scalar(select(Artist).where(Artist.mbid == VARIOUS_ARTISTS_MBID))
     if row is not None:
         return row
@@ -462,9 +462,9 @@ def apply_release_group(
 ) -> tuple[Title, bool]:
     """One release group of an artist as a title: made or updated, watched by the rules, with its history.
 
-    ``first_load`` with ``watch`` is the choice of the add dialog (decision 32); later loads follow the artist's
-    ``monitor_new`` for a group seen for the first time (decision 24). ``artists_by_mbid`` holds the artists of the
-    library for the credit, for a joint album (decision 3).
+    ``first_load`` with ``watch`` is the choice of the add dialog; later loads follow the artist's
+    ``monitor_new`` for a group seen for the first time. ``artists_by_mbid`` holds the artists of the
+    library for the credit, for a joint album.
     """
     title = find_album(db, group.mbid)
     new = title is None
@@ -533,7 +533,7 @@ def apply_release_group(
 def _credit_rows(
     db: OrmSession, title: Title, artist: Artist, group: ReleaseGroupData, known: dict[str, KnownArtist]
 ) -> None:
-    """Every further artist of the credit that is in the library gets an ``album_artists`` row (decision 3)."""
+    """Every further artist of the credit that is in the library gets an ``album_artists`` row."""
     wanted: dict[int, int] = {}
     for position, part in enumerate(group.credit):
         other = known.get(str(part.get("mbid") or ""))
@@ -595,7 +595,7 @@ def mark_groups_gone(
 
 
 def adopt_merged_group(db: OrmSession, title: Title, new_mbid: str, moment: datetime) -> Title:
-    """MusicBrainz merged the album's release group into another (decision 22): the title takes the new id and
+    """MusicBrainz merged the album's release group into another: the title takes the new id and
     keeps the old one in ``mbid_old``. A title the same browse made for the new id is a duplicate of minutes: its
     version moves over when the old title has none, then it goes with its history."""
     duplicate = db.scalar(select(Title).where(Title.kind == "album", Title.mbid == new_mbid, Title.id != title.id))
@@ -645,7 +645,7 @@ def apply_releases(
 
     ``keep`` names releases stored whatever their status: the release Lidarr watches for an album with files may be
     a bootleg or withdrawn when the album has no official one (54 of 496 on the bench), and its files belong to it.
-    The target rule still never chooses it (decision 5, E1)."""
+    The target rule still never chooses it."""
     existing = {row.mbid: row for row in db.scalars(select(Release).where(Release.title_id == title.id))}
     by_old: dict[str, Release] = {}
     for row in existing.values():
@@ -820,8 +820,8 @@ def countries_of(db: OrmSession, definition: VersionDefinition | None, language:
 
 
 def refresh_target(db: OrmSession, title: Title, version: Version, *, moment: datetime, language: str) -> target.Choice:
-    """Run the rule for one album version (decision 29): sets the target while nothing freezes it, else a
-    suggestion; the owner's choice stays (decision 30). Writes ``target_changed`` when the target moved."""
+    """Run the rule for one album version: sets the target while nothing freezes it, else a
+    suggestion; the owner's choice stays. Writes ``target_changed`` when the target moved."""
     definition_row = db.get(VersionDefinition, version.version_definition_id)
     choice = target.choose(candidates_of(db, title.id), countries_of(db, definition_row, language))
     chosen_id = choice.chosen.id if choice.chosen is not None else None
@@ -864,7 +864,7 @@ def set_owner_target(
     old_id = version.target_release_id
     if release is None:
         if version.actual_release_id is not None:
-            # Files lie there: the target goes back to the release they belong to (decision 29), and the rule's
+            # Files lie there: the target goes back to the release they belong to, and the rule's
             # choice shows as a suggestion again.
             version.target_release_id = version.actual_release_id
             version.target_set_by = "source" if version.source_id is not None else "rule"

@@ -16,12 +16,12 @@ to (``services/series/release_match.py``).
 7. with a series: at least one episode matched (``no_episode_match``)
 8. a season pack whose season has not aired in full (``season_incomplete {not_aired}``)
 
-**Size** (decision 23): MB per minute times the summed runtime of the episodes the release covers, each episode's
+**Size**: MB per minute times the summed runtime of the episodes the release covers, each episode's
 own runtime or else the series' usual one. Specials are not checked, as in Sonarr. Is no runtime known at all,
 nexcrate checks no size and says so (``runtime_unknown``); Sonarr refuses such a release, and the movie engine's
 110 minutes would be wrong for episodes of 20 to 60 minutes.
 
-**Per episode** (decision 27), never all or nothing as in Sonarr:
+**Per episode**, never all or nothing as in Sonarr:
 
 * ``fills``: watched, no file;
 * ``replaces``: a file that this release improves on;
@@ -35,19 +35,19 @@ counts the files and their size.
 is read by its release name (``release_title``), else by its file name, scored with the quality and, when stored, the
 languages Sonarr or nexcrate keep for it (a MULTi name read again loses the indexer's languages, measured against
 Radarr on 17.09.2026), and — this matters — with the release type of its own column, never from its file name
-(decision 25): a file
+: a file
 out of a season pack is called ``S01E03.mkv`` and must keep its +10, or the same pack would replace it for ever.
 A file with an unknown release type does not get those points, so a pack of the same quality replaces it, as in
 Sonarr.
 
-**Double episodes stay whole** (decision 26): a release is no improvement for an episode whose file holds more
+**Double episodes stay whole**: a release is no improvement for an episode whose file holds more
 episodes than the release covers (``file_covers_more``). A pack that holds all of them may replace it.
 
 ⚠️ The custom formats see the whole release title, the series name included: Sonarr does the same (decision 18,
 measured 16.09.2026). Group and languages are still read with the title masked, so a series called "German
 Crime" carries no language of its own.
 
-**Below the target** (``below_target``) as for movies, plus ``below_target_in_group`` (decision 28): the release
+**Below the target** (``below_target``) as for movies, plus ``below_target_in_group``: the release
 lies below the target resolution *and* shares a quality group with it. In TRaSH's German profiles 720p and 1080p
 lie in one group, where only the score decides, so a 720p Blu-ray of a top tier group replaces a 1080p WEB file.
 The interface says so in its own words.
@@ -75,7 +75,7 @@ FILE_RELEASE_TYPES = {"singleEpisode": 1, "multiEpisode": 2, "seasonPack": 3}
 class CurrentEpisodeFile:
     """A stored file of a series version, as the engine judges it."""
 
-    #: The release name the file came from; the file name is only the fallback (decision 25).
+    #: The release name the file came from; the file name is only the fallback.
     release_title: str | None = None
     name: str | None = None
     #: Sonarr's quality name as stored.
@@ -121,7 +121,7 @@ class SeriesContext:
     with_series: bool = False
     #: Codes of regular episodes of the season that have not aired yet (a pack is refused then).
     not_aired: tuple[str, ...] = ()
-    #: Whether the release name's title fits the chosen series; a hint only (decision 20).
+    #: Whether the release name's title fits the chosen series; a hint only.
     title_matches: bool = True
 
 
@@ -306,7 +306,7 @@ class _Runtime:
 
 
 def _runtime(parsed: ParsedRelease, context: SeriesContext) -> _Runtime:
-    """The summed runtime of the episodes a release covers (decision 23)."""
+    """The summed runtime of the episodes a release covers."""
     episodes = [episode for episode in context.episodes if not episode.special]
     if context.episodes and not episodes:
         return _Runtime(0, False, True)
@@ -423,7 +423,7 @@ def _episode_states(
 
 
 def _below_target_in_group(rules: dict[str, Any], quality: qs.Quality) -> bool:
-    """The release lies below the target and shares a quality group with it (decision 28)."""
+    """The release lies below the target and shares a quality group with it."""
     if not decision.below_target_of(rules, quality):
         return False
     target = rules.get("target_resolution")
@@ -517,7 +517,7 @@ def rank_series(
     parsed: list[ParsedRelease],
     sizes: list[int | None] | None = None,
 ) -> None:
-    """Sonarr's order (decision 29), written into each result as ``rank``, 1 first.
+    """Sonarr's order, written into each result as ``rank``, 1 first.
 
     Accepted first, then quality, score, a pack before a single release, fewer episodes, the lower first episode
     number, and the larger size. Indexer priority, seeders and age have no place in the checker; the search of a

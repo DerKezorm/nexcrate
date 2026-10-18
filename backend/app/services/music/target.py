@@ -1,4 +1,4 @@
-"""The target release of an album (decision 27, E1): deluxe yes, box no.
+"""The target release of an album: deluxe yes, box no.
 
 A pure function over the releases of an album, without database or network, with its reasons as codes and values,
 so the interface can say in one sentence why this release and not that one. Lidarr takes the release with the most
@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-#: Formats that carry no audio for the player: a release with one of them is never a target (decision 27, step 1).
+#: Formats that carry no audio for the player: a release with one of them is never a target.
 #: Lidarr's list (``NonAudioMedia``, b) plus what the bench showed (B1: Download Card, slotMusic).
 NON_AUDIO = frozenset(
     {
@@ -118,7 +118,7 @@ def date_key(date: str | None) -> str:
 
 
 def countries_for(language: str | None, own: list[str] | None) -> tuple[str, ...]:
-    """The country order of a definition, or the default of the interface language (decision 28)."""
+    """The country order of a definition, or the default of the interface language."""
     if own:
         return tuple(own)
     return DEFAULT_COUNTRIES.get((language or "en").lower()[:2], DEFAULT_COUNTRIES["en"])

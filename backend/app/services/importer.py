@@ -899,7 +899,7 @@ def move_source(db: OrmSession, source: Source, definition: VersionDefinition, m
 def remove_orphans(db: OrmSession) -> list[int]:
     """Delete every movie or series without a version. Their alternate titles and history go with them.
 
-    ⚠️ Albums stay: an artist's whole catalogue lives as titles without a version (decision 2).
+    ⚠️ Albums stay: an artist's whole catalogue lives as titles without a version.
     """
     orphan_ids = list(
         db.scalars(

@@ -19,7 +19,7 @@
    ``rss_last_at`` is the time of the sync. A failed page keeps the releases before it for matching and moves the
    newest release nowhere; the sync still counts for the interval, so a broken indexer is not asked every minute. The
    first request of a sync is RSS's reserve; every further request is charged to the indexer's bucket.
-4. **Matching** (decision 9), against the titles with a version that wants something (``planning.load_facts``), looked
+4. **Matching**, against the titles with a version that wants something (``planning.load_facts``), looked
    up once per round: the feed's ``imdb`` attribute, then ``tmdbid``, counted only when the year read from the name is
    missing, equals the title's year, or equals the year of its first premiere (TMDB type 1); otherwise the title read
    from the name and its year through every spelling key of the title, the original title and the alternative titles
@@ -94,7 +94,7 @@ MAX_RELEASES = 1000
 ROUND_TIMEOUT_SECONDS = 300.0
 FACTS_CHUNK = 500
 PREMIERE_TYPE = 1
-#: The forms of the request: what the sync asks for. Since Music M5 (decision 12) music joins
+#: The forms of the request: what the sync asks for. Since Music M5 music joins
 #: them; the column holds eight characters, so the combined forms have short names.
 MOVIE, SERIES, BOTH = "movie", "series", "both"
 MUSIC, MOVIE_MUSIC, SERIES_MUSIC, ALL = "music", "mo+mu", "se+mu", "all"
@@ -635,7 +635,7 @@ class SeriesInfo:
 
 @dataclass
 class SeriesLookups:
-    """The series with an episode that wants something, by TVDB number, IMDb number and spelling key (decision 19)."""
+    """The series with an episode that wants something, by TVDB number, IMDb number and spelling key."""
 
     infos: dict[int, SeriesInfo] = field(default_factory=dict)
     #: Series id to its wanting episodes.
@@ -853,7 +853,7 @@ def judge_kept(
 
 class AlbumLookups:
     """The albums that want something, found by the artist's name in a release's name, then matched exactly with the
-    album search's matching (decision 13): only ``this`` album counts, never another album of
+    album search's matching: only ``this`` album counts, never another album of
     the artist, a sampler or another artist."""
 
     def __init__(self) -> None:
@@ -862,7 +862,7 @@ class AlbumLookups:
 
     def add(self, album: album_search.AlbumSearch) -> None:
         if album.artist.various:
-            # A sampler is never taken from RSS (decision 13).
+            # A sampler is never taken from RSS.
             return
         self.albums[album.title_id] = album
         for name in album.artist.names:

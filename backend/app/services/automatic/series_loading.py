@@ -76,7 +76,7 @@ def seen_indexers(value: object, now: datetime) -> frozenset[int]:
 
 
 def planned_cost(row: Indexer, series: series_search.SeriesSearch, skip_titles: bool, now: datetime) -> int:
-    """The requests a planned series search plans on one indexer (decision 12)."""
+    """The requests a planned series search plans on one indexer."""
     stale = (
         row.caps_checked_at is None
         or row.caps_checked_at < now - indexers.CAPS_MAX_AGE
@@ -175,7 +175,7 @@ def start_planned(title_id: int, now: datetime, left: int) -> int:
 
 
 def search_now(title_id: int, *, switch: bool = True) -> str:
-    """Search every season of a series that wants something at once (decision 26): no limit of seasons, no budget.
+    """Search every season of a series that wants something at once: no limit of seasons, no budget.
     Raises the scheduler's ``TitleMissing``, ``AutomaticOff``, ``NothingWanted`` and the search jobs' exceptions."""
     now = scheduler.clock.now()
     with SessionLocal() as db:
@@ -245,10 +245,10 @@ def season_of(code: str) -> int | None:
 
 
 def pack_left_out(release: dict[str, Any], placed: dict[str, Any], take: dict[str, Any]) -> dict[str, Any] | None:
-    """The owner's pack rule (decision 15): a season pack that fills nothing and replaces fewer than half of the
+    """The owner's pack rule: a season pack that fills nothing and replaces fewer than half of the
     episodes it holds for the version. Returns what the season line shows, or None when the pack may load."""
     parsed = release.get("parsed_series") or {}
-    # A batch of an anime series counted through is a pack as well (decision 10).
+    # A batch of an anime series counted through is a pack as well.
     batch = parsed.get("form") == "anime" and not parsed.get("refused") and len(parsed.get("absolute") or []) > 1
     if (parsed.get("release_type") != "season_pack" and not batch) or take.get("fills"):
         return None

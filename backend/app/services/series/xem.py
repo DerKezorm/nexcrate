@@ -17,7 +17,7 @@ scene's ``absolute`` is kept on the scene row (B6): it is the number Sonarr stor
 purpose, not a fault (American Dad! has 148 of 405 scene numbers counted through that differ from TVDB's, by design,
 measured at the throwaway Sonarr on 23.09.2026).
 
-**Failures** keep the stored numbers and are shown with their own code (decision 15): ``xem_timeout``,
+**Failures** keep the stored numbers and are shown with their own code: ``xem_timeout``,
 ``xem_certificate`` (a filter in the owner's network, typically), ``xem_blocked`` (an HTML page instead of data, a
 403 from Cloudflare), ``xem_unreachable``. ⚠️ Requests carry ``User-Agent: nexcrate/<version> ( <project address> )``:
 TheXEM answers Python's default agent with a Cloudflare page (measured 16.09.2026), and its operator asked for the
@@ -303,7 +303,7 @@ def parse_scene_absolute(entries: list[dict[str, Any]]) -> dict[Numbers, int]:
 
 
 def bridge(episodes: list[tuple[int, int, int]], entries: dict[Numbers, Numbers]) -> dict[int, Mapped]:
-    """TMDB episodes ``(id, season, episode)`` to TheXEM's TVDB and scene numbers (decision 9)."""
+    """TMDB episodes ``(id, season, episode)`` to TheXEM's TVDB and scene numbers."""
     regular = sorted((row for row in episodes if row[1] > 0), key=lambda row: (row[1], row[2]))
     listed = sorted(numbers for numbers in entries if numbers[0] > 0)
     result: dict[int, Mapped] = {}

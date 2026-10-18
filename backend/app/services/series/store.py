@@ -1,7 +1,7 @@
 """TMDB's series data in the library (S1.2): one function for adding, refreshing and importing.
 
 ``apply_series`` writes the title's fields, finds seasons by TMDB season id and episodes by TMDB episode id, records
-renumbered episodes in the history, marks or removes vanished ones (decision 5), gives new ones their switches in every
+renumbered episodes in the history, marks or removes vanished ones, gives new ones their switches in every
 version (decisions 9 to 11), and computes counts and state of every version again.
 
 A season TMDB sent no details for keeps its stored episodes: an answer with a gap removes nothing.

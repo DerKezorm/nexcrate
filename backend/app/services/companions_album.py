@@ -1,4 +1,4 @@
-"""``release.nex`` in every album folder nexcrate files into (M4.7, decision 37).
+"""``release.nex`` in every album folder nexcrate files into.
 
 The same file as next to a movie or in a season folder, with an ``album`` block instead of ``movie`` or ``series``:
 the MusicBrainz ids of the album and its artist, the target and the actual release, and one entry per file with its

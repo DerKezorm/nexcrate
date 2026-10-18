@@ -9,7 +9,7 @@ falling through silently, Lidarr's gap (planungsgrundlage b). Measured on the be
 
 from __future__ import annotations
 
-#: The groups of an artist page in their order (decision 26).
+#: The groups of an artist page in their order.
 GROUPS = (
     "studio",
     "ep",
@@ -21,7 +21,7 @@ GROUPS = (
     "spoken",
     "other",
 )
-#: The first matching secondary type decides the group (decision 26).
+#: The first matching secondary type decides the group.
 _SECONDARY_GROUPS = (
     ("Live", "live"),
     ("Compilation", "compilation"),
@@ -38,7 +38,7 @@ _SECONDARY_GROUPS = (
 )
 
 
-#: The groups watched when nobody says otherwise: studio albums and EPs (decision 25).
+#: The groups watched when nobody says otherwise: studio albums and EPs.
 DEFAULT_TYPES = ("studio", "ep")
 
 

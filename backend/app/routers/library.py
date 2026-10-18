@@ -390,7 +390,7 @@ class TitleVersion(BaseModel):
     )
     upgrade_reason: Literal["quality", "score"] | None = Field(
         default=None,
-        description="Why nexcrate would still upgrade the file of a version of its own (decision 20). quality: its "
+        description="Why nexcrate would still upgrade the file of a version of its own. quality: its "
         "quality ranks below the profile's cutoff, or its resolution lies below the target resolution. score: its "
         "quality ranks at the cutoff and `current_score` lies below `upgrade_until`. Null for a version a source "
         "feeds, without a file or movie rules, and while the stored judgement (`state`) says the file is done.",
@@ -879,7 +879,7 @@ def list_library(
     )
     summaries = [TitleSummary.model_validate(item) for item in items]
     if chosen_kind in ("movie", "series") and summaries:
-        # IMDb's rating for the page's titles, from the separate ratings file (decision 10).
+        # IMDb's rating for the page's titles, from the separate ratings file.
         numbers = dict(
             db.execute(
                 select(Title.id, Title.imdb_id).where(
@@ -1025,7 +1025,7 @@ def _create_series(data: tmdb_series.SeriesData, choices: list[SeriesVersionIn],
                     reading.append(version.id)
             db.flush()
             series_store.apply_series(db, title, data, moment, on)
-            # A new series with aired episodes is due in the next minute (decision 23).
+            # A new series with aired episodes is due in the next minute.
             _replan(db, title.id)
             db.commit()
             if reading:
@@ -1084,7 +1084,7 @@ class SeriesPreview(BaseModel):
 
 
 def _folders_on_disk(version_ids: list[int], data: tmdb_series.SeriesData) -> dict[int, OnDisk]:
-    """Per definition the series folder that already lies there (decision 31), with its videos."""
+    """Per definition the series folder that already lies there, with its videos."""
     found: dict[int, OnDisk] = {}
     facts = naming_series.SeriesFacts(
         title=data.title or data.original_title or "",

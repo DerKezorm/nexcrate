@@ -401,7 +401,7 @@ def _episode_cutoff_needed(cursor: sqlite3.Cursor) -> bool:
 
 
 def _add_episode_cutoff(cursor: sqlite3.Cursor) -> None:
-    """The verdict per episode file: null means not judged, which counts as no upgrade (decision 33)."""
+    """The verdict per episode file: null means not judged, which counts as no upgrade."""
     for table, name, definition in _COLUMNS_9:
         columns = _columns(cursor, table)
         if columns and name not in columns:
@@ -421,7 +421,7 @@ _COLUMNS_10: tuple[tuple[str, str, str], ...] = (
 )
 #: Newznab's anime category; it and its subcategories stay out of the series default until anime follows.
 _ANIME_CATEGORY = 5070
-#: Sonarr's default plus UHD, for an indexer without usable caps (decision 5).
+#: Sonarr's default plus UHD, for an indexer without usable caps.
 _SERIES_CATEGORIES_WITHOUT_CAPS = (5030, 5040, 5045)
 
 
@@ -450,7 +450,7 @@ def series_categories_from_caps(caps: object) -> list[int]:
 
 
 def _add_series_search(cursor: sqlite3.Cursor) -> None:
-    """The columns of S3. Every indexer gets the series categories its stored caps offer (decision 5)."""
+    """The columns of S3. Every indexer gets the series categories its stored caps offer."""
     added_categories = False
     for table, name, definition in _COLUMNS_10:
         columns = _columns(cursor, table)
@@ -557,7 +557,7 @@ def _series_takeover_needed(cursor: sqlite3.Cursor) -> bool:
 
 def _add_series_takeover(cursor: sqlite3.Cursor) -> None:
     """The columns of S6. Series versions of nexcrate's own that exist already count as nexcrate's since they were
-    created and as read: nexcrate filed their files itself (decision 23)."""
+    created and as read: nexcrate filed their files itself."""
     added: list[str] = []
     for table, name, definition in _COLUMNS_13:
         columns = _columns(cursor, table)
@@ -585,7 +585,7 @@ _TITLES_13_COLUMNS = (
     "numbering_note", "title_en", "xem_checked_at", "xem_state", "episode_group_id", "id_search_seen",
 )  # fmt: skip
 
-#: The table as migration 14 leaves it: schema 13 with ``tmdb_id`` nullable and the album columns (decision 1).
+#: The table as migration 14 leaves it: schema 13 with ``tmdb_id`` nullable and the album columns.
 _TITLES_14 = """
 CREATE TABLE titles_migrating (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -734,7 +734,7 @@ def _music_needed(cursor: sqlite3.Cursor) -> bool:
 
 
 def _rebuild_titles(cursor: sqlite3.Cursor) -> None:
-    """``tmdb_id`` becomes nullable, the album columns come along (decision 1). Pattern of ``_rebuild_versions``.
+    """``tmdb_id`` becomes nullable, the album columns come along. Pattern of ``_rebuild_versions``.
 
     ⚠️ Eleven tables refer to ``titles.id``; foreign keys are off while the old table goes (see the module docstring),
     and the runner checks them before the commit.
@@ -795,7 +795,7 @@ def _add_music(cursor: sqlite3.Cursor) -> None:
 
 # --- Migration 15: searching albums (M3.1) --------------------------------------------------- #
 
-#: Null means "the default from the caps" (decision 4); a stored list is the owner's choice.
+#: Null means "the default from the caps"; a stored list is the owner's choice.
 _COLUMNS_15 = (("indexers", "music_categories", "JSON"),)
 
 

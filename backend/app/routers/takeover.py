@@ -162,7 +162,7 @@ class SeriesNamingProblems(BaseModel):
 
 
 class SeriesSourceNaming(BaseModel):
-    """Sonarr's naming as a series version would take it (decision 13)."""
+    """Sonarr's naming as a series version would take it."""
 
     series_folder: str = Field(examples=["{Series Title}"])
     season_folder: str = Field(examples=["Season {season:00}"])
