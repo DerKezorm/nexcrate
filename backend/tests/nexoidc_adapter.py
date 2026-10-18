@@ -1,6 +1,6 @@
-"""nexoidc contract tests: nexcrate's adapter (copied once from bauplaene/oidc, then nexcrate's file).
+"""nexoidc contract tests: nexcrate's adapter (copied once from the module's template, then nexcrate's file).
 
-nexcrate has one account (blueprint 06). The contract tests name accounts ("alex", "owner", "max"); here every name is
+nexcrate has one account. The contract tests name accounts ("alex", "owner", "max"); here every name is
 that one account: ``make_account`` renames it and gives it the one password, so the operator, who is the same person,
 signs in with the same. ``who`` answers the name the account carries now.
 

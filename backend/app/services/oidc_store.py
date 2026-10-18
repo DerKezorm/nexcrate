@@ -69,7 +69,7 @@ ANCHOR = "oidc_legacy_anchor"
 PASSWORD_LOGIN = "password_login"
 #: The old version showed this much of a provider's name for the linked identity.
 NAME_MAX = 100
-#: How the version before the list behaved after a provider: no code asked (blueprint 06 "Wanderung").
+#: How the version before the list behaved after a provider: no code asked.
 TRUSTED_BEFORE = True
 
 
@@ -351,7 +351,7 @@ def reopen_password_login(db: OrmSession) -> None:
         logger.warning("The sign-in with a password is open again: no active provider is linked any more")
 
 
-# --- The way back (blueprint 01 "Umstieg" 4) ------------------------------------------------------------------------ #
+# --- The way back --------------------------------------------------------------------------------------------------- #
 
 
 def read_legacy(db: OrmSession) -> tuple[migrate.Legacy, list[tuple[int, str]]]:
@@ -424,13 +424,13 @@ def _mirror(db: OrmSession) -> None:
         set_setting(db, PROVIDER_NAME, legacy.label)
 
 
-# --- The move from the settings (blueprint 01 "Umstieg", 06 "Wanderung") -------------------------------------------- #
+# --- The move from the settings ------------------------------------------------------------------------------------- #
 
 
 def legacy_plan(db: OrmSession) -> migrate.Plan | None:
     """The entry ``oidc`` and its link the old settings become; None when no provider was set up."""
     legacy, subjects = read_legacy(db)
-    # nexcrate asked no code after the provider before the list: the moved entry keeps that (blueprint 06).
+    # nexcrate asked no code after the provider before the list: the moved entry keeps that.
     return migrate.plan(legacy, subjects, trusts_second_factor=TRUSTED_BEFORE)
 
 
