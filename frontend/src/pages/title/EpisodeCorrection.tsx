@@ -16,7 +16,7 @@ import { episodeCode } from './seriesText'
 const PREVIEW_SHOWN = 3
 
 /**
- * "Im Release heißt diese Folge" an einer aufgeklappten Folge (S3, Entscheidung 12). Der Server ersetzt beim Speichern
+ * "Im Release heißt diese Folge" an einer aufgeklappten Folge. Der Server ersetzt beim Speichern
  * alle Korrekturen der Serie; deshalb holt die Seite erst die gespeicherten, tauscht die betroffenen Folgen aus und
  * schickt die ganze Liste zurueck.
  *

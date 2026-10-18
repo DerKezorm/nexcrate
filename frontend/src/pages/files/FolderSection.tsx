@@ -176,7 +176,7 @@ function VersionFolder({
   version: Version
   kind: 'movie' | 'series' | 'album'
   hint: string
-  /** Serienfassung: warnt vor einem Ordner, der wie eine Staffel heisst (S4, Entscheidung 55). */
+  /** Serienfassung: warnt vor einem Ordner, der wie eine Staffel heisst. */
   series?: boolean
   mounts: FolderMount[] | null
   onPick: () => void

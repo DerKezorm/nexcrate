@@ -18,7 +18,7 @@ export function downloadsPath(view: DownloadsView, page: number): string {
   return `/downloads?${params.toString()}`
 }
 
-/** Laden, verfolgen, erneut versuchen, entfernen. Wie in the design notes unter "Downloads". */
+/** Laden, verfolgen, erneut versuchen, entfernen. */
 export const downloadsApi = {
   list: (view: DownloadsView, page: number, signal?: AbortSignal) => api.get<DownloadList>(downloadsPath(view, page), { signal }),
   /**

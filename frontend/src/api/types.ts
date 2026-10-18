@@ -1,6 +1,6 @@
 import type { AuthentikAddress } from '../vendor/nexoidc/oidc'
 
-/** Die Formen aus the design notes. Zeiten kommen als ISO-Text. */
+/** Die Formen der Schnittstelle. Zeiten kommen als ISO-Text. */
 
 /** Das eine Konto. */
 export type Me = {
@@ -385,20 +385,20 @@ export type TitleVersion = {
   quality: string | null
   upgrade_to: string | null
   /**
-   * Since decision 20: the qualities of `upgrade_to` when it is a group, for a version of nexcrate's own, those that reach
+   * The qualities of `upgrade_to` when it is a group, for a version of nexcrate's own, those that reach
    * the profile's target resolution. Empty for a single quality and for a version a source feeds. An older server does not
    * send it.
    */
   upgrade_to_items?: string[]
   /**
-   * Since decision 20: why nexcrate would still upgrade the file of a version of its own. quality: below the cutoff or the
+   * Why nexcrate would still upgrade the file of a version of its own. quality: below the cutoff or the
    * target resolution; score: at the cutoff quality with a score below `upgrade_until`. null for a version a source feeds
    * and while the file is done.
    */
   upgrade_reason?: 'quality' | 'score' | null
-  /** Since decision 20: the score of the file of a version of nexcrate's own, as the upgrade check of a search scores it. */
+  /** The score of the file of a version of nexcrate's own, as the upgrade check of a search scores it. */
   current_score?: number | null
-  /** Since decision 20: the profile's upgrade-until score; null while its upgrades are switched off. */
+  /** The profile's upgrade-until score; null while its upgrades are switched off. */
   upgrade_until?: number | null
   size_bytes: number | null
   languages: string[]
@@ -452,7 +452,7 @@ export type TitleVersion = {
   source_only_episodes?: SourceOnlyEpisode[]
 }
 
-/** Eine Folge, die nur die Sonarr-Verbindung kennt (S4, Entscheidung 47). */
+/** Eine Folge, die nur die Sonarr-Verbindung kennt. */
 export type SourceOnlyEpisode = { season: number; episode: number; name: string; air_date: string | null; watched: boolean; has_file: boolean }
 
 /** Die Arten von `TitleVersion.location`. `sonarr` seit S1: der Serienordner, wie Sonarr ihn sieht. */
@@ -534,7 +534,7 @@ export type TitleDetail = Omit<TitleSummary, 'versions'> & {
 }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Schritt 2a, wie in the design notes. ⚠️ Alle Formen der Schnittstelle stehen hier an   */
+/* ⚠️ Alle Formen der Schnittstelle stehen hier an                                            */
 /* einer Stelle: Aendert der Server nach einer Messung ein Feld, wird es nur hier nachgezogen.  */
 /* ------------------------------------------------------------------------------------------ */
 
@@ -660,7 +660,7 @@ export type Indexer = {
   multi_languages?: string[]
   remove_year?: boolean
   /*
-   * Seit Schritt 3c, siehe the design notes unter "API". Ein Server von davor schickt sie nicht; dann gibt es
+   * Ein Server von davor schickt sie nicht; dann gibt es
    * kein Tageslimit, keine gemeldete Nutzung, keine Pause der Automatik und kein Lesen neuer Releases.
    */
   /** 1 bis 100000, selbst eingetragen. null: keins. */
@@ -862,7 +862,7 @@ export type IndexerFromSource = {
 }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Schritt 2b, wie in the design notes: Profile, Fragen, Release-Pruefer, TRaSH-Stand.    */
+/* Profile, Fragen, Release-Pruefer, TRaSH-Stand.                                             */
 /* ------------------------------------------------------------------------------------------ */
 
 /** Pflicht oder gern dazu. Die Rollen schickt der Server mit der Frage `languages`. */
@@ -1081,7 +1081,7 @@ export type ReleaseCheck = {
 }
 
 /* ---------------------------------------------------------------------------------------- */
-/* Serien S2, wie in the design notes: der Release-Pruefer je Serienfassung.          */
+/* Der Release-Pruefer je Serienfassung.                                                     */
 /* ---------------------------------------------------------------------------------------- */
 
 /** Hoechstens so viele Namen nimmt der Pruefer auf einmal. */
@@ -1182,7 +1182,7 @@ export type SeriesCheckRelease = {
 export type SeriesCheck = { releases: SeriesCheckRelease[] }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Schritt 2c, wie in the design notes: Suche je Film und die Indexer-Einstellungen dazu. */
+/* Suche je Film und die Indexer-Einstellungen dazu.                                          */
 /* ------------------------------------------------------------------------------------------ */
 
 /** Was an einem Indexer die Suche veraendert. `PATCH /api/indexers/{id}` nimmt es an. */
@@ -1373,7 +1373,7 @@ export type TrashState = {
 }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Schritt 3, wie in the design notes unter "API": Download-Programme, Laden, Downloads,   */
+/* Download-Programme, Laden, Downloads,                                                      */
 /* Ordner und Benennung.                                                                       */
 /* ------------------------------------------------------------------------------------------ */
 
@@ -1471,7 +1471,7 @@ export type DownloadState = 'queued' | 'downloading' | 'paused' | 'completed' | 
 /** Ein Problem als Code mit Werten, nie als Satz. `needs_owner` trennt "Braucht dich" von "Hinweise". */
 export type DownloadProblem = { code: string; needs_owner: boolean; values: Record<string, unknown> }
 
-/** Seit dem Entpacken (T3 in the design notes) kommt `unpacked` dazu. */
+/** Seit dem Entpacken kommt `unpacked` dazu. */
 export type DownloadTransfer = 'hardlink' | 'copy' | 'move' | 'unpacked'
 
 /**
@@ -1773,7 +1773,7 @@ export type Naming = Omit<NamingPatterns, 'series' | 'music'> & {
   music?: MusicNaming
 }
 
-/** Seit M4 (Entscheidung 14): Kuenstlerordner, Albumordner, Datei mit einem und mit mehreren Medien. */
+/** Seit M4: Kuenstlerordner, Albumordner, Datei mit einem und mit mehreren Medien. */
 export type MusicNamingPatterns = { artist_folder: string; album_folder: string; track_file: string; multi_disc_file: string }
 
 export type MusicNaming = MusicNamingPatterns & {
@@ -1868,8 +1868,7 @@ export type ForeignAdopt = { title_id?: number; tmdb_id?: number; version_id: nu
 export type BlocklistEntry = { id: number; release_title: string; indexer: string; reason: string; created_at: string }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Uebernahme aus Radarr, Benennung je Fassung und Papierkorb, wie in the design notes   */
-/* unter "API".                                                                                 */
+/* Uebernahme aus Radarr, Benennung je Fassung und Papierkorb.                                */
 /* ------------------------------------------------------------------------------------------ */
 
 export type TakeoverKind = 'check' | 'takeover'
@@ -1925,7 +1924,7 @@ export type SourceNaming = {
   can_take: boolean
 }
 
-/** `GET /api/sources/{id}/naming` einer Sonarr-Verbindung (S6, Entscheidung 13). */
+/** `GET /api/sources/{id}/naming` einer Sonarr-Verbindung. */
 export type SeriesSourceNaming = {
   series_folder: string
   season_folder: string
@@ -2086,7 +2085,7 @@ export type DeleteFilesRequest = { version_id: number; season?: number; episode_
 export type DeletedFiles = { files: number; missing: number }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Schritt 3c, wie in the design notes unter "API": der Schalter fuer alles Automatische, */
+/* Der Schalter fuer alles Automatische,                                                      */
 /* Untertitel, Tageslimit und Nutzung je Indexer, der Plan je Titel und die Herkunft eines      */
 /* Downloads. Jedes neue Feld an einer alten Form ist optional: Ein Server von davor fehlt es.  */
 /* ------------------------------------------------------------------------------------------ */
@@ -2229,7 +2228,7 @@ export type SeasonPlanLine = {
 export type Subtitle = { language: string | null; forced: boolean; sdh: boolean; file: string }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Library from disk, as in the design notes under "API": folders on disk,     */
+/* Library from disk: folders on disk,                                                        */
 /* companion files (`release.nex`), media data. Field names are the contract with the server.  */
 /* ------------------------------------------------------------------------------------------ */
 
@@ -2315,7 +2314,7 @@ export type DiskFolderState =
 export type DiskCounts = Partial<Record<DiskFolderState, number>>
 
 /** A scanned folder ("root"): a version's default folder, a root folder of an owned version, or one the owner added. */
-/** Ob unter der Wurzel Filmordner, Serienordner (S6, Entscheidung 25) oder Kuenstler- und Albumordner (Musik M6) liegen. */
+/** Ob unter der Wurzel Filmordner, Serienordner oder Kuenstler- und Albumordner (Musik M6) liegen. */
 export type DiskRootKind = 'movie' | 'series' | 'album'
 
 export type DiskRoot = {
@@ -2511,7 +2510,7 @@ export type CompanionsState = { enabled: boolean; job: CompanionJob | null }
 export type CompanionReplaceResult = { state: CompanionState | string }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Series S1, as in the design notes under "API": series, seasons, episodes, watching, */
+/* Series: series, seasons, episodes, watching,                                               */
 /* reading Sonarr. Every new field on an old shape is optional: an older server lacks it.      */
 /* ------------------------------------------------------------------------------------------ */
 
@@ -2609,13 +2608,13 @@ export type OccupiedEpisode = NearbyEpisode & { file: OccupyingFile }
 export type EpisodeChoice = NearbyEpisode & { file: OccupyingFile | null }
 
 /**
- * Der Vorschlag von nexcrate (S6, Entscheidung 16). `step`: 1 Titel und Sendedatum, 2 Titel, 3 Sendedatum, 4 Nummern.
+ * Der Vorschlag von nexcrate. `step`: 1 Titel und Sendedatum, 2 Titel, 3 Sendedatum, 4 Nummern.
  * Nur 1 und 2 nimmt "Alle Vorschlaege uebernehmen".
  */
 export type FileProposal = {
   episode_ids: number[]
   step: number
-  /** Nur was die Folge einer Quelle selbst nennt, wird ungefragt uebernommen (S6, Entscheidung 17). */
+  /** Nur was die Folge einer Quelle selbst nennt, wird ungefragt uebernommen. */
   safe?: boolean
 }
 
@@ -2640,7 +2639,7 @@ export type UnassignedFile = {
   occupied?: OccupiedEpisode[]
 }
 
-/** Eine eigene Serienfassung, deren Serienordner noch eingelesen wird (S6, Entscheidung 23). */
+/** Eine eigene Serienfassung, deren Serienordner noch eingelesen wird. */
 export type FolderReading = { version_id: number; state: 'queued' | 'reading'; done: number; total: number | null }
 
 export type EpisodeGroup = { id: string; name: string; type: number | null; episode_count: number | null; group_count: number | null }
@@ -2679,7 +2678,7 @@ export type SeriesPreview = {
     version_id: number
     watched: number
     aired: number
-    /** S6, Entscheidung 31: der Serienordner liegt schon da und wird beim Hinzufuegen eingelesen. */
+    /** Der Serienordner liegt schon da und wird beim Hinzufuegen eingelesen. */
     on_disk?: { folder: string; videos: number } | null
   }[]
 }
@@ -2785,7 +2784,7 @@ export type ImportRunDetails = {
 }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Serien S3, wie in the design notes unter "API": Nummerierung einer Serie, TheXEM.     */
+/* Nummerierung einer Serie, TheXEM.                                                          */
 /* ------------------------------------------------------------------------------------------ */
 
 /** Eine lokale Korrektur: Im Release heisst die Folge `season` und `episode`. `code` ist ihre Nummer bei TMDB. */
@@ -2826,11 +2825,11 @@ export type SeriesNumberingUpdate = {
 export type XemSettings = { enabled: boolean; last_ok_at: string | null; last_error_code: string | null }
 
 /* ------------------------------------------------------------------------------------------ */
-/* Musik M1, wie in the design notes unter "M1.4" und "M1.5": Kuenstler suchen, Vorschau, */
+/* Musik: Kuenstler suchen, Vorschau,                                                         */
 /* hinzufuegen, die Kuenstlerseite, das Laden im Hintergrund, die Zielausgabe.                   */
 /* ------------------------------------------------------------------------------------------ */
 
-/** Die Gruppen einer Kuenstlerseite, in dieser Reihenfolge (Entscheidung 26). */
+/** Die Gruppen einer Kuenstlerseite, in dieser Reihenfolge. */
 export type AlbumGroupName = 'studio' | 'ep' | 'single' | 'live' | 'compilation' | 'soundtrack' | 'remix' | 'spoken' | 'other'
 
 /** `versions.track_counts`: `wanted` aus der Zielausgabe, `present` mit Datei (`services/music/store.py:_count_tracks`). */
@@ -2869,7 +2868,7 @@ export type ArtistPreview = {
   in_library: number | null
 }
 
-/** Die Wahl beim Hinzufuegen eines Kuenstlers (Entscheidung 32). */
+/** Die Wahl beim Hinzufuegen eines Kuenstlers. */
 /** Seit V5 (Gabel 1) jede Wahl, die Lidarr beim Hinzufuegen kennt. */
 export type ArtistMonitor = 'studio' | 'future' | 'none' | 'missing' | 'existing' | 'first' | 'latest'
 
@@ -2898,7 +2897,7 @@ export type AlbumIn = { mbid: string }
 
 export type AlbumCreated = { id: number; created: boolean }
 
-/** Die Regel fuer neue Alben eines Kuenstlers (Entscheidung 24). */
+/** Die Regel fuer neue Alben eines Kuenstlers. */
 export type ArtistMonitorNew = 'all' | 'none'
 
 /** `PATCH /api/music/artists/{id}`. */
@@ -2945,7 +2944,7 @@ export type ArtistSummary = {
   size_bytes?: number
   /** Der eine Zustand, den die Zeile zeigt; null, wenn alles da und gut ist. */
   state?: string | null
-  /** Der Titel, dessen Cover die Kachel zeigt (Entscheidung 38). */
+  /** Der Titel, dessen Cover die Kachel zeigt. */
   cover_title_id: number | null
   cover_url: string | null
   mb_gone_at: string | null
@@ -2953,7 +2952,7 @@ export type ArtistSummary = {
 
 export type ArtistList = { items: ArtistSummary[]; total: number }
 
-/** `DELETE /api/music/artists/{id}` Antwort (Entscheidung 43). */
+/** `DELETE /api/music/artists/{id}` Antwort. */
 export type ArtistRemoved = { artist_id: number; albums_removed: number; versions_removed: number }
 
 export type ArtistAlbum = {
@@ -3064,7 +3063,7 @@ export type TargetOut = {
   track_counts: TrackCounts | null
 }
 
-/** Ein Grund der Zielregel (Entscheidung 27), als Kennung mit Werten. Nie ein Satz, den baut die Oberflaeche. */
+/** Ein Grund der Zielregel, als Kennung mit Werten. Nie ein Satz, den baut die Oberflaeche. */
 export type TargetReasonCode = { code: string; [value: string]: unknown }
 
 export type TargetReason = { codes: TargetReasonCode[] }
@@ -3281,7 +3280,7 @@ export type AlbumSearch = {
 export type AlbumSearchStartBody = { aliases?: boolean }
 
 /* ----------------------------------------------------------------------------------------- */
-/* Expertenmodus, wie in the design notes: Qualitaeten, eigene Formate, Profil.    */
+/* Expertenmodus: Qualitaeten, eigene Formate, Profil.                                       */
 /* ----------------------------------------------------------------------------------------- */
 
 /**

@@ -25,7 +25,7 @@ function releaseOf(releases: readonly ReleaseHead[], id: unknown): ReleaseHead |
 }
 
 /**
- * Der Grund der Zielregel als ein Satz (Entscheidung 27, M1.5.40), etwa "Meiste Titel ohne Box; 6-CD-Ausgabe
+ * Der Grund der Zielregel als ein Satz, etwa "Meiste Titel ohne Box; 6-CD-Ausgabe
  * ausgelassen." Baut aus den Kennungen in `target_reason.codes`; ein Code, den diese Oberflaeche nicht kennt, faellt
  * einfach weg, statt den Satz abzubrechen.
  */
@@ -33,7 +33,7 @@ export function targetReasonSentence(t: TFunction, reason: TargetReason | null, 
   if (reason === null || reason.codes.length === 0) return null
   const byCode = new Map(reason.codes.map((entry) => [String(entry.code), entry]))
   if (byCode.has('owner')) return t('title.album.target.reason.owner')
-  // Aus der Quelle (Lidarrs ueberwachte Ausgabe, Entscheidung 48) oder weil die Dateien zu dieser Ausgabe gehoeren (29).
+  // Aus der Quelle (Lidarrs ueberwachte Ausgabe) oder weil die Dateien zu dieser Ausgabe gehoeren.
   if (byCode.has('source')) return t('title.album.target.reason.source')
   if (byCode.has('files')) return t('title.album.target.reason.files')
 

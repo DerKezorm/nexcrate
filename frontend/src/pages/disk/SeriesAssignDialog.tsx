@@ -41,7 +41,7 @@ function Heading({ children }: { children: ReactNode }) {
 }
 
 /**
- * "{{name}} zuordnen" fuer einen Serienordner (S6, Entscheidung 27): die Serie aus den Vorschlaegen der Zeile oder aus
+ * "{{name}} zuordnen" fuer einen Serienordner: die Serie aus den Vorschlaegen der Zeile oder aus
  * TMDBs Seriensuche, die Fassung (die der Wurzel zuerst), und was sie ueberwachen soll, wie beim Hinzufuegen einer
  * Serie. Danach liest nexcrate den Ordner ein und ordnet die Dateien den Folgen zu; auf der Platte aendert sich nur
  * die release.nex je Staffelordner.
@@ -427,7 +427,7 @@ export function SeriesAssignDialog({
         {!canSubmit && !busy && (picked === null || chosenVersion === null) && versions !== null && versions.length > 0 && <p className="text-xs text-mist-500">{t('disk.series.assign.missingChoice')}</p>}
         <Toggle label={t('disk.keep.label')} hint={t('disk.keep.hint')} checked={keep} onChange={setKeep} disabled={busy} />
         {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
-        {/* Entscheidung 29: Die Fassung hat schon einen Serienordner. Welcher es ist, sagt der Server im Fehler. */}
+        {/* Die Fassung hat schon einen Serienordner. Welcher es ist, sagt der Server im Fehler. */}
         {takenLocation !== null && <p className="text-sm wrap-anywhere text-mist-300">{t('disk.series.assign.folderOf', { location: takenLocation })}</p>}
       </div>
     </Dialog>

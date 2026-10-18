@@ -1,6 +1,6 @@
 /**
  * Laendernamen aus einem ISO-3166-Code, ueber das eingebaute `Intl.DisplayNames`: Keine eigene Liste zu pflegen, und
- * jede Sprache, die der Browser kennt. MusicBrainz nutzt dazu zwei erfundene Kennungen (Musik M1, Entscheidung 28),
+ * jede Sprache, die der Browser kennt. MusicBrainz nutzt dazu zwei erfundene Kennungen,
  * die bekommen ihren Namen von Hand.
  */
 const SPECIAL: Record<string, { de: string; en: string }> = {

@@ -30,8 +30,8 @@ function ReleaseRow({ release, language }: { release: ReleaseHead; language: str
 }
 
 /**
- * Die Ausgaben zugeklappt (Entscheidung 40), ab zehn Ausgaben nach Format gruppiert (Entscheidung 41 nennt die
- * Tabelle im Dialog; diese Liste hier ist die knappe Uebersicht auf der Seite selbst).
+ * Die Ausgaben zugeklappt, ab zehn Ausgaben nach Format gruppiert (die Tabelle steht
+ * im Dialog; diese Liste hier ist die knappe Uebersicht auf der Seite selbst).
  */
 export function ReleaseList({ releases }: { releases: ReleaseHead[] }) {
   const { t, i18n } = useTranslation()

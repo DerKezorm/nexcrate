@@ -47,7 +47,7 @@ export const downloadClientsApi = {
   remove: (id: number) => api.delete<void>(`/download-clients/${id}`),
   test: (body: DownloadClientTest) => api.post<DownloadClientTestResult>('/download-clients/test', body),
   /**
-   * Die SABnzbd- und qBittorrent-Eintraege eines Radarr. Dieselbe Route liest auch ein Sonarr (S6, Entscheidung 14);
+   * Die SABnzbd- und qBittorrent-Eintraege eines Radarr. Dieselbe Route liest auch ein Sonarr;
    * `radarr_category` ist dort dessen Kategorie fuer Serien.
    */
   fromRadarr: (sourceId: number) => api.get<RadarrDownloadClient[]>(`/download-clients/from-radarr?source_id=${sourceId}`),

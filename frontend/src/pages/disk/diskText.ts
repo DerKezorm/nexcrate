@@ -8,7 +8,7 @@ import type { TFunction } from 'i18next'
 import { API_BASE } from '../../api/client'
 import type { DiskCounts, DiskFolder, DiskFolderState, DiskJob, DiskRoot, DiskRootKind, Proposal } from '../../api/types'
 
-/** Ob die Seite Filmordner, Serienordner (S6, Entscheidung 25) oder Albumordner (Musik M6) zeigt. Steht als `art` in der Adresse. */
+/** Ob die Seite Filmordner, Serienordner oder Albumordner (Musik M6) zeigt. Steht als `art` in der Adresse. */
 export const DISK_KINDS: readonly DiskRootKind[] = ['movie', 'series', 'album']
 
 /** ⚠️ Deutsche Woerter in der Adresse, englische Werte im Code, wie unter Einstellungen. */

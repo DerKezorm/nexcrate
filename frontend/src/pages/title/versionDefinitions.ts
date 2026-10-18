@@ -113,7 +113,7 @@ export function targetText(version: TitleVersion, language: string): string | nu
 
 /**
  * The two numbers of an upgrade by score: the file's score and the profile's upgrade-until. null for any
- * other reason, for a version a source feeds, and when a number is missing, as from a server before decision 20.
+ * other reason, for a version a source feeds, and when a number is missing, as from an older server.
  */
 export function scoreUpgradeOf(version: TitleVersion): { score: number; until: number } | null {
   if (isFromSource(version) || version.upgrade_reason !== 'score') return null

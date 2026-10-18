@@ -1,7 +1,7 @@
 import { api } from './client'
 import type { DelayWithTags, FolderRule, MediaKind, Relocation, Version, VersionCreate, VersionUpdate } from './types'
 
-/** Fassungen je Medienart, wie in the design notes unter "Versions". In Schritt 1 nur ein Name. */
+/** Fassungen je Medienart. */
 export const versionsApi = {
   list: (kind: MediaKind) => api.get<Version[]>(`/versions?kind=${kind}`),
   /** 409 `version_label_taken`, wenn es den Namen fuer diese Art schon gibt. */

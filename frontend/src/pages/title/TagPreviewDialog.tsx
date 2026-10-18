@@ -11,7 +11,7 @@ import { formatNumber } from '../../lib/format'
 import { tagFieldText, tagRefusalText } from './tagText'
 
 /**
- * "Tags prüfen" (M4, Entscheidung 29): je Datei die Felder, die sich aendern wuerden, die MusicBrainz-Kennungen
+ * "Tags prüfen": je Datei die Felder, die sich aendern wuerden, die MusicBrainz-Kennungen
  * eingeschlossen, und warum eine Datei nicht geschrieben werden kann. "Tags schreiben" schreibt alle mit Aenderungen;
  * danach zeigt der Dialog den Stand neu.
  */

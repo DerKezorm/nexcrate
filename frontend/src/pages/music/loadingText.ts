@@ -3,7 +3,7 @@ import type { TFunction } from 'i18next'
 import { ApiError, errorText } from '../../api/client'
 import type { ArtistLoadState } from '../../api/types'
 
-/** Die Zeile einer Kuenstlerkachel, solange sie nicht `ready` ist (Entscheidung 38). null, wenn nichts zu sagen ist. */
+/** Die Zeile einer Kuenstlerkachel, solange sie nicht `ready` ist. null, wenn nichts zu sagen ist. */
 export function tileLoadingText(t: TFunction, loadState: ArtistLoadState, loadDone: number, loadTotal: number | null): string | null {
   if (loadState === 'ready') return null
   if (loadState === 'failed') return t('music.artist.loadingFailed')
@@ -18,7 +18,7 @@ export function loadErrorText(t: TFunction, code: string | null): string {
   return errorText(t, new ApiError(0, code))
 }
 
-/** Die Ladezeile auf der Kuenstlerseite: Schritt und Zahl (Entscheidung 39). */
+/** Die Ladezeile auf der Kuenstlerseite: Schritt und Zahl. */
 export function artistLoadingLine(t: TFunction, loadState: ArtistLoadState, loadDone: number, loadTotal: number | null): string | null {
   if (loadState === 'ready' || loadState === 'failed') return null
   if (loadState === 'queued') return t('music.artist.loadingQueued')

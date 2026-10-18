@@ -21,7 +21,7 @@ function codesOf(text: string): string[] {
     .filter((item) => item !== '')
 }
 
-/** Die Laender fuer den Gleichstand der Zielausgabe (Entscheidung 28): sichtbar und aenderbar, ab Werk aus der Sprache. */
+/** Die Laender fuer den Gleichstand der Zielausgabe: sichtbar und aenderbar, ab Werk aus der Sprache. */
 function CountryOrder() {
   const { t, i18n } = useTranslation()
   const [state, setState] = useState<CountriesOut | null>(null)
@@ -114,14 +114,14 @@ function CountryOrder() {
 }
 
 /**
- * "Fassungen, Musik" (M1.5): genau eine Fassungsdefinition der Art Musik (Entscheidung 10), read-only, ohne
+ * "Fassungen, Musik" (M1.5): genau eine Fassungsdefinition der Art Musik, read-only, ohne
  * "Fassung anlegen": nexcrate legt sie selbst an, beim ersten Kuenstler, ersten Album oder der ersten
  * Lidarr-Verbindung. Umbenennen und Entfernen gibt es hier bewusst nicht, das ist Sache der uebrigen Fassungen.
- * Darunter die Laenderreihenfolge fuer die Zielausgabe (Entscheidung 28), das Profil mit seinen vier Fragen und der
+ * Darunter die Laenderreihenfolge fuer die Zielausgabe, das Profil mit seinen vier Fragen und der
  * Release-Pruefer fuer Musik (Musik M2). Das Profil gibt es auch ohne Fassung: Speichern legt sie an.
  */
 /**
- * "Tags schreiben" (M4, Entscheidung 24): ab Werk an. Aus schreibt nexcrate nichts in abgelegte Musik, und ein Torrent
+ * "Tags schreiben": ab Werk an. Aus schreibt nexcrate nichts in abgelegte Musik, und ein Torrent
  * wird verlinkt statt kopiert. Gespeichert wird sofort.
  */
 function WriteTagsSwitch() {

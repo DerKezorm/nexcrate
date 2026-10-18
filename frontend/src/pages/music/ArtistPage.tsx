@@ -48,9 +48,9 @@ function artistMeta(t: (key: string, values?: Record<string, unknown>) => string
 }
 
 /**
- * Die Kuenstlerseite (M1.5, Entscheidung 39): Kopf mit Name, Unterscheidung, Typ, Land, Jahren; die Regel fuer neue
- * Alben; der Ladezustand, solange er nicht `ready` ist; die Gruppen aus Entscheidung 26; "Jetzt bei MusicBrainz
- * aktualisieren" auf der Spur des Besitzers (Entscheidung 13). Solange geladen wird, fragt die Seite von selbst
+ * Die Kuenstlerseite: Kopf mit Name, Unterscheidung, Typ, Land, Jahren; die Regel fuer neue
+ * Alben; der Ladezustand, solange er nicht `ready` ist; die Gruppen; "Jetzt bei MusicBrainz
+ * aktualisieren" auf der Spur des Besitzers. Solange geladen wird, fragt die Seite von selbst
  * nach, wie die Titelseite beim Einlesen eines Serienordners.
  */
 export function ArtistPage() {

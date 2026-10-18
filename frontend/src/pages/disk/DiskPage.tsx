@@ -63,7 +63,7 @@ type DialogState =
  * state, with assigning, restoring and ignoring per row and for many at once. The page opens on the first of
  * "Wiederherstellen", "Vorschläge" and "Unbekannt" that is not empty. nexcrate moves and deletes nothing here.
  *
- * Ein Umschalter waehlt Filme oder Serien (S6, Entscheidung 25); die Art steht als `art` in der Adresse. Beide Seiten
+ * Ein Umschalter waehlt Filme oder Serien; die Art steht als `art` in der Adresse. Beide Seiten
  * zeigen ihre eigenen Wurzeln, Zaehler, Reiter und Zeilen, und "Ordner hinzufuegen" legt eine Wurzel der Art an.
  */
 export function DiskPage() {

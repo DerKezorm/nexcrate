@@ -35,7 +35,7 @@ export const EPISODE_STATES = ['fills', 'replaces', 'keeps', 'not_watched'] as c
 
 /**
  * Wie ein Ergebnis dasteht. "Vorerst" heisst auch bei Serien: Es passt, liegt aber unter dem Ziel.
- * Steht es mit dem Ziel in einer Gruppe, gilt derselbe Zustand mit einem anderen Satz (Entscheidung 28).
+ * Steht es mit dem Ziel in einer Gruppe, gilt derselbe Zustand mit einem anderen Satz.
  */
 export function seriesFitState(result: SeriesReleaseResult): FitState {
   if (!result.accepted) return 'fitsNot'

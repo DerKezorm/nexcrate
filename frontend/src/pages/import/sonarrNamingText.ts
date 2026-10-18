@@ -1,6 +1,6 @@
 /**
  * Die Saetze zu Sonarrs Benennung, ohne React: die Beschriftung je Muster, nexcrates Einwand, Sonarrs Stil fuer
- * mehrere Folgen in einer Datei und die Hinweise, was Sonarr anders macht (S6, Entscheidung 13).
+ * mehrere Folgen in einer Datei und die Hinweise, was Sonarr anders macht.
  */
 
 import type { TFunction } from 'i18next'

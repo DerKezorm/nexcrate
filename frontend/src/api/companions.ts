@@ -5,7 +5,7 @@ import type { CompanionJob, CompanionReplaceResult, CompanionsState } from './ty
 export const COMPANION_POLL_MS = 1000
 
 /**
- * The companion files `release.nex` (L3 of the design notes): the switch, the check that writes
+ * The companion files `release.nex`: the switch, the check that writes
  * nothing, the backfill that writes missing and outdated files, and replacing a file nexcrate would not overwrite.
  */
 export const companionsApi = {

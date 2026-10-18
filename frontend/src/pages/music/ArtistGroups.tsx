@@ -15,7 +15,7 @@ import { groupLabel } from './groupText'
 type WatchHandler = (albumId: number, monitored: boolean) => Promise<void>
 
 /**
- * Der Schalter "ueberwacht" einer Albumzeile (Entscheidung 39, E5): kompakt, ohne eigene Beschriftung, der Name des
+ * Der Schalter "ueberwacht" einer Albumzeile: kompakt, ohne eigene Beschriftung, der Name des
  * Albums steht im aria-label. Ein Album ohne Fassung bekommt beim Einschalten seine Fassung.
  */
 function WatchSwitch({ album, busy, onWatch }: { album: ArtistAlbum; busy: boolean; onWatch: WatchHandler }) {
@@ -70,7 +70,7 @@ function AlbumRow({ album, busy, onWatch }: { album: ArtistAlbum; busy: boolean;
   )
 }
 
-/** Eine Gruppe der Kuenstlerseite: aufklappbar, mit Zahl (Entscheidung 26, 39). */
+/** Eine Gruppe der Kuenstlerseite: aufklappbar, mit Zahl. */
 function GroupBlock({ group, initialOpen, busyId, onWatch }: { group: ArtistGroup; initialOpen: boolean; busyId: number | null; onWatch: WatchHandler | null }) {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(initialOpen)
@@ -100,7 +100,7 @@ function GroupBlock({ group, initialOpen, busyId, onWatch }: { group: ArtistGrou
 }
 
 /**
- * Die Gruppen einer Kuenstlerseite (Entscheidung 26): Studioalben und EPs offen, die uebrigen zugeklappt mit Zahl.
+ * Die Gruppen einer Kuenstlerseite: Studioalben und EPs offen, die uebrigen zugeklappt mit Zahl.
  * Leere Gruppen bleiben weg. `key={group.group}` an `GroupBlock` sorgt dafuer, dass ein neu geladener Stand den
  * Aufklappzustand des Besitzers nicht ueberschreibt, solange die Gruppe dieselbe bleibt.
  */

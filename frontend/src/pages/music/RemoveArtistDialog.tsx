@@ -8,7 +8,7 @@ import { Dialog } from '../../components/Dialog'
 import { Button, FormMessage } from '../../components/ui'
 
 /**
- * Kuenstler entfernen, wie ein Titel (Entscheidung 43): eine Rueckfrage mit der Zahl der Alben, die mit ihm gehen.
+ * Kuenstler entfernen, wie ein Titel: eine Rueckfrage mit der Zahl der Alben, die mit ihm gehen.
  * Dateien bleiben immer liegen, das sagt der Satz gleich mit.
  */
 export function RemoveArtistDialog({ artist, onClose, onRemoved }: { artist: ArtistSummary; onClose: () => void; onRemoved: () => void }) {
@@ -50,7 +50,7 @@ export function RemoveArtistDialog({ artist, onClose, onRemoved }: { artist: Art
     >
       <div className="flex flex-col gap-3">
         <p className="text-sm text-mist-300">{t('music.artist.remove.text', { name: artist.name })}</p>
-        {/* Entscheidung 43: die Zahl vorher, Dateien bleiben immer liegen. */}
+        {/* Die Zahl vorher, Dateien bleiben immer liegen. */}
         <p className="text-sm text-mist-400">
           {artist.albums > 0 ? t('music.artist.remove.albums', { count: artist.albums }) : t('music.artist.remove.noAlbums')}
         </p>

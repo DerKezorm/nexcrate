@@ -1,6 +1,6 @@
 /**
  * Die Aktionen je Problemcode, als Namen. Jeder Code, den der Server kennt, hat mindestens eine: nichts bleibt haengen
- * (S4, Entscheidung 32). `ProblemList.test.tsx` prueft das fuer jeden Code aus `PROBLEM_CODES`.
+ *. `ProblemList.test.tsx` prueft das fuer jeden Code aus `PROBLEM_CODES`.
  *
  * `series`: ein Serien-Download. Scheitert dort eine Datei (etwa ein fremdes Video im Staffelordner), sind die anderen
  * schon abgelegt; "Rest nicht ablegen" beendet ihn dann wie bei offenen Dateien (seit der Durchsicht).

@@ -24,7 +24,7 @@ import { Tile } from '../settings/parts'
  * Nach dem Hinzufuegen wird es sofort geleert. Liefert der Feed in Radarrs Kategorien nichts,
  * geht Hinzufuegen nur ueber "Trotzdem speichern", unten neben "Hinzufügen".
  *
- * Bei einer Verbindung zu Sonarr (S6, Entscheidung 14) sind die Kategorien Serienkategorien, und ein Indexer, den
+ * Bei einer Verbindung zu Sonarr sind die Kategorien Serienkategorien, und ein Indexer, den
  * nexcrate schon hat, bekommt sie nur ergaenzt: dafuer braucht es keinen Schluessel.
  *
  * Bei Lidarr (Musik-Abschluss) ebenso mit Musik-Kategorien. Eine uebernommene Verbindung gibt ihre Einstellungen

@@ -35,7 +35,7 @@ export const sourcesApi = {
   /** Radarrs Benennung, gespeichert wird nichts. Uebernommen wird ueber `namingApi.saveVersion`. 422 `source_key_missing`. */
   naming: (id: number) => api.get<SourceNaming>(`/sources/${id}/naming`),
   /**
-   * Dieselbe Route fuer eine Sonarr-Verbindung (S6, Entscheidung 13): die fuenf Serienmuster. Gespeichert wird nichts.
+   * Dieselbe Route fuer eine Sonarr-Verbindung: die fuenf Serienmuster. Gespeichert wird nichts.
    * Uebernommen wird ueber `namingApi.saveSeriesVersion`.
    */
   seriesNaming: (id: number) => api.get<SeriesSourceNaming>(`/sources/${id}/naming`),

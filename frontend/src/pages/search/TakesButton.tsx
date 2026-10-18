@@ -14,7 +14,7 @@ import { DOWNLOADS_PATH } from '../downloads/address'
 import { SearchLoadingContext } from './searchLoading'
 
 /**
- * "Alles laden" unter "Würde nehmen" einer Serienfassung (S4, Entscheidung 3): vorher ein Dialog mit Zahl, Groesse und
+ * "Alles laden" unter "Würde nehmen" einer Serienfassung: vorher ein Dialog mit Zahl, Groesse und
  * was es fuellt und ersetzt, danach je Release das Ergebnis. Scheitert eines, laufen die anderen weiter.
  */
 export function TakesButton({ version, releases }: { version: SearchVersion; releases: readonly SearchRelease[] }) {

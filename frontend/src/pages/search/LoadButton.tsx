@@ -43,7 +43,7 @@ export function LoadButton({ release, entry, prominent = false }: { release: Sea
   const version = loading.versions.find((item) => item.version_id === entry.version_id)
   const label = version?.label ?? ''
   const loaded = loading.loaded.get(entry.version_id)
-  // Eine Serienfassung laedt mehrere Releases (S4, Entscheidung 5): Ob Folgen schon laden, sagt der Server.
+  // Eine Serienfassung laedt mehrere Releases: Ob Folgen schon laden, sagt der Server.
   const series = release.parsed_series !== undefined && release.parsed_series !== null
   const loadedHere = loading.loadedKeys?.has(`${entry.version_id}:${release.release_key}`) ?? loaded?.releaseKey === release.release_key
 

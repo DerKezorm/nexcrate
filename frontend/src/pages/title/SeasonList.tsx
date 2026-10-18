@@ -55,7 +55,7 @@ function StateCell({ episode, entry, version }: { episode: Episode; entry: Episo
     )
   }
   const state = entry.late && !settled ? 'unmonitored' : entry.state
-  // Seit S4: ein Download haelt die Folge. Mit Fortschritt, ein Problem mit dem Weg zur Karte (Entscheidung 42).
+  // Seit S4: ein Download haelt die Folge. Mit Fortschritt, ein Problem mit dem Weg zur Karte.
   if (entry.state === 'downloading' && entry.progress !== null) {
     return (
       <span className="text-xs whitespace-nowrap text-info-400 tabular-nums">{t('series.seasons.downloading', { percent: formatNumber(Math.round(entry.progress), i18n.language) })}</span>
@@ -228,18 +228,18 @@ function SeasonRow({
     const text = t('series.seasons.count', { label: version.label, have: number(brief.have), total: number(brief.aired_watched) })
     const parts = [text]
     if (coming > 0) parts.push(t('series.seasons.coming', { count: coming, value: number(coming) }))
-    // Seit S4: wie viele Folgen dieser Staffel gerade ein Download dieser Fassung haelt (Entscheidung 42).
+    // Seit S4: wie viele Folgen dieser Staffel gerade ein Download dieser Fassung haelt.
     if ((brief.loading ?? 0) > 0) parts.push(t('series.seasons.loading_count', { count: brief.loading ?? 0, value: number(brief.loading ?? 0) }))
     return { id: version.id, text: parts.join(' · ') }
   })
 
   const episodes = data?.episodes ?? []
   const columns = 3 + versions.length
-  // Specials einer Fassung aus Sonarr (S4, Entscheidung 48): erst die, die Sonarr kennt, der Rest hinter einem Knopf.
+  // Specials einer Fassung aus Sonarr: erst die, die Sonarr kennt, der Rest hinter einem Knopf.
   const splitSpecials = specials && episodes.some((episode) => episode.known_to_source === true || episode.known_to_source === false)
   const hiddenSpecials = splitSpecials && !allSpecials ? episodes.filter((episode) => episode.known_to_source !== true) : []
   const shownEpisodes = hiddenSpecials.length > 0 ? episodes.filter((episode) => episode.known_to_source === true) : episodes
-  // Specials, die nur Sonarr kennt (Entscheidung 47): grau, ohne Suchen und Laden.
+  // Specials, die nur Sonarr kennt: grau, ohne Suchen und Laden.
   const sourceOnly = specials
     ? versions.flatMap((version) => (version.source_only_episodes ?? []).filter((entry) => entry.season === 0).map((entry) => ({ version, entry })))
     : []

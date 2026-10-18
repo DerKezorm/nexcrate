@@ -11,7 +11,7 @@ function initialsOf(name: string): string {
 }
 
 /**
- * Das Cover eines Kuenstlers (Entscheidung 38): das Cover des Albums, das die Karten- und Zeilenkomponenten waehlen,
+ * Das Cover eines Kuenstlers: das Cover des Albums, das die Karten- und Zeilenkomponenten waehlen,
  * sonst ein Platzhalter mit den Anfangsbuchstaben des Namens statt eines erfundenen Bilds.
  */
 export function ArtistCover({ name, url, className = '' }: { name: string; url: string | null; className?: string }) {

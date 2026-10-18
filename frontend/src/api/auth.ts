@@ -16,7 +16,7 @@ import type {
   TotpState,
 } from './types'
 
-/** Einrichtung und Anmeldung, wie in the design notes unter "Authentication". */
+/** Einrichtung und Anmeldung. */
 export const authApi = {
   setupStatus: () => api.get<SetupStatus>('/setup/status'),
   setup: (body: { username: string; password: string; language: string }) => api.post<Me>('/setup', body),

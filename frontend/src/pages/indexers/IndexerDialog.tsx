@@ -91,7 +91,7 @@ async function settleAfterCreate(saved: Indexer, settings: IndexerSearchSettings
  * Indexer aus Prowlarr sind die Felder gesperrt, die Prowlarr bestimmt (`prowlarr.locked`); ein Satz oben sagt, dass
  * man sie dort aendert. Gesendet wird wie immer, der Server nimmt die unveraenderten Werte an.
  *
- * Seit S3 eine zweite Liste "Kategorien für Serien" wie bei Sonarr (Entscheidung 5). Nach dem ersten Test steht die
+ * Seit S3 eine zweite Liste "Kategorien für Serien" wie bei Sonarr. Nach dem ersten Test steht die
  * Vorgabe des Servers da, Anime gesperrt. Der Test prueft beide Listen und warnt, wenn die Serienkategorien leer sind,
  * sperrt aber nicht. Hinaus geht die Liste beim Anlegen nur, wenn sie von der Vorgabe abweicht, beim Aendern nur, wenn
  * sie sich geaendert hat; sonst bleibt alles wie bei einem Server von davor.

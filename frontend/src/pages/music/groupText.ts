@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next'
 
 import type { AlbumGroupName } from '../../api/types'
 
-/** Die Gruppen einer Kuenstlerseite in ihrer Reihenfolge (Entscheidung 26, `services/music/kinds.py`). */
+/** Die Gruppen einer Kuenstlerseite in ihrer Reihenfolge (`services/music/kinds.py`). */
 export const ALBUM_GROUPS: readonly AlbumGroupName[] = ['studio', 'ep', 'single', 'live', 'compilation', 'soundtrack', 'remix', 'spoken', 'other']
 
 /** Der Name einer Gruppe, etwa "Studioalben" oder "Singles". Eine unbekannte Gruppe (ein neuerer Server) faellt unter "Sonstige". */

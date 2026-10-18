@@ -14,7 +14,7 @@ import { TakesButton } from './TakesButton'
 import { NoProfile, ReasonList } from './VersionOutcome'
 
 /**
- * Das Ergebnis einer Suche nach einer Serie fuer eine Fassung (S3, Entscheidung 29): "würde nehmen" als
+ * Das Ergebnis einer Suche nach einer Serie fuer eine Fassung: "würde nehmen" als
  * Zusammenstellung, eine Zeile je Release, dazu "nicht gefunden" fuer Folgen ohne Release und "kein passendes Release" fuer
  * Folgen, deren Releases nicht passen, mit deren Gruenden (Durchlauf ab null, 17.09.2026). Nimmt sie nichts,
  * heisst es "behält die vorhandenen Dateien" oder "nichts passt" mit den haeufigsten Gruenden. Fuellt ein Sonarr die

@@ -19,9 +19,9 @@ function labelText(labels: { name?: string; catalog_number?: string }[]): string
 }
 
 /**
- * "Ausgabe wählen" (Entscheidung 41): jede offizielle Ausgabe mit Format, Land, Datum, Label, Titelzahl und
+ * "Ausgabe wählen": jede offizielle Ausgabe mit Format, Land, Datum, Label, Titelzahl und
  * Unterschied zur Zielausgabe. Auch die Box laesst sich waehlen. "Wieder nach Regel" gibt die Wahl an die Zielregel
- * zurueck (Entscheidung 30).
+ * zurueck.
  */
 export function ChooseReleaseDialog({
   titleId,

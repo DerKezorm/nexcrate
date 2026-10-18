@@ -24,7 +24,7 @@ function xemErrorText(t: TFunction, code: string): string {
 }
 
 /**
- * Der Schalter fuer TheXEM neben dem fuer die TRaSH Guides (S3, Entscheidung 15): ein Weg nach draussen, deshalb
+ * Der Schalter fuer TheXEM neben dem fuer die TRaSH Guides: ein Weg nach draussen, deshalb
  * abschaltbar. Darunter, wann TheXEM zuletzt geantwortet hat und der letzte Fehler. Gespeichert wird sofort; lehnt der
  * Server ab, bleibt der alte Stand stehen.
  */

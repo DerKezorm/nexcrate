@@ -11,15 +11,15 @@ import { Symbol } from '../../components/Symbol'
 import { Badge, Button, FormMessage, Spinner } from '../../components/ui'
 import { ADD_ARTIST_SEARCH_DELAY_MS } from './AddArtistDialog'
 
-/** Die Wahl im Umschalter der Suche, `all` steht fuer keinen Filter (Entscheidung 34). */
+/** Die Wahl im Umschalter der Suche, `all` steht fuer keinen Filter. */
 const ALBUM_KIND_CHOICES = ['all', 'album', 'compilation', 'single'] as const
 type AlbumKindChoice = (typeof ALBUM_KIND_CHOICES)[number]
 
 /**
- * "Album hinzufügen" (Entscheidung 34): sucht Release-Groups bei MusicBrainz, wahlweise nach Art gefiltert (ohne
+ * "Album hinzufügen": sucht Release-Groups bei MusicBrainz, wahlweise nach Art gefiltert (ohne
  * Filter stehen fremde Singles zuerst, B1), und legt genau dieses Album mit Fassung an. Gehoert es einem Kuenstler,
  * der noch nicht in der Bibliothek steht, legt der Server ihn mit an, ohne weitere Ueberwachung. Derselbe Dialog
- * dient auch fuer eine Single von der Kuenstlerseite (Entscheidung 34, E5).
+ * dient auch fuer eine Single von der Kuenstlerseite.
  *
  * Aus Entdecken (05.10.2026) kommt `initial`: gleich die Bestaetigung, "Zurueck" schliesst. Mit `onAdded` bleibt die
  * Seite stehen, statt zum Album zu springen.

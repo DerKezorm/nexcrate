@@ -39,7 +39,7 @@ function ensureAlbumVersion(
 
 /**
  * "Lidarr" unter Einstellungen, Import (M1.6): nur lesend, wie Sonarr. Verbindung anlegen (die eine Musik-Fassung
- * entsteht dabei automatisch, Entscheidung 10), pruefen, Lauf starten, Ergebnis mit Kuenstlern, Alben, Ausgaben,
+ * entsteht dabei automatisch), pruefen, Lauf starten, Ergebnis mit Kuenstlern, Alben, Ausgaben,
  * Titeln, Dateien und nicht zugeordneten Dateien. Nichts davon geht in Lidarr, es wird nur gelesen.
  *
  * "Aus diesem Lidarr holen" (Musik-Abschluss): Indexer mit ihren Musik-Kategorien und Download-Programme, auch nach
@@ -48,7 +48,7 @@ function ensureAlbumVersion(
 export function LidarrImportSettings() {
   const { t } = useTranslation();
   const { sources, error: sourcesError, reload } = useSources();
-  // ⚠️ Erst wenn die Liste da ist, weiss der Dialog, ob er die eine Musik-Fassung noch anlegen muss (Entscheidung 10).
+  // ⚠️ Erst wenn die Liste da ist, weiss der Dialog, ob er die eine Musik-Fassung noch anlegen muss.
   const { versions } = useVersions("album");
   const own = useMemo(
     () =>

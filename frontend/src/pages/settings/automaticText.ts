@@ -83,7 +83,7 @@ export function usedUpTexts(t: TFunction, usage: IndexerUsage | null | undefined
 
 /**
  * Welches Limit gilt, wenn der Indexer keines meldet: das selbst eingetragene Tageslimit, sonst hoechstens eine geplante
- * Anfrage alle zwei Minuten (Entscheidung 7 im Plan). null, wenn der Indexer sein Limit selbst nennt.
+ * Anfrage alle zwei Minuten. null, wenn der Indexer sein Limit selbst nennt.
  */
 export function limitSourceText(t: TFunction, indexer: Indexer, language: string): string | null {
   if (amount(indexer.usage?.api_max) !== null) return null

@@ -56,7 +56,7 @@ export function confirmationsFor(release: SearchRelease, entry: SearchReleaseVer
   const series = entry.series_result
   if (series && !series.accepted) needs.push('not_fitting')
   if (release.blocklisted === true) needs.push('blocklisted')
-  // Seit S4: ein Serien-Release ohne Gewinn laedt nur nach Bestaetigung (Entscheidung 4).
+  // Seit S4: ein Serien-Release ohne Gewinn laedt nur nach Bestaetigung.
   if (series && !series.episodes.some((episode) => episode.state === 'fills' || episode.state === 'replaces')) needs.push('no_gain')
   return needs
 }

@@ -17,7 +17,7 @@ import { loadBlockLink, loadBlockText } from './loadText'
 export type AlbumLoaded = { releaseKey: string; download: Download } | null
 
 /**
- * "Laden" fuer ein Release dieses Albums (M4, Entscheidung 1): an der Karte "Würde nehmen" und an jeder Zeile. Wie bei
+ * "Laden" fuer ein Release dieses Albums: an der Karte "Würde nehmen" und an jeder Zeile. Wie bei
  * Filmen: gesperrt mit Grund und Weg, eine Rueckfrage bei einem Release, das nicht passt oder gesperrt ist, und nach
  * dem Laden ein Satz mit dem Weg zu den Downloads. Ein Release eines anderen Albums hat keinen Knopf.
  */

@@ -45,7 +45,7 @@ function upgradeText(t: TFunction, version: TitleVersion, automatic: boolean, la
   const from = version.quality ?? ''
   const to = targetText(version, language)
   if (isFromSource(version)) return to ? t('title.version.upgrade', { from, to }) : t('title.version.upgradeNoTarget', { from })
-  // Decision 20: the quality fits already, the score does not yet. The sentence names both numbers instead of a target.
+  // The quality fits already, the score does not yet. The sentence names both numbers instead of a target.
   const byScore = scoreUpgradeOf(version)
   if (byScore !== null) {
     const values = { from, count: byScore.score, score: formatNumber(byScore.score, language), until: formatNumber(byScore.until, language) }
@@ -79,7 +79,7 @@ function locationText(t: TFunction, location: VersionLocation, name: string): st
 }
 
 /**
- * The quality with where it came from (library from disk, decision 22): the measured resolution, the name, or Radarr.
+ * The quality with where it came from (library from disk): the measured resolution, the name, or Radarr.
  * Without `quality_from`, as from an older server, the quality stands alone.
  */
 function qualityText(t: TFunction, version: TitleVersion): string | null {

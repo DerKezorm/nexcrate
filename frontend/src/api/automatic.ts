@@ -8,8 +8,7 @@ export const AUTOMATIC_POLL_MS = 3000
 export const AUTOMATIC_POLL_MAX = 60
 
 /**
- * Die Schalter fuer alles Automatische, wie in the design notes unter "API" und the design notes
- * (Entscheidung 1): `enabled` fuer Filme, `series_enabled` fuer Serien. Neue Releases liest nexcrate, sobald einer an
+ * Die Schalter fuer alles Automatische: `enabled` fuer Filme, `series_enabled` fuer Serien. Neue Releases liest nexcrate, sobald einer an
  * ist. Beide ab Werk aus.
  */
 export const automaticApi = {
@@ -31,7 +30,7 @@ export const upgradesApi = {
   save: (body: { paused?: boolean; per_day?: number }) => api.put<UpgradesState>('/automatic/upgrades', body),
 }
 
-/** Seit Musik M5 der dritte Schalter, fuer Alben (Entscheidung 1), ab Werk aus. */
+/** Seit Musik M5 der dritte Schalter, fuer Alben, ab Werk aus. */
 export const automaticMusicSwitch = {
   get: async () => ({ enabled: (await api.get<AutomaticState>('/automatic')).music_enabled === true }),
   save: async (enabled: boolean) => ({

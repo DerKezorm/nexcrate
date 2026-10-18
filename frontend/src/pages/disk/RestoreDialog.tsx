@@ -20,7 +20,7 @@ import { companionLabelsOf, versionLabelsOf } from './diskText'
  * into the root's version; in a folder the owner added the label in the file decides, and a label without a version
  * offers "Fassung {{label}} anlegen". Then `POST /api/disk/restore` starts the job the page follows.
  *
- * Serienordner (S6, Entscheidung 28) kommen ebenso zurueck, Folgen und Angaben aus der release.nex je Staffelordner.
+ * Serienordner kommen ebenso zurueck, Folgen und Angaben aus der release.nex je Staffelordner.
  * Seit 18.09.2026 nennt die Zeile die Fassungen aus den release.nex aller Staffelordner, also bietet der Dialog wie
  * bei Filmen an, eine fehlende anzulegen. Nennt die Datei keine, fuehrt er ohne Serienfassung zu den Fassungen.
  */

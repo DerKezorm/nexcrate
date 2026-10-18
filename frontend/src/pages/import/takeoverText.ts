@@ -27,7 +27,7 @@ import { formatNumber } from '../../lib/format'
 /** Die Sperren, die die Seite kennt. Eine andere nimmt sie als Sperre, die sich nicht bestaetigen laesst. */
 const KNOWN_BLOCKERS: readonly string[] = ['root_unmapped', 'files_missing', 'queue_active']
 
-/** Die fuenf Muster, die eine Serienfassung aus Sonarr uebernimmt (S6, Entscheidung 13). */
+/** Die fuenf Muster, die eine Serienfassung aus Sonarr uebernimmt. */
 export const SERIES_PATTERNS: readonly (keyof SeriesNamingPatterns)[] = ['series_folder', 'season_folder', 'specials_folder', 'episode_file', 'daily_file', 'anime_file']
 
 /** Was der Besitzer im Ergebnis einer Pruefung angehakt hat. Die Bestaetigungen beginnen leer. */
@@ -206,7 +206,7 @@ export function foundByText(t: TFunction, root: TakeoverRoot, language: string, 
 
 /**
  * Die Hinweise aus Radarrs Einstellungen fuer Medien als Saetze: was sich mit der Uebernahme gegenueber Radarr aendert.
- * Sonarr schickt dieselben Hinweise mit eigenen Codes (S6, Entscheidung 12). Sie sperren nichts. Ein Code, den diese
+ * Sonarr schickt dieselben Hinweise mit eigenen Codes. Sie sperren nichts. Ein Code, den diese
  * Oberflaeche nicht kennt, faellt weg, statt roh dazustehen.
  */
 export function takeoverNoteTexts(t: TFunction, notes: readonly RadarrNote[] | undefined, language: string): string[] {

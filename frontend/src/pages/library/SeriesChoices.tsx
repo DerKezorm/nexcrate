@@ -99,7 +99,7 @@ export function SeriesChoices({ title, versions, existing, inLibrary, picks, onP
           const from = choiceOf(version.id, pick).from_season ?? 1
           const last = Math.max(seasons, from, 1)
           const counted = preview?.versions.find((entry) => entry.version_id === version.id)
-          // S6, Entscheidung 31: Der Serienordner liegt schon da. Die Fassung nimmt ihn und liest ihn ein, vor der ersten Suche.
+          // Der Serienordner liegt schon da. Die Fassung nimmt ihn und liest ihn ein, vor der ersten Suche.
           const onDisk = counted?.on_disk ?? null
           return (
             <li key={version.id}>

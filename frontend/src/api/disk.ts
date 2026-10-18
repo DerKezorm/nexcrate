@@ -58,8 +58,7 @@ export function diskFoldersPath({ state, rootId, q, offset, limit = DISK_PAGE_SI
 }
 
 /**
- * Folders on disk, as in the design notes under "API" and the design notes under "P2". The
- * scan, restoring and assigning many at once run as jobs on the server, at most one at a time (409
+ * Folders on disk. The scan, restoring and assigning many at once run as jobs on the server, at most one at a time (409
  * `disk_job_running`). Nothing here moves, renames or deletes a file; the only file nexcrate writes is `release.nex`.
  */
 export const diskApi = {

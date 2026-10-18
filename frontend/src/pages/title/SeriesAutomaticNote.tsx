@@ -26,7 +26,7 @@ function useAutomatic(field: 'enabled' | 'series_enabled'): boolean | null {
 }
 
 /**
- * Ein Satz beim Hinzufuegen einer Serie, beim Aendern der Regel und bei einer neuen Fassung (S5, Entscheidung 23): Ist
+ * Ein Satz beim Hinzufuegen einer Serie, beim Aendern der Regel und bei einer neuen Fassung: Ist
  * die Automatik fuer Serien an, sucht sie gelaufene ueberwachte Folgen gleich; ist sie aus, sucht man auf der Seite der
  * Serie. Einen Haken wie in Sonarr gibt es nicht: Wer alte Folgen nicht will, waehlt die Regel "Kuenftige".
  */

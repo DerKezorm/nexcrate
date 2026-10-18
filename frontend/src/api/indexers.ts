@@ -57,7 +57,7 @@ export const indexersApi = {
   search: (id: number, q: string) => api.post<IndexerSearch>(`/indexers/${id}/search`, { q }),
   /**
    * Einen Indexer aus Radarr oder Sonarr uebernehmen, mit dem Schluessel, den keines von beiden herausgibt. Aus Sonarr
-   * (S6, Entscheidung 14) werden seine Kategorien die Serienkategorien; einen Indexer mit derselben Adresse lehnt der
+   * werden seine Kategorien die Serienkategorien; einen Indexer mit derselben Adresse lehnt der
    * Server dann nicht ab (409 `indexer_exists`), sondern ergaenzt dessen Serienkategorien und antwortet 201 mit ihm.
    * Dafuer darf `api_key` leer bleiben.
    */
@@ -86,8 +86,8 @@ export const SEED_RATIO_MAX = 1000
 export const SEED_TIME_MAX = 525_600
 
 /**
- * Seit S3: die Serienkategorien, wenn ein Indexer keine nennt. Sonarrs Vorgabe plus UHD, wie im Plan S3 unter
- * Entscheidung 5. Anime (5070) kommt spaeter und steht nie darin.
+ * Seit S3: die Serienkategorien, wenn ein Indexer keine nennt. Sonarrs Vorgabe plus UHD.
+ * Anime (5070) kommt spaeter und steht nie darin.
  */
 export const DEFAULT_SERIES_CATEGORIES: readonly number[] = [5030, 5040, 5045]
 

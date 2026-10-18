@@ -6,7 +6,7 @@ import { formatNumber } from '../../lib/format'
 import { ArtistCover } from './ArtistCover'
 import { loadErrorText, tileLoadingText } from './loadingText'
 
-/** Die Kachelzeile einer Kuenstlerkachel: der Ladezustand, solange er nicht `ready` ist, sonst die Zahlen (Entscheidung 38). */
+/** Die Kachelzeile einer Kuenstlerkachel: der Ladezustand, solange er nicht `ready` ist, sonst die Zahlen. */
 function ArtistCountLine({ artist }: { artist: ArtistSummary }) {
   const { t, i18n } = useTranslation()
   if (artist.load_state !== 'ready') {
@@ -25,7 +25,7 @@ function ArtistCountLine({ artist }: { artist: ArtistSummary }) {
   )
 }
 
-/** Die Musik-Bibliothek als Kacheln: Kuenstler mit Cover, Name, Alias und Zahl der Alben (Entscheidung 38). */
+/** Die Musik-Bibliothek als Kacheln: Kuenstler mit Cover, Name, Alias und Zahl der Alben. */
 export function ArtistGrid({
   artists,
   selection = null,

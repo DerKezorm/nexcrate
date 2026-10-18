@@ -17,7 +17,7 @@ export function profileFileUrl(profileId: number): string {
   return `${API_BASE}/profiles/${profileId}/export`
 }
 
-/** Ein Profil je Fassung, wie in the design notes unter "API". */
+/** Ein Profil je Fassung. */
 export const profilesApi = {
   /** 422 `profile_kind_unsupported` fuer Arten ohne Fragen. */
   questions: (kind: MediaKind) => api.get<QuestionList>(`/profiles/questions?kind=${encodeURIComponent(kind)}`),

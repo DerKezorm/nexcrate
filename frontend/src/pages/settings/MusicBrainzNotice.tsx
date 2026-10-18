@@ -9,7 +9,7 @@ import { FormMessage, Spinner, Switch } from '../../components/ui'
 import { formatDateTime } from '../../lib/format'
 
 /**
- * Die Schalter fuer MusicBrainz und das Cover Art Archive (Musik M1, Entscheidung 16), im selben Aufbau wie
+ * Die Schalter fuer MusicBrainz und das Cover Art Archive, im selben Aufbau wie
  * `XemNotice.tsx`: ein Weg nach draussen, deshalb abschaltbar, ab Werk beide an. Aus bei MusicBrainz: nichts wird
  * gefragt, Hinzufuegen und Aktualisieren sagen `musicbrainz_disabled`, Gespeichertes bleibt sichtbar. Aus beim
  * Cover Art Archive: nur gespeicherte Cover werden gezeigt.

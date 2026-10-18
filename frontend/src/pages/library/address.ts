@@ -8,7 +8,7 @@ export type StateFilter = 'all' | Exclude<VersionState, 'available'> | 'unclear'
 export const KINDS: readonly MediaKind[] = ['movie', 'series', 'album']
 export const STATE_FILTERS: readonly StateFilter[] = ['all', 'wanted', 'downloading', 'problem', 'incomplete', 'upgrade', 'unmonitored', 'unclear']
 
-/** Musik M1 (Entscheidung 37): der Umschalter Kuenstler, Alben unter Musik, ab Werk Kuenstler. */
+/** Musik M1: der Umschalter Kuenstler, Alben unter Musik, ab Werk Kuenstler. */
 export type MusicView = 'kuenstler' | 'alben'
 export const MUSIC_VIEWS: readonly MusicView[] = ['kuenstler', 'alben']
 

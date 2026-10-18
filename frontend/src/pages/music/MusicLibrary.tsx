@@ -28,7 +28,7 @@ type ArtistListing = { items: ArtistSummary[]; total: number; page: number }
 type AlbumListing = { items: TitleSummary[]; total: number; page: number }
 
 /**
- * Der Musik-Bereich der Bibliothek (M1.5): Umschalter Kuenstler/Alben (Entscheidung 37), Suche, Sortierung, die
+ * Der Musik-Bereich der Bibliothek (M1.5): Umschalter Kuenstler/Alben, Suche, Sortierung, die
  * Ladezeile aus `GET /api/music/loading`, und darunter die Liste. Kuenstler kommen von `musicApi`, Alben ueber die
  * vorhandene Titelliste mit `kind=album`, mit demselben Poster- oder Listenbauteil wie Filme und Serien.
  *

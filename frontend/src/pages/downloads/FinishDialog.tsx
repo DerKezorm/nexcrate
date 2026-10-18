@@ -11,7 +11,7 @@ import { clientNameOf } from './downloadText'
 /**
  * "Rest nicht ablegen" mit Rueckfrage (seit der Durchsicht): welche Folgen ohne Datei bleiben, dass sie bei der naechsten
  * Suche wiederkommen, und was mit den Dateien im Download-Programm geschieht. SABnzbd loescht den Job samt Resten, ein
- * Torrent bleibt und teilt weiter (S4, Entscheidung 30).
+ * Torrent bleibt und teilt weiter.
  */
 export function FinishDialog({ download, onClose, onDone }: { download: Download; onClose: () => void; onDone: (message: string) => void }) {
   const { t } = useTranslation()

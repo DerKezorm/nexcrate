@@ -50,7 +50,7 @@ function TrackFileDetails({ track }: { track: AlbumTrack }) {
 }
 
 /**
- * Die Titelliste der Zielausgabe, je Medium (Entscheidung 40): Nummer, Name, Laenge, "vorhanden" oder "fehlt". Seit M4
+ * Die Titelliste der Zielausgabe, je Medium: Nummer, Name, Laenge, "vorhanden" oder "fehlt". Seit M4
  * je Datei, woher ihre Tags stammen, und bei einem eigenen Album mit Dateien "Tags prüfen" (Entscheidungen 29 und 30).
  * Seit dem 19.09.2026 klappt ein Klick auf den Titel die Datei auf: Name, Qualitaet, aus
  * welchem Download unter welchem Namen und wie sie zugeordnet wurde.

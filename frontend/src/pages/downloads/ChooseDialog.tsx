@@ -10,7 +10,7 @@ import { formatNumber } from '../../lib/format'
 import { sizeText } from '../../lib/size'
 
 /**
- * "Datei waehlen" fuer einen Film mit mehreren aehnlich grossen Videos (S4, Entscheidung 39): die Videos mit Groesse und
+ * "Datei waehlen" fuer einen Film mit mehreren aehnlich grossen Videos: die Videos mit Groesse und
  * Laufzeit, vorbelegt das groesste. Danach legt nexcrate wie immer ab.
  */
 export function ChooseDialog({ download, onClose, onDone }: { download: Download; onClose: () => void; onDone: (message: string) => void }) {

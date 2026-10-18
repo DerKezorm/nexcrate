@@ -5,7 +5,7 @@ import type { AlbumSearch, AlbumSearchStartBody, Search, SearchStart, SearchStar
 export const SEARCH_POLL_MS = 1000
 
 /**
- * Die Suche je Film, wie in the design notes unter "API". Gesucht wird beim Indexer,
+ * Die Suche je Film. Gesucht wird beim Indexer,
  * geladen wird nichts. Antworten tragen weder Download- noch Info-Adressen.
  */
 export const searchesApi = {

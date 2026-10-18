@@ -12,10 +12,10 @@ import { albumQualityText } from '../../lib/musicSteps'
 import { targetReasonSentence, releaseLine } from './albumText'
 
 /**
- * Die Fassungskarte der Albumseite (M1.5.40): Zustand, "9 von 12 Titeln", die Zielausgabe mit ihrer Begruendung
- * (Entscheidung 27), der Knopf "Ausgabe wählen" (Entscheidung 41) und der rosa Hinweis, wenn eine groessere Ausgabe
- * verfuegbar ist (Entscheidung 29). Fehlen die Ausgaben noch, laedt die Karte sie einmal von selbst nach
- * (Entscheidung 20, "Der Besitzer geht vor").
+ * Die Fassungskarte der Albumseite (M1.5.40): Zustand, "9 von 12 Titeln", die Zielausgabe mit ihrer Begruendung,
+ * der Knopf "Ausgabe wählen" und der rosa Hinweis, wenn eine groessere Ausgabe
+ * verfuegbar ist. Fehlen die Ausgaben noch, laedt die Karte sie einmal von selbst nach
+ * (der Besitzer geht vor).
  */
 export function AlbumVersionCard({
   titleId,

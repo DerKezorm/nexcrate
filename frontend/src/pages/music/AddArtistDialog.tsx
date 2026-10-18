@@ -15,7 +15,7 @@ import { Badge, Button, FormMessage, Spinner } from '../../components/ui'
 import { formatNumber } from '../../lib/format'
 import { ALBUM_GROUPS, groupLabel } from './groupText'
 
-/** Titel und Erklaerung einer Wahl beim Hinzufuegen (Entscheidung 32), als Schluessel woertlich, nicht aus einer Vorlage. */
+/** Titel und Erklaerung einer Wahl beim Hinzufuegen, als Schluessel woertlich, nicht aus einer Vorlage. */
 function monitorText(t: TFunction, value: ArtistMonitor): { title: string; hint: string } {
   switch (value) {
     case 'studio':
@@ -37,7 +37,7 @@ function monitorText(t: TFunction, value: ArtistMonitor): { title: string; hint:
 
 /** Die Wahlen in ihrer Reihenfolge; die ersten drei sind die gewohnten, die anderen kennt man aus Lidarr. */
 const MONITOR_CHOICES: readonly ArtistMonitor[] = ['studio', 'future', 'none', 'missing', 'existing', 'first', 'latest']
-/** Ab Werk zaehlen Studioalben und EPs (Entscheidung 25). */
+/** Ab Werk zaehlen Studioalben und EPs. */
 const DEFAULT_TYPES: readonly string[] = ['studio', 'ep']
 
 /** Gesucht wird erst, wenn so lange nichts getippt wurde, wie bei "Film hinzufuegen". */
@@ -52,7 +52,7 @@ function StatusLine({ children }: { children: ReactNode }) {
 }
 
 /**
- * "Künstler hinzufügen" (Entscheidung 31, M1.5): erst die Suche bei MusicBrainz, dann eine Vorschau mit den Zahlen je
+ * "Künstler hinzufügen": erst die Suche bei MusicBrainz, dann eine Vorschau mit den Zahlen je
  * Gruppe und wie viele Alben die Wahl "Studioalben und EPs" ueberwachen wuerde, dann die Wahl selbst (Entscheidung
  * 32). Ein Treffer, der schon in der Bibliothek steht, zeigt das mit einer Marke und fuehrt beim Bestaetigen dorthin,
  * statt ein zweites Mal anzulegen (der Server antwortet ohnehin 200 statt 201).
