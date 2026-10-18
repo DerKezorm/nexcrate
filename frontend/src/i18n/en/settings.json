@@ -829,7 +829,7 @@
     },
     "mappings": {
       "title": "Path mapping",
-      "intro": "Only needed when the server sees the same folders under another path than nexcrate, such as /media here and /volume1/media there.",
+      "intro": "Only needed when the server sees the same folders under another path than nexcrate, such as /media here and /volume1/media there. The remote side suggests the folders the server listed; a subfolder can still be typed.",
       "suggested": "Suggested from the folders the server lists and the folders of your versions. Please check; nothing is stored before you press Save.",
       "notNeeded": "No mapping needed: the server sees the folders of your versions under the same path.",
       "local": "nexcrate sees",

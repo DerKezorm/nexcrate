@@ -829,7 +829,7 @@
     },
     "mappings": {
       "title": "Pfadzuordnung",
-      "intro": "Nur nötig, wenn der Server dieselben Ordner unter einem anderen Pfad sieht als nexcrate, etwa /media hier und /volume1/media dort.",
+      "intro": "Nur nötig, wenn der Server dieselben Ordner unter einem anderen Pfad sieht als nexcrate, etwa /media hier und /volume1/media dort. Die rechte Seite schlägt die Ordner vor, die der Server nennt; ein Unterordner lässt sich weiterhin tippen.",
       "suggested": "Vorgeschlagen aus den Ordnern, die der Server nennt, und den Ordnern deiner Fassungen. Bitte prüfen; gespeichert wird erst mit „Speichern“.",
       "notNeeded": "Keine Zuordnung nötig: Der Server sieht die Ordner deiner Fassungen unter demselben Pfad.",
       "local": "nexcrate sieht",
