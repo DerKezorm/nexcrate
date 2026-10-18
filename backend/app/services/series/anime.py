@@ -5,7 +5,7 @@ A series of the type ``anime`` is searched, loaded, filed and named like any oth
 search that never comes (``capabilities.anime``, ``anime_not_supported``); with it on those answers fall away by
 themselves, and no field and no shape of ``/api/v1`` changed.
 
-Recognising anime when a series is added (A1, decision 7) goes by TMDB: its keyword ``anime``, or the genre Animation
+Recognising anime when a series is added goes by TMDB: its keyword ``anime``, or the genre Animation
 with Japanese as the original language. Measured on 22.09.2026 at 40 known series against TVDB's genre ``Anime`` as a
 throwaway Sonarr shows it: the same answer for all 40. Sonarr
 itself gives every series ``standard`` in its lookup, anime too. The proposal waits for ``SEARCHED``: a recognised

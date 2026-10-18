@@ -8,7 +8,7 @@ One table of fields serves reading and writing, so both speak the same names. Th
   empty tags. The audio facts come from the stream (codec, length, bit depth, sample rate, channels, bitrate), never
   from the name.
 * **Writing** sets only the fields of the table and the front cover; every other field stays (ReplayGain, lyrics,
-  ISRC, other pictures: decision 26). An MP3 keeps its ID3 version: 2.3 stays 2.3, a file without ID3 gets 2.4.
+  ISRC, other pictures). An MP3 keeps its ID3 version: 2.3 stays 2.3, a file without ID3 gets 2.4.
   Formats nexcrate writes: FLAC, MP3, M4A, Ogg Vorbis, Ogg Opus; the others are read only.
 * **Comparing** covers every field of the table, the MusicBrainz ids included, and the front cover by a
   hash of its bytes.

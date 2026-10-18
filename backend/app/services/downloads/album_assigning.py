@@ -5,7 +5,7 @@
   named by a number (``key``), never by a path the browser could send back. Tracks of the album's target release
   whose song that release lacks are offered as well (``target_tracks``): once files
   lie in the album folder the release cannot change, and a bonus track of the target would stay out for good.
-* ``assign`` files what the owner chose: a track, "fits no track, file anyway" (``loose``, decision 32), or nothing.
+* ``assign`` files what the owner chose: a track, "fits no track, file anyway" (``loose``), or nothing.
   Each track once, only tracks of the chosen release or tracks only its target has. The release can be changed only
   while no file of the download lies in the album folder. ``confirm: ["not_better"]`` replaces an album whose files
   are not worse. The choice holds for this download only; the target release stays as it is

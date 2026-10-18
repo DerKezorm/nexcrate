@@ -52,7 +52,7 @@ batches and the weekly releases named by that number. Every query of an anime se
 and the indexer's anime categories (``categories_for``). The names are read for an anime series (``anime=True``).
 The number asked is the scene's count through when the episode has one, else the series' own, as Sonarr asks
 (``SceneAbsoluteEpisodeNumber ?? AbsoluteEpisodeNumber``, measured at the bench on 23.09.2026: Frieren's S02E02 is
-asked as ``02`` with the scene names of season 2, not as 30; the design notes, B6).
+asked as ``02`` with the scene names of season 2, not as 30).
 
 **A pack for a few episodes**: a season pack that would bring fewer than half of its
 episodes gives way to releases of fewer episodes ranked after it, when those bring every one of them and are no worse:
@@ -728,7 +728,7 @@ def _blocked(series: SeriesSearch, protocol: str, title: str, info_hash: str | N
 
 
 def _sort_key(candidate: _Candidate) -> tuple[Any, ...]:
-    """Sonarr's order (S2 decision 29) with the movie search's indexer, seeder, age and size steps. The protocol
+    """Sonarr's order with the movie search's indexer, seeder, age and size steps. The protocol
     the version's delay rule prefers comes third, where Sonarr's comparer has it."""
     torrent = candidate.protocol == "torrent"
     return (

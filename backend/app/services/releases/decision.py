@@ -44,16 +44,16 @@ profiles put their allowed group on top of better qualities they do not allow; b
 into a Full-HD version, or a Remux-2160p file in a 4K version for encodes, would lie below the cutoff and a lesser
 release would replace it. The owner's rule: a file better than the profile's target stays, a worse one is upgraded.
 
-**Cutoff not met** (``cutoff_not_met``), whether the rules would still upgrade a stored file. Decision 20 of 15.09.2026:
-upgrades count the score too, as in Radarr. True when
+**Cutoff not met** (``cutoff_not_met``), whether the rules would still upgrade a stored file.
+Upgrades count the score too, as in Radarr. True when
 
 1. its quality ranks below the cutoff, or its resolution lies below ``target_resolution``, at any score: ``quality``
 2. upgrades are allowed, its quality ranks exactly at the cutoff (not below, not above) and its score lies below
    ``upgrade_until``: ``score``
 
 The file is scored exactly as ``evaluate`` scores a current file: by its name, with its stored quality and the movie's
-original language. A file whose quality ranks above the cutoff (``_rank``) is never upgraded for its score, the owner's
-rule from finding 9. With upgrades switched off the cutoff is the lowest allowed item and the score never counts. Rules
+original language. A file whose quality ranks above the cutoff (``_rank``) is never upgraded for its score.
+With upgrades switched off the cutoff is the lowest allowed item and the score never counts. Rules
 of another kind give false. In TRaSH's German profiles every 1080p quality is one merged group that is also the cutoff,
 so without the score any 1080p file would count as done.
 

@@ -30,8 +30,8 @@
   above its movie folder), ``relative_path`` the movie folder below it and Radarr's relative path. A version without a
   found file keeps the mapped root folder when that folder exists, so its next file goes there. Nothing on disk
   changes before the transaction, not even a write test: a folder is only proposed by its rights. Afterwards the
-  phase ``companions`` writes a ``release.nex`` for every version with a found file (the design notes,
-  L2); it never fails the takeover. Undoing a takeover removes those entries again after its commit.
+  phase ``companions`` writes a ``release.nex`` for every version with a found file; it
+  never fails the takeover. Undoing a takeover removes those entries again after its commit.
 * Log lines carry ids, counts and codes, never titles, names or paths.
 """
 

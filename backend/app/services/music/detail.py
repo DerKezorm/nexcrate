@@ -105,7 +105,7 @@ def _tracks_of(db: OrmSession, version: Version | None, release: Release | None)
             for covered in row.track_ids or []:
                 # One file that holds several tracks (B3): each of them is present.
                 files[covered] = row
-    # Files of another release than the target (an album "Vorerst", the design notes, decision 21) count for the
+    # Files of another release than the target (an album kept "for now") count for the
     # target's track with the same recording.
     # Since 19.09.2026 also by a name unique in its release (``same_song``): a remaster may give a track another
     # recording.

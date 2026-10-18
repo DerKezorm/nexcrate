@@ -68,7 +68,7 @@ QUEUE_STATES = ("downloading", "problem")
 MISSING_EXAMPLES = 20
 
 
-# --- Naming (Ü2, decision 13) --------------------------------------------------------------------------------------- #
+# --- Naming --------------------------------------------------------------------------------------------------------- #
 
 
 def source_naming(config: SeriesNamingConfig, current_style: str) -> dict[str, Any]:
@@ -485,7 +485,7 @@ def series_places(
 
 
 def _rule_of(details: dict[str, Any] | None) -> str:
-    """Decision 5: new seasons and episodes as Sonarr would watch them."""
+    """New seasons and episodes as Sonarr would watch them."""
     details = details or {}
     return "all" if details.get("monitored") and details.get("monitor_new_items") == "all" else "none"
 

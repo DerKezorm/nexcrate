@@ -48,7 +48,7 @@ from .subtitles import records as subtitle_records
 logger = logging.getLogger("nexcrate.companions")
 
 FILE_NAME = "release.nex"
-#: The fallback of decision 1, should a media server react to the visible name. Not used unless the bench says so.
+#: The fallback name, should a media server react to the visible name. Not used unless the bench says so.
 DOT_FILE_NAME = ".release.nex"
 PARTIAL_NAME = ".release.nex.nexcrate-partial"
 FORMAT = "nexcrate-release"
@@ -596,7 +596,7 @@ def writable(folder: Path) -> bool:
 
 
 def write_bytes(folder: Path, data: bytes, name: str = FILE_NAME) -> None:
-    """The safe write of decision 6. Raises ``_WriteFailed`` with the state."""
+    """Write through a partial file, synced, then moved onto the name. Raises ``_WriteFailed`` with the state."""
     partial = folder / PARTIAL_NAME
     target = folder / name
     try:
@@ -634,7 +634,7 @@ def remove_file(folder: Path, name: str = FILE_NAME) -> bool:
 def recycle_file(folder: Path, root: str | Path | None, moment: datetime, name: str = FILE_NAME) -> bool:
     """Move the folder's ``release.nex`` into ``.nexcrate-recycle/<date>/<movie folder>/`` of the root folder.
 
-    "Replace" of decision 5. True when the way is clear: the file was moved, or there was none. False for a link or a
+    True when the way is clear: the file was moved, or there was none. False for a link or a
     folder under the name, a root folder nexcrate does not see, or a move that failed. Nothing else on disk is touched.
     """
     path = folder / name

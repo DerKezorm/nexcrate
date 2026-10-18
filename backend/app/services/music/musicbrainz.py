@@ -792,7 +792,7 @@ async def search_release_groups(
     query: str, artist_mbid: str | None = None, kind: str | None = None, lane: str = OWNER
 ) -> list[ReleaseGroupData]:
     """Up to 10 release groups for a title, optionally of one artist and of one kind: ``album``, ``compilation``,
-    ``single``, or any (decision 34, B1: without the type, singles of other artists come first)."""
+    ``single``, or any (without the type, singles of other artists come first)."""
     text = _escaped(query)
     if not text:
         return []

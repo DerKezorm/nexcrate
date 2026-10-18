@@ -6,7 +6,7 @@ of 255 bytes per path part (research T14). What music adds:
 * **Four patterns:** artist folder, album folder, file of an album with one medium, file of an album with several.
   There is exactly one music version, so the patterns live in the settings only, not per version.
 * **Flat by default:** ``Artist/Album (Year)/1-01 Title.flac``; the medium stands in the name only when the release
-  has more than one (decision 14, research T6).
+  has more than one.
 * **A folder per medium, for whoever wants it** (20.09.2026): the pattern of an album with several media may hold
   one ``/``, as Lidarr's own does (``{Medium Format} {medium:00}/{track:00} {Track Title}``). What stands before it
   is the folder of the medium below the album folder and needs ``{medium}``; the file after it then needs only

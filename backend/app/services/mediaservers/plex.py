@@ -2,8 +2,8 @@
 
 Only these addresses: ``GET /identity``, ``GET /library/sections`` and ``GET /library/sections/{key}/refresh``, with
 ``path`` for one folder. ⚠️ Plex's own description names the refresh as POST, Radarr and Sonarr send GET; GET is tried
-first, and a 405 is asked again as POST. The facts and their sources stand in the design notes; ⚠️ none of
-them is measured on a real server.
+first, and a 405 is asked again as POST. ⚠️ None of this
+is measured on a real server.
 
 ⚠️ This module never talks to plex.tv. The token goes to the owner's server only, in the ``X-Plex-Token`` header.
 """

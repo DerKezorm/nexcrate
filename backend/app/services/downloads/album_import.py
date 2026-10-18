@@ -13,7 +13,7 @@
 4. **An album with files** is replaced only when neither the step nor the count of target tracks gets worse
    (decisions 20, E2, E11): then every old file goes into the recycle folder first. Otherwise nothing is filed and the
    problem ``album_not_better`` says why; the owner may confirm.
-5. **Filing file by file**, each in its own transaction: the album folder (fixed once, decision 16), the name after the
+5. **Filing file by file**, each in its own transaction: the album folder (fixed once), the name after the
    patterns, a copy instead of a hardlink for a torrent while tags are written, the tags written into the temporary
    file before its rename, the ``track_files`` row right after the rename. Before a file moves its row
    says ``placing`` with its target; the next round takes over a file found there.
@@ -382,7 +382,7 @@ def album_folder(db: OrmSession, context: Context, root: Path) -> tuple[str, str
     folder = root / artist / album
     busy = _key(f"{artist}/{album}") in taken or (folder.is_dir() and any(folder.iterdir()))
     if busy:
-        # The type first (``Single``, ``EP``), then the disambiguation, then the id: the design notes, answer G2.
+        # The type first (``Single``, ``EP``), then the disambiguation, then the id.
         for addition in naming_music.additions(context.album, context.title_id):
             candidate = naming_music.album_folder_name(context.naming, context.album, addition)
             spot = root / artist / candidate

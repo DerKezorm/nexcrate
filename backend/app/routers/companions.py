@@ -1,6 +1,6 @@
 """release.nex next to every movie nexcrate owns: the switch, the check and the backfill, and "replace".
 
-the design notes, L3. The check and the backfill run as jobs in the background;
+The check and the backfill run as jobs in the background;
 ``GET /api/companions/job`` follows the newest one. Nothing here writes into a folder Radarr still controls.
 """
 

@@ -1,4 +1,4 @@
-"""What the fixed jumps into the interface (``/open/…``, the design notes, N21) point at: the page resolves a
+"""What the fixed jumps into the interface (``/open/…``) point at: the page resolves a
 reference with the session and goes on. Only numbers and kinds; the pages keep their own addresses.
 """
 

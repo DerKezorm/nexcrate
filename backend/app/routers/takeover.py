@@ -1,5 +1,4 @@
-"""Taking over a Radarr or Sonarr connection, and reading its naming (T1 and T2;
-the design notes, Ü1 and Ü2).
+"""Taking over a Radarr or Sonarr connection, and reading its naming.
 
 The check and the takeover run as jobs in the background; ``GET /api/sources/{id}/takeover`` follows the newest one.
 Radarr is only read. A taken-over connection answers 409 ``source_taken_over`` here.

@@ -25,13 +25,13 @@ NON_AUDIO = frozenset(
         "Data CD", "CD-ROM", "Data DVD", "Playbutton", "SACD (hybrid)",
     }
 )  # fmt: skip
-#: Decision 27, step 4: the format order for a tie. Anything else comes last.
+#: The format order for a tie. Anything else comes last.
 FORMAT_RANKS = (
     ("Digital Media", 0),
     ("CD", 1),
     ("Vinyl", 2),
 )
-#: Decision 28: the country order per interface language while the definition has none of its own.
+#: The country order per interface language while the definition has none of its own.
 DEFAULT_COUNTRIES = {
     "de": ("DE", "XE", "XW"),
     "en": ("GB", "US", "XE", "XW"),
@@ -150,7 +150,7 @@ def is_filler(name: str | None, length_ms: int | None) -> bool:
 
 
 def choose(releases: list[Candidate], countries: tuple[str, ...] | list[str]) -> Choice:
-    """The target release of an album by decision 27, with the reasons."""
+    """The target release of an album by the target rule, with the reasons."""
     official = [release for release in releases if (release.status or "official") == "official"]
     if not official:
         return Choice(None, [{"code": "no_candidate", "why": "no_official"}])

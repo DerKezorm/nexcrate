@@ -43,7 +43,7 @@ DEFAULT_TYPES = ("studio", "ep")
 
 
 def is_studio_or_ep(primary_type: str | None, secondary_types: list[str] | None) -> bool:
-    """Decision 25 (E4): primary type ``Album`` or ``EP`` and no secondary type at all."""
+    """Primary type ``Album`` or ``EP`` and no secondary type at all."""
     return primary_type in ("Album", "EP") and not secondary_types
 
 

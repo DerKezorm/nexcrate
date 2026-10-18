@@ -12,7 +12,7 @@ through the numberings S1 kept. The order is fixed:
    means nothing for a series that is not daily (note ``not_daily``), as in Sonarr: in a series whose episodes came
    out on one day it would mean all of them.
 7. for an anime series a name counted through (``Show - 148``, form ``anime``): the scheme ``absolute``
-   (``series/absolute.py``, the design notes, A2), via ``absolute``. A name counted through means nothing for a
+   (``series/absolute.py``), via ``absolute``. A name counted through means nothing for a
    series of another type (note ``not_anime``). Numbers the series does not have stand in ``missing``.
 
 **The scene's count of an anime series** (B6, measured at the throwaway Sonarr on 23.09.2026):
@@ -85,7 +85,7 @@ from ..releases.series_parser import ParsedSeries
 from . import absolute
 from .store import code as episode_code
 
-#: The schemes in the order of decision 13 of the design notes: the owner's corrections, scene, TVDB, the chosen
+#: The schemes in this order: the owner's corrections, scene, TVDB, the chosen
 #: TMDB episode group, and ``tmdb``, the numbering on the episode itself.
 SCHEMES = ("owner", "scene", "tvdb", "group", "tmdb", "parts")
 #: The scheme of double episodes TMDB counts as one, built from TMDB's runtimes (see the module).

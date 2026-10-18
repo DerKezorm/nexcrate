@@ -1,6 +1,6 @@
 """Reading a series release name: series title and year, the numbering form, and the movie reader's features.
 
-nexcrate's own reading, written from the forms in the design notes (part S2.3, decisions 12 to 15). Nothing is
+nexcrate's own reading, written from the forms of series names. Nothing is
 taken from Sonarr's source (GPL-3.0): no code, no pattern, no test. Group, languages, quality, revision and hardcoded
 subtitles come from the movie parser (``parser.py``).
 
@@ -244,7 +244,7 @@ class ParsedSeries:
     languages: tuple[int, ...]
     hardcoded_subs: str | None
     #: The release title as it stands, the series title included. ⚠️ The custom formats see exactly this:
-    #: Sonarr does not mask the series title (measured 16.09.2026 at the bench, decision 18).
+    #: Sonarr does not mask the series title (measured 16.09.2026 at the bench).
     release_title: str
     #: The same with the series title replaced, used to read group and languages.
     masked_title: str

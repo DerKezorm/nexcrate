@@ -3,7 +3,7 @@
 **Starting** (``start_planned``): the title's due seasons as ``series_planning.asked`` picks them, at most five and no
 more than the starts left in the hour, since a series search counts one start per season it covers. Every enabled
 indexer with ``automatic_search`` and series categories is asked or the title waits, as for movies. The requests a
-search plans on one indexer: per target the search by number, the title queries unless decision 11 leaves them out
+search plans on one indexer: per target the search by number, the title queries unless they are left out
 (the indexer's search by number found the series within ``ID_SEEN_DAYS``), the query of a special by its name, and 1
 for stale caps; never more than the bucket can hold, as paging is charged afterwards anyway.
 

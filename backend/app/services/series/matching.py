@@ -2,9 +2,9 @@
 
 Sonarr counts by TVDB, nexcrate by TMDB. Per series, each episode is used once, in this order:
 
-1. ``tvdb``: the TVDB episode number stored on a TMDB episode by an earlier run. A special on both sides stays paired
-   so only as decision 54 would pair it now: on the same day, by its title or TMDB's English name, or while nothing can
-   be checked (a date or TMDB's English name missing). An earlier run paired specials a day apart, and the stored
+1. ``tvdb``: the TVDB episode number stored on a TMDB episode by an earlier run. A special on both sides stays paired so
+   only as the rule for specials pairs it now: on the same day, by its title or TMDB's English name, or while nothing
+   can be checked (a date or TMDB's English name missing). An earlier run paired specials a day apart, and the stored
    number kept such a pair for ever (measured on the owner's instance, 17.09.2026: 22 of 631);
 2. ``numbers_date``: the same season and number, and the same air date give or take one day (a special: the same day);
 3. ``date``: the same air date. On one date with the same count on both sides, by title (spelling keys) when that
@@ -20,7 +20,7 @@ Sonarr counts by TVDB, nexcrate by TMDB. Per series, each episode is used once, 
 Everything else stays unmatched. Generic titles (``TBA``, ``Episode 5``, ``Folge 5``) never match by title. A TMDB
 episode's title is its name in the account language and its English name.
 
-**The title vetoes** a pair of steps 1 to 3 (``title_veto``, the design notes, "Befund: falsche Brücken"): when
+**The title vetoes** a pair of steps 1 to 3 (``title_veto``): when
 Sonarr's title does not fit the chosen TMDB episode (whose English name is known), and exactly one other TMDB episode of
 the same kind (special or regular) carries it, that one is free, and no other source episode carries its title, the
 source episode takes that one instead. A stored TVDB number or a date otherwise kept a wrong pair for ever (measured
@@ -90,7 +90,7 @@ def _days_apart(first: str, second: str) -> int:
 
 
 def _special_holds(source: SourceEpisode, target: TmdbEpisode) -> bool:
-    """Whether a stored pair of two specials still holds by decision 54."""
+    """Whether a stored pair of two specials still holds by the rule for specials."""
     if not source.air_date or not target.air_date or source.air_date == target.air_date:
         return True
     if target.name_en is None:
@@ -390,7 +390,8 @@ def _title_pairs(sources: list[SourceEpisode], targets: list[TmdbEpisode]) -> li
 def numbering_note(
     source_name: str, source: list[SourceEpisode], tmdb: list[TmdbEpisode], matched: Matched
 ) -> dict[str, object] | None:
-    """The line of decision 25, or None when both count the regular seasons alike and every regular episode matched.
+    """The line on how the source counts against TMDB, or None when both count the regular seasons alike and every
+    regular episode matched.
 
     Specials without a TMDB episode are no numbering of their own: TVDB and TMDB keep different extras, and nearly every
     series has some. Their files still show as unassigned.

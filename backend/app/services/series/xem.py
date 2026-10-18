@@ -8,7 +8,7 @@ nexcrate asks it with TVDB as origin, as Sonarr does:
   no error.
 * ``allNames?origin=tvdb&seasonNumbers=1``: scene names per TVDB series, ``{"<name>": <season>}``, -1 for all seasons.
 
-**The bridge to TMDB** (decision 9, measured 16.09.2026: 982 episodes right, none wrong): nexcrate has TMDB's
+**The bridge to TMDB** (measured 16.09.2026: 982 episodes right, none wrong): nexcrate has TMDB's
 episodes, TheXEM speaks TVDB. When TheXEM lists as many regular episodes as TMDB, the n-th of each, sorted by season
 and episode, are the same episode. Otherwise an episode takes TheXEM's entry whose TVDB number equals TMDB's number,
 or none. TheXEM's TVDB ``absolute`` is not used: at one measured series it was off for 148 of 404 entries. The
@@ -25,7 +25,7 @@ project's address in the agent (answered with 200, measured 25.09.2026).
 
 TheXEM is a way out of the house, so it has a switch (``xem_enabled``, on by default). Off means no request at all.
 
-**Asking as little as Sonarr** (23.09.2026 evening, the design notes, "Nebenbefund: TheXEM sperrt nexcrate"):
+**Asking as little as Sonarr**:
 TheXEM answered the agent ``nexcrate/…`` with 403 while other agents got 200. nexcrate had asked every series it
 refreshed, whether TheXEM maps it or not, and a series whose last answer failed was due again at every search. Now:
 

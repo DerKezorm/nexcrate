@@ -75,8 +75,8 @@ class EpisodeData:
     air_date: str | None
     runtime: int | None
     episode_type: str | None
-    #: TMDB's English name, for every episode (specials are searched by it, S3 decision 21; matching checks Sonarr's
-    #: titles against it, plan S6). None when the season was not asked in English.
+    #: TMDB's English name, for every episode (specials are searched by it; matching checks Sonarr's
+    #: titles against it). None when the season was not asked in English.
     name_en: str | None = None
 
 

@@ -2,7 +2,7 @@
 
 Phases of the job: ``listing`` (the roots are walked), ``folders`` (every candidate is looked at: videos,
 ``release.nex``, ``.nfo``), ``radarr`` (the movie folders of Radarr connections nexcrate still reads, through the
-takeover's mapping by files), ``matching`` (the order of decision 17, rows written per root), ``tmdb`` (proposals TMDB
+takeover's mapping by files), ``matching`` (rows written per root), ``tmdb`` (proposals TMDB
 has to answer for, 50 folders and then a minute's pause; without a token the phase ends at once and the rows wait for
 the next scan).
 

@@ -1,4 +1,4 @@
-"""Absolute numbers of an anime series (fork 1, slice A1).
+"""Absolute numbers of an anime series.
 
 Release groups count anime through: ``[Group] Title - 148``. TMDB has no such number, so nexcrate keeps it as the scheme
 ``absolute`` in ``episode_numbers``: one row per regular episode of an anime series, only ``absolute`` set, ``origin``

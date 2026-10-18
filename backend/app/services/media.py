@@ -1,4 +1,4 @@
-"""Media data of a video file through ``mediainfo``, and the quality rule of decision 22.
+"""Media data of a video file through ``mediainfo``, and the quality rule.
 
 * **The tool** runs as a child process: ``mediainfo --Output=JSON <absolute path>``, an argument list and no shell,
   stdin closed, a small environment (``PATH`` and ``LANG=C.UTF-8``), its own process group, a timeout after which it
@@ -11,7 +11,7 @@
   language, and the subtitle languages. The mapping of dynamic range and audio codec follows Radarr's names; it was
   checked against MediaInfo 25.04 on the bench samples (15.09.2026), the recorded answers lie in
   ``tests/fixtures/mediainfo``.
-* **The quality** (``quality_of``) is one function with the six steps of decision 22: the resolution from the media data
+* **The quality** (``quality_of``) is one function in six steps: the resolution from the media data
   with Radarr's thresholds, source and resolution from a container title tag, source, modifier and revision from the
   file name and then the folder name, Radarr's source by extension when no name says one, ``qualities.find`` and then
   the nearest quality as Radarr's ``QualityFinder`` picks it, and where the quality came from.
@@ -675,7 +675,7 @@ def file_languages(media: dict[str, Any] | None, named: list[str]) -> list[str]:
 
 
 def languages_of(media: dict[str, Any] | None, name: str, original_language: str | None) -> list[str]:
-    """Decision 24 for a file found on disk: ``file_languages`` with the name's languages as the checker resolves
+    """For a file found on disk: ``file_languages`` with the name's languages as the checker resolves
     them."""
     parsed = releases.parse(name, original_language)
     names: list[str] = []

@@ -1,4 +1,4 @@
-"""The folders the scan walks ("roots", the design notes, L4).
+"""The folders the scan walks ("roots").
 
 The default folder of every movie version definition, every distinct ``root_folder`` of a version nexcrate owns, and the
 folders the owner added on the page. Since S6 the same for series, as roots of

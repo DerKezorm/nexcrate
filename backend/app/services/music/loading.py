@@ -7,7 +7,7 @@ the stored step; every page and every album is committed on its own. A browse in
 again at page one: the pages come from the cache for a day, so nothing is asked twice.
 
 Order: what the owner just added (priority 0), an album page waiting for its releases (1), an import
-(2), a due refresh (3); within a priority the oldest first. Refreshes follow decision 21 and are marked due by
+(2), a due refresh (3); within a priority the oldest first. Refreshes are marked due by
 ``groups_due_at`` and ``releases_due_at``.
 
 "MusicBrainz is busy" says nothing about the artist. An album whose full page stays busy is asked at once in smaller
@@ -266,7 +266,7 @@ def load_groups(db: OrmSession, artist: Artist, *, budget_end: float, lane: str 
     db.commit()
     first_load = artist.groups_refreshed_at is None
     # An imported artist keeps Lidarr's watching; the owner's own gets studio albums when it wants new
-    # ones and never had its groups stored (the add dialog stores them itself, decision 33).
+    # ones and never had its groups stored (the add dialog stores them itself).
     watch = "studio" if artist.monitor_new == "all" and artist.added_by == "owner" else "none"
     seen: set[str] = set()
     offset = 0
@@ -306,7 +306,7 @@ def load_groups(db: OrmSession, artist: Artist, *, budget_end: float, lane: str 
             db.delete(title)
             dropped += 1
             continue
-        # Decision 22: a lookup tells a merge (301 to another id) from a real 404. Same id and still this artist's:
+        # A lookup tells a merge (301 to another id) from a real 404. Same id and still this artist's:
         # it has no official release, so the browse hides it, and it stays as it is for the files the owner has.
         # Same id, another artist: no longer credited here; it stays with the mark.
         # ⚠️ What the albums before this one changed is written first: a merge flushes, and the lookup below asks
@@ -501,7 +501,7 @@ DROP_CHUNK = 50
 
 def settle_left_add(db: OrmSession, artist: Artist) -> None:
     """An artist whose adding broke off becomes an ordinary one that loads its catalogue in the background. It watches
-    no album on its own (``monitor_new`` none, as an artist made for one album, decision 34): the request that chose
+    no album on its own (``monitor_new`` none, as an artist made for one album): the request that chose
     what to watch failed. The versions the adding left unwatched go (``store.drop_adding_strays``)."""
     store.drop_adding_strays(db, artist.id)
     store.forget_adding_versions(db, artist.id)

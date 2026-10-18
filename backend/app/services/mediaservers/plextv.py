@@ -14,7 +14,7 @@ merely shared with it is somebody else's. The local addresses come first; which 
 The token never reaches the browser. It stays here in memory under the PIN's id until a server is saved with that
 id, or until the PIN expires; the browser only learns that the PIN was claimed.
 
-The facts and their sources stand in the design notes; ⚠️ none of them is measured against plex.tv.
+⚠️ None of this is measured against plex.tv.
 """
 
 from __future__ import annotations

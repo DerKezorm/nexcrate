@@ -33,8 +33,8 @@ WATCH_RULES = ("all", "future", "missing", "from_season", "none")
 #: long after it aired, which stays off.
 SET_BY = ("rule", "owner", "source", "late")
 #: The numbering schemes: ``tvdb`` and ``scene`` (from Sonarr or TheXEM), ``owner`` (a local correction) and ``group``
-#: (the chosen TMDB episode group), see the design notes, decisions 9 to 13; ``absolute`` (the number an anime
-#: series counts through, only ``absolute`` set, the design notes, A1).
+#: (the chosen TMDB episode group); ``absolute`` (the number an anime series counts through, only ``absolute``
+#: set).
 NUMBER_SCHEMES = ("tvdb", "scene", "owner", "group", "absolute")
 #: Where a numbering came from. ``tmdb_order`` and ``counted_on`` only for the scheme ``absolute``.
 NUMBER_ORIGINS = ("sonarr", "xem", "owner", "tmdb", "tmdb_order", "counted_on")

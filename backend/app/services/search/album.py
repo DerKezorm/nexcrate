@@ -272,7 +272,7 @@ def fits_any(album: AlbumSearch, releases: list[indexers.Release]) -> bool:
 
 # --- The category fills a gap --------------------------------------------------------------------------------------- #
 
-#: Decision 15 with the threshold of M3.0: the category fills the format a name does not give.
+#: The category fills the format a name does not give.
 USE_CATEGORY = True
 
 

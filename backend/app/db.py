@@ -68,7 +68,7 @@ def _pragmas(dbapi_connection: Any, _record: Any) -> None:
 
 
 #: A write that holds SQLite's lock, or waits for it, longer than this is named in the log, with the place it began
-#: (finding 3b of 22.09.2026: nothing told who held the lock when an import gave up after ``BUSY_TIMEOUT_MS``).
+#: so that an import giving up after ``BUSY_TIMEOUT_MS`` says who held the lock.
 HELD_WARNING_SECONDS = 10.0
 _WRITE = re.compile(r"^\s*(INSERT|UPDATE|DELETE|REPLACE)\b", re.IGNORECASE)
 _APP_FOLDER = str(Path(__file__).resolve().parent)

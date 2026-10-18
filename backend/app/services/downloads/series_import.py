@@ -8,7 +8,7 @@
    name is fixed once the first file lies in it. Archives are unpacked next to it, every first volume.
 3. **Assigning** (``episodes.assign``), or the owner's assignment for ``POST /api/downloads/{id}/assign``. Every video
    is kept in ``download_files`` with its decision before anything moves, so the dialog can show them.
-4. **Filing file by file**, each recorded in its own transaction: the season folder (named once, decision 15), the
+4. **Filing file by file**, each recorded in its own transaction: the season folder (named once), the
    name after the version's numbering, a replaced file into the recycle folder of the root folder. A file is not
    filed when the episode has a file that is not worse by now, when the file it would replace holds an
    episode this download does not bring or does not file, or when a video nexcrate does not know lies
@@ -1034,7 +1034,7 @@ def media_quality(
 def _place_subtitles(
     context: Context, found: Found, source: Path, origin: Path, target: Path, folder: Path
 ) -> tuple[subtitle_placing.Placed, ...]:
-    """The subtitles that belong to this video (C9 per episode file, decision 29). Never fails the file."""
+    """The subtitles that belong to this video (per episode file). Never fails the file."""
     if not context.subtitles_enabled:
         return ()
     origins = [(found.job, False)] if found.unpacked is None else [(found.job, False), (found.unpacked, True)]

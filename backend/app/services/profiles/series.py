@@ -1,6 +1,6 @@
 """Profiles for series: the questions, the decision table, and the rules built from the answers.
 
-The approved contract is the design notes, part S2.2 with decisions 5 to 11. The building blocks are the
+The building blocks are the
 ones movies use (``building.py``); only what TRaSH's Sonarr data does differently lives here.
 
 What differs from movies
@@ -18,7 +18,7 @@ What differs from movies
   and TRaSH lists all eight profiles of the table in its ``include``. "Multi-Episode" and "Single Episode" carry
   no scores and are left out.
 * **``audio``** is shown where TRaSH's ``audio-formats`` group acts: Remux + WEB, and not in the German profiles,
-  which the group does not list. That is the ``excludes`` condition of decision 11.
+  which the group does not list. That is the ``excludes`` condition.
 * **Sizes** come from TRaSH's ``series`` set and are measured against the runtime of the episodes a release
   covers, not a movie's runtime; that is the engine's part.
 
@@ -225,7 +225,7 @@ def build(answers: dict[str, Any], snapshot: TrashSnapshot) -> dict[str, Any]:
 def build_anime(answers: dict[str, Any], snapshot: TrashSnapshot, family: str | None = None) -> dict[str, Any]:
     """The rules of the version's anime series from TRaSH's anime profile of the family (see the module).
 
-    ``family`` picks the profile by hand (the expert mode's button, the design notes, B2b); left out, the
+    ``family`` picks the profile by hand (the expert mode's button); left out, the
     languages of the answers decide, as for the assistant.
     """
     family = family or family_of(answers)

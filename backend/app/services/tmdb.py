@@ -1,6 +1,6 @@
 """TMDB: the owner's token, the movie search, movie details, posters, the refresh of titles.
 
-What TMDB taught (researched 13.09.2026, see the design notes):
+What TMDB taught (researched 13.09.2026):
 
 * ⚠️ **The token travels only as ``Authorization: Bearer``**, never as ``api_key`` in a URL. It is
   TMDB's "API Read Access Token". Stored encrypted; answers only say ``configured: true``.

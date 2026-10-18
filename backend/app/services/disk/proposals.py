@@ -155,7 +155,7 @@ class Library:
 
 
 def library_proposals(library: Library, parsed_title: str | None, parsed_year: int | None) -> list[dict[str, Any]]:
-    """Decision 18 for the library: unambiguous when exactly one title shares a key and has the same year."""
+    """For the library: unambiguous when exactly one title shares a key and has the same year."""
     titles = library.by_name(parsed_title, parsed_year)
     same_year = [title for title in titles if parsed_year is not None and title.year == parsed_year]
     return [

@@ -1,5 +1,5 @@
 """Releases that wait out the delay of their version, and the job that loads them once the wait is over
-(the design notes; the rule itself is ``services/delay.py``).
+(the rule itself is ``services/delay.py``).
 
 **The gate** (``gate``) stands in the three load steps of the automatic (``scheduler._load``,
 ``series_loading._load_takes``, ``album_loading._load``), so it holds for planned searches, RSS and replacements alike.

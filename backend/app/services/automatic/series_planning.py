@@ -2,10 +2,10 @@
 (S5.2 to S5.4, decisions 2 to 10).
 
 **An episode wants something in a version** when no source feeds the version, its profile has series rules,
-its definition has a folder, the series is searched (anime only since A6 of the design notes), the version
+its definition has a folder, the series is searched (anime too), the version
 watches the episode, no running download of the
 version holds it (``downloads.store.downloading_episodes``, problems that need the owner included), no problem at the
-place holds the whole version (decision 3: ``path_not_found``, ``no_space``, ``client_error``), and it has no file or
+place holds the whole version (``path_not_found``, ``no_space``, ``client_error``), and it has no file or
 its file can still be upgraded. Specials only when watched, as they never are from a rule.
 
 **Files first** (decisions 18 and 23): a version of nexcrate's own wants nothing until its

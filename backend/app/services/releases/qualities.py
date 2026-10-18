@@ -1,6 +1,6 @@
 """Radarr's quality table for movies: names, sources, resolutions, modifiers.
 
-Facts from Radarr's source (read 13.09.2026, see the design notes), written down as data. TRaSH's
+Facts from Radarr's source (read 13.09.2026), written down as data. TRaSH's
 profiles and custom formats name qualities by these names and compare sources, resolutions and modifiers by
 these numbers, so nexcrate uses the same ones.
 """

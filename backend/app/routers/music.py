@@ -655,10 +655,9 @@ def _create_artist(
 
     ``mark`` lets ``/api/v1`` put its origin on a new artist and the versions made with it.
 
-    ⚠️ Two requests for the same new artist at once (nexbeat's finding 17 of 22.09.2026: two "whole artist" requests
-    ended in a 500 with ``UNIQUE constraint failed: artists.mbid``): the second waits for the first (``loading.adding``)
-    and finds its artist; every transaction takes SQLite's write lock before it reads, and a clash all the same answers
-    with the artist.
+    ⚠️ Two requests for the same new artist at once (two "whole artist" requests once ended in a 500 with ``UNIQUE
+    constraint failed: artists.mbid``): the second waits for the first (``loading.adding``) and finds its artist; every
+    transaction takes SQLite's write lock before it reads, and a clash all the same answers with the artist.
     """
     with loading.adding(data.mbid):
         try:
@@ -1061,7 +1060,7 @@ def list_artists(
     response_model=ArtistDetail,
     summary="Read an artist page",
     description=(
-        "The artist with its albums in the groups of decision 26; studio albums and EPs come open, the others closed "
+        "The artist with its albums in groups; studio albums and EPs come open, the others closed "
         "with their count. Joint albums of other artists of the library appear too."
     ),
     responses=error_responses((404, "not_found")),

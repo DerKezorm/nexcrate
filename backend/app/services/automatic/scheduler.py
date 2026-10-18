@@ -1,6 +1,5 @@
 """The job every minute, the load decision after an automatic search, and "search automatically now".
 
-the design notes, C1, C4, C6, C8, decisions 1, 6 to 10, 13 and 14.
 
 **Every minute** (``run_job``), with the switch on or off:
 
@@ -244,7 +243,7 @@ def _automatic_indexers(db: Any) -> list[Indexer]:
 
 
 def _due_order(today: str) -> tuple[Any, ...]:
-    """The order due titles start in (decision 21, S5 decision 13): a replacement, then a title with an own, monitored
+    """The order due titles start in: a replacement, then a title with an own, monitored
     version without a file, or a series with an aired, watched episode without a file in an own version (missing), then
     the rest (upgrades); within each group by the next time, then id."""
     movie_missing = exists().where(
@@ -806,8 +805,8 @@ def grab_limit_until(indexer_ids: set[int], now: datetime) -> datetime:
 
 def hold_for_grab_limit(summary: dict[str, Any], stopped: bool, body: dict[str, Any], now: datetime) -> dict[str, Any]:
     """The summary of a search in which only the indexer's grab limit held a fitting release back gets
-    ``grab_free_at``: the plan searches again then, not with the schedule (finding 6 of 22.09.2026, Full Metal Jacket:
-    a month later). Written before planning, which reads it (``planning.grab_limit_plan``)."""
+    ``grab_free_at``: the plan searches again then, not with the schedule, which could
+    be a month later. Written before planning, which reads it (``planning.grab_limit_plan``)."""
     if not stopped:
         return summary
     indexer_ids = {int(release["indexer_id"]) for release in body.get("releases") or [] if release.get("indexer_id")}
@@ -829,7 +828,7 @@ def _held_by_limit(value: object) -> bool:
 
 def repair_grab_limits(now: datetime) -> int:
     """At the start: a title whose last search found a release the grab limit held back, and which waits for its
-    schedule, is searched again now (finding 6 of 22.09.2026: 287 such titles waited a month). Returns how many."""
+    schedule, is searched again now instead of waiting up to a month. Returns how many."""
     repaired = 0
     with SessionLocal() as db:
         rows = db.scalars(

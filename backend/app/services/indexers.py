@@ -72,7 +72,7 @@ DEFAULT_CATEGORIES = (2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060)
 #: Sonarr's default series categories plus UHD, which Sonarr leaves out.
 DEFAULT_SERIES_CATEGORIES = (5030, 5040, 5045)
 #: Newznab's anime category. It stays out of the series default; an anime series asks it as well
-#: (``default_anime_categories``, the design notes, A3).
+#: (``default_anime_categories``).
 ANIME_CATEGORY = 5070
 DEFAULT_CAPS: dict[str, Any] = {
     "movie_search": True,

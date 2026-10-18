@@ -1,9 +1,8 @@
-"""The plan per title: which versions want something, when the title is searched next, and why (the design notes,
-C2, C3, C4, C7, C8, decisions 2 to 6, 11 and 12).
+"""The plan per title: which versions want something, when the title is searched next, and why.
 
 **A version wants something** when no source feeds it, it is monitored, its definition has a profile with
 movie rules and a default folder, no download blocks it (queued to importing, or a problem that needs the owner), and it
-has no file or its file can still be upgraded (``cutoff_not_met``: by its quality, or since decision 20 by its score at
+has no file or its file can still be upgraded (``cutoff_not_met``: by its quality, or by its score at
 the cutoff quality; both want the same way, at the same rates). Only movies take part.
 
 **Its next search,** by the first rule that applies:
@@ -147,7 +146,7 @@ def grab_free_at(summary: object) -> datetime | None:
 
 def grab_limit_plan(next_at: datetime, reason: str, free_at: datetime | None) -> tuple[datetime, str]:
     """A release that only the grab limit held back is searched again when the indexer loads again, not with the
-    schedule (finding 6 of 22.09.2026: 287 upgrades found on 21.09.2026 waited a month, Full Metal Jacket too). Until
+    schedule; with the schedule such an upgrade could wait a month. Until
     the next search the time stays, also once it passed: the title is due then."""
     if free_at is not None and reason in SEARCHING_REASONS and next_at > free_at:
         return free_at, "limit"

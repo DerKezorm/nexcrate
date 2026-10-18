@@ -152,7 +152,7 @@ def _store(version: Version, state: str, digest: str | None) -> str:
 
 def write(db: OrmSession, version: Version, installation: str, *, adopt: bool = False) -> str:
     """``adopt``: a file of another installation in a folder the owner just gave to an album or restored from it
-    becomes this installation's (as for movies, the design notes, decision 4)."""
+    becomes this installation's (as for movies)."""
     title = db.get(Title, version.title_id)
     folder = _folder(version)
     if title is None:

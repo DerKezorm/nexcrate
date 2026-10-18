@@ -50,12 +50,12 @@ logger = logging.getLogger("nexcrate.music")
 
 #: The label of the one music definition when it is created, by interface language.
 DEFINITION_LABELS = {"de": "Musik", "en": "Music"}
-#: The choices of the add dialog, and since the design notes every choice Lidarr offers when adding
+#: The choices of the add dialog, and every choice Lidarr offers when adding
 #: an artist: albums without files, albums with files, the first and the latest album.
 WATCH_CHOICES = ("studio", "future", "none", "missing", "existing", "first", "latest")
 #: The choices that are applied while the groups are made; the others after, over the whole catalogue.
 WATCH_WHILE_MAKING = ("studio", "future", "none")
-#: Decision 21: how often release groups and releases are asked for again, with up to 10 % jitter.
+#: How often release groups and releases are asked for again, with up to 10 % jitter.
 GROUPS_ACTIVE = timedelta(days=2)
 GROUPS_QUIET = timedelta(days=30)
 RELEASES_FRESH = timedelta(hours=12)
@@ -263,7 +263,7 @@ def upsert_artist(
 
 def take_write_lock(db: OrmSession) -> None:
     """A write that matches no row, so that SQLite's write lock is taken before anything is read: two writers that
-    both read first and then write would find the same nothing (nexbeat's finding 17 of 22.09.2026)."""
+    both read first and then write would find the same nothing."""
     db.execute(
         update(Artist).where(Artist.id < 1).values(name=Artist.name),
         execution_options={"synchronize_session": False},
@@ -402,14 +402,14 @@ def various_artist(db: OrmSession, moment: datetime) -> Artist:
 
 
 def groups_due(artist: Artist, newest_album: str | None, moment: datetime) -> datetime:
-    """Decision 21: every 2 days while the artist is active or its newest album is under 30 days old, else 30."""
+    """Every 2 days while the artist is active or its newest album is under 30 days old, else 30."""
     fresh = _date_of(newest_album)
     active = not artist.ended or (fresh is not None and moment - fresh < FRESH_ALBUM)
     return moment + jittered(GROUPS_ACTIVE if active else GROUPS_QUIET)
 
 
 def releases_due(first_release_date: str | None, has_file: bool, moment: datetime) -> datetime:
-    """Decision 21: an album under 30 days old every 12 hours, one with files every 60 days, else every 30."""
+    """An album under 30 days old every 12 hours, one with files every 60 days, else every 30."""
     released = _date_of(first_release_date)
     if released is not None and moment - released < FRESH_ALBUM:
         return moment + jittered(RELEASES_FRESH)
@@ -470,7 +470,7 @@ def apply_release_group(
     new = title is None
     studio = kinds.of_types(group.primary_type, group.secondary_types, artist.album_types)
     if title is None:
-        # Decision 3: the first artist of the credit that is in the library owns the album, whoever loads it first.
+        # The first artist of the credit that is in the library owns the album, whoever loads it first.
         known = artists_by_mbid or {}
         credited = [str(part.get("mbid") or "") for part in group.credit]
         owner = next((known[mbid] for mbid in credited if mbid in known), artist)
@@ -579,7 +579,7 @@ def unlisted_groups(db: OrmSession, artist: Artist, seen: set[str]) -> list[Titl
 
 
 def mark_group_gone(db: OrmSession, title: Title, moment: datetime, definition: VersionDefinition | None) -> None:
-    """Decision 22: the album stays, with the mark and a line in its history."""
+    """The album stays, with the mark and a line in its history."""
     title.mb_gone_at = moment
     _history(db, title.id, None, definition, "album_gone", moment)
 
@@ -859,7 +859,7 @@ def refresh_target(db: OrmSession, title: Title, version: Version, *, moment: da
 def set_owner_target(
     db: OrmSession, title: Title, version: Version, release: Release | None, *, moment: datetime, language: str
 ) -> None:
-    """Decision 30: the owner chooses any official release, or hands the choice back to the rule."""
+    """The owner chooses any official release, or hands the choice back to the rule."""
     definition_row = db.get(VersionDefinition, version.version_definition_id)
     old_id = version.target_release_id
     if release is None:
@@ -925,7 +925,7 @@ def _count_tracks(db: OrmSession, version: Version, files: list[TrackFile] | Non
             extra += len(file.source_track_ids)
         elif file.source_file_id is not None:
             extra += 1
-        # A file nexcrate filed without a track (a hidden track, the design notes, decision 32) holds none.
+        # A file nexcrate filed without a track (a hidden track) holds none.
     if version.target_release_id is not None and ids:
         release_ids = {version.target_release_id}
         release_ids.update(db.scalars(select(ReleaseTrack.release_id).where(ReleaseTrack.id.in_(ids))))

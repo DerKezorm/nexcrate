@@ -1,6 +1,6 @@
 """The building blocks movies and series share when rules are built from answers.
 
-Decision 5 of the design notes: the two kinds ask nearly the same questions and turn TRaSH's data into
+The two kinds ask nearly the same questions and turn TRaSH's data into
 rules the same way. What differs stays in ``movie.py`` and ``series.py``: the question catalogue, the table from
 family, resolution and source to TRaSH's profile, the groups a detailed answer adds, and the size set. What is
 the same lives here: the formats of a profile, the quality list, the language formats, the size limits, the
@@ -386,7 +386,7 @@ def cutoff_and_upgrade_until(
     min_score: int,
     table: QualityTable,
 ) -> tuple[str, int]:
-    """The cutoff item and upgrade-until, as the design notes decided them for ``first`` and ``best``."""
+    """The cutoff item and upgrade-until, as decided for ``first`` and ``best``."""
     if answers["good_enough"] == "first":
         cutoff = next(entry.label for entry in entries if entry.allowed and target in resolutions_of(entry, table))
         return cutoff, min_score

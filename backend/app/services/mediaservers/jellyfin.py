@@ -4,7 +4,7 @@ Both grew from the same code and answer nearly the same addresses: ``GET /System
 ``POST /Library/Media/Updated`` with the folders, and ``POST /Library/Refresh`` for everything. They differ in the
 header of the API key, in how they name themselves, and in where the libraries are listed: Jellyfin at
 ``GET /Library/VirtualFolders``, today's Emby at ``GET /Library/VirtualFolders/Query`` (an Emby that does not know
-that address is asked the old one). The facts and their sources stand in the design notes; ⚠️ none of them
+that address is asked the old one). ⚠️ None of this
 is measured on a real server.
 
 ⚠️ The key travels in a header only. Both also accept ``?api_key=``; a URL ends up in logs and proxies.

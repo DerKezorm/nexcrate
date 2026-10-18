@@ -18,7 +18,7 @@ Indexers and download clients (measured on Radarr 6.3.0, 13.09.2026): a field is
 ⚠️ ``userName`` in clear text. Only the fields in ``INDEXER_FIELDS`` and ``DOWNLOAD_CLIENT_FIELDS``
 are ever read. A field that is not set has no ``value``.
 
-What Radarr 6.3.0 taught (measured 13.09.2026, see the design notes):
+What Radarr 6.3.0 taught (measured 13.09.2026):
 
 * ⚠️ **The key travels only in the ``X-Api-Key`` header**, never in a URL. Radarr also accepts
   ``?apikey=``, and the query even wins over the header. A URL ends up in logs, proxies and

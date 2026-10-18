@@ -116,7 +116,7 @@ def _one_set(
 def compile_rules(db: OrmSession, profile: Profile) -> dict[str, Any]:
     """The rules of a profile in expert mode: its own settings, the formats it points at, the sizes of its kind.
 
-    A series profile may carry an anime branch of its own (``expert["anime"]``, the design notes, B2). It is
+    A series profile may carry an anime branch of its own (``expert["anime"]``). It is
     built exactly like the profile itself and lands under ``rules["anime"]``, where ``profiles.series.rules_for``
     reads it for a series of the type anime. Without it an anime series is judged by the profile itself, as before.
     """

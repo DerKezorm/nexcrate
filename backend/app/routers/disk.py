@@ -1,6 +1,6 @@
 """Folders on disk: scanning, proposals, assigning by hand and restoring from release.nex.
 
-the design notes, "API", "Folders on disk". The scan, restoring and assigning many at once run as jobs in
+The scan, restoring and assigning many at once run as jobs in
 memory; ``GET /api/disk/scan`` follows the newest one. Nothing here moves, renames or deletes a movie; the only file
 written on disk is ``release.nex``.
 """
@@ -159,7 +159,7 @@ class Proposal(BaseModel):
     )
     from_: Literal["companion", "name_number", "nfo_number", "title_year", "library"] = Field(alias="from")
     title_id: int | None = Field(description="The title in the library when the movie is there already.")
-    unambiguous: bool = Field(description="Decision 18: a number naming one movie, or exactly one title/year match.")
+    unambiguous: bool = Field(description="A number naming one movie, or exactly one title/year match.")
 
     model_config = {"populate_by_name": True}
 

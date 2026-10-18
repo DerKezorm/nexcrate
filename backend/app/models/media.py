@@ -53,8 +53,8 @@ RUN_STATUSES = ("running", "done", "failed")
 #: episodes long after they aired (decisions 5 and 11). ``episodes_filed`` and
 #: ``episode_renamed`` since S4: a series download filed, a file named with TBA renamed.
 #: ``file_relinked`` since S6: the repair of a wrong bridge to TVDB moved a taken-over file, detail ``old new`` codes.
-#: ``album_appeared``, ``album_type_changed``, ``album_gone`` and ``target_changed`` since M1 (the design notes,
-#: decisions 22 to 24, 29): MusicBrainz showed a new album of a watched artist, changed an album's type, stopped
+#: ``album_appeared``, ``album_type_changed``, ``album_gone`` and ``target_changed`` since M1:
+#: MusicBrainz showed a new album of a watched artist, changed an album's type, stopped
 #: listing one, or the target release of an album version changed. ``album_filed`` and ``tags_written`` since M4
 #:: an album download filed, the tags of an album's files written from the preview.
 #: ``renamed`` and ``rename_undone`` since the mass rename: files and folders of a version
@@ -128,8 +128,8 @@ class VersionDefinition(Base):
     naming_anime_file: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     #: ``tmdb`` or ``tvdb``: the numbers in the names of this series version. Null means ``tmdb``.
     episode_numbering: Mapped[str | None] = mapped_column(String(8), nullable=True)
-    #: The countries that break a tie for the target release of an album version, in order (the design notes,
-    #: decision 28). Null means the list of the interface language. ⚠️ From migration 14.
+    #: The countries that break a tie for the target release of an album version, in order.
+    #: Null means the list of the interface language. ⚠️ From migration 14.
     music_countries: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     #: The delay rule of this version (``services/delay.py``): preferred protocol, a protocol switched off, minutes to
     #: wait. Null means the apps' defaults: Usenet preferred, no waiting. Nullable, so it comes without a migration.
@@ -290,8 +290,8 @@ class Title(Base):
     xem_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
     #: The TMDB episode group the owner chose as the release numbering; null means TMDB's own.
     episode_group_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    #: Whether releases are read through the scene numbering (Sonarr's ``useSceneNumbering``, the design notes,
-    #: B6). Null means on, as Sonarr has it for every series with a mapping; only the owner sets false. ⚠️ From the
+    #: Whether releases are read through the scene numbering (Sonarr's ``useSceneNumbering``).
+    #: Null means on, as Sonarr has it for every series with a mapping; only the owner sets false. ⚠️ From the
     #: column upkeep, without a migration.
     use_scene_numbering: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     # ⚠️ From migration 12 (S5.0); a change needs a new migration.

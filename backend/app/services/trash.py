@@ -5,7 +5,7 @@
 * **Fetched:** ``data/trash/trash-radarr.json`` and ``trash-sonarr.json`` in the data directory, so they
   survive a new container. A readable fetched state wins over the bundled one; a broken one is logged loudly
   and ignored.
-* **One state for both apps** (decision 2 of the design notes): one commit, one daily check, one
+* **One state for both apps**: one commit, one daily check, one
   download, both files out of the same tarball. The daily check (job ``trash_check``) asks for the newest
   commit under ``docs/json/radarr`` and under ``docs/json/sonarr``, two API calls a day, and keeps the newer
   one, only while ``updates_enabled``. It only looks, it never fetches: a state that changed on its own would

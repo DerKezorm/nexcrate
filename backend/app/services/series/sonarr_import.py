@@ -742,7 +742,7 @@ def detach(db: OrmSession, version: Version, moment: datetime, on: str) -> None:
     """An owner's series version no connection feeds any more: its files go with Sonarr, its rule decides again.
 
     It is nexcrate's own from now on (``own_since``) and wants nothing until its folder is read (``files_read_at``
-    empty, the design notes, decision 23); the caller enqueues it after the commit.
+    empty); the caller enqueues it after the commit.
     """
     version.own_since = moment
     version.files_read_at = None

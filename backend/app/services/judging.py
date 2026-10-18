@@ -1,13 +1,11 @@
 """The stored judgement of nexcrate's own files follows the rules.
 
-See the design notes, finding 15.
-
-* **Episode files** of a series version of nexcrate's own are judged again as well (``episode_files``, A6 of
-  the design notes): a changed profile reaches the files that were filed before it.
+* **Episode files** of a series version of nexcrate's own are judged again as well (``episode_files``): a changed
+  profile reaches the files that were filed before it.
 * **One rule:** ``releases.cutoff_not_met`` judges a version no source feeds that has a file. The file is named by the
   release it came with (``release_title``), else by the file name of ``relative_path``, with the quality stored for it,
   the way the search names a current file (``current_file``). Without movie rules for its version definition the verdict
-  is false. Since decision 20 (15.09.2026) the rule counts the score too, as in Radarr: a file at the cutoff quality
+  is false. The rule counts the score too, as in Radarr: a file at the cutoff quality
   whose score lies below the profile's upgrade-until can still be upgraded. ``judgement`` gives the same verdict with
   its reason, the file's score and the target, for the title page, and writes nothing.
 * **Never judged here:** a version a source feeds keeps the source's verdict; a version without a file is left alone;

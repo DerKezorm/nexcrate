@@ -11,7 +11,7 @@ The jobs, the mapping of root folders by files, the blockers and the undo are th
   mapping are one file per album, spread over the albums. Then every file is looked at.
 * **The takeover** writes in one transaction per connection: every version becomes nexcrate's own with its album
   folder as nexcrate sees it, its files relative to that folder (a medium folder kept), the target release it has
-  (set by the owner from now on, decision 8), tags untouched; missing files go. ``own_since`` is now,
+  (set by the owner from now on), tags untouched; missing files go. ``own_since`` is now,
   ``files_read_at`` empty while the album folder exists.
 * **Afterwards**, phase ``reading_folders``: every album folder is read for files Lidarr did not know
   (``album_read``); phase ``companions``: ``release.nex`` per album folder. Neither fails the takeover.
@@ -612,7 +612,7 @@ def save(
                 ],
             )
         for start in range(0, len(version_ids), 500):
-            # Decision 8: the release the album has is the owner's choice from now on.
+            # The release the album has is the owner's choice from now on.
             db.execute(
                 update(Version)
                 .where(Version.id.in_(version_ids[start : start + 500]), Version.target_set_by == "source")

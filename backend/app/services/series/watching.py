@@ -393,8 +393,8 @@ SETTING_COUNTS_VERSION = "series_counts_version"
 
 
 def recount_all_once() -> int:
-    """Count every series version again when the counting rules changed since the last start (the design notes,
-    decision 46: specials left the count). Returns how many versions were counted."""
+    """Count every series version again when the counting rules changed since the last start (as when
+    specials left the count). Returns how many versions were counted."""
     from ...db import SessionLocal, get_setting, set_setting
     from ...models import Title
 

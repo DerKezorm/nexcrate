@@ -1,4 +1,4 @@
-"""The switch for subtitle files (C9, decision 16 of the owner).
+"""The switch for subtitle files.
 
 The setting ``subtitles_enabled``: ``0`` off, anything else on. Nothing stored means on. Off, an import places no
 subtitle file; what was placed before stays, and on an upgrade the old file's recorded subtitles still go into the

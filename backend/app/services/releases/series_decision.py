@@ -1,6 +1,6 @@
 """One series release for one version: does it fit, which episodes would it fill, replace or leave alone.
 
-Decisions 21 to 29 of the design notes. Like the movie engine this knows nothing about the database: the
+Like the movie engine this knows nothing about the database: the
 router hands in the rules of a profile, what it knows about the series, and the episodes the release was mapped
 to (``services/series/release_match.py``).
 
@@ -43,8 +43,8 @@ Sonarr.
 **Double episodes stay whole**: a release is no improvement for an episode whose file holds more
 episodes than the release covers (``file_covers_more``). A pack that holds all of them may replace it.
 
-⚠️ The custom formats see the whole release title, the series name included: Sonarr does the same (decision 18,
-measured 16.09.2026). Group and languages are still read with the title masked, so a series called "German
+⚠️ The custom formats see the whole release title, the series name included: Sonarr does the same
+(measured 16.09.2026). Group and languages are still read with the title masked, so a series called "German
 Crime" carries no language of its own.
 
 **Below the target** (``below_target``) as for movies, plus ``below_target_in_group``: the release

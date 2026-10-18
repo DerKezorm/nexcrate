@@ -1,5 +1,5 @@
-"""The quality step of an album on disk, and whether the music profile could improve it (the design notes,
-decision 22). Only shown: nothing is searched for because of it, that comes with M3 and M5.
+"""The quality step of an album on disk, and whether the music profile could improve it. Only
+shown: nothing is searched for because of it, that comes with M3 and M5.
 
 The step of an album is the worst step of its files (``track_files.quality``, as the connection names it). It is kept
 in ``versions.quality``; ``versions.cutoff_not_met`` says that it lies below the profile's target, and the state

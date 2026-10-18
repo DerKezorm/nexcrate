@@ -97,8 +97,8 @@ class Artist(Base):
     added_by: Mapped[str] = mapped_column(String(16), default="owner")
     added: Mapped[datetime] = mapped_column(default=utcnow, index=True)
     updated_at: Mapped[datetime] = mapped_column(default=utcnow)
-    #: The artist folder below the music version's folder, fixed once a file lies in it (the design notes,
-    #: decision 16). ⚠️ From migration 16.
+    #: The artist folder below the music version's folder, fixed once a file lies in it.
+    #: ⚠️ From migration 16.
     folder: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     # ⚠️ The three columns below come from the missing-column upkeep; nullable and without a
     # default on purpose, or every INSERT of an older table shape would carry them.

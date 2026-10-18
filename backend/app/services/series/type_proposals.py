@@ -6,7 +6,7 @@ keyword or Animation in Japanese (``anime.looks_like_anime``), daily for TMDB's 
 otherwise. Every TMDB refresh writes it; the run fills it for the series that have none yet, or for all on request.
 
 The proposals are the series whose stored type differs from the suggestion. A series a live Sonarr connection feeds is
-left out: it takes Sonarr's type on every run (decision 2 of this plan). Nothing is changed here; the owner takes the
+left out: it takes Sonarr's type on every run. Nothing is changed here; the owner takes the
 proposals he wants through ``PUT /api/library/series-type``.
 
 Log lines carry ids and counts, never titles.

@@ -250,7 +250,7 @@ async def _import(url: str, api_key: str, source_id: int, run_id: int, light: bo
                 known = before.get(str(record.id))
                 mark = _mark(record)
                 if isinstance(known, dict) and known.get("mark") == mark and (record.mbid or "") in library:
-                    # Decision 52 still needs its albums: what Lidarr no longer lists loses its version.
+                    # The cleanup at the end still needs its albums: what Lidarr no longer lists loses its version.
                     seen_albums.update(known.get("albums") or [])
                     tally.add(known.get("counts") or [])
                     tally.unchanged += 1
@@ -258,7 +258,8 @@ async def _import(url: str, api_key: str, source_id: int, run_id: int, light: bo
                 else:
                     albums = await lidarr.albums(record.id)
                     read = ArtistRead(albums, await lidarr.tracks(record.id), await lidarr.track_files(record.id))
-                    # Known to Lidarr, with or without an id: decision 52 removes only what Lidarr no longer lists.
+                    # Known to Lidarr, with or without an id: the cleanup at the end removes only what Lidarr no
+                    # longer lists.
                     seen_albums.update(album.id for album in read.albums)
                     counted = tally.counts()
                     if record.mbid:
@@ -622,7 +623,7 @@ def _write_album(
     if watched is not None and watched.mbid:
         watched_row = db.scalar(select(Release).where(Release.title_id == title.id, Release.mbid == watched.mbid))
     if has_files and watched_row is not None:
-        # Decision 48: with files, Lidarr's watched release is target and actual release.
+        # With files, Lidarr's watched release is target and actual release.
         version.target_release_id = watched_row.id
         version.actual_release_id = watched_row.id
         version.target_set_by = "source"
@@ -648,7 +649,7 @@ def _write_files(
     tally: Tally,
     moment: datetime,
 ) -> None:
-    """Decision 49: one row per Lidarr file; a file with several tracks keeps their ids and no single track."""
+    """One row per Lidarr file; a file with several tracks keeps their ids and no single track."""
     by_file: dict[int, list[TrackRecord]] = defaultdict(list)
     for track in tracks:
         if track.track_file_id:
@@ -710,7 +711,7 @@ def _write_files(
 def _write_unmapped(
     db: OrmSession, source: Source, unmapped: list[TrackFileRecord], tally: Tally, moment: datetime
 ) -> None:
-    """Decision 50: the files Lidarr could not map, replaced on every run."""
+    """The files Lidarr could not map, replaced on every run."""
     db.execute(delete(SourceUnmappedFile).where(SourceUnmappedFile.source_id == source.id))
     for file in unmapped:
         if not file.path:
@@ -727,7 +728,7 @@ def _write_unmapped(
 
 
 def _write_queue(db: OrmSession, source: Source, queue: list[QueueRecord]) -> None:
-    """Decision 51: an album in Lidarr's queue shows as downloading with its progress; nothing is touched."""
+    """An album in Lidarr's queue shows as downloading with its progress; nothing is touched."""
     by_album: dict[int, QueueRecord] = {}
     for item in queue:
         if item.album_id is not None:
@@ -749,7 +750,7 @@ def _write_queue(db: OrmSession, source: Source, queue: list[QueueRecord]) -> No
 
 
 def _finish(db: OrmSession, source: Source, run_id: int, seen_albums: set[int], tally: Tally, moment: datetime) -> None:
-    """Decision 52: a version this connection fed for an album Lidarr no longer knows goes; the title stays; an
+    """A version this connection fed for an album Lidarr no longer knows goes; the title stays; an
     album the owner added keeps its version, without the connection."""
     for version in list(db.scalars(select(Version).where(Version.source_id == source.id))):
         if version.lidarr_album_id in seen_albums:

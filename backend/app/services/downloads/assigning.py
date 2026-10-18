@@ -11,8 +11,8 @@
 * An assignment while the import's thread still ends answers ``download_busy``; an assignment that replaces only part
   of a multi-episode file answers ``assignment_covers_more`` with the episodes the file also holds.
 * ``choose`` files the video the owner chose of several.
-* ``watch`` is the guard of decision 33: a download ``completed`` or ``importing`` for 30 minutes without a change and
-  without a running import becomes ``import_stalled``.
+* ``watch`` is the guard against a stuck import: a download ``completed`` or ``importing`` for 30 minutes without a
+  change and without a running import becomes ``import_stalled``.
 """
 
 from __future__ import annotations

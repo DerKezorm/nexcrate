@@ -251,7 +251,7 @@ def _anime_categories(row: Indexer) -> tuple[int, ...]:
 
 
 def form_of(row: Indexer, kinds: Collection[str]) -> str | None:
-    """What one sync of the indexer asks for (decision 17; music since M5); None when it has nothing to ask."""
+    """What one sync of the indexer asks for (music since M5); None when it has nothing to ask."""
     # A Prowlarr indexer without movie categories (one for series only) is not read for movies; any other indexer
     # without them reads its defaults (``feed_categories``).
     movie = MOVIE in kinds and (bool(row.categories) or row.prowlarr_id is None)

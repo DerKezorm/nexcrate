@@ -6,7 +6,7 @@ a decision per file, the episodes that stay without a file, and whether the owne
 * **The reading of a video**, the first that gives a numbering form: its file name; the name of its folder when that
   folder holds this one video (obfuscated names in Usenet); for a download of exactly one episode with exactly one
   video, that episode. Numbers are mapped through the series' numberings, the one the release matched at loading first.
-  An anime series also reads names counted through (``Show - 148``, the design notes, A5): the numbers are
+  An anime series also reads names counted through (``Show - 148``): the numbers are
   ``absolute`` ones, mapped through the scheme ``absolute``, as each video of a batch names its own.
 * **Safe** means: the episodes read are all episodes of this download. Only numbers decide; a series title in the name
   is not required. A file whose episodes do not all belong is never filed by itself.
@@ -115,7 +115,8 @@ class Video:
 
 @dataclass(frozen=True)
 class Reading:
-    #: The parser's form: standard, multi_episode, daily or mini_series; ``download`` for decision 19.3.
+    #: The parser's form: standard, multi_episode, daily or mini_series; ``download`` when the download stood for the
+    #: one expected episode.
     form: str
     #: ``file``, ``folder`` or ``download``.
     source: str

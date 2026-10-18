@@ -39,7 +39,7 @@ FINISHED_STATES = ("imported", "failed", "removed")
 #: ``unpacked``: the video came out of the download's archives (T3).
 TRANSFERS = ("hardlink", "copy", "move", "unpacked")
 #: Why a failed download failed: SABnzbd reported Failed, the job was encrypted, or the client did not answer in time
-#: when it was handed the release and never showed it afterwards (``not_taken``, the owner's finding 1 of 22.09.2026).
+#: when it was handed the release and never showed it afterwards (``not_taken``).
 #: ``encrypted`` and ``archive_incomplete`` also when nexcrate found the finished download's archive wanting a password
 #: or missing volumes (``downloads.discard``).
 FAILED_REASONS = ("client_failed", "encrypted", "archive_incomplete", "not_taken")
@@ -299,7 +299,7 @@ class DownloadFile(Base):
 
 
 #: What became of an audio file of an album download (M4.3 to M4.6): filed with its track,
-#: ``placing`` while it moves, ``open`` for the owner, filed without a track (``loose``, decision 32), another album of
+#: ``placing`` while it moves, ``open`` for the owner, filed without a track (``loose``), another album of
 #: the artist (``other_album``), not needed once the album is complete, or not filed by the owner.
 AUDIO_DECISIONS = ("filed", "placing", "open", "loose", "other_album", "not_needed", "not_filed")
 
@@ -424,9 +424,9 @@ FOREIGN_STATES = ("queued", "downloading", "paused", "completed", "failed", "pro
 
 
 class ForeignJob(Base):
-    """A job in nexcrate's category of a client that no download of nexcrate follows (the owner's finding 2 of
-    22.09.2026): put there by hand, by another program, or by a hand-over whose answer never came. It shows under
-    Downloads, Problems, until the owner imports it into a title, removes it, or it leaves the client.
+    """A job in nexcrate's category of a client that no download of nexcrate follows: put
+    there by hand, by another program, or by a hand-over whose answer never came. It shows under Downloads, Problems,
+    until the owner imports it into a title, removes it, or it leaves the client.
 
     ``name`` is the client's name of the job, ``reported_path`` its finished path as the client reports it (never
     trusted, never answered). ⚠️ From ``create_all``, without a migration.

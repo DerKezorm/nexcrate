@@ -1823,7 +1823,7 @@ _proposal_runs: set[asyncio.Task[None]] = set()
     response_model=SeriesTypeProposalsOut,
     summary="The series whose type differs from TMDB's suggestion",
     description=(
-        "the design notes, B5: what TMDB suggests for every series (anime, daily, standard), kept by every TMDB "
+        "What TMDB suggests for every series (anime, daily, standard), kept by every TMDB "
         "refresh, against the type the series has. Nothing is changed; take a proposal with "
         "`PUT /api/library/series-type`."
     ),

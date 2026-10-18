@@ -1,6 +1,6 @@
 """Sonarr's quality table for series: names, sources, resolutions, and the order of the qualities.
 
-Decision 16 of the design notes. Sonarr names and numbers qualities differently from Radarr, and TRaSH's
+Sonarr names and numbers qualities differently from Radarr, and TRaSH's
 Sonarr formats compare sources by Sonarr's numbers, so series need their own table:
 
 * **Names:** ``Bluray-1080p Remux`` instead of ``Remux-1080p``, ``HDTV-2160p``, ``Raw-HD``. Sonarr has no CAM,

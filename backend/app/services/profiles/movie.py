@@ -1,7 +1,6 @@
 """Profiles for movies: the questions, the decision table, and the rules built from the answers.
 
-The approved contract is the design notes ("Questions" and "Building the rules",
-which wins where they differ); Nexview's wizard is the groundwork for the tables. Same answers and same
+Nexview's wizard is the groundwork for the tables. Same answers and same
 TRaSH state give the same rules. A missing table row, profile, group or custom format is a loud
 ``ProfileBuildError``, never a fallback.
 
