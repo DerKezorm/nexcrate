@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { errorText } from '../../api/client'
 import { MEDIA_SERVER_KINDS, mediaServersApi } from '../../api/mediaServers'
-import type { MediaServer, MediaServerCreate, MediaServerKind, MediaServerPathMapping, MediaServerTestResult, MediaServerUpdate, PlexPin, PlexServer, PlexServers } from '../../api/types'
+import type { MediaServer, MediaServerCreate, MediaServerKind, MediaServerLibrary, MediaServerPathMapping, MediaServerTestResult, MediaServerUpdate, PlexPin, PlexServer, PlexServers } from '../../api/types'
 import { buttonClasses } from '../../components/buttonClasses'
 import { Dialog } from '../../components/Dialog'
 import { PasswordField } from '../../components/PasswordField'
@@ -248,6 +248,26 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
     setRows((current) => current.map((row) => (row.key === key ? { ...row, [side]: value } : row)))
   }
 
+  /** The paths the server actually returned, for the remote side. Editing an existing server shows the stored ones;
+   *  "Test connection" refreshes the list. The user can still type a subfolder the server did not list. */
+  const remoteOptions = useMemo(() => {
+    const pathToLabel = new Map<string, string>()
+    const collect = (libs: MediaServerLibrary[] | undefined) => {
+      for (const library of libs ?? []) {
+        const name = library.name?.trim()
+        for (const location of library.locations ?? []) {
+          if (!location || pathToLabel.has(location)) continue
+          pathToLabel.set(location, name ? `${name} \u00b7 ${location}` : location)
+        }
+      }
+    }
+    collect(server?.libraries)
+    collect(tested?.libraries)
+    return Array.from(pathToLabel, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value))
+  }, [server?.libraries, tested?.libraries])
+
+  const remoteDatalistId = 'media-server-remote-options'
+
   const urlHint = plex
     ? t('settings.servers.form.urlHintPlex')
     : kodi
@@ -451,6 +471,7 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
                 {t('settings.servers.mappings.remote')}
                 <input
                   aria-label={t('settings.servers.mappings.remoteLabel', { row: index + 1 })}
+                  list={remoteDatalistId}
                   value={row.remote}
                   onChange={(event) => changeRow(row.key, 'remote', event.target.value)}
                   maxLength={1024}
@@ -470,6 +491,13 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
               </Button>
             </div>
           ))}
+          <datalist id={remoteDatalistId}>
+            {remoteOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </datalist>
           <div>
             <Button
               variant="ghost"
