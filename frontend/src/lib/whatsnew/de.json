@@ -506,6 +506,20 @@
       "small": [
         "Schlüssel, die du schon hast, gelten überall weiter; nur ab jetzt angelegte sind kürzer."
       ]
+    },
+    "1.2.2": {
+      "lead": "Ein kleines Release aus Issue #18: Die Nummern auf der Titelseite führen jetzt zu TMDB, TVDB und IMDb.",
+      "sections": [
+        {
+          "title": "Nummern als Links",
+          "body": "Unter der Beschreibung eines Films oder einer Serie stehen die Nummern bei TMDB, TVDB und IMDb. Ein Klick öffnet jetzt die Seite des Titels dort, in einem neuen Tab.",
+          "where": "Bibliothek › ein Titel"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Ist die Versionsprüfung ausgeschaltet, meldet nexcrate keine neuere Fassung mehr."
+      ]
     }
   }
 }

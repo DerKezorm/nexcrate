@@ -506,6 +506,20 @@
       "small": [
         "Keys you already have keep working everywhere; only keys made from now on are shorter."
       ]
+    },
+    "1.2.2": {
+      "lead": "A small release from issue #18: the numbers on the title page now lead to TMDB, TVDB and IMDb.",
+      "sections": [
+        {
+          "title": "Numbers as links",
+          "body": "Below the overview of a movie or a series stand its numbers at TMDB, TVDB and IMDb. A click now opens the title's page there, in a new tab.",
+          "where": "Library › a title"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "With the version check switched off, nexcrate no longer reports a newer release."
+      ]
     }
   }
 }
