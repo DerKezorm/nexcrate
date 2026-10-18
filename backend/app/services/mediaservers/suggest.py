@@ -88,7 +88,13 @@ def suggest(local_by_kind: Mapping[str, Iterable[str]], libraries: Iterable[Any]
     any_folder, all_covered = False, True
     for kind, folders in local_by_kind.items():
         wanted = LIBRARY_KIND.get(kind)
-        of_kind = [library for library in listed if library.kind == wanted]
+        # Libraries without a kind (Kodi's video sources hold movies and series mixed; a mixed library of Jellyfin
+        # or Emby) can hold movies and series as well, but never music.
+        of_kind = [
+            library
+            for library in listed
+            if library.kind == wanted or (wanted in ("movie", "series") and library.kind is None)
+        ]
         remotes = [location for library in of_kind for location in library.locations]
         locals_ = [folder for folder in folders if folder]
         if not remotes:

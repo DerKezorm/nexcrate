@@ -14,16 +14,17 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, utcnow
 
-SERVER_KINDS = ("plex", "jellyfin", "emby")
+SERVER_KINDS = ("plex", "jellyfin", "emby", "kodi")
 #: What the last notification was: the folder alone, a whole library, or it failed.
 NOTIFY_RESULTS = ("folder", "library", "failed")
 
 
 class MediaServer(Base):
-    """A Plex, a Jellyfin or an Emby.
+    """A Plex, a Jellyfin, an Emby or a Kodi.
 
-    ``token`` holds Plex's token or the API key of Jellyfin or Emby, encrypted (``enc:...``), never the plain value.
-    ``libraries`` is what the server listed at the last check, each with the owner's switch:
+    ``token`` holds Plex's token, the API key of Jellyfin or Emby, or the password of Kodi, encrypted (``enc:...``),
+    never the plain value. ``username`` is Kodi only: the username of HTTP Basic, stored plain; it is empty for the
+    others. ``libraries`` is what the server listed at the last check, each with the owner's switch:
     ``{id, name, kind, locations, refresh}``; ``kind`` is movie, series, music or null. ``path_mappings`` is a list of
     ``{local, remote}`` pairs: the same folder as nexcrate sees it and as the server sees it.
 
@@ -39,6 +40,8 @@ class MediaServer(Base):
     kind: Mapped[str] = mapped_column(String(16))
     url: Mapped[str] = mapped_column(String(1024))
     token: Mapped[str] = mapped_column(Text, default="")
+    #: Kodi only: the username of HTTP Basic, stored plain; null or empty for the others.
+    username: Mapped[str | None] = mapped_column(String(128), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     libraries: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     path_mappings: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list)
