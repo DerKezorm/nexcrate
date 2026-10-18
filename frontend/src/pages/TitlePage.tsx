@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
@@ -242,11 +242,16 @@ export function TitlePage() {
         ]
   ).filter(Boolean)
   const original = title.original_title && title.original_title !== title.title ? title.original_title : null
+  // Jede Nummer fuehrt auf die Seite des Titels dort (Issue #18).
   const ids = [
-    title.tmdb_id !== null ? t('title.ids.tmdb', { id: title.tmdb_id }) : null,
-    series !== null && series.tvdb_id !== null ? t('series.ids.tvdb', { id: series.tvdb_id }) : null,
-    title.imdb_id ? t('title.ids.imdb', { id: title.imdb_id }) : null,
-  ].filter(Boolean)
+    title.tmdb_id !== null
+      ? { label: t('title.ids.tmdb', { id: title.tmdb_id }), href: isMovie || isSeries ? `https://www.themoviedb.org/${isSeries ? 'tv' : 'movie'}/${title.tmdb_id}` : null }
+      : null,
+    series !== null && series.tvdb_id !== null
+      ? { label: t('series.ids.tvdb', { id: series.tvdb_id }), href: `https://www.thetvdb.com/?tab=series&id=${series.tvdb_id}` }
+      : null,
+    title.imdb_id ? { label: t('title.ids.imdb', { id: title.imdb_id }), href: `https://www.imdb.com/title/${encodeURIComponent(title.imdb_id)}/` } : null,
+  ].filter((entry) => entry !== null)
   const watchVersion = watchFor !== null ? (title.versions.find((version) => version.id === watchFor) ?? null) : null
   // Nur wenn die Liste sicher kein eingeschaltetes Indexer zeigt. Weiss die Seite es nicht, entscheidet der Server.
   const noIndexer = (isMovie || isSeries || isAlbum) && enabledIndexers === 0
@@ -373,7 +378,22 @@ export function TitlePage() {
       {(title.overview || ids.length > 0) && (
         <div className="flex max-w-3xl flex-col gap-2">
           {title.overview && <p className="text-sm leading-relaxed text-mist-300">{title.overview}</p>}
-          {ids.length > 0 && <p className="text-xs text-mist-500">{ids.join(' · ')}</p>}
+          {ids.length > 0 && (
+            <p className="text-xs text-mist-500">
+              {ids.map((entry, index) => (
+                <Fragment key={entry.label}>
+                  {index > 0 && ' · '}
+                  {entry.href !== null ? (
+                    <a href={entry.href} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:text-mist-300 hover:underline">
+                      {entry.label}
+                    </a>
+                  ) : (
+                    entry.label
+                  )}
+                </Fragment>
+              ))}
+            </p>
+          )}
         </div>
       )}
 
