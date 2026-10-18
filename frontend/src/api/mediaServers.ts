@@ -1,10 +1,12 @@
 import { api } from './client'
 import type { MediaServer, MediaServerCreate, MediaServerKind, MediaServerTest, MediaServerTestResult, MediaServerUpdate, PlexChosen, PlexPin, PlexPinState, PlexServers } from './types'
 
-export const MEDIA_SERVER_KINDS: readonly MediaServerKind[] = ['plex', 'jellyfin', 'emby']
+export const MEDIA_SERVER_KINDS: readonly MediaServerKind[] = ['plex', 'jellyfin', 'emby', 'kodi']
 
 /**
- * Plex, Jellyfin und Emby. Der Token oder API-Schluessel geht nur hinaus, nie herein: Antworten tragen `has_token`.
+ * Plex, Jellyfin, Emby und Kodi. Token, API-Schluessel oder Passwort gehen nur hinaus, nie herein: Antworten tragen
+ * `has_token`, nur Kodis Benutzername steht darin. Speichern prueft die Verbindung und liest die Bibliotheken.
+ *
  * Speichern prueft die Verbindung und liest die Bibliotheken.
  *
  * ⚠️ Nur `plexPin`, `plexPinState` und `plexServers` loesen einen Kontakt zu plex.tv aus, und nur hinter dem Knopf

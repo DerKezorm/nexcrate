@@ -37,7 +37,7 @@ releases. Posters and covers in them are placeholder artwork.
   popular, acclaimed, classics. Movies only once they are out on digital or disc, filters for
   country, genre and language, and "not interested" hides a title for good.
 - **Calendar** with an iCal feed, **notifications** (ntfy, Gotify, Telegram, Discord, webhook,
-  Apprise, e-mail), **Plex, Jellyfin and Emby** told about new files, **backups** with an
+  Apprise, e-mail), **Plex, Jellyfin, Emby and Kodi** told about new files, **backups** with an
   encrypted download.
 - **An API for other programs** (`/api/v1`) with keys, an event feed and webhooks.
 - **Bazarr and Lingarr** (beta) read nexcrate as Radarr and Sonarr, and the subtitles they write

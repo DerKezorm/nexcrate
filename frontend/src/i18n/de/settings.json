@@ -783,14 +783,15 @@
   },
   "servers": {
     "title": "Medienserver",
-    "intro": "Plex, Jellyfin und Emby erfahren von nexcrate, wenn sich ein Ordner geändert hat: nach jedem abgelegten Download und nach dem Umbenennen. So steht ein neuer Film nach ein, zwei Minuten im Player und nicht erst nach dem nächsten Suchlauf des Servers. Ein Medienserver, der nicht antwortet, hält nie einen Import auf.",
+    "intro": "Plex, Jellyfin, Emby und Kodi erfahren von nexcrate, wenn sich ein Ordner geändert hat: nach jedem abgelegten Download und nach dem Umbenennen. So steht ein neuer Film nach ein, zwei Minuten im Player und nicht erst nach dem nächsten Suchlauf des Servers. Ein Medienserver, der nicht antwortet, hält nie einen Import auf.",
     "add": "Medienserver hinzufügen",
     "empty": "Noch kein Medienserver verbunden. Neue Dateien erscheinen dann erst, wenn der Server von selbst nachsieht.",
     "kind": {
       "label": "Server",
       "plex": "Plex",
       "jellyfin": "Jellyfin",
-      "emby": "Emby"
+      "emby": "Emby",
+      "kodi": "Kodi"
     },
     "state": {
       "enabled": "Eingeschaltet",
@@ -803,7 +804,7 @@
     "lastError": {
       "label": "Letzter Fehler: {{text}}",
       "mediaserver_unreachable": "nexcrate erreicht den Server nicht.",
-      "mediaserver_auth_failed": "Der Server hat den Token oder API-Schlüssel nicht angenommen.",
+      "mediaserver_auth_failed": "Der Server hat den Zugang nicht angenommen.",
       "mediaserver_wrong_kind": "Unter der Adresse antwortet ein anderes Programm.",
       "mediaserver_http_error": "Der Server hat mit einem Fehler geantwortet.",
       "unknown": "Code {{code}}"
@@ -859,11 +860,16 @@
       "urlHintPlex": "Die Adresse deines Plex mit Port, etwa http://plex.example.com:32400.",
       "urlHintJellyfin": "Die Adresse, unter der du Jellyfin im Browser öffnest, etwa http://jellyfin.example.com:8096.",
       "urlHintEmby": "Die Adresse, unter der du Emby im Browser öffnest, etwa http://emby.example.com:8096.",
+      "urlHintKodi": "Die Adresse deines Kodi mit Port, etwa http://kodi.example.com:8080. In Kodi muss die Steuerung über HTTP eingeschaltet sein.",
       "token": "Token",
       "tokenHint": "Der X-Plex-Token deines Servers. Wer ihn hier einträgt, braucht plex.tv nicht: nexcrate spricht dann nur mit deinem Server.",
       "apiKey": "API-Schlüssel",
       "apiKeyHintJellyfin": "In Jellyfin unter Dashboard, API-Schlüssel anlegen.",
       "apiKeyHintEmby": "In Emby unter Einstellungen, API-Schlüssel anlegen.",
+      "username": "Benutzername",
+      "usernameHintKodi": "Nur Kodi: der Benutzername aus Kodis Einstellungen für den Webserver. Leer lassen, wenn Kodi keinen verlangt.",
+      "password": "Passwort",
+      "passwordHintKodi": "Nur Kodi: das Passwort aus Kodis Einstellungen für den Webserver. Leer lassen, wenn Kodi keines verlangt.",
       "secretSaved": "Gespeichert. Lass das Feld leer, dann bleibt er.",
       "secretNone": "Noch nichts gespeichert.",
       "enabled": "Eingeschaltet",

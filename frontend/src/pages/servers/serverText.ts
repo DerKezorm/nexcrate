@@ -20,6 +20,8 @@ export function serverKindText(t: TFunction, kind: string): string {
       return t('settings.servers.kind.jellyfin')
     case 'emby':
       return t('settings.servers.kind.emby')
+    case 'kodi':
+      return t('settings.servers.kind.kodi')
     default:
       return kind
   }
