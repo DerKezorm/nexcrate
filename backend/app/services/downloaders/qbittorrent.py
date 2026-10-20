@@ -21,6 +21,9 @@ Measured on qBittorrent 5.2.3, WebAPI 2.15.1 (14.09.2026) and read in Radarr's s
   stalled; uploading, stalledUP, queuedUP, forcedUP, stoppedUP and pausedUP completed only with ``progress`` 1; error
   and missingFiles the problem client_error; everything else downloading. An ``eta`` of 8640000 is unknown.
 * The finished path is ``content_path``; equal to ``save_path``, or missing, it is the problem path_not_found.
+* A torrent nexcrate loaded that another program moved to another category (Issue #20) is found by its hash alone
+  (``moved``); ``torrents/setCategory`` and ``torrents/start`` (``resume`` below WebAPI 2.11.0) take it back. Read in
+  qBittorrent's WebAPI documentation, not measured.
 * ``torrents/delete`` needs ``deleteFiles``. A download that was not imported is removed when the owner says so; an
   imported one only after its seed goal, with ``services/downloads/seeding.py``.
 
@@ -58,6 +61,7 @@ from .base import (
     DuplicateTorrent,
     HandOverUnsure,
     Job,
+    Moved,
     SeedGoal,
     Seeding,
     auth_failed,
@@ -337,6 +341,36 @@ class Qbittorrent(ClientBase):
             if job is not None and job.download_id in wanted:
                 found[job.download_id] = job
         return found
+
+    async def moved(self, download_ids: list[str]) -> dict[str, Moved]:
+        wanted = {download_id.lower() for download_id in download_ids if download_id}
+        if not wanted:
+            return {}
+        data = await self._json("/api/v2/torrents/info", hashes="|".join(sorted(wanted)))
+        if not isinstance(data, list):
+            raise wrong_kind()
+        found: dict[str, Moved] = {}
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            category = text(item.get("category"), 64)
+            job = self._job(item) if category != self.target.category else None
+            if job is not None and job.download_id in wanted:
+                found[job.download_id] = Moved(job=job, category=category)
+        return found
+
+    async def take_back(self, download_id: str) -> None:
+        info_hash = download_id.lower()
+        answer = await self._request(
+            "POST", "/api/v2/torrents/setCategory", data={"hashes": info_hash, "category": self.target.category}
+        )
+        if answer.status != 200:
+            logger.info("qBittorrent did not take torrent %s back (HTTP %d)", info_hash[:8], answer.status)
+            raise refused()
+        start = "start" if await self._webapi_version() >= STOPPED_SINCE else "resume"
+        answer = await self._request("POST", f"/api/v2/torrents/{start}", data={"hashes": info_hash})
+        if answer.status != 200:
+            logger.info("qBittorrent did not start torrent %s again (HTTP %d)", info_hash[:8], answer.status)
 
     async def category_jobs(self) -> list[CategoryJob]:
         data = await self._json("/api/v2/torrents/info", category=self.target.category)

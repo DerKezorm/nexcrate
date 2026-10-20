@@ -10,6 +10,8 @@
   ⚠️ The local side must still be a visible folder. Without a proposal the owner chooses the folder the download lies
   in (``local``); it must carry the reported name, and the mapping is derived from both paths (28.09.2026, a Movie
   download had no way to be filed when nothing was proposed).
+* **Taking back** a download another program moved out of nexcrate's category (``moved_in_client``, Issue #20) puts
+  it into the category again and starts it; the tracking follows it from the next round on.
 * **Removing** a download that is not finished: with ``remove_from_client`` the client drops the job with its files
   (SABnzbd from queue and history, qBittorrent with ``deleteFiles``), then the download is ``removed``. A Usenet job
   the client finished keeps its folder there; nexcrate deletes it once the download is ``removed`` (``discard``). An
@@ -165,6 +167,53 @@ def retry(download_id: int, confirm: list[str] | None = None) -> dict[str, Any]:
     else:
         importing.request(download_id)
     return read(download_id)
+
+
+def _moved_job(download_id: int) -> discard.Leftover:
+    with SessionLocal() as db:
+        row = db.get(Download, download_id)
+        if row is None:
+            raise not_found()
+        left = discard.leftover(db, row)
+        if row.state != "problem" or row.problem_code != tracking.MOVED or left.target is None:
+            raise ActionError(
+                meldung(
+                    "download_not_moved",
+                    "Only a download another program moved out of nexcrate's category can be taken back.",
+                ),
+                409,
+            )
+        return left
+
+
+def _taken_back(download_id: int) -> None:
+    moment = store.now()
+    with SessionLocal() as db:
+        row = db.get(Download, download_id)
+        if row is None or row.problem_code != tracking.MOVED:
+            return
+        row.state, row.problem_code, row.problem_values, row.missing_count = "downloading", None, None, 0
+        row.updated_at = moment
+        store.follow(db, row, moment)
+        db.commit()
+
+
+async def take_back(download_id: int) -> dict[str, Any]:
+    """A download another program moved out of nexcrate's category (Issue #20) goes back into it and starts again;
+    the tracking follows it from the next round on."""
+    left = await asyncio.to_thread(_moved_job, download_id)
+    if left.target is None:
+        raise not_found()
+    try:
+        async with downloaders.open_client(left.target) as client:
+            await client.take_back(left.client_download_id)
+    except downloaders.ClientError as exc:
+        logger.info("Download %d could not be taken back into its category: %s", download_id, exc.code)
+        raise ActionError(exc.detail, exc.status) from exc
+    await asyncio.to_thread(_taken_back, download_id)
+    logger.info("Download %d is taken back into nexcrate's category", download_id)
+    tracking.soon()
+    return await asyncio.to_thread(read, download_id)
 
 
 def confirm_mapping(download_id: int, local_folder: str | None = None) -> dict[str, Any]:

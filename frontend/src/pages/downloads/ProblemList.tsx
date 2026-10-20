@@ -88,6 +88,7 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
   const [retrying, setRetrying] = useState(false)
   const [filing, setFiling] = useState(false)
   const [clearing, setClearing] = useState(false)
+  const [takingBack, setTakingBack] = useState(false)
   const [problem, setProblem] = useState<unknown>(null)
   const info = download.problem ?? { code: '', needs_owner: urgent, values: {} }
   const code = info.code
@@ -120,6 +121,19 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
       setProblem(error)
     } finally {
       setRetrying(false)
+    }
+  }
+
+  async function takeBack() {
+    setTakingBack(true)
+    setProblem(null)
+    try {
+      await downloadsApi.takeBack(download.id)
+      onChanged(t('downloads.problems.takenBack'))
+    } catch (error) {
+      setProblem(error)
+    } finally {
+      setTakingBack(false)
     }
   }
 
@@ -167,6 +181,12 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
       <Button variant="ghost" size="sm" onClick={() => void clear()} loading={clearing} aria-label={t('downloads.actions.clearLabel', { title })}>
         {!clearing && <Symbol name="check" />}
         {t('downloads.actions.clear')}
+      </Button>
+    ),
+    takeBack: (
+      <Button size="sm" onClick={() => void takeBack()} loading={takingBack} aria-label={t('downloads.actions.takeBackLabel', { title })}>
+        {!takingBack && <Symbol name="refresh" />}
+        {t('downloads.actions.takeBack')}
       </Button>
     ),
     remove: removeButton,

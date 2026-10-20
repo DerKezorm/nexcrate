@@ -8,6 +8,7 @@ import type { TFunction } from 'i18next'
 import type { Download, DownloadAftermath, DownloadProblem, DownloadScope, DownloadTransfer, PathMapping } from '../../api/types'
 import type { SymbolName } from '../../components/Symbol'
 import { formatDateTime, formatNumber } from '../../lib/format'
+import { percentOf } from '../../lib/states'
 import { countingName } from '../checker/seriesCheckerText'
 
 /**
@@ -71,6 +72,8 @@ export const PROBLEM_CODES = [
   'file_truncated',
   // 26.09.2026: Weder Release- noch Videoname passt zum Film, nie abgelegt, bis du es trotzdem ablegst.
   'title_mismatch',
+  // 20.10.2026 (Issue #20): ein anderes Programm hat ihn aus der Kategorie genommen, das Programm hat ihn noch.
+  'moved_in_client',
 ] as const
 
 export function isKnownProblem(code: string): boolean {
@@ -173,6 +176,8 @@ export function problemReasonText(t: TFunction, code: string, client: string, va
       return t('downloads.problems.reason.no_space')
     case 'gone_from_client':
       return t('downloads.problems.reason.gone_from_client', { client })
+    case 'moved_in_client':
+      return t('downloads.problems.reason.moved_in_client', { client })
     case 'client_error':
       return t('downloads.problems.reason.client_error', { client })
     case 'import_failed':
@@ -296,6 +301,18 @@ function titleMismatchWhyText(t: TFunction, values: Record<string, unknown>): st
   return parts.join(' ')
 }
 
+/** Wohin ein anderes Programm den Download gelegt hat, wie weit er dort ist, und was hilft (Issue #20). */
+function movedWhyText(t: TFunction, values: Record<string, unknown>, client: string): string {
+  const category = typeof values.category === 'string' ? values.category : ''
+  const parts = [category !== '' ? t('downloads.problems.why.movedTo', { category }) : t('downloads.problems.why.movedNowhere')]
+  if (typeof values.progress === 'number') {
+    const percent = String(percentOf(values.progress))
+    parts.push(values.paused === true ? t('downloads.problems.why.movedPaused', { percent }) : t('downloads.problems.why.movedProgress', { percent }))
+  }
+  parts.push(t('downloads.problems.why.movedNext', { client }))
+  return parts.join(' ')
+}
+
 /** Warum, und was als Naechstes hilft. */
 export function problemWhyText(t: TFunction, problem: DownloadProblem, client: string, album = false): string {
   switch (problem.code) {
@@ -313,6 +330,8 @@ export function problemWhyText(t: TFunction, problem: DownloadProblem, client: s
       return t('downloads.problems.why.no_space')
     case 'gone_from_client':
       return t('downloads.problems.why.gone_from_client')
+    case 'moved_in_client':
+      return movedWhyText(t, problem.values ?? {}, client)
     case 'client_error':
       return t('downloads.problems.why.client_error', { client })
     case 'import_failed':

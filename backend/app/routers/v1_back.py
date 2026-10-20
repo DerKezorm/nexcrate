@@ -83,7 +83,8 @@ class ProblemOut(BaseModel):
     code: str = Field(
         description="download_failed, path_not_found, packed, no_video, no_space, gone_from_client, client_error, "
         "import_failed, dangerous_file, encrypted, client_unreachable, stalled, files_unassigned, "
-        "other_series_suspected, several_videos, import_stalled, too_many_files, multi_part. Translate by code; show "
+        "other_series_suspected, several_videos, import_stalled, too_many_files, multi_part, moved_in_client. "
+        "Translate by code; show "
         "one you do not know as a problem."
     )
     needs_owner: bool = Field(description="True: it waits for somebody. False: a hint, nexcrate goes on by itself.")
@@ -94,7 +95,7 @@ class ProblemOut(BaseModel):
     )
     actions: list[str] = Field(
         description="What may be done, the likeliest first: retry, remove, remove_and_search, clear, search, "
-        "confirm_mapping, finish, assign. Anything else answers 409 `action_not_allowed`."
+        "confirm_mapping, finish, assign, take_back. Anything else answers 409 `action_not_allowed`."
     )
     automatic: list[str] = Field(
         description="Of those, what an automatic may do without a human. Empty: only a human decides."
@@ -630,6 +631,18 @@ async def confirm_mapping(download_id: int, key: OperateKey) -> ActOut:
 )
 async def finish(download_id: int, key: OperateKey) -> ActOut:
     await v1_downloads.act(download_id, "finish", key.name)
+    return await asyncio.to_thread(_after, download_id)
+
+
+@router.post(
+    "/downloads/{download_id}/take-back",
+    response_model=ActOut,
+    summary="Take a moved download back into nexcrate's category",
+    description="For moved_in_client: the job goes back into nexcrate's category and starts again.",
+    responses=v1_error_responses(*_ACT_ERRORS),
+)
+async def take_back(download_id: int, key: OperateKey) -> ActOut:
+    await v1_downloads.act(download_id, "take_back", key.name)
     return await asyncio.to_thread(_after, download_id)
 
 

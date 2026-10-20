@@ -36,6 +36,8 @@ export const downloadsApi = {
   fileAnyway: (id: number) => api.post<Download>(`/downloads/${id}/retry`, { confirm: ['title_mismatch'] }),
   /** Nimmt einen fehlgeschlagenen Download von den Problemen. Er bleibt im Verlauf. 409 `download_not_failed`. */
   clear: (id: number) => api.post<Download>(`/downloads/${id}/clear`),
+  /** Nur bei `moved_in_client`, sonst 409 `download_not_moved`. */
+  takeBack: (id: number) => api.post<Download>(`/downloads/${id}/take-back`),
   /** Uebernimmt die vorgeschlagene Zuordnung ins Programm und versucht es erneut. 409 `mapping_not_proposed`. */
   confirmMapping: (id: number) => api.post<Download>(`/downloads/${id}/mapping`),
   /**

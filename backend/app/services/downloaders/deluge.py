@@ -21,6 +21,8 @@ read in Radarr's source:
   Seeding, Paused, Queued, Checking, Allocating, Moving, Error. ``progress`` counts 0 to 100. Done is Seeding, or Paused
   and Queued with ``is_finished``; Error is the problem client_error; a size of 0 is a magnet without its metadata,
   queued. ``eta`` 0 is unknown. The finished path is ``save_path`` plus ``name``.
+* **Moved away** (Issue #20): a torrent nexcrate loaded under another label, or none, is found by its hash alone;
+  ``label.set_torrent`` and ``core.resume_torrent`` take it back. Not measured.
 * **Removing**: ``core.remove_torrent`` with ``remove_data``; an unknown hash is the error ``not in session``.
 
 Seed goals (measured on 2.2.0, 02.10.2026): every torrent goes in with ``remove_at_ratio`` false, as in Radarr: with
@@ -48,6 +50,7 @@ from .base import (
     DuplicateTorrent,
     HandOverUnsure,
     Job,
+    Moved,
     SeedGoal,
     Seeding,
     auth_failed,
@@ -248,6 +251,36 @@ class Deluge(ClientBase):
             if job is not None and job.download_id in wanted:
                 found[job.download_id] = job
         return found
+
+    async def moved(self, download_ids: list[str]) -> dict[str, Moved]:
+        wanted = sorted({download_id.lower() for download_id in download_ids if download_id})
+        if not wanted:
+            return {}
+        status = await self._rpc("core.get_torrents_status", {"id": wanted}, list(KEYS))
+        if not isinstance(status, dict):
+            raise wrong_kind()
+        found: dict[str, Moved] = {}
+        for item in status.values():
+            if not isinstance(item, dict):
+                continue
+            label = text(item.get("label"), 64)
+            # Deluge keeps labels in lower case.
+            job = self._job(item) if label.casefold() != self.target.category.casefold() else None
+            if job is not None and job.download_id in wanted:
+                found[job.download_id] = Moved(job=job, category=label)
+        return found
+
+    async def take_back(self, download_id: str) -> None:
+        info_hash = download_id.lower()
+        try:
+            await self._rpc("label.set_torrent", info_hash, self.target.category)
+        except DelugeError as exc:
+            logger.info("Deluge did not take torrent %s back into its label", info_hash[:8])
+            raise refused() from exc
+        try:
+            await self._rpc("core.resume_torrent", [info_hash])
+        except DelugeError:
+            logger.info("Deluge did not start torrent %s again", info_hash[:8])
 
     async def category_jobs(self) -> list[CategoryJob]:
         found: list[CategoryJob] = []

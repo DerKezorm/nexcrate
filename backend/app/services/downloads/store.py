@@ -52,6 +52,8 @@ PROBLEMS: dict[str, bool] = {
     "no_video": True,
     "no_space": True,
     "gone_from_client": True,
+    # Still in the client, but another program moved it out of nexcrate's category (Issue #20).
+    "moved_in_client": True,
     "client_error": True,
     "import_failed": True,
     # A video the container says is cut off: never filed, never replaces a file (24.09.2026).

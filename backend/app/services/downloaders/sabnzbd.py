@@ -18,6 +18,9 @@ Measured on SABnzbd 5.1.3 (14.09.2026) and read in Radarr's source:
 * History (filtered by ``category`` and ``nzo_ids``): Completed with a ``storage`` is completed, with an empty one still
   downloading; Failed is failed, except the unpack message about a full disk, which is the problem no_space; every
   post-processing status is downloading. A job name starting with ``ENCRYPTED /`` failed as encrypted.
+* A queued job nexcrate loaded that lies in another category (Issue #20) is found by its ``nzo_ids`` alone;
+  ``change_cat`` and ``queue`` ``resume`` take it back. A finished job in another category is not looked for: its files
+  went to that category's folder. Not measured.
 * ``storage`` is the file of a job that left one file, the job folder of one that left several. It is walked up to the
   parent folder named like the job.
 * Removing: a queued job with ``del_files=1``; a finished job from the history with ``archive=0`` (and ``del_files=1``
@@ -41,6 +44,7 @@ from .base import (
     ClientError,
     HandOverUnsure,
     Job,
+    Moved,
     auth_failed,
     category_failed,
     category_unusable,
@@ -345,6 +349,38 @@ class Sabnzbd(ClientBase):
             if job is not None and job.download_id in wanted:
                 found[job.download_id] = job
         return found
+
+    async def moved(self, download_ids: list[str]) -> dict[str, Moved]:
+        wanted = {download_id for download_id in download_ids if download_id}
+        if not wanted:
+            return {}
+        try:
+            queue = await self._call("queue", start=0, limit=0, nzo_ids=",".join(sorted(wanted)))
+        except _Rejected as exc:
+            raise wrong_kind() from exc
+        queue_part = queue.get("queue") if isinstance(queue, dict) else None
+        queue_part = queue_part if isinstance(queue_part, dict) else {}
+        queue_paused = _truthy(queue_part.get("paused"))
+        found: dict[str, Moved] = {}
+        for slot in queue_part.get("slots") or []:
+            category = text(slot.get("cat"), 64) if isinstance(slot, dict) else ""
+            if not isinstance(slot, dict) or category.casefold() == self.target.category.casefold():
+                continue
+            job = self._queue_job(slot, queue_paused)
+            if job is not None and job.download_id in wanted:
+                found[job.download_id] = Moved(job=job, category=category)
+        return found
+
+    async def take_back(self, download_id: str) -> None:
+        try:
+            await self._call("change_cat", value=download_id, value2=self.target.category)
+        except _Rejected as exc:
+            logger.info("SABnzbd did not take a job back into its category")
+            raise refused() from exc
+        try:
+            await self._call("queue", name="resume", value=download_id)
+        except _Rejected:
+            logger.info("SABnzbd did not resume a job it took back")
 
     async def category_jobs(self) -> list[CategoryJob]:
         category = self.target.category

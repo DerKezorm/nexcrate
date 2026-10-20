@@ -21,6 +21,9 @@ read in Radarr's source:
   cannot write, a file gone), the problem client_error; 1 and 2 are tracker messages and change nothing. A torrent
   without a size (a magnet still fetching its metadata) is queued, as in Radarr. ``eta`` -1 and -2 are unknown. The
   finished path is ``downloadDir`` plus ``name``.
+* **Moved away** (Issue #20): a torrent nexcrate loaded that carries neither the label nor lies in the folder is found
+  by its hash alone. ``torrent-set`` adds the label again and ``torrent-start`` starts it; before labels (RPC 17) that
+  would mean moving files, so nexcrate does not take it back there. Not measured.
 * **Removing**: ``torrent-remove`` with ``delete-local-data``. An unknown id is answered with success.
 
 Seed goals (measured on 4.1.3, 02.10.2026): ``torrent-set`` with ``seedRatioLimit`` and ``seedRatioMode`` 1 after the
@@ -49,6 +52,7 @@ from .base import (
     DuplicateTorrent,
     HandOverUnsure,
     Job,
+    Moved,
     SeedGoal,
     Seeding,
     address_refused,
@@ -81,6 +85,11 @@ SEED_FIELDS = (
     "labels",
 )  # fmt: skip
 _VERSION = re.compile(r"^(\d+(?:\.\d+){0,3})")
+
+
+def _label_names(item: dict[str, Any]) -> list[str]:
+    labels = item.get("labels")
+    return [text(label, 64) for label in labels if text(label, 64)] if isinstance(labels, list) else []
 
 
 def _join(folder: str, name: str) -> str:
@@ -245,6 +254,32 @@ class Transmission(ClientBase):
             if job is not None and job.download_id in wanted:
                 found[job.download_id] = job
         return found
+
+    async def moved(self, download_ids: list[str]) -> dict[str, Moved]:
+        wanted = sorted({download_id.lower() for download_id in download_ids if download_id})
+        if not wanted:
+            return {}
+        found: dict[str, Moved] = {}
+        for item in await self._torrents(wanted):
+            job = None if await self._is_ours(item) else self._job(item)
+            if job is not None and job.download_id in wanted:
+                found[job.download_id] = Moved(job=job, category=", ".join(_label_names(item))[:64])
+        return found
+
+    async def take_back(self, download_id: str) -> None:
+        info_hash = download_id.lower()
+        # ⚠️ Before labels (Transmission 4.0) only the folder made a torrent nexcrate's: taking it back would move files.
+        if not await self._labels():
+            raise refused()
+        items = await self._torrents([info_hash])
+        if not items:
+            raise refused()
+        labels = [*_label_names(items[0]), self.target.category]
+        await self._rpc("torrent-set", {"ids": [info_hash], "labels": labels})
+        try:
+            await self._rpc("torrent-start", {"ids": [info_hash]})
+        except ClientError as exc:
+            logger.info("Transmission did not start torrent %s again: %s", info_hash[:8], exc.code)
 
     async def category_jobs(self) -> list[CategoryJob]:
         found: list[CategoryJob] = []

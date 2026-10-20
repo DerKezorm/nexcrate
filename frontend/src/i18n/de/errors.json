@@ -110,6 +110,7 @@
   "release_file_invalid": "Der Indexer hat keine brauchbare NZB- oder Torrent-Datei geliefert.",
   "download_finished": "Dieser Download ist schon abgelegt oder wird gerade abgelegt. Aus dem Download-Programm lässt er sich so nicht entfernen.",
   "download_not_retryable": "Noch einmal versuchen geht nur bei einem Download mit Problem oder einem, der aufs Ablegen wartet.",
+  "download_not_moved": "Zurückholen geht nur bei einem Download, den ein anderes Programm aus der Kategorie von nexcrate genommen hat.",
   "download_not_failed": "Nur ein fehlgeschlagener Download kann von den Problemen genommen werden.",
   "mapping_not_proposed": "Für diesen Download gibt es keinen vorgeschlagenen Pfad zum Bestätigen.",
   "download_not_found": "Diesen Download gibt es nicht oder nicht mehr.",

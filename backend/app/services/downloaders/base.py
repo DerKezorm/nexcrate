@@ -270,6 +270,16 @@ class CategoryJob:
 
 
 @dataclass(frozen=True)
+class Moved:
+    """A job nexcrate loaded that the client still has, but outside nexcrate's category: another program or the owner
+    moved it there (Issue #20). ``job`` is what the client says about it; nexcrate files nothing from there."""
+
+    job: Job
+    #: The category or label it lies in now, as the client names it; empty for none.
+    category: str
+
+
+@dataclass(frozen=True)
 class Checked:
     version: str
     category_exists: bool
@@ -418,8 +428,18 @@ class ClientBase:
         """The client's jobs among ``download_ids`` in nexcrate's category, by download id."""
         raise NotImplementedError
 
+    async def moved(self, download_ids: list[str]) -> dict[str, Moved]:
+        """The jobs among ``download_ids`` the client still has outside nexcrate's category, by download id. Asked only
+        for the ids ``jobs`` did not find. A Usenet client is asked about its queue: a finished job in another category
+        has its files there already."""
+        return {}
+
+    async def take_back(self, download_id: str) -> None:
+        """Put a job ``moved`` found back into nexcrate's category and start it again."""
+        raise refused()
+
     async def remove(self, download_id: str, *, delete_files: bool) -> None:
-        """Remove a job that is not imported."""
+        """Remove a job that is not imported, wherever it lies in the client."""
         raise NotImplementedError
 
     async def remove_imported(self, download_id: str) -> None:

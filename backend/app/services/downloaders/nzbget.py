@@ -22,6 +22,9 @@ Measured on NZBGet 26.3 in the download bench:
   ``DestDir``; ``FAILURE`` failed; ``WARNING/SPACE`` is the problem no_space, ``WARNING/PASSWORD`` failed for the
   password, other warnings failed; ``DELETED`` failed (``COPY``/``DUPE``/``GOOD`` as duplicate). A failed job's
   folder is often gone already (health failures remove it), otherwise it is the leftover.
+* **Moved away** (Issue #20): a queued job nexcrate loaded in another category is found in ``listgroups`` by its number;
+  ``editqueue`` ``GroupSetCategory`` and ``GroupResume`` take it back. A finished one is not looked for: its files went
+  to that category's folder. Not measured.
 * **Removing**: a queued job with ``GroupFinalDelete`` (files too) or ``GroupDelete``; a finished one with
   ``HistoryFinalDelete`` (gone for good) or, after an import, ``HistoryDelete`` (only hidden, NZBGet forgets it after
   its ``KeepHistory`` days; the files were moved by the import).
@@ -45,6 +48,7 @@ from .base import (
     ClientError,
     HandOverUnsure,
     Job,
+    Moved,
     auth_failed,
     longest_retention,
     percent,
@@ -229,6 +233,33 @@ class Nzbget(ClientBase):
             if job is not None and job.download_id in wanted:
                 found[job.download_id] = job
         return found
+
+    async def moved(self, download_ids: list[str]) -> dict[str, Moved]:
+        wanted = {download_id for download_id in download_ids if download_id}
+        if not wanted:
+            return {}
+        groups, _history, held = await self._both()
+        found: dict[str, Moved] = {}
+        for item in groups:
+            job = None if self._ours(item) else self._queue_job(item, held)
+            if job is not None and job.download_id in wanted:
+                found[job.download_id] = Moved(job=job, category=text(item.get("Category"), 64))
+        return found
+
+    async def take_back(self, download_id: str) -> None:
+        number = whole(download_id)
+        if number is None:
+            raise refused()
+        # ``editqueue`` answers false for a job it could not change.
+        if await self._rpc("editqueue", "GroupSetCategory", self.target.category, [number]) is False:
+            logger.info("NZBGet did not take a job back into its category")
+            raise refused()
+        try:
+            await self._rpc("editqueue", "GroupResume", "", [number])
+        except ClientError as exc:
+            if exc.code != "client_refused":
+                raise
+            logger.info("NZBGet did not resume a job it took back")
 
     async def category_jobs(self) -> list[CategoryJob]:
         groups, history, held = await self._both()

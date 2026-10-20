@@ -68,7 +68,8 @@ class DownloadProblem(BaseModel):
         "container says is cut off; not filed, it replaced nothing; for a series download `episodes` names the "
         "episodes). Since 26.09.2026: title_mismatch (a movie download whose release name and video name fit none of "
         "the movie's titles; not filed, it replaced nothing; filed with retry and `confirm` title_mismatch, or removed "
-        "and blocked)."
+        "and blocked). Since 20.10.2026: moved_in_client (the client still has the job, but another program moved it "
+        "out of nexcrate's category; nothing is filed from there; `take-back` or remove)."
     )
     needs_owner: bool
     values: dict[str, Any] = Field(
@@ -79,7 +80,8 @@ class DownloadProblem(BaseModel):
         "files. several_videos: `count`. download_failed: `reason` and `detail` (see failed_detail); only while "
         "nothing takes care of it by itself. title_mismatch: `parsed_release_title` and `parsed_file_title` (the "
         "titles read from the names, null when none could be read), `file_runtime_min` (the video's, null when "
-        "unread) and `runtime_min` (TMDB's), the runtimes only a hint: a cut of another length is no reason."
+        "unread) and `runtime_min` (TMDB's), the runtimes only a hint: a cut of another length is no reason. "
+        "moved_in_client: `category` (where it lies now, empty for none), `paused` and `progress` (0 to 100 or null)."
     )
 
 
@@ -695,6 +697,24 @@ def retry_download(download_id: int, payload: RetryIn | None = None) -> Download
 def clear_download(download_id: int) -> Download:
     try:
         return _download(actions.clear(download_id))
+    except actions.ActionError as exc:
+        raise exc.http() from exc
+
+
+@router.post(
+    "/{download_id}/take-back",
+    response_model=Download,
+    summary="Take a moved download back into nexcrate's category",
+    description=(
+        "For the problem moved_in_client: the client still has the job, but another program moved it to another "
+        "category or label. nexcrate puts it back into its own category and starts it again. Transmission before 4.0 "
+        "knows no labels and refuses, as taking it back would mean moving files there."
+    ),
+    responses=error_responses((404, "download_not_found"), (409, "download_not_moved"), *downloaders.ERRORS),
+)
+async def take_back_download(download_id: int) -> Download:
+    try:
+        return _download(await actions.take_back(download_id))
     except actions.ActionError as exc:
         raise exc.http() from exc
 

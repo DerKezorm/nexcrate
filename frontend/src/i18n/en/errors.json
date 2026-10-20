@@ -110,6 +110,7 @@
   "release_file_invalid": "The indexer did not deliver a usable NZB or torrent file.",
   "download_finished": "This download is filed away already, or right now, and cannot be removed from the download client.",
   "download_not_retryable": "Only a download with a problem, or one waiting to be filed away, can be tried again.",
+  "download_not_moved": "Only a download another program moved out of nexcrate's category can be taken back.",
   "download_not_failed": "Only a failed download can be taken off the problems.",
   "mapping_not_proposed": "There is no proposed path for this download to confirm.",
   "download_not_found": "This download does not exist, or not any more.",

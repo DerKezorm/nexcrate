@@ -60,6 +60,9 @@ export function problemActions(
       return ['fileAnyway', 'removeAndBlock', 'toTitle']
     case 'gone_from_client':
       return ['remove', 'toTitle']
+    // Seit 20.10.2026 (Issue #20): das Programm hat ihn noch, nur in einer anderen Kategorie.
+    case 'moved_in_client':
+      return ['takeBack', 'remove']
     case 'dangerous_file':
     case 'encrypted':
     case 'multi_part':

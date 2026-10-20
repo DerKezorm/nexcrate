@@ -36,7 +36,9 @@ from . import versions as v1_versions
 logger = logging.getLogger("nexcrate.api_v1")
 
 #: What a program may ask for, as the addresses are named.
-ACTIONS = ("retry", "remove", "remove_and_search", "clear", "search", "confirm_mapping", "finish", "assign")
+ACTIONS = (
+    "retry", "remove", "remove_and_search", "clear", "search", "confirm_mapping", "finish", "assign", "take_back",
+)  # fmt: skip
 
 #: English fallback texts per problem code; a program translates by code.
 MESSAGES = {
@@ -48,6 +50,8 @@ MESSAGES = {
     "no_audio": "The download holds no audio file.",
     "no_space": "There is not enough free space to file the download away.",
     "gone_from_client": "The download client no longer knows the download.",
+    "moved_in_client": "The download client still has the download, but another program moved it out of nexcrate's "
+    "category; nothing is filed from there.",
     "client_error": "The download client reports an error for the download.",
     "import_failed": "Filing the download away failed.",
     "file_truncated": "A video of the download is cut off; it was not filed and replaced nothing.",
@@ -103,6 +107,8 @@ def choice(code: str | None, state: str, values: dict[str, Any], scope: str | No
         "multi_part": _REFUSED,
         "album_single_file": _REFUSED,
         "gone_from_client": (("remove", "remove_and_search"), ("remove",)),
+        # Another program moved it on purpose, perhaps: only a human takes it back or removes it (Issue #20).
+        "moved_in_client": (("take_back", "remove"), ()),
         "client_error": _REPLACE,
         "stalled": _REPLACE,
         "import_stalled": ((*retry, "remove"), ("retry",) if retry else ()),
@@ -325,7 +331,8 @@ def _raise(exc: actions.ActionError) -> Exception:
 
 
 async def act(download_id: int, action: str, key_name: str) -> None:
-    """``retry``, ``remove``, ``remove_and_search``, ``clear``, ``search``, ``confirm_mapping`` or ``finish``."""
+    """``retry``, ``remove``, ``remove_and_search``, ``clear``, ``search``, ``confirm_mapping``, ``finish`` or
+    ``take_back``."""
     found = await asyncio.to_thread(allowed, download_id, action)
     try:
         if action == "retry":
@@ -348,6 +355,8 @@ async def act(download_id: int, action: str, key_name: str) -> None:
             await asyncio.to_thread(actions.confirm_mapping, download_id)
         elif action == "finish":
             await asyncio.to_thread(assigning.finish, download_id)
+        elif action == "take_back":
+            await actions.take_back(download_id)
     except actions.ActionError as exc:
         raise _raise(exc) from exc
     await asyncio.to_thread(_history, found.title_id, download_id, action, key_name)

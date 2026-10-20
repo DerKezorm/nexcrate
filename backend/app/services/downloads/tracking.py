@@ -8,6 +8,10 @@
   becomes the download's state, progress, remaining time, size, reported path and the client's state for the log.
 * A download the client does not know twice in a row is the problem ``gone_from_client``, except one whose
   hand-over the client did not answer in time: ``foreign`` looks for it by its name once a minute.
+* A download missing from the category is looked for by its id alone (``moved``, Issue #20): one another program
+  moved to another category is the problem ``moved_in_client`` with that category, its state and progress, at once
+  and not as gone. nexcrate files nothing from there; the owner takes it back or removes it. Moved back by hand, it
+  is followed as before.
 * Once a minute every enabled client lists its whole category (``foreign.look``): jobs no download follows show
   under Problems.
 * A client that cannot be asked keeps its downloads as they are and gets its error code.
@@ -27,6 +31,7 @@ import logging
 import threading
 import time
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from sqlalchemy import and_, or_, select
 
@@ -47,6 +52,8 @@ ROUND_SECONDS = 15.0
 SOON_SECONDS = 5.0
 #: Rounds in a row a download may be missing before it is a problem.
 GONE_AFTER = 2
+#: Still in the client, but outside nexcrate's category (Issue #20).
+MOVED = "moved_in_client"
 
 _lock = threading.Lock()
 _last_round: float | None = None
@@ -149,10 +156,41 @@ def _work() -> list[_Work]:
     return work
 
 
-def _follow(db: object, row: Download, job: downloaders.Job | None, removals: list[tuple[int, str]]) -> None:
+def _moved(row: Download, moved: downloaders.Moved, moment: datetime) -> None:
+    """Another program moved the job out of nexcrate's category: the card says where to and how far it is."""
+    values = {
+        "category": moved.category,
+        "paused": moved.job.state == "paused",
+        "progress": moved.job.progress,
+    }
+    row.missing_count = 0
+    row.client_state = moved.job.client_state[:64] or None
+    if moved.job.size_bytes:
+        row.size_bytes = moved.job.size_bytes
+    if row.state == "problem" and row.problem_code == MOVED and row.problem_values == values:
+        return
+    if row.problem_code != MOVED:
+        logger.info("Download %d lies outside nexcrate's category in its client now", row.id)
+    row.state, row.problem_code, row.problem_values = "problem", MOVED, values
+    if moved.job.progress is not None:
+        row.progress = moved.job.progress
+    row.remaining_seconds = None
+    row.updated_at = moment
+
+
+def _follow(
+    db: object,
+    row: Download,
+    job: downloaders.Job | None,
+    removals: list[tuple[int, str]],
+    moved: downloaders.Moved | None = None,
+) -> None:
     moment = store.now()
     if row.handed_unsure_at is not None:
         # The client did not answer the hand-over in time: ``foreign`` finds its job, or ends it as not_taken.
+        return
+    if job is None and moved is not None:
+        _moved(row, moved, moment)
         return
     if job is None:
         row.missing_count = (row.missing_count or 0) + 1
@@ -203,9 +241,12 @@ def _follow(db: object, row: Download, job: downloaders.Job | None, removals: li
         row.updated_at = moment
 
 
-def _apply(client_id: int, found: dict[str, downloaders.Job]) -> list[tuple[int, str]]:
+def _apply(
+    client_id: int, found: dict[str, downloaders.Job], moved: dict[str, downloaders.Moved] | None = None
+) -> list[tuple[int, str]]:
     """Write what the client said. Returns the downloads to remove from the client with their files: nexcrate's id and
-    the client's."""
+    the client's. ``moved``: jobs the client still has outside nexcrate's category."""
+    moved = moved or {}
     removed: list[tuple[int, str]] = []
     with SessionLocal() as db:
         client = db.get(DownloadClient, client_id)
@@ -215,7 +256,7 @@ def _apply(client_id: int, found: dict[str, downloaders.Job]) -> list[tuple[int,
         rows = list(db.scalars(select(Download).where(Download.client_id == client_id, _tracked())))
         for row in rows:
             key = row.client_download_id.lower() if row.protocol == "torrent" else row.client_download_id
-            _follow(db, row, found.get(key), removed)
+            _follow(db, row, found.get(key), removed, moved.get(key))
         db.flush()
         # Once per version, not once per download: a series version follows all its downloads in one pass, and a
         # series with eight downloads counted its episodes eight times while the write lock was held (23.09.2026:
@@ -254,6 +295,20 @@ def _completed_ids() -> list[int]:
         return list(db.scalars(select(Download.id).where(Download.state == "completed").order_by(Download.id)))
 
 
+async def _moved_jobs(
+    client: downloaders.ClientBase, work: _Work, found: dict[str, downloaders.Job]
+) -> dict[str, downloaders.Moved]:
+    """The missing downloads the client still has elsewhere. A client that cannot say leaves them missing, as before."""
+    missing = [item for item in work.download_ids if item not in found and item.lower() not in found]
+    if not missing:
+        return {}
+    try:
+        return await client.moved(missing)
+    except downloaders.ClientError as exc:
+        logger.info("Download client %d could not say where downloads went: %s", work.client_id, exc.code)
+        return {}
+
+
 async def run_round() -> None:
     """Ask every client once, then hand completed downloads to the import."""
     global _last_round, _soon_at
@@ -266,11 +321,12 @@ async def run_round() -> None:
             try:
                 async with downloaders.open_client(work.target) as client:
                     found = await client.jobs(work.download_ids)
+                    moved = await _moved_jobs(client, work, found)
             except downloaders.ClientError as exc:
                 logger.info("Download client %d could not be asked: %s", work.client_id, exc.code)
                 await asyncio.to_thread(_client_failed, work.client_id, exc.code)
                 continue
-            to_remove = await asyncio.to_thread(_apply, work.client_id, found)
+            to_remove = await asyncio.to_thread(_apply, work.client_id, found, moved)
         # Removals that failed in an earlier round go after the new ones (09.10.2026).
         to_remove += [item for item in work.removals if item not in to_remove]
         done: list[int] = []
