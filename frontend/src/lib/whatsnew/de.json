@@ -520,6 +520,21 @@
       "small": [
         "Ist die Versionsprüfung ausgeschaltet, meldet nexcrate keine neuere Fassung mehr."
       ]
+    },
+    "1.2.3": {
+      "lead": "Ein kleines Release aus Issue #20: Hat ein anderes Programm einen Download in eine andere Kategorie verschoben, sagt nexcrate das jetzt, statt ihn für verschwunden zu halten.",
+      "sections": [
+        {
+          "title": "Verschoben statt verschwunden",
+          "body": "Fehlt ein Download in der Kategorie von nexcrate, sucht nexcrate ihn im Download-Programm über seinen Hash oder seine Nummer. Liegt er noch dort, sagt die Karte, in welcher Kategorie, ob er angehalten ist und wie weit er ist. Zurückholen legt ihn wieder in die Kategorie von nexcrate und lädt weiter. Entfernen nimmt ihn ab Werk samt Dateien auch aus dem Programm. Aus der anderen Kategorie legt nexcrate nichts ab.",
+          "where": "Downloads › Probleme"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Das gilt für qBittorrent, Deluge, Transmission ab 4.0, SABnzbd und NZBGet; bei SABnzbd und NZBGet für Aufträge in der Warteschlange.",
+        "/api/v1 kennt das Problem moved_in_client und die Aktion take_back."
+      ]
     }
   }
 }

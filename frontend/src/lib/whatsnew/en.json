@@ -520,6 +520,21 @@
       "small": [
         "With the version check switched off, nexcrate no longer reports a newer release."
       ]
+    },
+    "1.2.3": {
+      "lead": "A small release from issue #20: when another program moves a download to another category, nexcrate now says so instead of taking it for gone.",
+      "sections": [
+        {
+          "title": "Moved, not gone",
+          "body": "When a download is missing from nexcrate's category, nexcrate looks for it in the download client by its hash or its number. If it is still there, the card says in which category, whether it is paused and how far it is. Take back puts it into nexcrate's category again and goes on loading. Remove takes it out of the client as well, with its files, by default. nexcrate files nothing from the other category.",
+          "where": "Downloads › Problems"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "This works with qBittorrent, Deluge, Transmission from 4.0, SABnzbd and NZBGet; with SABnzbd and NZBGet for jobs in the queue.",
+        "/api/v1 knows the problem moved_in_client and the action take_back."
+      ]
     }
   }
 }
