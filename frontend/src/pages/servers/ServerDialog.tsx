@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -248,8 +248,13 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
     setRows((current) => current.map((row) => (row.key === key ? { ...row, [side]: value } : row)))
   }
 
-  /** Die Pfade, die der Server wirklich gemeldet hat, fuer die rechte Seite. Beim Bearbeiten stehen die gespeicherten
-   *  darin, "Verbindung pruefen" liest sie neu. Ein Unterordner, den der Server nicht nennt, laesst sich tippen. */
+  /** Die Pfade, die der Server wirklich gemeldet hat, fuer die rechte Seite. Ein Unterordner, den der Server nicht
+   *  nennt, laesst sich tippen.
+   *
+   *  ⚠️ Nur aus einer Quelle: nach "Verbindung pruefen" das, was diese Pruefung fand, vorher beim Bearbeiten die
+   *  gespeicherten, aber nur solange die Adresse die gespeicherte ist. Sonst stuenden Ordner eines anderen Servers
+   *  in der Liste. */
+  const storedLibraries = server !== null && url.trim() === server.url ? server.libraries : undefined
   const remoteOptions = useMemo(() => {
     const pathToLabel = new Map<string, string>()
     const collect = (libs: MediaServerLibrary[] | undefined) => {
@@ -261,12 +266,11 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
         }
       }
     }
-    collect(server?.libraries)
-    collect(tested?.libraries)
+    collect(tested?.libraries ?? storedLibraries)
     return Array.from(pathToLabel, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value))
-  }, [server?.libraries, tested?.libraries])
+  }, [storedLibraries, tested?.libraries])
 
-  const remoteDatalistId = 'media-server-remote-options'
+  const remoteDatalistId = useId()
 
   const urlHint = plex
     ? t('settings.servers.form.urlHintPlex')
