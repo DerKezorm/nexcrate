@@ -804,7 +804,7 @@
     "lastError": {
       "label": "Last error: {{text}}",
       "mediaserver_unreachable": "nexcrate cannot reach the server.",
-      "mediaserver_auth_failed": "The server did not accept the access.",
+      "mediaserver_auth_failed": "The server did not accept the token or API key.",
       "mediaserver_auth_failed_kodi": "Kodi did not accept the user name and password.",
       "mediaserver_wrong_kind": "Another program answers at the address.",
       "mediaserver_http_error": "The server answered with an error.",
