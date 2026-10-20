@@ -9,8 +9,9 @@ import type { MediaServerLibrary } from '../../api/types'
 /** Kein Fehler, sondern ein Zustand: Der letzte Ordner lag in keiner Bibliothek, es fehlt wohl eine Pfadzuordnung. */
 export const PATH_UNMATCHED = 'mediaserver_path_unmatched'
 
-/** Die Codes, die als letzter Fehler an einem Server stehen koennen. Eigene Saetze ohne Werte. */
-export const SERVER_ERROR_CODES = ['mediaserver_unreachable', 'mediaserver_auth_failed', 'mediaserver_wrong_kind', 'mediaserver_http_error'] as const
+/** Die Codes, die als letzter Fehler an einem Server stehen koennen. Eigene Saetze ohne Werte. Der mit Kodi im Namen
+ * nennt den Benutzernamen und das Passwort, alle anderen einen Token oder einen API-Schluessel. */
+export const SERVER_ERROR_CODES = ['mediaserver_unreachable', 'mediaserver_auth_failed', 'mediaserver_auth_failed_kodi', 'mediaserver_wrong_kind', 'mediaserver_http_error'] as const
 
 export function serverKindText(t: TFunction, kind: string): string {
   switch (kind) {
@@ -20,6 +21,8 @@ export function serverKindText(t: TFunction, kind: string): string {
       return t('settings.servers.kind.jellyfin')
     case 'emby':
       return t('settings.servers.kind.emby')
+    case 'kodi':
+      return t('settings.servers.kind.kodi')
     default:
       return kind
   }
@@ -44,6 +47,8 @@ export function serverErrorText(t: TFunction, code: string): string {
       return t('settings.servers.lastError.mediaserver_unreachable')
     case 'mediaserver_auth_failed':
       return t('settings.servers.lastError.mediaserver_auth_failed')
+    case 'mediaserver_auth_failed_kodi':
+      return t('settings.servers.lastError.mediaserver_auth_failed_kodi')
     case 'mediaserver_wrong_kind':
       return t('settings.servers.lastError.mediaserver_wrong_kind')
     case 'mediaserver_http_error':

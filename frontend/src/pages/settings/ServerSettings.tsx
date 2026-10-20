@@ -14,8 +14,8 @@ import { libraryKindText, notifyText, PATH_UNMATCHED, serverErrorText, serverKin
 import { useMediaServers } from '../servers/useMediaServers'
 
 /**
- * Reiter "Medienserver": Plex, Jellyfin und Emby eintragen, pruefen, aendern, entfernen. Je Bibliothek ein Schalter,
- * ob nexcrate ihr Aenderungen meldet. Den Token oder API-Schluessel zeigt die Seite nie, nur ob einer gespeichert ist.
+ * Reiter "Medienserver": Plex, Jellyfin, Emby und Kodi eintragen, pruefen, aendern, entfernen. Je Bibliothek ein Schalter,
+ * ob nexcrate ihr Aenderungen meldet. Token, API-Schluessel und Passwort zeigt die Seite nie, nur ob eines gespeichert ist.
  */
 export function ServerSettings() {
   const { t } = useTranslation()

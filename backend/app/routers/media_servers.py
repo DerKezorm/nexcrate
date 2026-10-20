@@ -1,7 +1,7 @@
-"""Media servers: Plex, Jellyfin and Emby. Connect, check, choose the libraries, map paths.
+"""Media servers: Plex, Jellyfin, Emby and Kodi. Connect, check, choose the libraries, map paths.
 
-⚠️ Plex's token and the API key of Jellyfin or Emby are stored encrypted and never leave the backend again, not even
-partly. Answers carry ``has_token``.
+⚠️ Plex's token, the API key of Jellyfin or Emby, and the password of Kodi are stored encrypted and never leave the
+backend again, not even partly. Answers carry ``has_token``; Kodi's username is no secret and is returned as stored.
 
 ⚠️ plex.tv is contacted by three ``/plex/pin`` routes only, the ones behind the button "Sign in at plex.tv": create
 the PIN, ask for its state, list the account's servers. A token typed by hand causes no contact with plex.tv at all.
@@ -41,9 +41,10 @@ router = APIRouter(prefix="/api/media-servers", tags=["media-servers"])
 
 NAME_MAX_LENGTH = 100
 TOKEN_MAX_LENGTH = 512
+USERNAME_MAX_LENGTH = 128
 PATH_MAX_LENGTH = 1024
 MAPPINGS_MAX = 50
-Kind = Literal["plex", "jellyfin", "emby"]
+Kind = Literal["plex", "jellyfin", "emby", "kodi"]
 
 
 class PathMapping(BaseModel):
@@ -52,7 +53,7 @@ class PathMapping(BaseModel):
 
 
 class LibraryOut(BaseModel):
-    id: str = Field(description="Plex's section key, or the item id of Jellyfin and Emby.")
+    id: str = Field(description="Plex's section key, the item id of Jellyfin and Emby, or a Kodi source.")
     name: str
     kind: str | None = Field(description="movie, series, music, or null for anything else.")
     locations: list[str] = Field(description="The folders of the library as the server names them.")
@@ -62,9 +63,12 @@ class LibraryOut(BaseModel):
 class MediaServerOut(BaseModel):
     id: int
     name: str
-    kind: str = Field(description="plex, jellyfin or emby.")
+    kind: str = Field(description="plex, jellyfin, emby or kodi.")
     url: str = Field(examples=["http://plex.example.com:32400"])
-    has_token: bool = Field(description="Whether a token or API key is stored. It is never returned.")
+    has_token: bool = Field(description="Whether a token, API key or password is stored. It is never returned.")
+    username: str | None = Field(
+        default=None, description="Kodi only: the username of HTTP Basic, as stored. Null when none."
+    )
     enabled: bool
     server_name: str | None = Field(description="What the server calls itself, as read at the last check.")
     version: str | None
@@ -86,8 +90,9 @@ class LibrarySwitch(BaseModel):
     refresh: bool
 
 
-_TOKEN_TEXT = "Plex's token, or the API key of Jellyfin or Emby. Never returned."
+_TOKEN_TEXT = "Plex's token, the API key of Jellyfin or Emby, or the password of Kodi. Never returned."
 _PIN_TEXT = "Plex only: the id of a claimed PIN from `POST /api/media-servers/plex/pin`; its token is taken."
+_USERNAME_TEXT = "Kodi only: the username from Kodi's web server settings. Leave empty when Kodi asks for none."
 
 
 class ServerIn(BaseModel):
@@ -95,6 +100,7 @@ class ServerIn(BaseModel):
     kind: Kind
     url: str = Field(max_length=2048, description="http or https with an optional path, without user info or query.")
     token: str | None = Field(default=None, max_length=TOKEN_MAX_LENGTH, description=_TOKEN_TEXT)
+    username: str | None = Field(default=None, max_length=USERNAME_MAX_LENGTH, description=_USERNAME_TEXT)
     plex_pin_id: int | None = Field(default=None, description=_PIN_TEXT)
     enabled: bool = True
     path_mappings: list[PathMapping] = Field(default_factory=list, max_length=MAPPINGS_MAX)
@@ -108,6 +114,12 @@ class ServerPatch(BaseModel):
     )
     url: str | None = Field(default=None, max_length=2048)
     token: str | None = Field(default=None, max_length=TOKEN_MAX_LENGTH, description="Empty keeps the stored one.")
+    username: str | None = Field(
+        default=None,
+        max_length=USERNAME_MAX_LENGTH,
+        description="Kodi only: a new username. Empty removes it, and the stored password with it unless a new "
+        "`token` is given in the same call, which then wins.",
+    )
     plex_pin_id: int | None = Field(default=None, description=_PIN_TEXT)
     enabled: bool | None = None
     path_mappings: list[PathMapping] | None = Field(default=None, max_length=MAPPINGS_MAX)
@@ -123,6 +135,7 @@ class ServerTestIn(BaseModel):
     token: str | None = Field(
         default=None, max_length=TOKEN_MAX_LENGTH, description="Empty uses the stored one of `id`."
     )
+    username: str | None = Field(default=None, max_length=USERNAME_MAX_LENGTH, description=_USERNAME_TEXT)
     plex_pin_id: int | None = Field(default=None, description=_PIN_TEXT)
 
 
@@ -215,6 +228,22 @@ def _clean_token(raw: str | None) -> str:
     return text
 
 
+def _clean_username(raw: str | None) -> str:
+    """Kodi's username, or empty: without one Kodi may allow control as it is."""
+    text = (raw or "").strip()
+    if len(text) > USERNAME_MAX_LENGTH or _control(text):
+        raise error("invalid_input", "The input is not valid.", 422, fields=["username"])
+    return text
+
+
+def _kodi_only(*, kind: str | None, username: str | None) -> None:
+    """⚠️ A username belongs to a Kodi alone: the other three know no such field and would store it unused, and a
+    stored one makes the server check the connection again for nothing. So a username they are sent with is refused.
+    An empty or missing one is no username at all and stays fine."""
+    if username and kind != "kodi":
+        raise error("invalid_input", "A username belongs to a Kodi alone.", 422, fields=["username"])
+
+
 def _clean_mappings(raw: list[PathMapping]) -> list[dict[str, str]]:
     cleaned: list[dict[str, str]] = []
     for mapping in raw:
@@ -244,9 +273,12 @@ def _pin_token(pin_id: int) -> str:
     return token
 
 
-def _merged(listed: tuple[mediaservers.Listed, ...], stored: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _merged(
+    listed: tuple[mediaservers.Listed, ...], stored: list[dict[str, Any]], kind: str | None = None
+) -> list[dict[str, Any]]:
     """The libraries as the server lists them now, each with the owner's switch. A new library of movies, series or
-    music starts switched on, anything else switched off."""
+    music starts switched on, anything else switched off. Kodi's video sources hold movies and series mixed under no
+    kind, so for a Kodi they start switched on as well."""
     switches = {str(entry.get("id")): bool(entry.get("refresh")) for entry in stored if isinstance(entry, dict)}
     return [
         {
@@ -254,7 +286,9 @@ def _merged(listed: tuple[mediaservers.Listed, ...], stored: list[dict[str, Any]
             "name": library.name,
             "kind": library.kind,
             "locations": list(library.locations),
-            "refresh": switches.get(library.id, library.kind is not None),
+            "refresh": switches.get(
+                library.id, library.kind is not None or (kind == "kodi" and library.kind is None)
+            ),
         }
         for library in listed
     ]
@@ -270,13 +304,17 @@ def _version_folders() -> dict[str, list[str]]:
         return found
 
 
-async def _tested(checked: mediaservers.Checked, stored_libraries: list[dict[str, Any]]) -> dict[str, Any]:
+async def _tested(
+    checked: mediaservers.Checked, stored_libraries: list[dict[str, Any]], kind: str | None = None
+) -> dict[str, Any]:
     """What a check answers: who it is, the libraries with their switches, and the path pairs to offer."""
-    offered = suggest.suggest(await asyncio.to_thread(_version_folders), checked.libraries)
+    offered = suggest.suggest(await asyncio.to_thread(_version_folders), checked.libraries, kind)
     return {
         "server_name": checked.server_name,
         "version": checked.version,
-        "libraries": [LibraryOut.model_validate(entry) for entry in _merged(checked.libraries, stored_libraries)],
+        "libraries": [
+            LibraryOut.model_validate(entry) for entry in _merged(checked.libraries, stored_libraries, kind)
+        ],
         "suggested_mappings": [
             SuggestedMapping(local=pair.local, remote=pair.remote, reason=pair.reason) for pair in offered.pairs
         ],
@@ -305,7 +343,8 @@ class _Stored:
     kind: str
     url: str
     token: str = field(repr=False)
-    libraries: list[dict[str, Any]]
+    username: str = ""
+    libraries: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _load(server_id: int) -> _Stored | None:
@@ -318,6 +357,7 @@ def _load(server_id: int) -> _Stored | None:
             kind=row.kind,
             url=row.url,
             token=row.token,
+            username=row.username or "",
             libraries=[dict(entry) for entry in (row.libraries or [])],
         )
 
@@ -333,6 +373,7 @@ def server_out(row: MediaServer) -> MediaServerOut:
         kind=row.kind,
         url=row.url,
         has_token=bool(row.token),
+        username=row.username,
         enabled=row.enabled,
         server_name=row.server_name,
         version=row.version,
@@ -397,8 +438,8 @@ def _apply(server_id: int, changes: dict[str, Any], token: str | None, checked: 
             raise _not_found()
         for name, value in changes.items():
             setattr(row, name, value)
-        if token:
-            row.token = crypto.encrypt(token)
+        if token is not None:
+            row.token = crypto.encrypt(token) if token else ""
         if checked:
             row.last_error_code = None
             row.last_checked_at = moment
@@ -407,11 +448,13 @@ def _apply(server_id: int, changes: dict[str, Any], token: str | None, checked: 
         logger.info("Media server %d changed", server_id)
 
 
-def _checked_values(checked: mediaservers.Checked, stored: list[dict[str, Any]]) -> dict[str, Any]:
+def _checked_values(
+    checked: mediaservers.Checked, stored: list[dict[str, Any]], kind: str | None = None
+) -> dict[str, Any]:
     return {
         "server_name": checked.server_name[:200] or None,
         "version": checked.version[:64] or None,
-        "libraries": _merged(checked.libraries, stored),
+        "libraries": _merged(checked.libraries, stored, kind),
     }
 
 
@@ -437,9 +480,12 @@ def list_servers(db: DbSession) -> list[MediaServerOut]:
     response_model=MediaServerOut,
     summary="Add a media server",
     description=(
-        "Checks the server (reachable, the right kind, the token accepted), reads its libraries and stores it with "
-        "its token encrypted. Libraries of movies, series and music start switched on. For Plex, `plex_pin_id` takes "
-        "the token a confirmed sign-in at plex.tv brought instead of `token`; plex.tv is not contacted by this route."
+        "Checks the server (reachable, the right kind, the access accepted), reads its libraries and stores it with "
+        "its token or password encrypted. Libraries of movies, series and music start switched on, as do Kodi's "
+        "video sources. For Plex, "
+        "`plex_pin_id` takes the token a confirmed sign-in at plex.tv brought instead of `token`; plex.tv is not "
+        "contacted by this route. For Kodi, `username` is the username of HTTP Basic, `token` its password; a "
+        "`username` sent for another kind is refused (422 `invalid_input`)."
     ),
     responses=error_responses(
         (422, "mediaserver_invalid"), (409, "plextv_pin_unclaimed"), (422, "invalid_input"), *mediaservers.ERRORS
@@ -450,17 +496,21 @@ async def create_server(payload: ServerIn) -> MediaServerOut:
     url = _clean_url(payload.url)
     mappings = _clean_mappings(payload.path_mappings)
     token = _clean_token(payload.token)
+    username = _clean_username(payload.username)
+    _kodi_only(kind=payload.kind, username=username)
     if payload.kind == "plex" and payload.plex_pin_id is not None and not token:
         token = _pin_token(payload.plex_pin_id)
-    checked = await _check(mediaservers.Target(kind=payload.kind, url=url, token=token))
+    checked = await _check(mediaservers.Target(kind=payload.kind, url=url, token=token, username=username))
     values = {
         "name": name,
         "kind": payload.kind,
         "url": url,
         "enabled": payload.enabled,
         "path_mappings": mappings,
-        **_checked_values(checked, []),
+        **_checked_values(checked, [], payload.kind),
     }
+    if username:
+        values["username"] = username
     server_id = await asyncio.to_thread(_insert, values, token)
     if payload.plex_pin_id is not None:
         plextv.forget(payload.plex_pin_id)
@@ -472,9 +522,9 @@ async def create_server(payload: ServerIn) -> MediaServerOut:
     response_model=ServerTestOut,
     summary="Check a media server without saving",
     description=(
-        "Send `kind` and `url` with the token, or `id` of a saved server, whose stored values the given ones override; "
-        "an empty `token` then uses the stored one. Reads who answers and its libraries. Changes nothing, neither on "
-        "the server nor in nexcrate."
+        "Send `kind` and `url` with the access, or `id` of a saved server, whose stored values the given ones "
+        "override; an empty `token` then uses the stored one, a missing `username` the stored one. Reads who answers "
+        "and its libraries. Changes nothing, neither on the server nor in nexcrate."
     ),
     responses=error_responses(
         (404, "mediaserver_not_found"),
@@ -501,8 +551,12 @@ async def probe_server(payload: ServerTestIn) -> ServerTestOut:
         token = _pin_token(payload.plex_pin_id)
     if not token and stored is not None:
         token = await asyncio.to_thread(_decrypted, stored)
-    checked = await _check(mediaservers.Target(kind=kind, url=url, token=token))
-    return ServerTestOut(**await _tested(checked, stored.libraries if stored is not None else []))
+    username = _clean_username(payload.username) if payload.username is not None else None
+    _kodi_only(kind=kind, username=username)
+    if username is None and stored is not None:
+        username = stored.username
+    checked = await _check(mediaservers.Target(kind=kind, url=url, token=token, username=username or ""))
+    return ServerTestOut(**await _tested(checked, stored.libraries if stored is not None else [], kind))
 
 
 @router.post(
@@ -511,7 +565,8 @@ async def probe_server(payload: ServerTestIn) -> ServerTestOut:
     summary="Check a saved media server and read its libraries again",
     description=(
         "Checks the stored connection and stores what the server lists now: its name, version and libraries. The "
-        "switch of a library that is still there stays; a new library of movies, series or music starts switched on. "
+        "switch of a library that is still there stays; a new library of movies, series or music starts switched on, "
+        "as does a new video source of a Kodi. "
         "A failure becomes the server's `last_error_code`. Nothing is changed on the server."
     ),
     responses=error_responses((404, "mediaserver_not_found"), *mediaservers.ERRORS),
@@ -521,8 +576,11 @@ async def check_server(server_id: int) -> MediaServerOut:
     if stored is None:
         raise _not_found()
     token = await asyncio.to_thread(_decrypted, stored)
-    checked = await _check(mediaservers.Target(kind=stored.kind, url=stored.url, token=token), record=stored.id)
-    await asyncio.to_thread(_apply, server_id, _checked_values(checked, stored.libraries), None, True)
+    checked = await _check(
+        mediaservers.Target(kind=stored.kind, url=stored.url, token=token, username=stored.username),
+        record=stored.id,
+    )
+    await asyncio.to_thread(_apply, server_id, _checked_values(checked, stored.libraries, stored.kind), None, True)
     return await asyncio.to_thread(_read, server_id)
 
 
@@ -531,9 +589,10 @@ async def check_server(server_id: int) -> MediaServerOut:
     response_model=MediaServerOut,
     summary="Change a media server",
     description=(
-        "Changes the given fields. An empty or missing `token` keeps the stored one. A new address or token is "
-        "checked first and the libraries are read again. `libraries` sets the switches, `path_mappings` replaces the "
-        "pairs. The kind of a saved server cannot change."
+        "Changes the given fields. An empty or missing `token` keeps the stored one, and so does a missing "
+        "`username`. A new address, access or username is checked first and the libraries are read again. An empty "
+        "`username` on a Kodi removes it, and the stored password with it. `libraries` sets "
+        "the switches, `path_mappings` replaces the pairs. The kind of a saved server cannot change."
     ),
     responses=error_responses(
         (404, "mediaserver_not_found"),
@@ -566,19 +625,29 @@ async def update_server(server_id: int, payload: ServerPatch) -> MediaServerOut:
     new_token = _clean_token(payload.token)
     if not new_token and stored.kind == "plex" and payload.plex_pin_id is not None:
         new_token = _pin_token(payload.plex_pin_id)
+    new_username = _clean_username(payload.username) if payload.username is not None else None
+    _kodi_only(kind=stored.kind, username=new_username)
+    username = new_username if new_username is not None else stored.username
+    username_changed = new_username is not None and new_username != stored.username
+    # Without a username Kodi asks for no password either: the stored one goes with it. A password typed in the same
+    # save wins over it, though, and is what the check answers for.
+    clear_password = stored.kind == "kodi" and username_changed and not new_username and not new_token
     libraries = stored.libraries
-    connection_changed = url != stored.url or bool(new_token)
+    connection_changed = url != stored.url or bool(new_token) or username_changed
+    if username_changed:
+        changes["username"] = new_username
     if connection_changed:
-        token = new_token or await asyncio.to_thread(_decrypted, stored)
-        checked = await _check(mediaservers.Target(kind=stored.kind, url=url, token=token))
-        changes.update({"url": url, **_checked_values(checked, stored.libraries)})
+        token = "" if clear_password else (new_token or await asyncio.to_thread(_decrypted, stored))
+        checked = await _check(mediaservers.Target(kind=stored.kind, url=url, token=token, username=username))
+        changes.update({"url": url, **_checked_values(checked, stored.libraries, stored.kind)})
         libraries = changes["libraries"]
     if payload.libraries is not None:
         wanted = {switch.id: switch.refresh for switch in payload.libraries}
         changes["libraries"] = [
             {**entry, "refresh": wanted.get(str(entry.get("id")), bool(entry.get("refresh")))} for entry in libraries
         ]
-    await asyncio.to_thread(_apply, server_id, changes, new_token or None, connection_changed)
+    token_to_store = "" if clear_password else (new_token or None)
+    await asyncio.to_thread(_apply, server_id, changes, token_to_store, connection_changed)
     if payload.plex_pin_id is not None:
         plextv.forget(payload.plex_pin_id)
     return await asyncio.to_thread(_read, server_id)
@@ -701,7 +770,7 @@ async def choose_plex_server(pin_id: int, machine_id: str) -> PlexChosenOut:
             continue
         plextv.choose(pin_id, machine_id)
         logger.info("A Plex server of the sign-in answered at one of its %d addresses", len(server.addresses))
-        return PlexChosenOut(name=server.name, url=url, **await _tested(checked, []))
+        return PlexChosenOut(name=server.name, url=url, **await _tested(checked, [], "plex"))
     if failure is not None:
         raise failure.http() from failure
     raise server_base.unreachable(server.name).http()

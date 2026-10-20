@@ -1,4 +1,4 @@
-"""What Plex, Jellyfin and Emby have in common: the target, a library as the server lists it, and the errors.
+"""What Plex, Jellyfin, Emby and Kodi have in common: the target, a library as the server lists it, and the errors.
 
 * Every call goes through the clients of ``http_log`` with a short timeout: a media server never holds anything up.
 * ⚠️ The token travels in a header only, never in a URL: a URL ends up in logs, proxies and browser histories.
@@ -18,7 +18,7 @@ from fastapi import HTTPException
 
 from ...meldungen import meldung
 
-KINDS = ("plex", "jellyfin", "emby")
+KINDS = ("plex", "jellyfin", "emby", "kodi")
 #: Short on purpose: a media server that does not answer must not hold up anything.
 TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 MAX_LIBRARIES = 200
@@ -57,6 +57,15 @@ def auth_failed() -> ServerError:
     return ServerError(meldung("mediaserver_auth_failed", "The media server did not accept the token or API key."))
 
 
+def kodi_auth_failed() -> ServerError:
+    return ServerError(
+        meldung(
+            "mediaserver_auth_failed_kodi",
+            "Kodi did not accept the username and password of its web server settings.",
+        )
+    )
+
+
 def wrong_kind() -> ServerError:
     return ServerError(
         meldung("mediaserver_wrong_kind", "Something answers at this address, but not the chosen media server.")
@@ -73,6 +82,8 @@ def http_error(status: int) -> ServerError:
 ERRORS = (
     (502, "mediaserver_unreachable"),
     (502, "mediaserver_auth_failed"),
+    # Only a Kodi raises this one; the other three name a token or an API key alone.
+    (502, "mediaserver_auth_failed_kodi"),
     (502, "mediaserver_wrong_kind"),
     (502, "mediaserver_http_error"),
 )
@@ -82,8 +93,10 @@ ERRORS = (
 class Target:
     kind: str
     url: str
-    #: ⚠️ The plain token or API key; never logged, never part of a ``repr``.
+    #: ⚠️ The plain token, API key or password; never logged, never part of a ``repr``.
     token: str = field(repr=False)
+    #: Kodi only: the username of HTTP Basic. Never secret, but kept with the access.
+    username: str = ""
 
 
 @dataclass(frozen=True)

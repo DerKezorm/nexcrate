@@ -21,11 +21,11 @@ type PinState = 'idle' | 'waiting' | 'claimed' | 'expired'
 type Row = MediaServerPathMapping & { key: number }
 
 /**
- * Einen Medienserver eintragen (`server` null) oder aendern. Der Server (Plex, Jellyfin, Emby) ist nur beim Eintragen
+ * Einen Medienserver eintragen (`server` null) oder aendern. Der Server (Plex, Jellyfin, Emby, Kodi) ist nur beim Eintragen
  * waehlbar. Speichern prueft beim Server von nexcrate die Verbindung und liest die Bibliotheken;
  * "Verbindung pruefen" tut das vorher ohne zu speichern.
  *
- * ⚠️ Der Token oder API-Schluessel ist nie vorbelegt: Der Server gibt ihn nie heraus. Bleibt das Feld beim Bearbeiten
+ * ⚠️ Token, API-Schluessel und Passwort sind nie vorbelegt: Der Server gibt sie nie heraus. Bleibt das Feld beim Bearbeiten
  * leer, geht keiner hinaus und der gespeicherte bleibt.
  *
  * Plex wie in Nexview: nach der Anmeldung nennt plex.tv die eigenen Server des Kontos, der Besitzer waehlt seinen, und
@@ -43,6 +43,8 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
   const [name, setName] = useState(server?.name ?? '')
   const [url, setUrl] = useState(server?.url ?? '')
   const [token, setToken] = useState('')
+  // Nur Kodi: der Benutzername ist kein Geheimnis und steht vorbelegt da.
+  const [username, setUsername] = useState(server?.username ?? '')
   const [enabled, setEnabled] = useState(server?.enabled ?? true)
   const [rows, setRows] = useState<Row[]>(() => (server?.path_mappings ?? []).map((mapping, index) => ({ ...mapping, key: index })))
   const [nextKey, setNextKey] = useState(server?.path_mappings.length ?? 0)
@@ -61,6 +63,7 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const plex = kind === 'plex'
+  const kodi = kind === 'kodi'
 
   // Nachfragen nur, solange eine Anmeldung laeuft, die der Knopf gestartet hat.
   useEffect(() => {
@@ -166,11 +169,12 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
     }
   }
 
-  /** Der Zugang, wie er hinausgeht: der getippte Token, sonst die bestaetigte Anmeldung, sonst nichts. */
-  function access(): { token?: string; plex_pin_id?: number } {
+  /** Der Zugang, wie er hinausgeht: der getippte Token, sonst die bestaetigte Anmeldung, sonst nichts. Kodi schickt zusaetzlich den Benutzernamen mit. */
+  function access(): { token?: string; username?: string; plex_pin_id?: number } {
     const typed = token.trim()
-    if (typed !== '') return { token: typed }
+    if (typed !== '') return { token: typed, ...(kodi ? { username: username.trim() } : {}) }
     if (plex && pin !== null && pinState === 'claimed') return { plex_pin_id: pin.pin_id }
+    if (kodi) return { username: username.trim() }
     return {}
   }
 
@@ -217,6 +221,7 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
         const change: MediaServerUpdate = { name: body.name, enabled: body.enabled, path_mappings: body.path_mappings }
         if (body.url !== server.url) change.url = body.url
         if (body.token !== undefined) change.token = body.token
+        if (body.username !== undefined && body.username !== (server.username ?? '')) change.username = body.username
         if (body.plex_pin_id !== undefined) change.plex_pin_id = body.plex_pin_id
         saved = await mediaServersApi.update(server.id, change)
       }
@@ -243,7 +248,13 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
     setRows((current) => current.map((row) => (row.key === key ? { ...row, [side]: value } : row)))
   }
 
-  const urlHint = plex ? t('settings.servers.form.urlHintPlex') : kind === 'jellyfin' ? t('settings.servers.form.urlHintJellyfin') : t('settings.servers.form.urlHintEmby')
+  const urlHint = plex
+    ? t('settings.servers.form.urlHintPlex')
+    : kodi
+      ? t('settings.servers.form.urlHintKodi')
+      : kind === 'jellyfin'
+        ? t('settings.servers.form.urlHintJellyfin')
+        : t('settings.servers.form.urlHintEmby')
   const secretHint =
     server !== null
       ? server.has_token
@@ -251,9 +262,12 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
         : t('settings.servers.form.secretNone')
       : plex
         ? t('settings.servers.form.tokenHint')
-        : kind === 'jellyfin'
-          ? t('settings.servers.form.apiKeyHintJellyfin')
-          : t('settings.servers.form.apiKeyHintEmby')
+        : kodi
+          ? t('settings.servers.form.passwordHintKodi')
+          : kind === 'jellyfin'
+            ? t('settings.servers.form.apiKeyHintJellyfin')
+            : t('settings.servers.form.apiKeyHintEmby')
+  const secretLabel = plex ? t('settings.servers.form.token') : kodi ? t('settings.servers.form.password') : t('settings.servers.form.apiKey')
 
   return (
     <Dialog
@@ -387,8 +401,23 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
           spellCheck={false}
           className="w-full min-w-0"
         />
+        {kodi && (
+          <Field
+            label={t('settings.servers.form.username')}
+            hint={t('settings.servers.form.usernameHintKodi')}
+            value={username}
+            onChange={(event) => {
+              setUsername(event.target.value)
+              resetTest()
+            }}
+            maxLength={128}
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full min-w-0"
+          />
+        )}
         <PasswordField
-          label={plex ? t('settings.servers.form.token') : t('settings.servers.form.apiKey')}
+          label={secretLabel}
           hint={secretHint}
           value={token}
           onChange={(event) => {

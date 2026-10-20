@@ -9,7 +9,8 @@ What is told ("So gebaut"):
 * Only enabled servers, and only libraries whose switch is on.
 * The folder is translated with the owner's path pairs and looked up in the locations the server listed for its
   libraries. It lies in a library with the switch on: that folder alone is read again (Plex: ``refresh?path=``;
-  Jellyfin and Emby: ``Library/Media/Updated``). It lies in a library with the switch off: nothing, the owner said no.
+  Jellyfin and Emby: ``Library/Media/Updated``; Kodi: ``VideoLibrary.Scan`` or ``AudioLibrary.Scan`` with the
+  folder). It lies in a library with the switch off: nothing, the owner said no.
 * ⚠️ It lies in no library of the server: nothing is guessed. The libraries of that media kind with the switch on are
   read again as a whole, and the row says ``mediaserver_path_unmatched``, so the owner sees that a path pair is
   missing. A server without such a library is left alone.
@@ -35,6 +36,7 @@ from ...models import MediaServer, utcnow
 from ..radarr import SourceUrlInvalid
 from . import base, paths
 from .jellyfin import JellyfinClient
+from .kodi import KodiClient
 from .plex import PlexClient
 
 logger = logging.getLogger("nexcrate.mediaservers")
@@ -55,8 +57,10 @@ class Stored:
     url: str
     #: ⚠️ Decrypted.
     token: str = field(repr=False)
-    libraries: list[dict[str, Any]]
-    path_mappings: list[dict[str, str]]
+    #: Kodi only: the username of HTTP Basic, stored plain.
+    username: str = ""
+    libraries: list[dict[str, Any]] = field(default_factory=list)
+    path_mappings: list[dict[str, str]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -145,6 +149,7 @@ def _load() -> list[Stored]:
                 kind=row.kind,
                 url=row.url,
                 token=crypto.decrypt(row.token) if row.token else "",
+                username=row.username or "",
                 libraries=[dict(entry) for entry in (row.libraries or [])],
                 path_mappings=[dict(entry) for entry in (row.path_mappings or [])],
             )
@@ -175,7 +180,7 @@ def _execute(kind: str, folders: list[str]) -> None:
             wanted = plan(server.libraries, server.path_mappings, kind, folders)
             if wanted.empty:
                 continue
-            whole = asyncio.run(_tell(server, wanted))
+            whole = asyncio.run(_tell(server, kind, wanted))
             result, code = ("library" if whole else "folder"), (PATH_UNMATCHED if wanted.unmatched else None)
             logger.info(
                 "Media server %d (%s) was told: %d folders, %d whole libraries",
@@ -200,7 +205,7 @@ def _execute(kind: str, folders: list[str]) -> None:
             logger.warning("The result for media server %d could not be stored", server.id, exc_info=True)
 
 
-async def _tell(server: Stored, wanted: Plan) -> bool:
+async def _tell(server: Stored, kind: str, wanted: Plan) -> bool:
     """Returns whether a library was read again as a whole."""
     if server.kind == "plex":
         async with PlexClient(server.url, server.token) as plex:
@@ -213,6 +218,18 @@ async def _tell(server: Stored, wanted: Plan) -> bool:
                     await plex.refresh(library_id, folder)
             for library_id in wanted.whole:
                 await plex.refresh(library_id)
+        return many or bool(wanted.whole)
+    if server.kind == "kodi":
+        # Kodi knows no scan of a single library, only of folders: the ids do not matter here. Too many folders
+        # at once become one scan of everything, as with Plex.
+        async with KodiClient(server.url, server.username, server.token) as kodi:
+            folders = [folder for found in wanted.targeted.values() for folder in found]
+            many = len(folders) > MAX_TARGETED
+            if many or wanted.whole:
+                await kodi.scan(kind)
+            else:
+                for folder in folders:
+                    await kodi.scan(kind, folder)
         return many or bool(wanted.whole)
     async with JellyfinClient(server.kind, server.url, server.token) as other:
         folders = [folder for found in wanted.targeted.values() for folder in found]

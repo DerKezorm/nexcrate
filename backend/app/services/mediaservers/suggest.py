@@ -10,6 +10,10 @@ How a pair is found, per media kind (a movie version against the movie libraries
   before that ending (``/volume1/media`` and ``/data``). The longest common ending wins; two library folders with the
   same ending but another beginning are ambiguous and give no pair.
 * No common ending, but exactly one version folder and exactly one library folder of the kind: those two as a pair.
+
+⚠️ Kodi's video sources hold movies and series mixed and are named under no kind. They are offered for movies and
+series only at a Kodi (``server_kind``); for Plex, Jellyfin and Emby a library without a kind counts for neither kind,
+as it did before Kodi was there.
 """
 
 from __future__ import annotations
@@ -80,15 +84,25 @@ def _pair_for(local: str, remotes: list[str]) -> Suggested | None:
     return Suggested(local=best[0][0], remote=best[0][1], reason="same_ending")
 
 
-def suggest(local_by_kind: Mapping[str, Iterable[str]], libraries: Iterable[Any]) -> Suggestion:
+def suggest(
+    local_by_kind: Mapping[str, Iterable[str]], libraries: Iterable[Any], server_kind: str | None = None
+) -> Suggestion:
     """``local_by_kind``: the folders of the versions per kind of version (movie, series, album). ``libraries``: what
-    the server lists, anything with ``kind`` and ``locations``."""
+    the server lists, anything with ``kind`` and ``locations``. ``server_kind``: ``kodi``, where the video sources hold
+    movies and series mixed under no kind; for the other three a library without a kind stays what it was."""
     listed = [library for library in libraries if getattr(library, "locations", None)]
     pairs: list[Suggested] = []
     any_folder, all_covered = False, True
     for kind, folders in local_by_kind.items():
         wanted = LIBRARY_KIND.get(kind)
-        of_kind = [library for library in listed if library.kind == wanted]
+        # Kodi's video sources hold movies and series mixed, so they take both; a library without a kind elsewhere
+        # (a mixed library of Jellyfin or Emby) counts for neither, as it did before Kodi existed.
+        of_kind = [
+            library
+            for library in listed
+            if library.kind == wanted
+            or (wanted in ("movie", "series") and library.kind is None and server_kind == "kodi")
+        ]
         remotes = [location for library in of_kind for location in library.locations]
         locals_ = [folder for folder in folders if folder]
         if not remotes:

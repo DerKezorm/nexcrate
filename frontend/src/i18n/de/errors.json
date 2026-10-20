@@ -208,6 +208,7 @@
   "mediaserver_kind_locked": "Der Server eines gespeicherten Medienservers lässt sich nicht ändern. Leg für einen anderen Server einen neuen Eintrag an.",
   "mediaserver_unreachable": "Der Medienserver ist unter {{url}} nicht erreichbar. Stimmen Adresse und Port?",
   "mediaserver_auth_failed": "Der Medienserver hat den Token oder API-Schlüssel nicht angenommen. Läuft unter der Adresse vielleicht ein anderer Server als der gewählte?",
+  "mediaserver_auth_failed_kodi": "Kodi hat den Benutzernamen und das Passwort für den Webserver nicht angenommen.",
   "mediaserver_wrong_kind": "Unter dieser Adresse antwortet etwas, aber nicht der gewählte Medienserver.",
   "mediaserver_http_error": "Der Medienserver meldet einen Fehler (HTTP {{status}}).",
   "plextv_unreachable": "plex.tv ist nicht erreichbar. Du kannst den Token auch von Hand eintragen.",

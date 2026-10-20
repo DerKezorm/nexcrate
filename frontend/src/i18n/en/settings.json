@@ -783,14 +783,15 @@
   },
   "servers": {
     "title": "Media servers",
-    "intro": "nexcrate tells Plex, Jellyfin and Emby when a folder has changed: after every filed download and after renaming. A new movie then shows up in the player within a minute or two instead of after the server's next scan. A media server that does not answer never holds up an import.",
+    "intro": "nexcrate tells Plex, Jellyfin, Emby and Kodi when a folder has changed: after every filed download and after renaming. A new movie then shows up in the player within a minute or two instead of after the server's next scan. A media server that does not answer never holds up an import.",
     "add": "Add media server",
     "empty": "No media server connected yet. New files then appear only when the server looks by itself.",
     "kind": {
       "label": "Server",
       "plex": "Plex",
       "jellyfin": "Jellyfin",
-      "emby": "Emby"
+      "emby": "Emby",
+      "kodi": "Kodi"
     },
     "state": {
       "enabled": "Switched on",
@@ -803,7 +804,8 @@
     "lastError": {
       "label": "Last error: {{text}}",
       "mediaserver_unreachable": "nexcrate cannot reach the server.",
-      "mediaserver_auth_failed": "The server did not accept the token or API key.",
+      "mediaserver_auth_failed": "The server did not accept the access.",
+      "mediaserver_auth_failed_kodi": "Kodi did not accept the user name and password.",
       "mediaserver_wrong_kind": "Another program answers at the address.",
       "mediaserver_http_error": "The server answered with an error.",
       "unknown": "Code {{code}}"
@@ -859,11 +861,16 @@
       "urlHintPlex": "The address of your Plex with its port, such as http://plex.example.com:32400.",
       "urlHintJellyfin": "The address you open Jellyfin at in the browser, such as http://jellyfin.example.com:8096.",
       "urlHintEmby": "The address you open Emby at in the browser, such as http://emby.example.com:8096.",
+      "urlHintKodi": "The address of your Kodi with its port, such as http://kodi.example.com:8080. Control via HTTP must be switched on in Kodi.",
       "token": "Token",
       "tokenHint": "The X-Plex-Token of your server. Typed in here, plex.tv is not needed: nexcrate then talks to your server only.",
       "apiKey": "API key",
       "apiKeyHintJellyfin": "In Jellyfin under Dashboard, API Keys.",
       "apiKeyHintEmby": "In Emby under Settings, API Keys.",
+      "username": "Username",
+      "usernameHintKodi": "The username from Kodi's web server settings. Leave empty when Kodi asks for none.",
+      "password": "Password",
+      "passwordHintKodi": "The password from Kodi's web server settings. Leave empty when Kodi asks for none.",
       "secretSaved": "Saved. Leave the field empty to keep it.",
       "secretNone": "Nothing saved yet.",
       "enabled": "Switched on",

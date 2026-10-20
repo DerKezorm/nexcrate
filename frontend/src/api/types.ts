@@ -3457,7 +3457,7 @@ export type ArrQualityTaken = { formats: number; sizes: number; profiles: number
 
 // Medienserver -------------------------------------------------------------------
 
-export type MediaServerKind = 'plex' | 'jellyfin' | 'emby'
+export type MediaServerKind = 'plex' | 'jellyfin' | 'emby' | 'kodi'
 
 /** Dieselbe Stelle, wie nexcrate sie sieht und wie der Medienserver sie sieht. */
 export type MediaServerPathMapping = { local: string; remote: string }
@@ -3472,13 +3472,15 @@ export type MediaServerLibrary = {
   refresh: boolean
 }
 
-/** Den Token oder API-Schluessel gibt der Server nie heraus, nur `has_token`. */
+/** Den Token, API-Schluessel oder das Passwort gibt der Server nie heraus, nur `has_token`. Der Benutzername von Kodi ist kein Geheimnis. */
 export type MediaServer = {
   id: number
   name: string
   kind: MediaServerKind
   url: string
   has_token: boolean
+  /** Nur Kodi: der Benutzername, oder null, wenn keiner gespeichert ist. */
+  username: string | null
   enabled: boolean
   server_name: string | null
   version: string | null
@@ -3496,16 +3498,18 @@ export type MediaServerCreate = {
   kind: MediaServerKind
   url: string
   token?: string
+  /** Nur Kodi: der Benutzername. Leer, wenn Kodi keinen verlangt. */
+  username?: string
   /** Nur Plex: die bestaetigte Anmeldung bei plex.tv. Der Token selbst bleibt im Server von nexcrate. */
   plex_pin_id?: number
   enabled?: boolean
   path_mappings?: MediaServerPathMapping[]
 }
 
-/** Jedes Feld darf fehlen. Ohne `token` bleibt der gespeicherte. `libraries` stellt nur die Schalter. */
+/** Jedes Feld darf fehlen. Ohne `token` bleibt der gespeicherte. `libraries` stellt nur die Schalter. Ohne `username` bleibt der gespeicherte; leer entfernt ihn bei Kodi samt Passwort. */
 export type MediaServerUpdate = Partial<Omit<MediaServerCreate, 'kind'>> & { libraries?: { id: string; refresh: boolean }[] }
 
-export type MediaServerTest = { id?: number; kind?: MediaServerKind; url?: string; token?: string; plex_pin_id?: number }
+export type MediaServerTest = { id?: number; kind?: MediaServerKind; url?: string; token?: string; username?: string; plex_pin_id?: number }
 
 /** Ein Pfadpaar, das der Dialog anbietet. Ein Vorschlag: gespeichert wird erst, was der Besitzer speichert. */
 export type MediaServerSuggestedMapping = MediaServerPathMapping & { reason: 'same_ending' | 'only_one' }
