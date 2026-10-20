@@ -54,10 +54,14 @@ def unreachable(url: str) -> ServerError:
 
 
 def auth_failed() -> ServerError:
+    return ServerError(meldung("mediaserver_auth_failed", "The media server did not accept the token or API key."))
+
+
+def kodi_auth_failed() -> ServerError:
     return ServerError(
         meldung(
-            "mediaserver_auth_failed",
-            "The media server did not accept the access: token, API key, or username and password.",
+            "mediaserver_auth_failed_kodi",
+            "Kodi did not accept the username and password of its web server settings.",
         )
     )
 
@@ -78,6 +82,8 @@ def http_error(status: int) -> ServerError:
 ERRORS = (
     (502, "mediaserver_unreachable"),
     (502, "mediaserver_auth_failed"),
+    # Only a Kodi raises this one; the other three name a token or an API key alone.
+    (502, "mediaserver_auth_failed_kodi"),
     (502, "mediaserver_wrong_kind"),
     (502, "mediaserver_http_error"),
 )

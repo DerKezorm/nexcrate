@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { errorText } from '../../api/client'
 import { MEDIA_SERVER_KINDS, mediaServersApi } from '../../api/mediaServers'
-import type { MediaServer, MediaServerCreate, MediaServerKind, MediaServerLibrary, MediaServerPathMapping, MediaServerTestResult, MediaServerUpdate, PlexPin, PlexServer, PlexServers } from '../../api/types'
+import type { MediaServer, MediaServerCreate, MediaServerKind, MediaServerPathMapping, MediaServerTestResult, MediaServerUpdate, PlexPin, PlexServer, PlexServers } from '../../api/types'
 import { buttonClasses } from '../../components/buttonClasses'
 import { Dialog } from '../../components/Dialog'
 import { PasswordField } from '../../components/PasswordField'
@@ -25,8 +25,8 @@ type Row = MediaServerPathMapping & { key: number }
  * waehlbar. Speichern prueft beim Server von nexcrate die Verbindung und liest die Bibliotheken;
  * "Verbindung pruefen" tut das vorher ohne zu speichern.
  *
-  * ⚠️ Token, API-Schluessel und Passwort sind nie vorbelegt: Der Server gibt sie nie heraus. Bleibt das Feld beim Bearbeiten
-  * leer, geht keiner hinaus und der gespeicherte bleibt.
+ * ⚠️ Token, API-Schluessel und Passwort sind nie vorbelegt: Der Server gibt sie nie heraus. Bleibt das Feld beim Bearbeiten
+ * leer, geht keiner hinaus und der gespeicherte bleibt.
  *
  * Plex wie in Nexview: nach der Anmeldung nennt plex.tv die eigenen Server des Kontos, der Besitzer waehlt seinen, und
  * Adresse, Name und Token kommen von selbst. Die Pfadzuordnung schlaegt der Server von nexcrate vor, sobald er die
@@ -248,26 +248,6 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
     setRows((current) => current.map((row) => (row.key === key ? { ...row, [side]: value } : row)))
   }
 
-  /** The paths the server actually returned, for the remote side. Editing an existing server shows the stored ones;
-   *  "Test connection" refreshes the list. The user can still type a subfolder the server did not list. */
-  const remoteOptions = useMemo(() => {
-    const pathToLabel = new Map<string, string>()
-    const collect = (libs: MediaServerLibrary[] | undefined) => {
-      for (const library of libs ?? []) {
-        const name = library.name?.trim()
-        for (const location of library.locations ?? []) {
-          if (!location || pathToLabel.has(location)) continue
-          pathToLabel.set(location, name ? `${name} \u00b7 ${location}` : location)
-        }
-      }
-    }
-    collect(server?.libraries)
-    collect(tested?.libraries)
-    return Array.from(pathToLabel, ([value, label]) => ({ value, label })).sort((a, b) => a.value.localeCompare(b.value))
-  }, [server?.libraries, tested?.libraries])
-
-  const remoteDatalistId = 'media-server-remote-options'
-
   const urlHint = plex
     ? t('settings.servers.form.urlHintPlex')
     : kodi
@@ -421,17 +401,6 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
           spellCheck={false}
           className="w-full min-w-0"
         />
-        <PasswordField
-          label={secretLabel}
-          hint={secretHint}
-          value={token}
-          onChange={(event) => {
-            setToken(event.target.value)
-            resetTest()
-          }}
-          autoComplete="new-password"
-          maxLength={512}
-        />
         {kodi && (
           <Field
             label={t('settings.servers.form.username')}
@@ -447,6 +416,17 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
             className="w-full min-w-0"
           />
         )}
+        <PasswordField
+          label={secretLabel}
+          hint={secretHint}
+          value={token}
+          onChange={(event) => {
+            setToken(event.target.value)
+            resetTest()
+          }}
+          autoComplete="new-password"
+          maxLength={512}
+        />
         <div className="flex flex-col gap-2">
           <p className="text-sm font-medium text-mist-300">{t('settings.servers.mappings.title')}</p>
           <p className="text-xs text-mist-500">{t('settings.servers.mappings.intro')}</p>
@@ -471,7 +451,6 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
                 {t('settings.servers.mappings.remote')}
                 <input
                   aria-label={t('settings.servers.mappings.remoteLabel', { row: index + 1 })}
-                  list={remoteDatalistId}
                   value={row.remote}
                   onChange={(event) => changeRow(row.key, 'remote', event.target.value)}
                   maxLength={1024}
@@ -491,13 +470,6 @@ export function ServerDialog({ server, onClose, onSaved }: { server: MediaServer
               </Button>
             </div>
           ))}
-          <datalist id={remoteDatalistId}>
-            {remoteOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </datalist>
           <div>
             <Button
               variant="ghost"

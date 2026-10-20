@@ -7,15 +7,13 @@ export const MEDIA_SERVER_KINDS: readonly MediaServerKind[] = ['plex', 'jellyfin
  * Plex, Jellyfin, Emby und Kodi. Token, API-Schluessel oder Passwort gehen nur hinaus, nie herein: Antworten tragen
  * `has_token`, nur Kodis Benutzername steht darin. Speichern prueft die Verbindung und liest die Bibliotheken.
  *
- * Speichern prueft die Verbindung und liest die Bibliotheken.
- *
  * ⚠️ Nur `plexPin`, `plexPinState` und `plexServers` loesen einen Kontakt zu plex.tv aus, und nur hinter dem Knopf
  * "Bei plex.tv anmelden". Wer den Token von Hand eintraegt, ruft keine der drei. `plexChoose` fragt nur den Server
  * selbst, an seinen eigenen Adressen.
  */
 export const mediaServersApi = {
   list: () => api.get<MediaServer[]>('/media-servers'),
-  /** 201. 422 `mediaserver_invalid`, 409 `plextv_pin_unclaimed`, 502 `mediaserver_unreachable`, `mediaserver_auth_failed`, `mediaserver_wrong_kind`, `mediaserver_http_error`. */
+  /** 201. 422 `mediaserver_invalid`, 409 `plextv_pin_unclaimed`, 502 `mediaserver_unreachable`, `mediaserver_auth_failed`, `mediaserver_auth_failed_kodi`, `mediaserver_wrong_kind`, `mediaserver_http_error`. */
   create: (body: MediaServerCreate) => api.post<MediaServer>('/media-servers', body),
   /** Eine neue Adresse oder ein neuer Token wird geprueft. Der Server aendert sich nie (422 `mediaserver_kind_locked`). */
   update: (id: number, body: MediaServerUpdate) => api.patch<MediaServer>(`/media-servers/${id}`, body),

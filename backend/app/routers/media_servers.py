@@ -92,7 +92,7 @@ class LibrarySwitch(BaseModel):
 
 _TOKEN_TEXT = "Plex's token, the API key of Jellyfin or Emby, or the password of Kodi. Never returned."
 _PIN_TEXT = "Plex only: the id of a claimed PIN from `POST /api/media-servers/plex/pin`; its token is taken."
-_USERNAME_TEXT = "Kodi only: the username of HTTP Basic, as stored. Leave empty when Kodi asks for none."
+_USERNAME_TEXT = "Kodi only: the username from Kodi's web server settings. Leave empty when Kodi asks for none."
 
 
 class ServerIn(BaseModel):
@@ -117,7 +117,8 @@ class ServerPatch(BaseModel):
     username: str | None = Field(
         default=None,
         max_length=USERNAME_MAX_LENGTH,
-        description="Kodi only: a new username. Empty removes it and the stored password.",
+        description="Kodi only: a new username. Empty removes it, and the stored password with it unless a new "
+        "`token` is given in the same call, which then wins.",
     )
     plex_pin_id: int | None = Field(default=None, description=_PIN_TEXT)
     enabled: bool | None = None
@@ -235,6 +236,14 @@ def _clean_username(raw: str | None) -> str:
     return text
 
 
+def _kodi_only(*, kind: str | None, username: str | None) -> None:
+    """⚠️ A username belongs to a Kodi alone: the other three know no such field and would store it unused, and a
+    stored one makes the server check the connection again for nothing. So a username they are sent with is refused.
+    An empty or missing one is no username at all and stays fine."""
+    if username and kind != "kodi":
+        raise error("invalid_input", "A username belongs to a Kodi alone.", 422, fields=["username"])
+
+
 def _clean_mappings(raw: list[PathMapping]) -> list[dict[str, str]]:
     cleaned: list[dict[str, str]] = []
     for mapping in raw:
@@ -299,7 +308,7 @@ async def _tested(
     checked: mediaservers.Checked, stored_libraries: list[dict[str, Any]], kind: str | None = None
 ) -> dict[str, Any]:
     """What a check answers: who it is, the libraries with their switches, and the path pairs to offer."""
-    offered = suggest.suggest(await asyncio.to_thread(_version_folders), checked.libraries)
+    offered = suggest.suggest(await asyncio.to_thread(_version_folders), checked.libraries, kind)
     return {
         "server_name": checked.server_name,
         "version": checked.version,
@@ -475,7 +484,8 @@ def list_servers(db: DbSession) -> list[MediaServerOut]:
         "its token or password encrypted. Libraries of movies, series and music start switched on, as do Kodi's "
         "video sources. For Plex, "
         "`plex_pin_id` takes the token a confirmed sign-in at plex.tv brought instead of `token`; plex.tv is not "
-        "contacted by this route. For Kodi, `username` is the username of HTTP Basic, `token` its password."
+        "contacted by this route. For Kodi, `username` is the username of HTTP Basic, `token` its password; a "
+        "`username` sent for another kind is refused (422 `invalid_input`)."
     ),
     responses=error_responses(
         (422, "mediaserver_invalid"), (409, "plextv_pin_unclaimed"), (422, "invalid_input"), *mediaservers.ERRORS
@@ -487,6 +497,7 @@ async def create_server(payload: ServerIn) -> MediaServerOut:
     mappings = _clean_mappings(payload.path_mappings)
     token = _clean_token(payload.token)
     username = _clean_username(payload.username)
+    _kodi_only(kind=payload.kind, username=username)
     if payload.kind == "plex" and payload.plex_pin_id is not None and not token:
         token = _pin_token(payload.plex_pin_id)
     checked = await _check(mediaservers.Target(kind=payload.kind, url=url, token=token, username=username))
@@ -541,6 +552,7 @@ async def probe_server(payload: ServerTestIn) -> ServerTestOut:
     if not token and stored is not None:
         token = await asyncio.to_thread(_decrypted, stored)
     username = _clean_username(payload.username) if payload.username is not None else None
+    _kodi_only(kind=kind, username=username)
     if username is None and stored is not None:
         username = stored.username
     checked = await _check(mediaservers.Target(kind=kind, url=url, token=token, username=username or ""))
@@ -579,8 +591,8 @@ async def check_server(server_id: int) -> MediaServerOut:
     description=(
         "Changes the given fields. An empty or missing `token` keeps the stored one, and so does a missing "
         "`username`. A new address, access or username is checked first and the libraries are read again. An empty "
-        "`username` on a Kodi removes it and the stored password. `libraries` sets the switches, `path_mappings` "
-        "replaces the pairs. The kind of a saved server cannot change."
+        "`username` on a Kodi removes it, and the stored password with it. `libraries` sets "
+        "the switches, `path_mappings` replaces the pairs. The kind of a saved server cannot change."
     ),
     responses=error_responses(
         (404, "mediaserver_not_found"),
@@ -614,12 +626,12 @@ async def update_server(server_id: int, payload: ServerPatch) -> MediaServerOut:
     if not new_token and stored.kind == "plex" and payload.plex_pin_id is not None:
         new_token = _pin_token(payload.plex_pin_id)
     new_username = _clean_username(payload.username) if payload.username is not None else None
+    _kodi_only(kind=stored.kind, username=new_username)
     username = new_username if new_username is not None else stored.username
     username_changed = new_username is not None and new_username != stored.username
-    # Without a username Kodi asks for no password either: the stored one goes with it.
-    clear_password = stored.kind == "kodi" and username_changed and not new_username
-    if clear_password:
-        new_token = ""
+    # Without a username Kodi asks for no password either: the stored one goes with it. A password typed in the same
+    # save wins over it, though, and is what the check answers for.
+    clear_password = stored.kind == "kodi" and username_changed and not new_username and not new_token
     libraries = stored.libraries
     connection_changed = url != stored.url or bool(new_token) or username_changed
     if username_changed:
@@ -758,7 +770,7 @@ async def choose_plex_server(pin_id: int, machine_id: str) -> PlexChosenOut:
             continue
         plextv.choose(pin_id, machine_id)
         logger.info("A Plex server of the sign-in answered at one of its %d addresses", len(server.addresses))
-        return PlexChosenOut(name=server.name, url=url, **await _tested(checked, []))
+        return PlexChosenOut(name=server.name, url=url, **await _tested(checked, [], "plex"))
     if failure is not None:
         raise failure.http() from failure
     raise server_base.unreachable(server.name).http()

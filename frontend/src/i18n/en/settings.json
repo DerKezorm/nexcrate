@@ -805,6 +805,7 @@
       "label": "Last error: {{text}}",
       "mediaserver_unreachable": "nexcrate cannot reach the server.",
       "mediaserver_auth_failed": "The server did not accept the access.",
+      "mediaserver_auth_failed_kodi": "Kodi did not accept the user name and password.",
       "mediaserver_wrong_kind": "Another program answers at the address.",
       "mediaserver_http_error": "The server answered with an error.",
       "unknown": "Code {{code}}"
@@ -830,7 +831,7 @@
     },
     "mappings": {
       "title": "Path mapping",
-      "intro": "Only needed when the server sees the same folders under another path than nexcrate, such as /media here and /volume1/media there. The remote side suggests the folders the server listed; a subfolder can still be typed.",
+      "intro": "Only needed when the server sees the same folders under another path than nexcrate, such as /media here and /volume1/media there.",
       "suggested": "Suggested from the folders the server lists and the folders of your versions. Please check; nothing is stored before you press Save.",
       "notNeeded": "No mapping needed: the server sees the folders of your versions under the same path.",
       "local": "nexcrate sees",
@@ -867,9 +868,9 @@
       "apiKeyHintJellyfin": "In Jellyfin under Dashboard, API Keys.",
       "apiKeyHintEmby": "In Emby under Settings, API Keys.",
       "username": "Username",
-      "usernameHintKodi": "Kodi only: the username from Kodi's web server settings. Leave empty when Kodi asks for none.",
+      "usernameHintKodi": "The username from Kodi's web server settings. Leave empty when Kodi asks for none.",
       "password": "Password",
-      "passwordHintKodi": "Kodi only: the password from Kodi's web server settings. Leave empty when Kodi asks for none.",
+      "passwordHintKodi": "The password from Kodi's web server settings. Leave empty when Kodi asks for none.",
       "secretSaved": "Saved. Leave the field empty to keep it.",
       "secretNone": "Nothing saved yet.",
       "enabled": "Switched on",

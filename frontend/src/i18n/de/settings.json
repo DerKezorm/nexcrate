@@ -805,6 +805,7 @@
       "label": "Letzter Fehler: {{text}}",
       "mediaserver_unreachable": "nexcrate erreicht den Server nicht.",
       "mediaserver_auth_failed": "Der Server hat den Zugang nicht angenommen.",
+      "mediaserver_auth_failed_kodi": "Kodi hat den Benutzernamen und das Passwort nicht angenommen.",
       "mediaserver_wrong_kind": "Unter der Adresse antwortet ein anderes Programm.",
       "mediaserver_http_error": "Der Server hat mit einem Fehler geantwortet.",
       "unknown": "Code {{code}}"
@@ -830,7 +831,7 @@
     },
     "mappings": {
       "title": "Pfadzuordnung",
-      "intro": "Nur nötig, wenn der Server dieselben Ordner unter einem anderen Pfad sieht als nexcrate, etwa /media hier und /volume1/media dort. Die rechte Seite schlägt die Ordner vor, die der Server nennt; ein Unterordner lässt sich weiterhin tippen.",
+      "intro": "Nur nötig, wenn der Server dieselben Ordner unter einem anderen Pfad sieht als nexcrate, etwa /media hier und /volume1/media dort.",
       "suggested": "Vorgeschlagen aus den Ordnern, die der Server nennt, und den Ordnern deiner Fassungen. Bitte prüfen; gespeichert wird erst mit „Speichern“.",
       "notNeeded": "Keine Zuordnung nötig: Der Server sieht die Ordner deiner Fassungen unter demselben Pfad.",
       "local": "nexcrate sieht",

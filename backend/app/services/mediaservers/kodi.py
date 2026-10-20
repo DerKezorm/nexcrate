@@ -34,7 +34,7 @@ def auth_headers(username: str, password: str) -> dict[str, str]:
     """The ``Authorization`` header, or none: without either Kodi may allow control as it is."""
     if not username and not password:
         return {}
-    token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+    token = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
     return {"Authorization": f"Basic {token}"}
 
 
@@ -87,6 +87,9 @@ class KodiClient:
                 response = await http_log.send(self._http, "POST", rpc_path(self.base_url), json=body)
         except httpx.RequestError as exc:
             raise base.unreachable(self.base_url) from exc
+        # Kodi names no token of its own: the pair of its web server settings is what it refuses or accepts.
+        if response.status_code in (401, 403):
+            raise base.kodi_auth_failed()
         base.raise_for(response)
         data = base.json_of(response)
         if not isinstance(data, dict) or data.get("jsonrpc") != "2.0" or "result" not in data:
@@ -148,11 +151,14 @@ class KodiClient:
 
         ``kind`` is nexcrate's: movie and series scan the video library, music the audio one. Nothing pops up on
         Kodi's screen; the scan runs in the background and this call only hands it over.
+
+        Kodi keeps the paths of its own sources with a trailing slash, so the folder goes out with one as well;
+        a scan of the whole library names no directory and is left as it is.
         """
         method = "AudioLibrary.Scan" if kind == "music" else "VideoLibrary.Scan"
         params: dict[str, Any] = {"showdialogs": False}
         if directory:
-            params["directory"] = directory
+            params["directory"] = directory if directory.endswith("/") else f"{directory}/"
         await self._call(method, params)
 
 
