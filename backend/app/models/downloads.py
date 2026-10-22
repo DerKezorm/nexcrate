@@ -61,7 +61,8 @@ FAILED_DETAILS = (
 #: gets a card.
 FAILURE_HANDLINGS = ("replacement", "schedule", "owner")
 #: Why a release is on a title's blocklist.
-BLOCK_REASONS = (*FAILED_REASONS, "dangerous_file", "multi_part", "removed_by_owner")
+#: ``lower_than_named``: an automatic album download whose files lay below the step its name promised.
+BLOCK_REASONS = (*FAILED_REASONS, "dangerous_file", "multi_part", "removed_by_owner", "lower_than_named")
 #: Series downloads: what the download covers.
 #: ``album`` since M4.
 SCOPES = ("episode", "season", "series", "album")

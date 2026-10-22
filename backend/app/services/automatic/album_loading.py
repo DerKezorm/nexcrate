@@ -6,6 +6,9 @@ most four; fresh caps one more). After the search, the release the music version
 ``loading.grab`` without any confirmation; one that cannot load gives way to the next accepted release of the album
 that is better than its files, at most ``scheduler.ATTEMPTS_PER_VERSION``. The summary has the movies' shape.
 
+**At most ``GRABS_PER_DAY`` automatic loads of one album in 24 hours,** whatever brought them: a net under the rules,
+so a loop of loads can never run for days. The owner's "Search automatically now" goes past it.
+
 Log lines carry ids, counts and codes, never names, release titles or links.
 """
 
@@ -13,11 +16,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
+from sqlalchemy import func, select
+
 from ...db import SessionLocal
-from ...models import Indexer, Title
+from ...models import Download, Indexer, Title
 from .. import indexers
 from ..downloads import loading
 from ..releases import music_qualities as mq
@@ -28,6 +33,12 @@ from . import album_planning, budget, clock, handover_retry, planning, scheduler
 logger = logging.getLogger("nexcrate.automatic")
 
 ALBUM_SCOPE = {"kind": "album", "aliases": False}
+#: Automatic loads of one album in ``GRABS_WINDOW``, and the code of a load the limit held back.
+GRABS_PER_DAY = 3
+GRABS_WINDOW = timedelta(hours=24)
+GRABS_PER_DAY_CODE = "album_grabs_per_day"
+#: Origins of automatic loads; ``manual`` is the owner's.
+_AUTOMATIC = ("search", "rss", "replacement")
 
 
 def _categories(row: Indexer) -> tuple[int, ...]:
@@ -44,6 +55,19 @@ def planned_cost(row: Indexer, album: album_search.AlbumSearch, now: datetime) -
     else:
         queries = len(album_search.text_queries(row.caps, album))
     return max(1, queries) + (1 if stale else 0)
+
+
+def grabs_in_window(title_id: int, now: datetime) -> int:
+    """The album's automatic loads in the last ``GRABS_WINDOW``."""
+    with SessionLocal() as db:
+        counted = db.scalar(
+            select(func.count(Download.id)).where(
+                Download.title_id == title_id,
+                Download.origin.in_(_AUTOMATIC),
+                Download.grabbed_at >= now - GRABS_WINDOW,
+            )
+        )
+    return int(counted or 0)
 
 
 def _wanted(title_id: int, now: datetime) -> planning.Plan | None:
@@ -169,6 +193,14 @@ def _load(search: search_jobs.Search, body: dict[str, Any], now: datetime) -> tu
             return False, "automatic_off"
     if decision.get("load_block"):
         return False, decision["load_block"]
+    if not search.user_invoked and grabs_in_window(search.title_id, now) >= GRABS_PER_DAY:
+        logger.info(
+            "Automatic search %s: album %d was loaded %d times in 24 hours; nothing loads",
+            search.search_id,
+            search.title_id,
+            GRABS_PER_DAY,
+        )
+        return False, GRABS_PER_DAY_CODE
     code: str | None = None
     attempts = 0
     ranked = candidates(body)

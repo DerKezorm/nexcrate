@@ -20,6 +20,7 @@
       "noClientUsenet": "No download client for Usenet is switched on.",
       "noClientTorrent": "No download client for torrents is switched on.",
       "download_active": "A download for {{label}} is already running. A second one only works once it is filed away or removed.",
+      "album_grabs_per_day": "This album was loaded automatically three times in the last 24 hours already. nexcrate loads it by itself again only after that; Search automatically now still works.",
       "waiting_for_delay": "The best release for {{label}} is still waiting: the delay rule of the version gives a better one some time. It is listed under Downloads, tab Waiting.",
       "unknown": "Downloading this release does not work right now (code {{code}}).",
       "unknownNoCode": "Downloading this release does not work right now.",

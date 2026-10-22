@@ -207,6 +207,9 @@ export function loadCodeText(t: TFunction, code: string, label: string): string 
     // Die Verzoegerungsregel der Fassung laesst das beste Release noch warten; es steht unter Downloads, "Wartet".
     case 'waiting_for_delay':
       return t('search.load.block.waiting_for_delay', { label })
+    // Ein Album hat sich in 24 Stunden schon dreimal von selbst geladen; die Grenze faengt jede Schleife ab.
+    case 'album_grabs_per_day':
+      return t('search.load.block.album_grabs_per_day')
     default:
       return PLAIN_LOAD_ERRORS.includes(code) ? errorText(t, new ApiError(409, code)) : t('search.load.block.unknown', { code })
   }

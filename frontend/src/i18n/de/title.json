@@ -362,7 +362,8 @@
       "dangerous_file": "Im Download lag eine gefährliche Datei.",
       "unknown": "Gesperrt mit dem Grund {{code}}.",
       "multi_part": "Das Release war ein Film in mehreren Teilen.",
-      "removed_by_owner": "Du hast den Download entfernt und das Release gesperrt."
+      "removed_by_owner": "Du hast den Download entfernt und das Release gesperrt.",
+      "lower_than_named": "Die Dateien waren schlechter, als der Name des Releases versprach. nexcrate lädt es nicht noch einmal von selbst."
     }
   },
   "album": {

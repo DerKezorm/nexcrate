@@ -43,6 +43,7 @@ from ... import crypto
 from ...db import SessionLocal, set_setting
 from ...models import (
     Artist,
+    BlocklistEntry,
     Download,
     DownloadAudioFile,
     DownloadClient,
@@ -1471,6 +1472,7 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
             download.progress, download.remaining_seconds = 100.0, 0
             detail = f"filed={len(filed)} missing={len(missing)} release={edition.id} download={download.id}"
             store.add_history(db, download, "album_filed", detail, moment)
+            _block_if_short_of_its_name(db, download, filed, moment)
         download.updated_at = moment
         store.follow(db, download, moment)
         db.commit()
@@ -1484,6 +1486,39 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
         state,
     )
     return state
+
+
+#: The blocklist reason of a release whose files lay below the step its name promised.
+LOWER_THAN_NAMED = "lower_than_named"
+#: Origins of automatic loads; the owner's own (``manual``) are never judged here: the owner chose them.
+_AUTOMATIC = ("search", "rss", "replacement")
+
+
+def _block_if_short_of_its_name(
+    db: OrmSession, download: Download, filed: list[DownloadAudioFile], moment: datetime
+) -> None:
+    """An automatic download whose filed files lie below the step its name promised (``FLAC`` holding MP3 files) goes
+    on the album's blocklist. Loaded again it would bring the same files, while its name kept promising an upgrade: the
+    same release was loaded over and over."""
+    promised = download.quality
+    if download.origin not in _AUTOMATIC or promised not in mq.STEPS:
+        return
+    ids = [row.track_file_id for row in filed if row.track_file_id is not None]
+    qualities = list(db.scalars(select(TrackFile.quality).where(TrackFile.id.in_(ids)))) if ids else []
+    delivered = album_quality.step_of_files(qualities)
+    if delivered not in mq.STEPS or mq.rank(delivered) <= mq.rank(promised):
+        return
+    entries = list(db.scalars(select(BlocklistEntry).where(BlocklistEntry.title_id == download.title_id)))
+    hash_ = download.client_download_id if download.protocol == "torrent" else None
+    if store.is_blocked(entries, protocol=download.protocol, release_title=download.release_title, info_hash=hash_):
+        return
+    store.block(db, download, LOWER_THAN_NAMED, moment)
+    logger.info(
+        "Album download %d: its files are %s, its name said %s; the release is not loaded again",
+        download.id,
+        delivered,
+        promised,
+    )
 
 
 def after_finish(download_id: int, found: Found) -> None:

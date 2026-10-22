@@ -362,7 +362,8 @@
       "dangerous_file": "The download held a dangerous file.",
       "unknown": "Blocked with the reason {{code}}.",
       "multi_part": "The release was a movie in several parts.",
-      "removed_by_owner": "You removed the download and blocked the release."
+      "removed_by_owner": "You removed the download and blocked the release.",
+      "lower_than_named": "The files were of a lower quality than the release name promised. nexcrate does not load it again by itself."
     }
   },
   "album": {

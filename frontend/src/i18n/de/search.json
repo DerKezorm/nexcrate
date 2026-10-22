@@ -20,6 +20,7 @@
       "noClientUsenet": "Für Usenet ist kein Download-Programm eingeschaltet.",
       "noClientTorrent": "Für Torrents ist kein Download-Programm eingeschaltet.",
       "download_active": "Für {{label}} läuft schon ein Download. Ein zweiter geht erst, wenn er abgelegt oder entfernt ist.",
+      "album_grabs_per_day": "Dieses Album wurde in den letzten 24 Stunden schon dreimal automatisch geladen. nexcrate lädt es erst danach wieder von selbst, Jetzt automatisch suchen geht trotzdem.",
       "waiting_for_delay": "Das beste Release für {{label}} wartet noch: Die Verzögerungsregel der Fassung lässt einem besseren Zeit. Es steht unter Downloads im Reiter Wartet.",
       "unknown": "Laden geht für dieses Release gerade nicht (Code {{code}}).",
       "unknownNoCode": "Laden geht für dieses Release gerade nicht.",
