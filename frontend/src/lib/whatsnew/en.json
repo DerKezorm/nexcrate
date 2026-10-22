@@ -535,6 +535,25 @@
         "This works with qBittorrent, Deluge, Transmission from 4.0, SABnzbd and NZBGet; with SABnzbd and NZBGet for jobs in the queue.",
         "/api/v1 knows the problem moved_in_client and the action take_back."
       ]
+    },
+    "1.3.0": {
+      "lead": "Kodi joins as a fourth media server, and the automatic album search no longer loads a release again and again whose files are worse than its name says (issue #22).",
+      "sections": [
+        {
+          "title": "Kodi as a media server",
+          "body": "Next to Plex, Jellyfin and Emby you can now add Kodi. nexcrate tells it about new files over Kodi's API, with or without the username and password of its web server. Video sources count for movies and series, music sources for music.",
+          "where": "Settings › Media servers"
+        },
+        {
+          "title": "No album on an endless loop",
+          "body": "When a release promises FLAC in its name and brings MP3, it goes on the album's blocklist after filing and is not loaded again by itself. Also, nexcrate loads an album by itself at most three times in 24 hours, whatever the reason. Search automatically now still works.",
+          "where": "Library › an album"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When mapping the paths of a media server, the dialog suggests the folders the server names for its libraries. Another folder can still be typed."
+      ]
     }
   }
 }

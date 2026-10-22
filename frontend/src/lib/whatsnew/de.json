@@ -535,6 +535,25 @@
         "Das gilt für qBittorrent, Deluge, Transmission ab 4.0, SABnzbd und NZBGet; bei SABnzbd und NZBGet für Aufträge in der Warteschlange.",
         "/api/v1 kennt das Problem moved_in_client und die Aktion take_back."
       ]
+    },
+    "1.3.0": {
+      "lead": "Kodi kommt als vierter Medienserver dazu, und die automatische Albensuche lädt ein Release nicht mehr immer wieder, dessen Dateien schlechter sind, als sein Name sagt (Issue #22).",
+      "sections": [
+        {
+          "title": "Kodi als Medienserver",
+          "body": "Neben Plex, Jellyfin und Emby lässt sich jetzt Kodi eintragen. nexcrate meldet neue Dateien über Kodis Schnittstelle, mit oder ohne Benutzername und Passwort des Webservers. Video-Quellen gelten für Filme und Serien, Musik-Quellen für Musik.",
+          "where": "Einstellungen › Medienserver"
+        },
+        {
+          "title": "Kein Album mehr in Dauerschleife",
+          "body": "Verspricht ein Release im Namen FLAC und bringt MP3, kommt es nach dem Ablegen auf die Sperrliste des Albums und wird nicht noch einmal von selbst geladen. Außerdem lädt nexcrate ein Album höchstens dreimal in 24 Stunden von selbst, was immer der Grund ist. Jetzt automatisch suchen geht trotzdem.",
+          "where": "Bibliothek › ein Album"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Beim Zuordnen der Pfade eines Medienservers schlägt der Dialog die Ordner vor, die der Server für seine Bibliotheken nennt. Ein anderer Ordner lässt sich weiter eintippen."
+      ]
     }
   }
 }
