@@ -39,6 +39,7 @@ from .. import delay as delay_rules
 from .. import indexers, schreibweisen
 from .. import tags as tag_store
 from ..music import album_quality, hit_matching, store
+from ..releases import decision as movie_decision
 from ..releases import music_decision as md
 from ..releases import music_qualities as mq
 from ..releases.music_parser import ParsedAlbum, parse_album
@@ -123,6 +124,8 @@ class AlbumSearch:
     scope: dict[str, Any] = field(default_factory=dict)
     #: The delay rule of the music version: a protocol switched off does not fit, the preferred one wins a tie.
     delay: delay_rules.Rule = delay_rules.DEFAULT
+    #: The release the album's files came from, when it has files and the name is known.
+    release_title: str | None = None
 
 
 def _year(date: str | None) -> int | None:
@@ -209,6 +212,7 @@ def load(db: OrmSession, title_id: int, *, aliases: bool = False) -> AlbumSearch
         delay=delay_rules.for_title(
             definition.delay if definition is not None else None, tag_store.title_tag_ids(db, title_id)
         ),
+        release_title=version.release_title if version is not None and version.has_file else None,
     )
 
 
@@ -477,6 +481,10 @@ def _verdict(
     box = _box_rejection(parsed, album.target)
     if box is not None:
         rejections.append(box)
+    if album.has_file and movie_decision.same_release(release.title, album.release_title):
+        # The album's files came from this very release: loaded again it brings the same files, even when one file it
+        # does not replace keeps the album below its target (Sonarr's AlreadyImportedSpecification).
+        rejections.append({"code": movie_decision.SAME_RELEASE})
     if album.rules is None:
         # Without a profile only what nexcrate never takes: no step is judged.
         fixed = [{"code": "cue_single_file"}] if "cue" in parsed.warnings else []

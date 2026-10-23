@@ -236,6 +236,7 @@
       "step_never_taken": "{{step}} nimmt das Profil nie.",
       "other": "Abgelehnt ({{code}}).",
       "too_small_for_album": "Zu klein für das ganze Album: {{minutes}} Minuten brauchen selbst als MP3 niedrig mindestens {{size}}.",
+      "same_release": "Die Dateien des Albums stammen schon aus genau diesem Release. Noch einmal geladen brächte es dieselben Dateien.",
       "protocol_disabled_usenet": "Die Fassung nutzt kein Usenet (Protokoll und Wartezeit).",
       "protocol_disabled_torrent": "Die Fassung nutzt keine Torrents (Protokoll und Wartezeit).",
       "not_enough_seeders": "{{seeders}} Seeder, der Indexer verlangt mindestens {{minimum}}.",

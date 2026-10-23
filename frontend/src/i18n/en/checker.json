@@ -236,6 +236,7 @@
       "step_never_taken": "The profile never takes {{step}}.",
       "other": "Refused ({{code}}).",
       "too_small_for_album": "Too small for the whole album: {{minutes}} minutes need at least {{size}} even as low MP3.",
+      "same_release": "The album's files came from this very release already. Loading it again would bring the same files.",
       "protocol_disabled_usenet": "The version does not use Usenet (protocol and waiting time).",
       "protocol_disabled_torrent": "The version does not use torrents (protocol and waiting time).",
       "not_enough_seeders": "{{seeders}} seeders, the indexer asks for at least {{minimum}}.",

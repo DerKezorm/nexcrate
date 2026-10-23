@@ -44,6 +44,8 @@ export function albumRejectionText(t: TFunction, rejection: ReleaseRejection, la
         age: formatNumber(numberOf(rejection.age_days), language),
         retention: formatNumber(numberOf(rejection.retention_days), language),
       })
+    case 'same_release':
+      return t('checker.music.rejections.same_release')
     case 'protocol_disabled':
       return rejection.protocol === 'torrent'
         ? t('checker.music.rejections.protocol_disabled_torrent')
