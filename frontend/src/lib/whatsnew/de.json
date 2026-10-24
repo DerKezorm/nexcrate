@@ -568,6 +568,20 @@
       "small": [
         "Das gilt auch für Releases, die schon vor 1.3.0 abgelegt wurden und darum noch auf keiner Sperrliste stehen."
       ]
+    },
+    "1.3.2": {
+      "lead": "Ein kleines Release aus Issue #23: nexcrate läuft weiter, wenn der Browser die Seite übersetzt.",
+      "sections": [
+        {
+          "title": "Übersetzte Seiten stürzen nicht mehr ab",
+          "body": "Übersetzt Chrome oder eine Erweiterung die Seite, tauscht der Browser jeden Text gegen eigene Elemente. Sobald danach ein Knopf sein Ladesymbol zeigte, etwa beim Prüfen der TMDB-Verbindung, beim Anlegen eines API-Schlüssels oder beim Zuweisen eines Profils, konnte nexcrate die Seite nicht mehr zeichnen. Jetzt arbeiten die Knöpfe auch auf einer übersetzten Seite, und die übrige Oberfläche fällt nicht mehr um, wenn Text ausgetauscht wurde.",
+          "where": "Überall in der Oberfläche"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Auf einer übersetzten Seite kann ein neu eingeblendetes Element am Ende seiner Zeile stehen statt an seinem Platz. Die Seite bleibt dabei stehen."
+      ]
     }
   }
 }
