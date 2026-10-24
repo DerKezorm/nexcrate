@@ -8,9 +8,11 @@ import App from './App'
 import { CrashBoundary } from './components/CrashBoundary'
 import { AuthProvider } from './auth/AuthProvider'
 import { startI18n } from './i18n'
+import { bearTranslatedPages } from './lib/translatedPage'
 import './styles/index.css'
 
 function startApp(): void {
+  bearTranslatedPages()
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <BrowserRouter basename={URL_BASE || undefined}>
