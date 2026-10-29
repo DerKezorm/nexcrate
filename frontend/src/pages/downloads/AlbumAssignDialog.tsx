@@ -10,13 +10,25 @@ import { Badge, Button, FormMessage, SelectField, Spinner } from '../../componen
 import { formatNumber } from '../../lib/format'
 import { albumQualityText } from '../../lib/musicSteps'
 import { sizeText } from '../../lib/size'
-import { type AlbumChoice, doubleTracks, durationText, EDITABLE, initialAlbumChoices, LOOSE, trackCode } from './albumAssignChoices'
+import {
+  type AlbumChoice,
+  doubleTracks,
+  durationText,
+  EDITABLE,
+  initialAlbumChoices,
+  LOOSE,
+  movablePlaced,
+  movedPlaced,
+  trackCode,
+} from './albumAssignChoices'
 import { FinishDialog } from './FinishDialog'
 
 /**
  * "Von Hand zuordnen" fuer einen Albendownload (M4, Entscheidungen 31 bis 33): oben die Ausgabe, darunter je Datei mit
  * Laenge, Format und Tags ein Titel dieser Ausgabe, "passt zu keinem Titel, trotzdem ablegen" oder "nicht ablegen", und
  * die Titelliste mit dem, was liegt, was gewaehlt ist und was fehlt. Die Wahl gilt nur fuer diesen Download.
+ * Seit dem 29.10.2026 bekommen auch abgelegte Dateien dieses Downloads einen anderen Titel (oder "trotzdem ablegen");
+ * sie kommen dann mit neuem Namen und neuen Tags auf den gewaehlten Titel.
  * Bei "nicht besser" sagt der Dialog, was schlechter wuerde, und ersetzt erst auf ausdrueckliche Bestaetigung.
  */
 export function AlbumAssignDialog({ download, onClose, onDone }: { download: Download; onClose: () => void; onDone: (message: string) => void }) {
@@ -49,11 +61,15 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
   const severalMedia = useMemo(() => new Set((data?.tracks ?? []).map((track) => track.medium)).size > 1, [data])
   const trackById = useMemo(() => new Map([...(data?.tracks ?? []), ...(data?.target_tracks ?? [])].map((track) => [track.id, track])), [data])
   const editable = (data?.files ?? []).filter((file) => !file.placed && EDITABLE.includes(file.decision))
-  const placed = (data?.files ?? []).filter((file) => file.placed)
+  const movable = data !== null ? movablePlaced(data) : []
+  const fixed = (data?.files ?? []).filter((file) => file.placed && !movable.includes(file))
+  const moved = data !== null ? movedPlaced(data, choices) : []
+  // Titel, die eine umziehende Datei frei macht
+  const freed = new Set(moved.flatMap((file) => (file.track_id !== null ? [file.track_id] : [])))
   const doubles = data !== null ? doubleTracks(data, choices) : new Set<number>()
   const chosen = new Set(Object.values(choices).flatMap((choice) => (choice.kind === 'track' ? [choice.trackId] : [])))
-  const toFile = Object.values(choices).filter((choice) => choice.kind !== 'none').length
-  const missing = (data?.tracks ?? []).filter((track) => track.held === null && !chosen.has(track.id))
+  const toFile = editable.filter((file) => (choices[file.key]?.kind ?? 'none') !== 'none').length + moved.length
+  const missing = (data?.tracks ?? []).filter((track) => (track.held === null || freed.has(track.id)) && !chosen.has(track.id))
 
   function choose(key: number, value: string) {
     const next: AlbumChoice = value === '' ? { kind: 'none' } : value === LOOSE ? { kind: 'loose' } : { kind: 'track', trackId: Number(value) }
@@ -64,11 +80,12 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
     if (data === null) return
     setChoices((current) => {
       const next = { ...current }
-      const taken = new Set([...data.files.filter((file) => file.placed && file.track_id !== null).map((file) => file.track_id as number)])
+      const taken = new Set(data.files.filter((file) => file.placed && file.track_id !== null && next[file.key] === undefined).map((file) => file.track_id as number))
       for (const choice of Object.values(next)) if (choice.kind === 'track') taken.add(choice.trackId)
+      const free = new Set(movedPlaced(data, next).flatMap((file) => (file.track_id !== null ? [file.track_id] : [])))
       for (const file of editable) {
         if (next[file.key]?.kind !== 'none') continue
-        const proposal = file.proposal.find((id) => trackById.has(id) && !taken.has(id) && trackById.get(id)?.held === null)
+        const proposal = file.proposal.find((id) => trackById.has(id) && !taken.has(id) && (trackById.get(id)?.held === null || free.has(id)))
         if (proposal !== undefined) {
           next[file.key] = { kind: 'track', trackId: proposal }
           taken.add(proposal)
@@ -83,7 +100,7 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
     setBusy(true)
     setProblem(null)
     try {
-      const files = editable.map((file) => {
+      const files = [...editable, ...moved].map((file) => {
         const choice = choices[file.key] ?? { kind: 'none' }
         return { key: file.key, track_id: choice.kind === 'track' ? choice.trackId : null, loose: choice.kind === 'loose' }
       })
@@ -201,7 +218,27 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
                   trackById={trackById}
                 />
               ))}
-              {placed.map((file) => (
+              {movable.map((file) => (
+                <FileRow
+                  key={file.key}
+                  file={file}
+                  tracks={data.tracks}
+                  targetTracks={data.target_tracks}
+                  severalMedia={severalMedia}
+                  choice={choices[file.key] ?? { kind: 'none' }}
+                  doubles={doubles}
+                  onChoose={(value) => choose(file.key, value)}
+                  trackById={trackById}
+                  placed={{
+                    where:
+                      file.track_id !== null && trackById.has(file.track_id)
+                        ? t('downloads.albumAssign.placedAs', { code: trackCode(trackById.get(file.track_id) as AlbumTrackChoice, severalMedia) })
+                        : t('downloads.albumAssign.placedLoose'),
+                    moves: moved.includes(file),
+                  }}
+                />
+              ))}
+              {fixed.map((file) => (
                 <li key={file.key} className="flex min-w-0 flex-col gap-1 rounded-xl border border-ink-700/60 p-3 text-mist-500">
                   <p className="font-mono text-xs break-all">{file.path}</p>
                   <p className="text-xs">
@@ -214,11 +251,11 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
             </ul>
             <section aria-label={t('downloads.albumAssign.tracksTitle')} className="flex flex-col gap-2 border-t border-ink-700 pt-4">
               <h3 className="text-sm font-semibold text-mist-200">{t('downloads.albumAssign.tracksTitle')}</h3>
-              <TrackList tracks={data.tracks} chosen={chosen} severalMedia={severalMedia} />
+              <TrackList tracks={data.tracks} chosen={chosen} freed={freed} severalMedia={severalMedia} />
               {data.target_tracks.length > 0 && (
                 <>
                   <h4 className="pt-2 text-xs font-semibold text-mist-400">{t('downloads.albumAssign.targetOnly')}</h4>
-                  <TrackList tracks={data.target_tracks} chosen={chosen} severalMedia={severalMedia} />
+                  <TrackList tracks={data.target_tracks} chosen={chosen} freed={freed} severalMedia={severalMedia} />
                 </>
               )}
             </section>
@@ -248,12 +285,12 @@ export function AlbumAssignDialog({ download, onClose, onDone }: { download: Dow
   )
 }
 
-function TrackList({ tracks, chosen, severalMedia }: { tracks: AlbumTrackChoice[]; chosen: Set<number>; severalMedia: boolean }) {
+function TrackList({ tracks, chosen, freed, severalMedia }: { tracks: AlbumTrackChoice[]; chosen: Set<number>; freed: Set<number>; severalMedia: boolean }) {
   const { t } = useTranslation()
   return (
     <ol className="flex flex-col gap-1">
       {tracks.map((track) => {
-        const state = track.held !== null ? 'held' : chosen.has(track.id) ? 'chosen' : 'missing'
+        const state = track.held !== null && !freed.has(track.id) ? 'held' : chosen.has(track.id) ? 'chosen' : 'missing'
         return (
           <li key={track.id} className="flex min-w-0 items-baseline gap-2 text-sm">
             <span className="w-12 shrink-0 font-mono text-xs text-mist-500 tabular-nums">{trackCode(track, severalMedia)}</span>
@@ -282,6 +319,7 @@ function FileRow({
   doubles,
   onChoose,
   trackById,
+  placed,
 }: {
   file: AlbumAudioFile
   tracks: AlbumTrackChoice[]
@@ -291,6 +329,8 @@ function FileRow({
   doubles: Set<number>
   onChoose: (value: string) => void
   trackById: Map<number, AlbumTrackChoice>
+  /** Eine Datei im Albumordner: wo sie liegt und ob sie umzieht; ohne "nicht ablegen" (dafuer gibt es den Papierkorb). */
+  placed?: { where: string; moves: boolean }
 }) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
@@ -324,7 +364,7 @@ function FileRow({
             (choice.kind === 'track' && doubles.has(choice.trackId) ? 'border-bad-500' : 'border-ink-700')
           }
         >
-          <option value="">{t('downloads.assign.notFiled')}</option>
+          {placed === undefined && <option value="">{t('downloads.assign.notFiled')}</option>}
           <option value={LOOSE}>{t('downloads.albumAssign.loose')}</option>
           {tracks.map((track) => (
             <option key={track.id} value={track.id}>
@@ -345,6 +385,8 @@ function FileRow({
           <p className="text-xs text-mist-500">{t('downloads.albumAssign.proposal', { track: `${trackCode(proposal, severalMedia)} ${proposal.name}` })}</p>
         )}
         {choice.kind === 'loose' && <p className="text-xs text-mist-500">{t('downloads.albumAssign.looseHint')}</p>}
+        {placed !== undefined && <p className="text-xs text-mist-500">{placed.where}</p>}
+        {placed?.moves === true && <p className="text-xs text-accent-400">{t('downloads.albumAssign.placedMoves')}</p>}
       </div>
     </li>
   )

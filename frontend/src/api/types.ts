@@ -3094,6 +3094,8 @@ export type AlbumTrack = {
     download_path?: string
     via?: string | null
     filed_at?: string | null
+    /** Seit dem 29.10.2026: der Titel, den Name oder Tags im Download nennen, wenn der Fingerabdruck die Datei woanders hinlegte. */
+    download_named_track?: number | null
   } | null
 }
 

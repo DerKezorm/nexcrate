@@ -418,6 +418,7 @@
       "fromDownload": "From the download",
       "nameInDownload": "Name in the download",
       "matchedBy": "Matched by",
+      "namedElsewhere": "The name in the download names another track: {{track}}. The fingerprint says the file holds this track; some releases name their files wrong.",
       "filedAt": "Filed",
       "origin": "Origin",
       "fromLidarr": "taken over from Lidarr",

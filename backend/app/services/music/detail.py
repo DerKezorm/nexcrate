@@ -19,7 +19,7 @@ from ...models import (
     TrackFile,
     Version,
 )
-from . import kinds, paths, same_song
+from . import file_matching, kinds, paths, same_song
 
 
 def _release_head(release: Release | None) -> dict[str, Any] | None:
@@ -82,8 +82,20 @@ def _origins(db: OrmSession, file_ids: set[int]) -> dict[int, dict[str, Any]]:
             "download_path": row.path,
             "via": row.via,
             "filed_at": imported_at.isoformat() if imported_at is not None else None,
+            "reading": row.reading,
         }
     return found
+
+
+def _named_elsewhere(origin: dict[str, Any], track: ReleaseTrack, tracks: list[ReleaseTrack]) -> int | None:
+    """The track of the release the file's name or tags in the download name, when the fingerprint put it on another
+    one. Found on 29.10.2026: a release had named three of its files after the wrong songs, and the details looked
+    like a wrong assignment."""
+    if origin.get("via") != "fingerprint":
+        return None
+    keys = file_matching.title_keys((origin.get("reading") or {}).get("title"))
+    named = [item for item in tracks if keys and keys & file_matching.title_keys(item.name)]
+    return named[0].id if len(named) == 1 and named[0].id != track.id else None
 
 
 def _tracks_of(db: OrmSession, version: Version | None, release: Release | None) -> list[dict[str, Any]]:
@@ -128,6 +140,7 @@ def _tracks_of(db: OrmSession, version: Version | None, release: Release | None)
         file = files.get(track.id) or next(
             (by_song[key] for key in sorted(keys.get(track.id, frozenset())) if key in by_song), None
         )
+        origin = origins.get(file.id, {}) if file is not None else {}
         items.append(
             {
                 "id": track.id,
@@ -153,7 +166,8 @@ def _tracks_of(db: OrmSession, version: Version | None, release: Release | None)
                             if file.source_file_id is not None
                             else ("download" if file.id in origins else None)
                         ),
-                        **origins.get(file.id, {}),
+                        **{name: value for name, value in origin.items() if name != "reading"},
+                        "download_named_track": _named_elsewhere(origin, track, tracks),
                     }
                     if file is not None
                     else None

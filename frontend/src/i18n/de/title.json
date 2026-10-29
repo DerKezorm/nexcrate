@@ -418,6 +418,7 @@
       "fromDownload": "Aus dem Download",
       "nameInDownload": "Name im Download",
       "matchedBy": "Zugeordnet über",
+      "namedElsewhere": "Der Name im Download nennt einen anderen Titel: {{track}}. Der Fingerabdruck sagt, dass die Datei diesen Titel enthält; manche Releases benennen ihre Dateien falsch.",
       "filedAt": "Abgelegt",
       "origin": "Herkunft",
       "fromLidarr": "aus Lidarr übernommen",

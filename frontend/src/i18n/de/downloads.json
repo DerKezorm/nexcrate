@@ -420,6 +420,7 @@
     "filesTitle": "Dateien",
     "placedAs": "Liegt im Albumordner als {{code}}.",
     "placedLoose": "Liegt im Albumordner ohne Titel.",
+    "placedMoves": "Kommt beim Ablegen auf den gewählten Titel, mit neuem Namen und neuen Tags.",
     "tracksTitle": "Titelliste",
     "targetOnly": "Nur in der Zielausgabe",
     "held": "liegt",

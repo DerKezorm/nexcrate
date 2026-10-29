@@ -172,6 +172,8 @@ class Manual:
     release_id: int | None
     chosen: dict[int, int | str | None]
     confirm: frozenset[str] = frozenset()
+    #: Rows of files in the album folder the owner moves to another track; they leave the folder first (``unplace``).
+    unplace: frozenset[int] = frozenset()
 
 
 def _target_of(client: DownloadClient | None) -> downloaders.Target | None:
@@ -1205,6 +1207,10 @@ def run(download_id: int, manual: Manual | None = None) -> None:
         if not context.editions:
             _waiting(context)
         root = _root(context)
+        if manual is not None and manual.unplace:
+            unplace(context, root, manual.unplace)
+            with SessionLocal() as db:
+                context = load(db, download_id) or context
         store.set_step(download_id, "matching")
         found = gather(context, root)
         _file_all(context, found, root, manual)
@@ -1268,6 +1274,54 @@ def _planned(
         if decision.decision == fm.FILED and by_key[decision.key].path not in done:
             planned.append(Planned(decision.key, rows[decision.key], decision.track_id, decision.via))
     return planned
+
+
+def unplace(context: Context, root: Path, row_ids: Iterable[int]) -> int:
+    """Files of this download the owner moves to another track leave the album folder, so this round files them again
+    under the new name with new tags. Returns how many left.
+
+    A file whose source is gone (Usenet moves) goes back to its place in the job; when the source is still there (a
+    torrent, an archive unpacked again) the album's copy goes to the recycle folder. Found on 29.10.2026: a release
+    named three of its files after the wrong songs, and a filed file could not be moved to another track.
+    """
+    if not context.album_relative:
+        return 0
+    job = _local_job(context)
+    origin = job if job.is_dir() else job.parent
+    album = root.joinpath(*[part for part in context.album_relative.split("/") if part])
+    moved = 0
+    for row_id in row_ids:
+        with SessionLocal() as db:
+            row = db.get(DownloadAudioFile, row_id)
+            if row is None or row.download_id != context.download_id or row.track_file_id is None:
+                continue
+            placed_row = db.get(TrackFile, row.track_file_id)
+            if placed_row is not None:
+                parts = [part for part in placed_row.relative_path.replace("\\", "/").split("/") if part]
+                placed = album.joinpath(*parts) if parts else None
+                if placed is not None and os.path.lexists(placed) and files.strictly_inside(placed, album):
+                    names = row.path.split("/")
+                    back = (
+                        origin.joinpath(*names)
+                        if not row.path.startswith(UNPACKED_PREFIX) and all(_plain(name) for name in names)
+                        else None
+                    )
+                    try:
+                        if back is not None and not os.path.lexists(back):
+                            back.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.move(placed, back)
+                        else:
+                            files.recycle(placed, root, store.now())
+                    except (OSError, files.FileProblem) as exc:
+                        raise Problem("import_failed", reason="recycle_failed") from exc
+                db.delete(placed_row)
+            row.track_file_id, row.decision, row.track_id, row.via, row.target = None, fm.OPEN, None, None, None
+            db.commit()
+        moved += 1
+    logger.info(
+        "Album download %d: %d filed files leave the album folder for another track", context.download_id, moved
+    )
+    return moved
 
 
 def _not_filed_by_owner(manual: Manual | None) -> list[int]:

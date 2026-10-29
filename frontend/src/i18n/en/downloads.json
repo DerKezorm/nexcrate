@@ -420,6 +420,7 @@
     "filesTitle": "Files",
     "placedAs": "Lies in the album folder as {{code}}.",
     "placedLoose": "Lies in the album folder without a track.",
+    "placedMoves": "Moves to the chosen track on filing, with a new name and new tags.",
     "tracksTitle": "Track list",
     "targetOnly": "Only in the target release",
     "held": "there",

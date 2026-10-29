@@ -17,7 +17,7 @@ function trackTime(lengthMs: number | null): string | null {
 }
 
 /** Was ueber die Datei eines Titels bekannt ist: Name, Qualitaet, Groesse, Tags und woher sie kam. */
-function TrackFileDetails({ track }: { track: AlbumTrack }) {
+function TrackFileDetails({ track, tracks }: { track: AlbumTrack; tracks: AlbumTrack[] }) {
   const { t, i18n } = useTranslation()
   const language = i18n.language
   const file = track.file
@@ -37,15 +37,20 @@ function TrackFileDetails({ track }: { track: AlbumTrack }) {
   } else if (file.source === 'lidarr') {
     rows.push([t('title.album.tracks.origin'), t('title.album.tracks.fromLidarr')])
   }
+  // Name im Download und Fingerabdruck gehen auseinander: sagen, wem die Zuordnung folgt (29.10.2026)
+  const named = file.source === 'download' ? tracks.find((item) => item.id === file.download_named_track) : undefined
   return (
-    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
-      {rows.map(([label, value]) => (
-        <div key={label} className="contents">
-          <dt className="text-mist-500">{label}</dt>
-          <dd className="break-words text-mist-200">{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <>
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="contents">
+            <dt className="text-mist-500">{label}</dt>
+            <dd className="break-words text-mist-200">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {named !== undefined && <p className="mt-2 text-sm text-mist-400">{t('title.album.tracks.namedElsewhere', { track: `${named.number ?? named.position} ${named.name}` })}</p>}
+    </>
   )
 }
 
@@ -144,7 +149,7 @@ export function TrackList({
                     </button>
                     {expanded && (
                       <div id={detailsId} className="border-t border-ink-700/60 bg-ink-900/60 px-4 py-3 pl-15">
-                        <TrackFileDetails track={track} />
+                        <TrackFileDetails track={track} tracks={tracks} />
                         {onDeleteTrack && track.present && typeof track.file?.id === 'number' && (
                           <Button variant="ghost" size="sm" className="mt-2" onClick={() => onDeleteTrack(track, track.file?.id as number)}>
                             <Symbol name="trash" />

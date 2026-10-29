@@ -6,7 +6,9 @@
   whose song that release lacks are offered as well (``target_tracks``): once files
   lie in the album folder the release cannot change, and a bonus track of the target would stay out for good.
 * ``assign`` files what the owner chose: a track, "fits no track, file anyway" (``loose``), or nothing.
-  Each track once, only tracks of the chosen release or tracks only its target has. The release can be changed only
+  Each track once, only tracks of the chosen release or tracks only its target has. A file in the album folder may
+  get another track or ``loose``: it leaves the folder and is filed again (``album_import.unplace``). The release can
+  be changed only
   while no file of the download lies in the album folder. ``confirm: ["not_better"]`` replaces an album whose files
   are not worse. The choice holds for this download only; the target release stays as it is
  .
@@ -236,12 +238,26 @@ def assign(
         version = store.version_of(db, row.title_id, row.version_definition_id)
         target_id = version.target_release_id if version is not None else None
         tracks |= {track.id for track in _target_only(db, release, target_id)}
-        held = {item.track_id for item in placed if item.track_id is not None}
+        # A file in the album folder keeps its track unless the owner chose another one or "loose"; "not filed" is not
+        # offered for it (the album page has the recycle bin for that).
+        moving: set[int] = set()
+        for key, track_id, loose in chosen:
+            item = rows.get(key)
+            if item is None or item.track_file_id is None:
+                continue
+            if (album_import.LOOSE if loose else track_id) not in (None, item.track_id or album_import.LOOSE):
+                moving.add(key)
+        held = {item.track_id for item in placed if item.track_id is not None and item.id not in moving}
         seen: set[int] = set()
         mapping: dict[int, int | str | None] = {}
         for key, track_id, loose in chosen:
             item = rows.get(key)
-            if item is None or item.track_file_id is not None or item.decision not in OPEN_DECISIONS:
+            if item is None:
+                raise _not_assignable()
+            if item.track_file_id is not None:
+                if key not in moving:
+                    continue
+            elif item.decision not in OPEN_DECISIONS:
                 raise _not_assignable()
             if loose:
                 mapping[key] = album_import.LOOSE
@@ -265,7 +281,9 @@ def assign(
         if not getattr(claimed, "rowcount", 0):
             raise _not_assignable()
         db.commit()
-    manual = album_import.Manual(release_id=release, chosen=mapping, confirm=frozenset(confirm))
+    manual = album_import.Manual(
+        release_id=release, chosen=mapping, confirm=frozenset(confirm), unplace=frozenset(moving)
+    )
     logger.info("Album download %d: the owner assigned %d files", download_id, len(mapping))
     if not importing.request(download_id, work=lambda: album_import.run(download_id, manual=manual)):
         with SessionLocal() as db:

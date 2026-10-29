@@ -1,4 +1,4 @@
-import type { AlbumFiles, AlbumTrackChoice } from '../../api/types'
+import type { AlbumAudioFile, AlbumFiles, AlbumTrackChoice } from '../../api/types'
 
 /** Die reinen Teile des Dialogs "Von Hand zuordnen" fuer Alben (M4.6). */
 
@@ -19,10 +19,35 @@ export function trackCode(track: Pick<AlbumTrackChoice, 'medium' | 'position'>, 
   return severalMedia ? `${track.medium}-${String(track.position).padStart(2, '0')}` : String(track.position).padStart(2, '0')
 }
 
+/**
+ * Abgelegte Dateien, die der Dialog umziehen kann (seit 29.10.2026): ihr Titel gehoert zu dieser Ausgabe oder ihrem
+ * Ziel, oder sie liegen ohne Titel. Andere bleiben nur zum Lesen.
+ */
+export function movablePlaced(data: AlbumFiles): AlbumAudioFile[] {
+  const tracks = new Set([...data.tracks, ...data.target_tracks].map((track) => track.id))
+  return data.files.filter((file) => file.placed && (file.track_id === null || tracks.has(file.track_id)))
+}
+
+/** Die Wahl, die einer abgelegten Datei entspricht: ihr Titel oder "trotzdem ablegen". */
+export function placedChoice(file: AlbumAudioFile): AlbumChoice {
+  return file.track_id !== null ? { kind: 'track', trackId: file.track_id } : { kind: 'loose' }
+}
+
+function sameChoice(first: AlbumChoice, second: AlbumChoice): boolean {
+  if (first.kind === 'track' && second.kind === 'track') return first.trackId === second.trackId
+  return first.kind === second.kind
+}
+
+/** Abgelegte Dateien, fuer die der Besitzer etwas anderes gewaehlt hat. */
+export function movedPlaced(data: AlbumFiles, choices: Record<number, AlbumChoice>): AlbumAudioFile[] {
+  return movablePlaced(data).filter((file) => choices[file.key] !== undefined && !sameChoice(choices[file.key], placedChoice(file)))
+}
+
 /** Die Wahl, mit der der Dialog oeffnet: was nexcrate schon entschieden hatte, sonst nichts (Vorschlaege nur auf Knopfdruck). */
 export function initialAlbumChoices(data: AlbumFiles): Record<number, AlbumChoice> {
   const tracks = new Set(data.tracks.map((track) => track.id))
   const choices: Record<number, AlbumChoice> = {}
+  for (const file of movablePlaced(data)) choices[file.key] = placedChoice(file)
   for (const file of data.files) {
     if (file.placed || !EDITABLE.includes(file.decision)) continue
     choices[file.key] = file.decision === 'filed' && file.track_id !== null && tracks.has(file.track_id) ? { kind: 'track', trackId: file.track_id } : { kind: 'none' }
@@ -34,7 +59,8 @@ export function initialAlbumChoices(data: AlbumFiles): Record<number, AlbumChoic
 export function doubleTracks(data: AlbumFiles, choices: Record<number, AlbumChoice>): Set<number> {
   const seen = new Map<number, number>()
   for (const file of data.files) {
-    if (file.placed && file.track_id !== null) seen.set(file.track_id, (seen.get(file.track_id) ?? 0) + 1)
+    // Eine umziehbare abgelegte Datei zaehlt mit ihrer Wahl, nicht mit ihrem alten Titel
+    if (file.placed && file.track_id !== null && choices[file.key] === undefined) seen.set(file.track_id, (seen.get(file.track_id) ?? 0) + 1)
   }
   for (const choice of Object.values(choices)) {
     if (choice.kind === 'track') seen.set(choice.trackId, (seen.get(choice.trackId) ?? 0) + 1)
