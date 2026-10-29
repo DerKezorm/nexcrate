@@ -582,6 +582,25 @@
       "small": [
         "Auf einer übersetzten Seite kann ein neu eingeblendetes Element am Ende seiner Zeile stehen statt an seinem Platz. Die Seite bleibt dabei stehen."
       ]
+    },
+    "1.4.0": {
+      "lead": "Ein Release für Musik: Abgelegte Dateien lassen sich von Hand einem anderen Titel zuordnen, und die Titelliste sagt, wenn ein Release seine Dateien falsch benannt hat.",
+      "sections": [
+        {
+          "title": "Abgelegte Dateien umzuordnen",
+          "body": "Im Dialog „Von Hand zuordnen“ eines Albumdownloads haben jetzt auch die Dateien, die schon im Albumordner liegen, eine Auswahl. Wählst du einen anderen Titel oder „Passt zu keinem Titel, trotzdem ablegen“, nimmt nexcrate die Datei beim Ablegen aus dem Albumordner und legt sie mit neuem Namen und neuen Tags auf den gewählten Titel. Zwei Dateien können dabei auch ihre Titel tauschen.",
+          "where": "Downloads › Probleme › Von Hand zuordnen"
+        },
+        {
+          "title": "Falsch benannte Releases",
+          "body": "Manche Releases benennen ihre Dateien nach dem falschen Song. Legt nexcrate eine solche Datei nach ihrem Fingerabdruck ab, sah das bisher wie eine falsche Zuordnung aus. Jetzt sagt die Datei in der Titelliste, welchen Titel ihr Name im Download nennt und dass der Fingerabdruck einen anderen gefunden hat.",
+          "where": "Album › Titel › Datei aufklappen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Eine Datei, die im Albumordner liegt, lässt sich im Dialog nicht auf „nicht ablegen“ stellen. Dafür gibt es auf der Albumseite „Diese Datei in den Papierkorb“."
+      ]
     }
   }
 }

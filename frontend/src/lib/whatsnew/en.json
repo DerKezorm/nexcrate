@@ -582,6 +582,25 @@
       "small": [
         "On a translated page, something that appears may sit at the end of its line instead of its usual place. The page keeps working."
       ]
+    },
+    "1.4.0": {
+      "lead": "A release for music: filed files can be moved to another track by hand, and the track list says when a release named its files wrong.",
+      "sections": [
+        {
+          "title": "Move filed files",
+          "body": "In the “Assign by hand” dialog of an album download, the files already in the album folder now have a choice as well. Pick another track or “Fits no track, file anyway”, and nexcrate takes the file out of the album folder on filing and files it on the chosen track with a new name and new tags. Two files can also swap their tracks.",
+          "where": "Downloads › Problems › Assign by hand"
+        },
+        {
+          "title": "Wrongly named releases",
+          "body": "Some releases name their files after the wrong song. When nexcrate filed such a file by its fingerprint, it looked like a wrong assignment. Now the file in the track list says which track its name in the download names and that the fingerprint found another one.",
+          "where": "Album › Tracks › open a file"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "A file in the album folder cannot be set to “not filed” in the dialog. The album page has “This file into the recycle bin” for that."
+      ]
     }
   }
 }
