@@ -601,6 +601,33 @@
       "small": [
         "Eine Datei, die im Albumordner liegt, lässt sich im Dialog nicht auf „nicht ablegen“ stellen. Dafür gibt es auf der Albumseite „Diese Datei in den Papierkorb“."
       ]
+    },
+    "1.4.1": {
+      "lead": "Diesmal keine neue Funktion, sondern eine Nachricht: nexcrate gibt es jetzt als App für iPhone und iPad.",
+      "sections": [
+        {
+          "title": "nexcrate im App Store",
+          "body": "Die App zeigt deine Filme, Serien und Musik mit jeder Fassung. Du fügst Titel hinzu, verfolgst Downloads, löst Probleme und siehst im Kalender, was bald erscheint. Sie ist kostenlos und spricht nur mit deinem eigenen nexcrate. Zum Verbinden scannst du den QR-Code unter „iPhone-App verbinden“.",
+          "where": "Einstellungen › System › API-Schlüssel",
+          "link": {
+            "label": "nexcrate im App Store",
+            "href": "https://apps.apple.com/app/nexcrate/id6823614021"
+          }
+        },
+        {
+          "title": "Android: Tester gesucht",
+          "body": "Wir möchten auch eine App für Android bauen. Bevor Google eine neue App in den Play Store lässt, muss sie in einem geschlossenen Test mit 20 Testern laufen. Wenn du ein Android-Gerät hast und mitmachen möchtest, melde dich in der Diskussion auf GitHub.",
+          "where": "GitHub › Discussions",
+          "link": {
+            "label": "Zur Diskussion auf GitHub",
+            "href": "https://github.com/DerKezorm/nexcrate/discussions/25"
+          }
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Sonst ändert sich nichts, auch nicht an der Datenbank."
+      ]
     }
   }
 }
