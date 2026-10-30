@@ -12,6 +12,8 @@ export interface WhatsNewSection {
   title: string
   body: string
   where: string
+  /** Wahlweise ein Link unter dem Text, etwa in den App Store. */
+  link?: { label: string; href: string }
 }
 
 export interface WhatsNewEntry {
@@ -27,7 +29,18 @@ export const FILES: Record<string, File> = { de, en }
 export function isSection(value: unknown): value is WhatsNewSection {
   if (!value || typeof value !== 'object') return false
   const section = value as Record<string, unknown>
-  return typeof section.title === 'string' && typeof section.body === 'string' && typeof section.where === 'string'
+  return (
+    typeof section.title === 'string' &&
+    typeof section.body === 'string' &&
+    typeof section.where === 'string' &&
+    (section.link === undefined || isLink(section.link))
+  )
+}
+
+function isLink(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false
+  const link = value as Record<string, unknown>
+  return typeof link.label === 'string' && typeof link.href === 'string' && link.href.startsWith('https://')
 }
 
 export function isEntry(value: unknown): value is WhatsNewEntry {

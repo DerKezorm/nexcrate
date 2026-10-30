@@ -49,6 +49,16 @@ export function WhatsNewDialog({ version, entry, onClose }: { version: string; e
             <section key={section.title} className="mb-4">
               <h3 className="font-semibold">{section.title}</h3>
               <p className="mt-0.5 leading-relaxed text-mist-400">{section.body}</p>
+              {section.link && (
+                <a
+                  href={section.link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block font-medium text-accent-400 hover:underline"
+                >
+                  {section.link.label}
+                </a>
+              )}
               <p className="mt-0.5 text-[11px] text-mist-600">{section.where}</p>
             </section>
           ))}
