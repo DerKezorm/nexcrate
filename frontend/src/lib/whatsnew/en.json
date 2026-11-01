@@ -628,6 +628,21 @@
       "small": [
         "Nothing else changes, the database neither."
       ]
+    },
+    "1.5.0": {
+      "lead": "You can now import files you got yourself: from any folder nexcrate sees, for a movie, a series or an album.",
+      "sections": [
+        {
+          "title": "Import from a folder",
+          "body": "For files nexcrate could not or would not load. Choose a folder, see what lies in it, then pick the title and the version. nexcrate files it like a download, with its naming, and the old file goes into the recycle bin. What it cannot place, it asks you as usual. Your files stay where they are: nexcrate links or copies them and never moves or deletes them.",
+          "where": "Downloads › Import from a folder"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The folder has to be mounted into the container, as nexcrate only sees mounted folders. A folder inside the library folder of the version is refused.",
+        "Series and albums have to be in the library first. A movie from TMDB is added by the import."
+      ]
     }
   }
 }

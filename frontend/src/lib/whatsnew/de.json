@@ -628,6 +628,21 @@
       "small": [
         "Sonst ändert sich nichts, auch nicht an der Datenbank."
       ]
+    },
+    "1.5.0": {
+      "lead": "Du kannst jetzt Dateien importieren, die du selbst besorgt hast: aus jedem Ordner, den nexcrate sieht, für einen Film, eine Serie oder ein Album.",
+      "sections": [
+        {
+          "title": "Aus einem Ordner importieren",
+          "body": "Für Dateien, die nexcrate nicht laden konnte oder wollte. Wähle einen Ordner, sieh nach, was darin liegt, und wähle Titel und Fassung. nexcrate legt ihn ab wie einen Download, nach seiner Benennung, und die alte Datei geht in den Papierkorb. Was es nicht zuordnen kann, fragt es dich wie gewohnt. Deine Dateien bleiben, wo sie sind: nexcrate verlinkt oder kopiert sie und verschiebt oder löscht sie nie.",
+          "where": "Downloads › Aus Ordner importieren"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Der Ordner muss in den Container eingebunden sein, denn nexcrate sieht nur eingebundene Ordner. Ein Ordner im Bibliotheksordner der Fassung wird abgelehnt.",
+        "Serien und Alben müssen schon in der Bibliothek sein. Einen Film von TMDB legt der Import selbst an."
+      ]
     }
   }
 }
