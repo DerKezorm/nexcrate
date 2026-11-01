@@ -14,6 +14,7 @@ import { ActiveList } from './downloads/ActiveList'
 import { BlockedList } from './downloads/BlockedList'
 import { addressOfView, viewFromAddress } from './downloads/address'
 import { DownloadHistory } from './downloads/DownloadHistory'
+import { FolderImportDialog } from './downloads/FolderImport'
 import { ProblemList } from './downloads/ProblemList'
 import { useDownloadList } from './downloads/useDownloadList'
 import { WaitingList } from './downloads/WaitingList'
@@ -36,6 +37,7 @@ export function DownloadsPage() {
   const [paging, setPaging] = useState<{ view: DownloadsView; page: number }>({ view, page: 1 })
   const page = paging.view === view ? paging.page : 1
   const { list, clients, foreign, error, reload } = useDownloadList(view, page)
+  const [importing, setImporting] = useState(false)
 
   const show = useCallback((next: DownloadsTab) => setParams({ reiter: addressOfView(next) }, { replace: true }), [setParams])
 
@@ -65,7 +67,26 @@ export function DownloadsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageTitle sub={t('downloads.sub')}>{t('downloads.title')}</PageTitle>
+      <PageTitle
+        sub={t('downloads.sub')}
+        actions={
+          <Button variant="ghost" onClick={() => setImporting(true)}>
+            <Symbol name="folder" />
+            {t('downloads.folderImport.action')}
+          </Button>
+        }
+      >
+        {t('downloads.title')}
+      </PageTitle>
+      {importing && (
+        <FolderImportDialog
+          onClose={() => setImporting(false)}
+          onDone={(message) => {
+            setImporting(false)
+            changed(message)
+          }}
+        />
+      )}
 
       <div className="flex flex-col gap-5">
         <TabRow tabs={tabs} active={tab} onChange={show} label={t('downloads.tabs.label')} />

@@ -59,6 +59,7 @@ from .routers import disk as disk_router
 from .routers import download_clients as download_clients_router
 from .routers import downloads as downloads_router
 from .routers import expert as expert_router
+from .routers import folder_import as folder_import_router
 from .routers import folders as folders_router
 from .routers import foreign_jobs as foreign_jobs_router
 from .routers import images as images_router
@@ -239,6 +240,7 @@ ROUTERS: list[tuple[APIRouter, str | None]] = [
     (tags_router.router, None),
     (auto_tags_router.router, None),
     (foreign_jobs_router.router, None),
+    (folder_import_router.router, None),
     (backups_router.router, None),
     (whats_new_router.router, None),
     (notifications_router.router, None),

@@ -60,7 +60,8 @@
   "origin": {
     "search": "automatisch gesucht",
     "rss": "über RSS",
-    "replacement": "Ersatz nach Fehlschlag"
+    "replacement": "Ersatz nach Fehlschlag",
+    "folder": "aus einem Ordner"
   },
   "someClient": "das Download-Programm",
   "noClient": "Kein Programm",
@@ -272,6 +273,7 @@
     },
     "transfer": {
       "hardlink": "Teilt die Datei mit dem Torrent, kein zusätzlicher Platz.",
+      "hardlinkFolder": "Teilt die Datei mit dem Ordner, aus dem sie kam, kein zusätzlicher Platz.",
       "copy": "Kopiert.",
       "move": "Verschoben.",
       "unpacked": "Entpackt."
@@ -442,9 +444,20 @@
     "replace": "Trotzdem ersetzen",
     "done": "Die Dateien werden abgelegt."
   },
+  "folderImport": {
+    "action": "Aus Ordner importieren",
+    "pickTitle": "Aus welchem Ordner importieren?",
+    "pickHint": "Für Dateien, die du selbst besorgt hast. Wähle den Ordner, in dem sie liegen: nexcrate sieht nur eingebundene Ordner.",
+    "intro": "nexcrate legt den Ordner ab wie einen Download: in den Ordner der Fassung, nach ihrer Benennung. Die Dateien bleiben, wo sie sind, nexcrate verlinkt oder kopiert sie. Hat die Fassung eine Datei, geht die alte in den Papierkorb.",
+    "seriesHint": "nexcrate legt die Folgen ab, die in den Dateinamen stehen. Was es nicht zuordnen kann, fragt es dich wie gewohnt.",
+    "files": "In diesem Ordner",
+    "choose": "Welches Video soll abgelegt werden?",
+    "more_one": "und {{value}} weitere Datei",
+    "more_other": "und {{value}} weitere Dateien"
+  },
   "foreign": {
     "title": "Nicht von nexcrate bestellt",
-    "intro": "Diese Aufträge liegen in der Kategorie von nexcrate, aber nexcrate hat sie nicht bestellt. nexcrate legt sie nie von selbst ab: ordne sie einem Film zu oder entferne sie.",
+    "intro": "Diese Aufträge liegen in der Kategorie von nexcrate, aber nexcrate hat sie nicht bestellt. nexcrate legt sie nie von selbst ab: ordne sie einem Titel zu oder entferne sie.",
     "completed": "Fertig in {{client}}.",
     "running": "Lädt in {{client}}, {{percent}}.",
     "queued": "Wartet in {{client}}.",

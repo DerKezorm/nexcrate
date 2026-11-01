@@ -107,7 +107,7 @@ class QueueItemOut(_KindBlocks):
     title: QueueTitleOut
     version_id: str | None = Field(description="The version it loads for; null when the version was deleted since.")
     origin: str | None = Field(description="The `origin` of the program that added this version.")
-    started_by: str = Field(description="Who started it: manual, search, rss or replacement.")
+    started_by: str = Field(description="Who started it: manual, search, rss, replacement or folder.")
     state: str = Field(
         description="queued, downloading, paused, completed, importing, problem, or failed (waits for the owner); "
         "imported and removed only after acting."

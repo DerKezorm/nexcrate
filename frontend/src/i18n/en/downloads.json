@@ -60,7 +60,8 @@
   "origin": {
     "search": "searched automatically",
     "rss": "via RSS",
-    "replacement": "replacement after a failure"
+    "replacement": "replacement after a failure",
+    "folder": "from a folder"
   },
   "someClient": "the download client",
   "noClient": "No client",
@@ -272,6 +273,7 @@
     },
     "transfer": {
       "hardlink": "Shares the file with the torrent, no extra space.",
+      "hardlinkFolder": "Shares the file with the folder it came from, no extra space.",
       "copy": "Copied.",
       "move": "Moved.",
       "unpacked": "Unpacked."
@@ -442,9 +444,20 @@
     "replace": "Replace anyway",
     "done": "The files are being filed."
   },
+  "folderImport": {
+    "action": "Import from a folder",
+    "pickTitle": "Import from which folder?",
+    "pickHint": "For files you got yourself. Choose the folder they lie in: nexcrate only sees mounted folders.",
+    "intro": "nexcrate files the folder like a download: into the folder of the version, with its naming. The files stay where they are, nexcrate links or copies them. When the version has a file, the old one goes into the recycle bin.",
+    "seriesHint": "nexcrate files the episodes the file names say. What it cannot place, it asks you as usual.",
+    "files": "In this folder",
+    "choose": "Which video should be filed?",
+    "more_one": "and {{value}} more file",
+    "more_other": "and {{value}} more files"
+  },
   "foreign": {
     "title": "Not ordered by nexcrate",
-    "intro": "These jobs lie in nexcrate's category, but nexcrate did not order them. nexcrate never files them by itself: assign them to a movie or remove them.",
+    "intro": "These jobs lie in nexcrate's category, but nexcrate did not order them. nexcrate never files them by itself: assign them to a title or remove them.",
     "completed": "Finished in {{client}}.",
     "running": "Loading in {{client}}, {{percent}}.",
     "queued": "Waiting in {{client}}.",

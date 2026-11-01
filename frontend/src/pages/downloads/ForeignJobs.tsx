@@ -7,7 +7,7 @@ import { ApiError, errorText } from '../../api/client'
 import { foreignApi } from '../../api/foreign'
 import { LIBRARY_PAGE_SIZE, libraryApi } from '../../api/library'
 import { cleanYear, tmdbApi } from '../../api/tmdb'
-import type { ForeignJob, MediaKind, TitleDetail, TitleSummary, TmdbResult } from '../../api/types'
+import type { ForeignAdopt, ForeignJob, MediaKind, TitleDetail, TitleSummary, TmdbResult } from '../../api/types'
 import { Dialog } from '../../components/Dialog'
 import { PosterImage } from '../../components/PosterImage'
 import { Symbol } from '../../components/Symbol'
@@ -103,8 +103,11 @@ function ForeignCard({ job, onChanged }: { job: ForeignJob; onChanged: (message?
         </Button>
       </div>
       {dialog === 'assign' && (
-        <ForeignAssignDialog
+        <AssignDialog
           job={job}
+          intro={t('downloads.foreign.dialogIntro')}
+          seriesHint={t('downloads.foreign.seriesHint')}
+          submit={(body) => foreignApi.adopt(job.id, body)}
           onClose={() => setDialog(null)}
           onDone={(message) => {
             setDialog(null)
@@ -179,13 +182,33 @@ function Heading({ children }: { children: ReactNode }) {
   return <h3 className="text-sm font-semibold text-mist-100">{children}</h3>
 }
 
+/** Was der Dialog zuordnet: ein fremder Auftrag oder ein Ordner. */
+export type AssignSubject = Pick<ForeignJob, 'name' | 'parsed' | 'proposals' | 'kind' | 'series_proposals'>
+
 /**
  * "Zuordnen und importieren": wie "Zuordnen" auf der Seite Ordner, der Film aus den Vorschlaegen oder TMDBs Suche und
  * die Fassung. Eine Fassung aus Radarr nimmt nichts; eine mit Datei bekommt die neue, die alte geht in den Papierkorb.
+ * `extra` steht unter der Wahl und kennt die gewaehlte Art, `submit` fuehrt die Zuordnung aus.
  */
-function ForeignAssignDialog({ job, onClose, onDone }: { job: ForeignJob; onClose: () => void; onDone: (message: string) => void }) {
+export function AssignDialog({
+  job,
+  intro,
+  seriesHint,
+  extra,
+  submit: send,
+  onClose,
+  onDone,
+}: {
+  job: AssignSubject
+  intro: string
+  seriesHint: string
+  extra?: (kind: MediaKind) => ReactNode
+  submit: (body: ForeignAdopt, kind: MediaKind) => Promise<unknown>
+  onClose: () => void
+  onDone: (message: string) => void
+}) {
   const { t } = useTranslation()
-  const [kind, setKind] = useState<MediaKind>(job.kind === 'series' ? 'series' : 'movie')
+  const [kind, setKind] = useState<MediaKind>(job.kind ?? 'movie')
   const [libraryPick, setLibraryPick] = useState<{
     title: TitleSummary
     versionId: number
@@ -290,7 +313,7 @@ function ForeignAssignDialog({ job, onClose, onDone }: { job: ForeignJob; onClos
     setBusy(true)
     setProblem(null)
     try {
-      await foreignApi.adopt(job.id, body)
+      await send(body, kind)
       onDone(
         t('downloads.foreign.imported', {
           name: job.name,
@@ -355,7 +378,7 @@ function ForeignAssignDialog({ job, onClose, onDone }: { job: ForeignJob; onClos
       }
     >
       <div className="flex flex-col gap-6">
-        <p className="text-sm text-mist-400">{t('downloads.foreign.dialogIntro')}</p>
+        <p className="text-sm text-mist-400">{intro}</p>
         <div role="radiogroup" aria-label={t('downloads.foreign.kind')} className="flex flex-wrap gap-2">
           {(['movie', 'series', 'album'] as const).map((choice) => (
             <button
@@ -378,7 +401,7 @@ function ForeignAssignDialog({ job, onClose, onDone }: { job: ForeignJob; onClos
             </button>
           ))}
         </div>
-        {kind !== 'movie' && <LibraryChoice key={kind} kind={kind} job={job} busy={busy} onChange={setLibraryPick} />}
+        {kind !== 'movie' && <LibraryChoice key={kind} kind={kind} job={job} seriesHint={seriesHint} busy={busy} onChange={setLibraryPick} />}
         {kind === 'movie' && (
           <>
             <section className="flex flex-col gap-3" aria-label={t('disk.assign.movie')}>
@@ -511,6 +534,7 @@ function ForeignAssignDialog({ job, onClose, onDone }: { job: ForeignJob; onClos
             </section>
           </>
         )}
+        {extra?.(kind)}
         {!canSubmit && !busy && versions !== null && versions.length > 0 && <p className="text-xs text-mist-500">{t('disk.assign.missingChoice')}</p>}
         {problem !== null && <FormMessage>{errorText(t, problem)}</FormMessage>}
       </div>
@@ -522,9 +546,21 @@ function ForeignAssignDialog({ job, onClose, onDone }: { job: ForeignJob; onClos
  * Serie oder Album aus der Bibliothek, mit Suche: die Vorschlaege aus dem Namen zuerst. Die Fassung kommt aus den
  * Fassungen des Titels; ein Album hat genau eine.
  */
-function LibraryChoice({ kind, job, busy, onChange }: { kind: 'series' | 'album'; job: ForeignJob; busy: boolean; onChange: (pick: { title: TitleSummary; versionId: number } | null) => void }) {
+function LibraryChoice({
+  kind,
+  job,
+  seriesHint,
+  busy,
+  onChange,
+}: {
+  kind: 'series' | 'album'
+  job: AssignSubject
+  seriesHint: string
+  busy: boolean
+  onChange: (pick: { title: TitleSummary; versionId: number } | null) => void
+}) {
   const { t } = useTranslation()
-  const [query, setQuery] = useState(kind === 'series' ? (job.parsed.title ?? '') : '')
+  const [query, setQuery] = useState(kind === 'series' || kind === job.kind ? (job.parsed.title ?? '') : '')
   const [results, setResults] = useState<TitleSummary[] | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [title, setTitle] = useState<TitleSummary | null>(null)
@@ -649,7 +685,7 @@ function LibraryChoice({ kind, job, busy, onChange }: { kind: 'series' | 'album'
               ))}
             </ul>
           )}
-          {kind === 'series' && <p className="text-xs text-mist-500">{t('downloads.foreign.seriesHint')}</p>}
+          {kind === 'series' && <p className="text-xs text-mist-500">{seriesHint}</p>}
         </section>
       )}
     </>

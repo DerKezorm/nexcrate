@@ -344,7 +344,7 @@ def not_found() -> ForeignError:
     return ForeignError(meldung("not_found", "This does not exist, or not any more."), 404)
 
 
-def _series_reading(name: str) -> Any:
+def series_reading(name: str) -> Any:
     """The name read as a series release; None when it carries no season or episode numbering."""
     from ..releases import series_parser
 
@@ -356,7 +356,7 @@ def _series_reading(name: str) -> Any:
     return parsed
 
 
-def _series_matches(db: Any, reading: Any) -> list[dict[str, Any]]:
+def series_matches(db: Any, reading: Any) -> list[dict[str, Any]]:
     """Series of the library that share a spelling with the name, the likeliest first, at most five."""
     keys = [key for key in reading.title_keys if key]
     if not keys:
@@ -386,7 +386,7 @@ def listing() -> list[dict[str, Any]]:
         found: list[dict[str, Any]] = []
         for row in rows:
             parsed = release_parser.parse_movie(row.name)
-            reading = _series_reading(row.name)
+            reading = series_reading(row.name)
             client = clients.get(row.client_id)
             found.append(
                 {
@@ -405,7 +405,7 @@ def listing() -> list[dict[str, Any]]:
                     "proposals": proposing.library_proposals(library, parsed.title, parsed.year)
                     if reading is None
                     else [],
-                    "series_proposals": _series_matches(db, reading) if reading is not None else [],
+                    "series_proposals": series_matches(db, reading) if reading is not None else [],
                 }
             )
         return found
@@ -456,30 +456,60 @@ def _refuse(code: str, message: str, status: int = 409, **values: Any) -> Foreig
     return ForeignError(meldung(code, message, **values), status)
 
 
-def _series_episodes(db: Any, title: Title, version: Any, name: str) -> dict[int, str]:
-    """The episodes a series job is for, read from its name: the episodes it names, the seasons of a pack, or every
-    regular season. ``replaces`` where the version has a file, else ``fills``. The import files what it finds and asks
-    the owner about the rest (``files_unassigned``)."""
-    from ...models import Episode, EpisodeVersion
+def _named_episodes(db: Any, title: Title, rows: list[Any], name: str) -> list[Any] | None:
+    """The episodes a name names, or the seasons of a pack; None when it reads no numbering."""
     from ..releases import series_parser
 
     names = tuple(item for item in (title.title, title.original_title, title.title_en) if item)
     reading = series_parser.parse_series(name, titles=names, anime=title.series_type == "anime")
-    rows = list(db.scalars(select(Episode).where(Episode.title_id == title.id)))
     if reading.refused is None and reading.form == "anime" and reading.absolute:
         # Counted through (A5): the episodes of the numbers the series has.
         from ..series import release_match
 
         counted = release_match.load(db, title).by_absolute
         wanted = {counted[number] for number in reading.absolute if number in counted}
-        chosen = [row for row in rows if row.id in wanted]
-    elif reading.refused is None and reading.season is not None and reading.episodes:
-        chosen = [row for row in rows if row.season_number == reading.season and row.episode_number in reading.episodes]
-    elif reading.refused is None and (reading.season is not None or reading.seasons):
+        return [row for row in rows if row.id in wanted]
+    if reading.refused is None and reading.season is not None and reading.episodes:
+        return [row for row in rows if row.season_number == reading.season and row.episode_number in reading.episodes]
+    if reading.refused is None and (reading.season is not None or reading.seasons):
         seasons = set(reading.seasons) | ({reading.season} if reading.season is not None else set())
-        chosen = [row for row in rows if row.season_number in seasons]
-    else:
+        return [row for row in rows if row.season_number in seasons]
+    return None
+
+
+def _series_episodes(db: Any, title: Title, version: Any, name: str) -> dict[int, str]:
+    """The episodes a series job is for, read from its name: the episodes it names, the seasons of a pack, or every
+    regular season. The import files what it finds and asks the owner about the rest (``files_unassigned``)."""
+    from ...models import Episode
+
+    rows = list(db.scalars(select(Episode).where(Episode.title_id == title.id)))
+    chosen = _named_episodes(db, title, rows, name)
+    if chosen is None:
         chosen = [row for row in rows if row.season_number > 0]
+    return _with_actions(db, version, chosen)
+
+
+def episodes_of_files(db: Any, title: Title, version: Any, names: list[str], name: str) -> dict[int, str]:
+    """The episodes the video names say, each read on its own. A name without numbering leaves open what the folder
+    holds: then the episodes of ``name``, and the import asks the owner about the rest as for a job."""
+    from ...models import Episode
+
+    rows = list(db.scalars(select(Episode).where(Episode.title_id == title.id)))
+    chosen: dict[int, Any] = {}
+    for video in names:
+        read = _named_episodes(db, title, rows, video)
+        if read is None:
+            return _series_episodes(db, title, version, name)
+        chosen.update((row.id, row) for row in read)
+    if not chosen:
+        return _series_episodes(db, title, version, name)
+    return _with_actions(db, version, list(chosen.values()))
+
+
+def _with_actions(db: Any, version: Any, chosen: list[Any]) -> dict[int, str]:
+    """``replaces`` where the version has a file, else ``fills``."""
+    from ...models import EpisodeVersion
+
     with_file = set(
         db.scalars(
             select(EpisodeVersion.episode_id).where(
@@ -490,104 +520,95 @@ def _series_episodes(db: Any, title: Title, version: Any, name: str) -> dict[int
     return {row.id: ("replaces" if row.id in with_file else "fills") for row in chosen}
 
 
-def adopt(foreign_id: int, title_id: int, definition_id: int) -> int:
-    """ "Assign and import": the foreign job becomes a download of the version, as if nexcrate had loaded it. A finished
-    one is imported at once, one still loading is followed by the tracking. Returns the download's id.
+def prepare_version(
+    db: Any,
+    title: Title,
+    definition: VersionDefinition,
+    moment: Any,
+    episodes_of: Any,
+    refuse_release: str | None = None,
+) -> tuple[Any, dict[int, str]]:
+    """The version a job or a folder is filed into and the episodes it is for. A movie takes any movie version (a
+    missing one is added); a series one of the versions it has; an album the music version (added when missing).
 
-    A movie takes any movie version (a missing one is added); a series one of the versions it has, and the episodes of
-    its name (``_series_episodes``); an album the music version (added when missing), the import matches the files to
-    the tracks itself.
+    ``episodes_of(version)`` reads the episodes of a series. ``refuse_release``: a movie's or an album's version that
+    has exactly this release answers ``foreign_same_release``.
 
-    Raises ``ForeignError``: 404 when the job or the title is gone, 422 for a version of another kind, 409
-    ``version_owned_by_source`` for a version a connection feeds, ``foreign_same_release`` when the version has exactly
-    this release already (remove the job instead), ``foreign_job_failed`` for a job the client gave up on,
-    ``foreign_no_version`` for a series without this version, ``foreign_no_episodes`` for a series without episodes."""
+    Raises ``ForeignError``: 422 for a version of another kind, 409 ``version_owned_by_source`` for a version a
+    connection feeds, ``foreign_no_version`` for a series without this version, ``foreign_no_episodes`` for a series
+    without episodes."""
+    if title.kind not in ("movie", "series", "album") or definition.kind != title.kind:
+        raise _refuse("invalid_input", "The input is not valid.", 422, fields=["version_id"])
+    version = store.version_of(db, title.id, definition.id)
+    if version is not None and version.source_id is not None:
+        raise _refuse(
+            "version_owned_by_source", "This version comes from a Radarr connection; nexcrate files nothing there."
+        )
+    if refuse_release is not None and title.kind != "series" and _same_release(version, refuse_release):
+        raise _refuse("foreign_same_release", "This version has exactly this release already. Remove the job instead.")
+    episodes: dict[int, str] = {}
+    if title.kind == "series":
+        if version is None:
+            raise _refuse("foreign_no_version", "This series does not have this version. Add it to the series first.")
+        episodes = episodes_of(version)
+        if not episodes:
+            raise _refuse("foreign_no_episodes", "nexcrate knows no episodes of this series yet.")
+    elif version is None and title.kind == "album":
+        from ..music import store as music_store
+
+        version = music_store.add_version(db, title, definition, moment)
+    elif version is None:
+        from .. import library
+
+        version = library.add_owner_version(db, title, definition, moment)
+    return version, episodes
+
+
+def record_download(
+    db: Any,
+    title: Title,
+    definition: VersionDefinition,
+    version: Any,
+    episodes: dict[int, str],
+    moment: Any,
+    **fields: Any,
+) -> Download:
+    """The download of a job or a folder nexcrate did not order, with the scope and the episodes of its title. Stages;
+    the caller commits."""
     from ...models import DownloadEpisode
+
+    download = Download(
+        title_id=title.id,
+        version_id=version.id,
+        version_definition_id=definition.id,
+        version_label=definition.label,
+        indexer_name="",
+        release_key="",
+        languages=[],
+        formats=[],
+        grabbed_at=moment,
+        updated_at=moment,
+        **fields,
+    )
+    if title.kind == "album":
+        download.scope = store.ALBUM_SCOPE
+    elif title.kind == "series":
+        seasons = {season for (season,) in db.execute(_seasons_of(list(episodes)))}
+        download.scope = "episode" if len(episodes) == 1 else ("season" if len(seasons) == 1 else "series")
+        download.season = next(iter(seasons)) if len(seasons) == 1 else None
+    db.add(download)
+    db.flush()
+    db.add_all(
+        DownloadEpisode(download_id=download.id, episode_id=episode_id, action=action, state="expected")
+        for episode_id, action in sorted(episodes.items())
+    )
+    return download
+
+
+def hand_over(download_id: int, kind: str, title_id: int, completed: bool) -> None:
+    """After the commit: a finished download is filed away at once, one still loading is followed."""
     from . import importing, tracking
 
-    moment = store.now()
-    with SessionLocal() as db:
-        row = db.get(ForeignJob, foreign_id)
-        title = db.get(Title, title_id)
-        definition = db.get(VersionDefinition, definition_id)
-        client = db.get(DownloadClient, row.client_id) if row is not None else None
-        if row is None or title is None or definition is None or client is None:
-            raise not_found()
-        if title.kind not in ("movie", "series", "album") or definition.kind != title.kind:
-            raise _refuse("invalid_input", "The input is not valid.", 422, fields=["version_id"])
-        if row.state in ("failed", "problem"):
-            raise _refuse("foreign_job_failed", "The download client gave up on this job. Remove it instead.")
-        version = store.version_of(db, title.id, definition.id)
-        if version is not None and version.source_id is not None:
-            raise _refuse(
-                "version_owned_by_source", "This version comes from a Radarr connection; nexcrate files nothing there."
-            )
-        if title.kind != "series" and _same_release(version, row.name):
-            raise _refuse(
-                "foreign_same_release", "This version has exactly this release already. Remove the job instead."
-            )
-        episodes: dict[int, str] = {}
-        if title.kind == "series":
-            if version is None:
-                raise _refuse(
-                    "foreign_no_version", "This series does not have this version. Add it to the series first."
-                )
-            episodes = _series_episodes(db, title, version, row.name)
-            if not episodes:
-                raise _refuse("foreign_no_episodes", "nexcrate knows no episodes of this series yet.")
-        elif version is None and title.kind == "album":
-            from ..music import store as music_store
-
-            version = music_store.add_version(db, title, definition, moment)
-        elif version is None:
-            from .. import library
-
-            version = library.add_owner_version(db, title, definition, moment)
-        completed = row.state == "completed"
-        running = row.state if row.state in ("queued", "downloading", "paused") else "queued"
-        download = Download(
-            title_id=title.id,
-            version_id=version.id,
-            version_definition_id=definition.id,
-            version_label=definition.label,
-            client_id=client.id,
-            protocol=PROTOCOL_OF_KIND.get(client.kind, "usenet"),
-            client_download_id=row.client_download_id,
-            release_title=row.name[:1024],
-            indexer_name="",
-            release_key="",
-            size_bytes=row.size_bytes,
-            quality=_quality(title.kind, row.name),
-            languages=[],
-            formats=[],
-            confirmed=[],
-            origin="manual",
-            state="completed" if completed else running,
-            progress=100.0 if completed else row.progress,
-            reported_path=row.reported_path if completed else None,
-            completed_at=moment if completed else None,
-            grabbed_at=moment,
-            updated_at=moment,
-        )
-        if title.kind == "album":
-            download.scope = store.ALBUM_SCOPE
-        elif title.kind == "series":
-            seasons = {season for (season,) in db.execute(_seasons_of(list(episodes)))}
-            download.scope = "episode" if len(episodes) == 1 else ("season" if len(seasons) == 1 else "series")
-            download.season = next(iter(seasons)) if len(seasons) == 1 else None
-        db.add(download)
-        db.flush()
-        db.add_all(
-            DownloadEpisode(download_id=download.id, episode_id=episode_id, action=action, state="expected")
-            for episode_id, action in sorted(episodes.items())
-        )
-        store.add_history(db, download, "grabbed", download.quality, moment, {"origin": "manual", "foreign": True})
-        store.follow(db, download, moment)
-        db.delete(row)
-        db.commit()
-        download_id = download.id
-        kind = title.kind
-    logger.info("Foreign job %d becomes download %d of %s %d", foreign_id, download_id, kind, title_id)
     if kind == "album":
         from ..music import loading as music_loading
 
@@ -596,6 +617,66 @@ def adopt(foreign_id: int, title_id: int, definition_id: int) -> int:
         importing.request(download_id)
     else:
         tracking.soon()
+
+
+def adopt(foreign_id: int, title_id: int, definition_id: int) -> int:
+    """ "Assign and import": the foreign job becomes a download of the version, as if nexcrate had loaded it. A finished
+    one is imported at once, one still loading is followed by the tracking. Returns the download's id.
+
+    A series is for the episodes of the name (``_series_episodes``); the import matches an album's files to the tracks
+    itself.
+
+    Raises ``ForeignError``: 404 when the job or the title is gone, 409 ``foreign_job_failed`` for a job the client
+    gave up on, ``foreign_same_release`` when the version has exactly this release already (remove the job instead),
+    and what ``prepare_version`` raises."""
+    moment = store.now()
+    with SessionLocal() as db:
+        row = db.get(ForeignJob, foreign_id)
+        title = db.get(Title, title_id)
+        definition = db.get(VersionDefinition, definition_id)
+        client = db.get(DownloadClient, row.client_id) if row is not None else None
+        if row is None or title is None or definition is None or client is None:
+            raise not_found()
+        if row.state in ("failed", "problem"):
+            raise _refuse("foreign_job_failed", "The download client gave up on this job. Remove it instead.")
+        version, episodes = prepare_version(
+            db,
+            title,
+            definition,
+            moment,
+            lambda found: _series_episodes(db, title, found, row.name),
+            refuse_release=row.name,
+        )
+        completed = row.state == "completed"
+        running = row.state if row.state in ("queued", "downloading", "paused") else "queued"
+        download = record_download(
+            db,
+            title,
+            definition,
+            version,
+            episodes,
+            moment,
+            client_id=client.id,
+            protocol=PROTOCOL_OF_KIND.get(client.kind, "usenet"),
+            client_download_id=row.client_download_id,
+            release_title=row.name[:1024],
+            size_bytes=row.size_bytes,
+            quality=name_quality(title.kind, row.name),
+            confirmed=[],
+            origin="manual",
+            state="completed" if completed else running,
+            progress=100.0 if completed else row.progress,
+            reported_path=row.reported_path if completed else None,
+            completed_at=moment if completed else None,
+        )
+        store.add_history(db, download, "grabbed", download.quality, moment, {"origin": "manual", "foreign": True})
+        store.follow(db, download, moment)
+        db.delete(row)
+        db.commit()
+        download_id = download.id
+        kind = title.kind
+    logger.info("Foreign job %d becomes download %d of %s %d", foreign_id, download_id, kind, title_id)
+    hand_over(download_id, kind, title_id, completed)
     return download_id
 
 
@@ -605,7 +686,7 @@ def _seasons_of(episode_ids: list[int]) -> Any:
     return select(Episode.season_number).where(Episode.id.in_(episode_ids)).distinct()
 
 
-def _quality(kind: str, name: str) -> str | None:
+def name_quality(kind: str, name: str) -> str | None:
     if kind == "series":
         from ..releases import series_parser
 

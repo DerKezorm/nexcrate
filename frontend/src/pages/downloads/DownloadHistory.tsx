@@ -25,7 +25,7 @@ export function DownloadHistory({ items }: { items: Download[] }) {
             // Ein Serien-Download nennt seine Zahlen statt eines Filmordners (S4).
             const counts = imported ? scopeCountsText(t, download.scope, i18n.language) : null
             const place = imported && counts === null ? placeText(t, download) : null
-            const way = imported ? transferText(t, download.transfer) : null
+            const way = imported ? transferText(t, download.transfer, download.origin) : null
             const client = clientNameOf(t, download)
             const problem = download.problem
             // `failed_reason` sagt, warum. Fehlt er, steht der Satz zum Problem da, wenn es einen gibt.

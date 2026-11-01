@@ -108,6 +108,18 @@ async def _movie(tmdb_id: int) -> tmdb.MovieData:
         raise exc.http() from exc
 
 
+async def title_of(payload: AdoptIn) -> int:
+    """The title of the owner's choice; a movie of TMDB not in the library is added."""
+    if payload.title_id is not None:
+        return payload.title_id
+    tmdb_id = int(payload.tmdb_id or 0)
+    known = await asyncio.to_thread(foreign.title_of_tmdb, tmdb_id, None)
+    if known is None:
+        data = await _movie(tmdb_id)
+        known = await asyncio.to_thread(foreign.title_of_tmdb, tmdb_id, data)
+    return int(known or 0)
+
+
 @router.post(
     "/{job_id}/import",
     response_model=Download,
@@ -131,15 +143,9 @@ async def _movie(tmdb_id: int) -> tmdb.MovieData:
     ),
 )
 async def adopt_foreign(job_id: int, payload: AdoptIn) -> Download:
-    title_id = payload.title_id
-    if title_id is None and payload.tmdb_id is not None:
-        known = await asyncio.to_thread(foreign.title_of_tmdb, payload.tmdb_id, None)
-        if known is None:
-            data = await _movie(payload.tmdb_id)
-            known = await asyncio.to_thread(foreign.title_of_tmdb, payload.tmdb_id, data)
-        title_id = known
+    title_id = await title_of(payload)
     try:
-        download_id = await asyncio.to_thread(foreign.adopt, job_id, int(title_id or 0), payload.version_id)
+        download_id = await asyncio.to_thread(foreign.adopt, job_id, title_id, payload.version_id)
     except foreign.ForeignError as exc:
         raise _http(exc) from exc
     answer: dict[str, Any] = await asyncio.to_thread(actions.read, download_id)

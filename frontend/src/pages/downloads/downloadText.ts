@@ -13,7 +13,7 @@ import { countingName } from '../checker/seriesCheckerText'
 
 /**
  * Woher ein Download kam, als kleine Marke (Schritt 3c): eine geplante Suche oder "Jetzt automatisch suchen", RSS oder ein
- * Ersatz nach einem Fehlschlag. Von Hand geladene, unbekannte und die eines Servers von davor bekommen keine.
+ * Ersatz nach einem Fehlschlag oder ein Ordner. Von Hand geladene, unbekannte und die eines Servers von davor bekommen keine.
  */
 export function downloadOriginText(t: TFunction, origin: string | null | undefined): string | null {
   switch (origin) {
@@ -23,6 +23,8 @@ export function downloadOriginText(t: TFunction, origin: string | null | undefin
       return t('downloads.origin.rss')
     case 'replacement':
       return t('downloads.origin.replacement')
+    case 'folder':
+      return t('downloads.origin.folder')
     default:
       return null
   }
@@ -34,6 +36,8 @@ export function downloadOriginSymbol(origin: string | null | undefined): SymbolN
       return 'refresh'
     case 'replacement':
       return 'swap'
+    case 'folder':
+      return 'folder'
     default:
       return 'search'
   }
@@ -488,10 +492,10 @@ export function failedReasonText(t: TFunction, reason: string | null, client: st
 }
 
 /** Wie die Datei in den Ordner der Fassung kam, in schlichten Worten und ohne Fachwort. */
-export function transferText(t: TFunction, transfer: DownloadTransfer | null): string | null {
+export function transferText(t: TFunction, transfer: DownloadTransfer | null, origin?: string | null): string | null {
   switch (transfer) {
     case 'hardlink':
-      return t('downloads.history.transfer.hardlink')
+      return origin === 'folder' ? t('downloads.history.transfer.hardlinkFolder') : t('downloads.history.transfer.hardlink')
     case 'copy':
       return t('downloads.history.transfer.copy')
     case 'move':

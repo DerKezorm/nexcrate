@@ -173,8 +173,8 @@ class Download(BaseModel):
         "anyway."
     )
     origin: str = Field(
-        description="Who started it: manual, search (a planned search or searching automatically now), rss, or "
-        "replacement (after a failed download)."
+        description="Who started it: manual, search (a planned search or searching automatically now), rss, "
+        "replacement (after a failed download), or folder (imported from a folder by hand)."
     )
     grabbed_at: datetime
     completed_at: datetime | None

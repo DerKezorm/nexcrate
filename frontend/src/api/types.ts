@@ -1864,6 +1864,25 @@ export type ForeignJobList = { items: ForeignJob[] }
 /** Genau eines von `title_id` und `tmdb_id`. */
 export type ForeignAdopt = { title_id?: number; tmdb_id?: number; version_id: number }
 
+/** Eine Datei eines Ordners vor dem Import. Proben und Extras fehlen. */
+export type FolderFile = { path: string; size_bytes: number; kind: 'video' | 'audio' | 'archive' }
+
+/** Was in einem Ordner liegt, und eine Vermutung, was es ist. `files` nennt hoechstens 200. */
+export type FolderPreview = {
+  path: string
+  name: string
+  kind: MediaKind
+  size_bytes: number
+  files: FolderFile[]
+  more_files: number
+  parsed: { title: string | null; year: number | null }
+  proposals: Proposal[]
+  series_proposals: { title_id: number; title: string; year: number | null; kind: string }[]
+}
+
+/** `file`: das Video von mehreren, nur fuer einen Film. */
+export type FolderImport = ForeignAdopt & { path: string; file?: string }
+
 /** Ein gesperrtes Release eines Titels. `reason` ist ein Code wie `client_failed`, `encrypted` oder `dangerous_file`. */
 export type BlocklistEntry = { id: number; release_title: string; indexer: string; reason: string; created_at: string }
 
@@ -2121,7 +2140,7 @@ export type IndexerUsage = {
 export type IndexerRss = { last_at: string | null; newest_at: string | null; gap_at: string | null }
 
 /** Woher ein Download kam: von Hand, aus einer geplanten Suche oder "Jetzt automatisch suchen", aus RSS, als Ersatz nach einem Fehlschlag. */
-export type DownloadOrigin = 'manual' | 'search' | 'rss' | 'replacement'
+export type DownloadOrigin = 'manual' | 'search' | 'rss' | 'replacement' | 'folder'
 
 /** Warum die naechste Suche eines Titels dann kommt, oder warum keine. Die Seite hat fuer jeden einen Satz. */
 export type SearchPlanReason = 'anchor' | 'air_date' | 'schedule' | 'limit' | 'replacement' | 'replacement_limit' | 'no_date' | 'nothing_wanted' | 'no_folder' | 'off' | 'wish'

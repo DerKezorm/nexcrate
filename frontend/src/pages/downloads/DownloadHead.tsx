@@ -46,10 +46,12 @@ export function DownloadHead({ download, hint = false, children }: { download: D
               {origin}
             </Badge>
           )}
-          <span className="flex min-w-0 items-center gap-1.5 text-xs text-mist-500">
-            <Symbol name="server" className="h-3.5 w-3.5 shrink-0" />
-            <span className="min-w-0 wrap-anywhere">{download.client?.name ?? t('downloads.noClient')}</span>
-          </span>
+          {download.origin !== 'folder' && (
+            <span className="flex min-w-0 items-center gap-1.5 text-xs text-mist-500">
+              <Symbol name="server" className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 wrap-anywhere">{download.client?.name ?? t('downloads.noClient')}</span>
+            </span>
+          )}
         </div>
       </div>
       {children && <div className="flex flex-wrap gap-2">{children}</div>}
