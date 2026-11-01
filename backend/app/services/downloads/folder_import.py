@@ -55,8 +55,12 @@ class _Found:
 
     @property
     def name(self) -> str:
-        """The release's name: the only video's own, as a folder of one video may be called anything."""
-        return self.videos[0][0].stem if len(self.videos) == 1 else self.path.name
+        """The release's name: the only video's own, or the archive's beside no video, as a folder may be called
+        anything. The volumes of one archive share a name."""
+        if len(self.videos) == 1:
+            return self.videos[0][0].stem
+        stems = {path.stem for path, _size in self.archives}
+        return stems.pop() if not self.videos and len(stems) == 1 else self.path.name
 
     def relative(self, path: Path) -> str:
         return path.relative_to(self.path).as_posix()
