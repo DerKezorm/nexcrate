@@ -452,6 +452,9 @@
     "seriesHint": "nexcrate files the episodes the file names say. What it cannot place, it asks you as usual.",
     "files": "In this folder",
     "choose": "Which video should be filed?",
+    "byHand": "Choose the episodes by hand",
+    "byHandHint": "nexcrate files nothing by itself. The folder waits under Problems, where you choose the episode of each file. What the file name says is chosen first. For packs that count differently than TMDB.",
+    "byHandDone": "“{{name}}” waits under Problems: choose the episode of each file there.",
     "more_one": "and {{value}} more file",
     "more_other": "and {{value}} more files"
   },

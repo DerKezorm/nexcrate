@@ -46,6 +46,14 @@ class FolderImportIn(AdoptIn, FolderIn):
         max_length=4096,
         description="The video to take of several, as `files` names it; a movie only, in a folder without archives.",
     )
+    by_hand: bool = Field(
+        default=False,
+        description=(
+            "A series only: nothing is filed by itself. Every video waits under Downloads › Problems "
+            "(files_unassigned) with the episodes its name reads as the first choice, for a pack that counts by "
+            "another database than TMDB."
+        ),
+    )
 
 
 def _http(exc: foreign.ForeignError) -> HTTPException:
@@ -80,8 +88,8 @@ async def preview_folder(payload: FolderIn) -> FolderPreview:
         "The folder becomes a download of the version without a client, and the usual import files it: into the "
         "version's folder, with its naming, the old file into the recycle folder. Its files stay where they are, "
         "linked or copied, never moved. A movie of TMDB not in the library is added first; a series and an album must "
-        "be in the library. A series is for the episodes the video names say; what the import cannot place asks the "
-        "owner as usual."
+        "be in the library. A series is for the episodes the video names say, or with `by_hand` for the ones the owner "
+        "chooses; what the import cannot place asks the owner as usual."
     ),
     responses=error_responses(
         (404, "not_found"),
@@ -101,7 +109,7 @@ async def import_folder(payload: FolderImportIn) -> Download:
     title_id = await title_of(payload)
     try:
         download_id = await asyncio.to_thread(
-            folder_import.start, payload.path, payload.file, title_id, payload.version_id
+            folder_import.start, payload.path, payload.file, title_id, payload.version_id, payload.by_hand
         )
     except foreign.ForeignError as exc:
         raise _http(exc) from exc

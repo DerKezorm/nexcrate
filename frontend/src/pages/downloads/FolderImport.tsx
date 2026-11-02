@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { folderImportApi } from '../../api/folderImport'
 import type { FolderFile, FolderPreview, MediaKind } from '../../api/types'
+import { Toggle } from '../../components/ui'
 import { formatNumber } from '../../lib/format'
 import { sizeText } from '../../lib/size'
 import { FolderPicker } from '../files/FolderPicker'
@@ -26,6 +27,9 @@ export function FolderImportDialog({ onClose, onDone }: { onClose: () => void; o
   const { t } = useTranslation()
   const [preview, setPreview] = useState<FolderPreview | null>(null)
   const [file, setFile] = useState<string | null>(null)
+  const [byHand, setByHand] = useState(false)
+  // Was zuletzt geschickt wurde: von Hand gewaehlte Folgen legt nexcrate nicht ab, die Meldung sagt, wo es weitergeht.
+  const sentByHand = useRef(false)
 
   if (preview === null) {
     return (
@@ -48,10 +52,23 @@ export function FolderImportDialog({ onClose, onDone }: { onClose: () => void; o
       job={preview}
       intro={t('downloads.folderImport.intro')}
       seriesHint={t('downloads.folderImport.seriesHint')}
-      extra={(kind) => <FolderFiles preview={preview} kind={kind} file={file} onFile={setFile} />}
-      submit={(body, kind) => folderImportApi.start({ ...body, path: preview.path, ...(kind === 'movie' && file !== null ? { file } : {}) })}
+      extra={(kind) => (
+        <>
+          {kind === 'series' && <Toggle label={t('downloads.folderImport.byHand')} hint={t('downloads.folderImport.byHandHint')} checked={byHand} onChange={setByHand} />}
+          <FolderFiles preview={preview} kind={kind} file={file} onFile={setFile} />
+        </>
+      )}
+      submit={(body, kind) => {
+        sentByHand.current = kind === 'series' && byHand
+        return folderImportApi.start({
+          ...body,
+          path: preview.path,
+          ...(kind === 'movie' && file !== null ? { file } : {}),
+          ...(sentByHand.current ? { by_hand: true } : {}),
+        })
+      }}
       onClose={onClose}
-      onDone={onDone}
+      onDone={(message) => onDone(sentByHand.current ? t('downloads.folderImport.byHandDone', { name: preview.name }) : message)}
     />
   )
 }

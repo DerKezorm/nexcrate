@@ -1884,7 +1884,8 @@ export type FolderPreview = {
 }
 
 /** `file`: das Video von mehreren, nur fuer einen Film. */
-export type FolderImport = ForeignAdopt & { path: string; file?: string }
+/** `by_hand` nur bei einer Serie: nichts wird von selbst abgelegt, jede Datei wartet unter Probleme auf ihre Folge. */
+export type FolderImport = ForeignAdopt & { path: string; file?: string; by_hand?: boolean }
 
 /** Ein gesperrtes Release eines Titels. `reason` ist ein Code wie `client_failed`, `encrypted` oder `dangerous_file`. */
 export type BlocklistEntry = { id: number; release_title: string; indexer: string; reason: string; created_at: string }

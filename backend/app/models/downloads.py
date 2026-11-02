@@ -161,7 +161,8 @@ class Download(Base):
     #: The matched formats TRaSH marks for renaming, for ``{Custom Formats}``.
     formats: Mapped[list[str]] = mapped_column(JSON, default=list)
     #: What the owner confirmed: not_fitting, blocklisted, no_gain when loading; title_mismatch with not_fitting for a
-    #: release whose name fits none of the movie's titles, or when filing it away anyway.
+    #: release whose name fits none of the movie's titles, or when filing it away anyway; files_by_hand for a series
+    #: folder imported by hand whose episodes the owner chooses.
     confirmed: Mapped[list[str]] = mapped_column(JSON, default=list)
     state: Mapped[str] = mapped_column(String(16), default="queued", index=True)
     #: 0 to 100.

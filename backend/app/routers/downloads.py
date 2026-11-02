@@ -170,7 +170,7 @@ class Download(BaseModel):
     confirmed: list[str] = Field(
         description="What the owner confirmed: not_fitting, blocklisted or no_gain when loading; title_mismatch when "
         "the release's name fits none of the movie's titles and the owner loaded it all the same or filed it away "
-        "anyway."
+        "anyway; files_by_hand for a series folder imported by hand whose episodes the owner chooses."
     )
     origin: str = Field(
         description="Who started it: manual, search (a planned search or searching automatically now), rss, "

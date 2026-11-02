@@ -169,6 +169,8 @@ class Context:
     anime: bool = False
     #: The episode names of the series; ``assign`` makes them when they are missing.
     names: episode_names.Index | None = None
+    #: The owner chooses every video's episodes (a folder imported by hand, issue #26): nothing is filed by itself.
+    by_hand: bool = False
 
 
 @dataclass
@@ -666,6 +668,28 @@ def _propose(
             item.proposal, item.proposed_by = shifted[key], BY_SHIFT
 
 
+def _all_open(
+    result: Result,
+    videos: Sequence[Video],
+    counting: Sequence[Video],
+    readings: dict[int, Reading | None],
+    named: dict[int, tuple[int, ...]],
+    context: Context,
+) -> None:
+    """Every counting video open with the episodes it read, samples and extras left out as marked."""
+    result.files = [
+        Decision(
+            video,
+            readings[video.key],
+            OPEN if video in counting else (_left_out(video, ()) or OPEN),
+            readings[video.key].episode_ids if readings[video.key] is not None else (),
+        )
+        for video in videos
+    ]
+    _propose(result.files, {key: ids for key, ids in named.items() if not readings[key].named_plain}, {})  # type: ignore[union-attr]
+    result.uncovered = tuple(sorted(context.expected - context.filed))
+
+
 def assign(videos: Sequence[Video], context: Context, rank: Ranker | None = None) -> Result:
     """A decision per video (S4.3). Pure."""
     if context.names is None:
@@ -680,6 +704,11 @@ def assign(videos: Sequence[Video], context: Context, rank: Ranker | None = None
     readings = by_parts(context, readings)
     result = Result(counted=counted)
     named = by_name(context, counting, readings)
+    if context.by_hand:
+        # What the names read is only the dialog's first choice: a pack may count by another database (issue #26).
+        _all_open(result, videos, counting, readings, named, context)
+        result.problem = "files_unassigned" if result.open else None
+        return result
     if other_series(
         [readings[video.key] for video in counting],
         context.keys,
@@ -687,17 +716,7 @@ def assign(videos: Sequence[Video], context: Context, rank: Ranker | None = None
         titles_inside(counting),
     ) and not names_confirm([readings[video.key] for video in counting]):
         # The episodes read stay with each video: the owner can take them over in one step if it is this series.
-        result.files = [
-            Decision(
-                video,
-                readings[video.key],
-                OPEN if video in counting else (_left_out(video, ()) or OPEN),
-                readings[video.key].episode_ids if readings[video.key] is not None else (),
-            )
-            for video in videos
-        ]
-        _propose(result.files, {key: ids for key, ids in named.items() if not readings[key].named_plain}, {})  # type: ignore[union-attr]
-        result.uncovered = tuple(sorted(context.expected - context.filed))
+        _all_open(result, videos, counting, readings, named, context)
         result.problem = "other_series_suspected"
         return result
 

@@ -146,9 +146,11 @@ def _movie_reading(library: Any, names: list[str]) -> tuple[Any, list[dict[str, 
     return next((parsed for parsed in readings if parsed.year), readings[0]), []
 
 
-def _check_chosen(found: _Found, title: Title, file: str | None) -> None:
+def _check_chosen(found: _Found, title: Title, file: str | None, by_hand: bool) -> None:
     """A chosen video is one of the folder's, for a movie, and of a folder without archives: the import would file
-    what it unpacks and not know the choice."""
+    what it unpacks and not know the choice. Episodes by hand are for a series."""
+    if by_hand and title.kind != "series":
+        raise _refuse("invalid_input", "The input is not valid.", 422, fields=["by_hand"])
     if file is None:
         return
     known = {found.relative(path) for path, _size in found.videos}
@@ -178,13 +180,15 @@ def _check_not_running(db: Any, found: _Found) -> None:
         raise _refuse("folder_import_running", "This folder is being imported already, or waits under Problems.")
 
 
-def start(raw: str, file: str | None, title_id: int, definition_id: int) -> int:
+def start(raw: str, file: str | None, title_id: int, definition_id: int, by_hand: bool = False) -> int:
     """The folder becomes a download of the version and is filed away. ``file`` is the video to take of several, for a
-    movie. Returns the download's id.
+    movie. ``by_hand``, for a series: nothing is filed by itself, every video waits under Problems with the episodes
+    its name reads as the first choice, as a pack may count by another database than TMDB. Returns the download's id.
 
     Raises ``ForeignError``: 404 when the title or the version is gone, 409 ``folder_import_in_library`` for a folder
     the version files into and ``folder_import_running`` for one that is not through yet, 422 for a ``file`` that is
-    no video to choose, what ``_look`` raises and what ``foreign.prepare_version`` raises."""
+    no video to choose and for ``by_hand`` beside no series, what ``_look`` raises and what
+    ``foreign.prepare_version`` raises."""
     found = _look(raw)
     names = [path.stem for path, _size in found.videos]
     moment = store.now()
@@ -193,7 +197,7 @@ def start(raw: str, file: str | None, title_id: int, definition_id: int) -> int:
         definition = db.get(VersionDefinition, definition_id)
         if title is None or definition is None:
             raise foreign.not_found()
-        _check_chosen(found, title, file)
+        _check_chosen(found, title, file, by_hand)
         _check_not_running(db, found)
         version, episodes = foreign.prepare_version(
             db,
@@ -218,7 +222,7 @@ def start(raw: str, file: str | None, title_id: int, definition_id: int) -> int:
             release_title=release[:1024],
             size_bytes=found.size,
             quality=foreign.name_quality(title.kind, release),
-            confirmed=["title_mismatch"],
+            confirmed=["title_mismatch", *([store.FILES_BY_HAND] if by_hand else [])],
             origin="folder",
             state="completed",
             progress=100.0,
@@ -233,6 +237,13 @@ def start(raw: str, file: str | None, title_id: int, definition_id: int) -> int:
         db.commit()
         download_id = download.id
         kind = title.kind
-    logger.info("A folder becomes download %d of %s %d (%d files)", download_id, kind, title_id, len(names))
+    logger.info(
+        "A folder becomes download %d of %s %d (%d files%s)",
+        download_id,
+        kind,
+        title_id,
+        len(names),
+        ", episodes by hand" if by_hand else "",
+    )
     foreign.hand_over(download_id, kind, title_id, True)
     return download_id

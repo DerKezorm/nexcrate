@@ -91,6 +91,8 @@ UNFINISHED_STATES = (*ACTIVE_STATES, "problem")
 #: The scopes of series downloads; ``album`` is an album download.
 SERIES_SCOPES = ("episode", "season", "series")
 ALBUM_SCOPE = "album"
+#: In ``confirmed``: the owner chooses the episodes of every video of a series folder imported by hand (issue #26).
+FILES_BY_HAND = "files_by_hand"
 
 _step_lock = threading.Lock()
 _steps: dict[int, str] = {}

@@ -193,6 +193,8 @@ class Context:
     #: The second halves of double episodes by their episode. The first half, like any
     #: file, is in ``current``.
     halves: dict[int, CurrentFile] = field(default_factory=dict)
+    #: The owner chooses every video's episodes (``store.FILES_BY_HAND``).
+    by_hand: bool = False
 
 
 #: The words of a title, for the part before its colon.
@@ -396,6 +398,7 @@ def load(db: OrmSession, download_id: int) -> Context | None:
         marker=row.imported_path,
         known_paths=known_paths,
         subtitles={file_id: tuple(rows) for file_id, rows in subtitle_rows.items()},
+        by_hand=store.FILES_BY_HAND in (row.confirmed or []),
     )
 
 
@@ -638,6 +641,7 @@ def assignment_context(context: Context) -> episodes.Context:
         original_language=context.original_language,
         filed=frozenset(item for item, state in context.states.items() if state == "filed"),
         anime=context.numbering.series_type == "anime",
+        by_hand=context.by_hand,
     )
 
 
