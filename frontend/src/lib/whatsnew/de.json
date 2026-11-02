@@ -671,6 +671,25 @@
       "small": [
         "Die Dateien im Ordner bleiben wie immer, wo sie sind. An der Datenbank ändert sich nichts."
       ]
+    },
+    "1.7.0": {
+      "lead": "Releases in anderen Sprachen findet nexcrate jetzt auch über ihren Titel in dieser Sprache, und der Profil-Assistent kennt jede Sprache.",
+      "sections": [
+        {
+          "title": "Suche im Titel deiner Sprache",
+          "body": "Ein französisches Release heißt nach dem französischen Titel, ein niederländisches nach dem niederländischen. Viele Indexer für solche Releases können nicht nach Nummer suchen, und mit dem Titel in deiner Kontosprache und dem Originaltitel fand nexcrate sie bisher nicht. Jetzt fragt nexcrate zusätzlich mit dem Titel in jeder Sprache, die ein Profil der Fassung verlangt oder bevorzugt, auch bei Serien. Die Titel kommen aus den Übersetzungen von TMDB und werden eine Woche gemerkt.",
+          "where": "Suchen von Hand und Automatik"
+        },
+        {
+          "title": "Jede Sprache im Profil",
+          "body": "Der Assistent zeigt weiter Deutsch, Englisch, Französisch, Spanisch, Italienisch, Türkisch und die Originalsprache. Jede weitere Sprache, die Radarr kennt, wählst du darunter unter „Weitere Sprache“ dazu.",
+          "where": "Fassungen › Profil"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Auch Profile im Expertenmodus und aus Radarr oder Sonarr übernommene zählen: Ein Sprachformat mit Pluspunkten nennt die Sprache. An der Datenbank ändert sich nichts."
+      ]
     }
   }
 }

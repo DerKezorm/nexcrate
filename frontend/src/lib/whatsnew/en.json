@@ -671,6 +671,25 @@
       "small": [
         "As always, the files in the folder stay where they are. The database does not change."
       ]
+    },
+    "1.7.0": {
+      "lead": "nexcrate now also finds releases in other languages by their title in that language, and the profile assistant knows every language.",
+      "sections": [
+        {
+          "title": "Searching with the title in your language",
+          "body": "A French release is named after the French title, a Dutch one after the Dutch title. Many indexers for such releases cannot search by number, and with the title in your account language and the original title nexcrate did not find them so far. Now nexcrate also asks with the title in every language a profile of the version requires or prefers, for shows as well. The titles come from TMDB's translations and are kept for a week.",
+          "where": "Searching by hand and automatic search"
+        },
+        {
+          "title": "Every language in a profile",
+          "body": "The assistant still shows German, English, French, Spanish, Italian, Turkish and the original language. Every further language Radarr knows can be added below under \"Another language\".",
+          "where": "Versions › Profile"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Profiles in expert mode and those taken over from Radarr or Sonarr count too: a language format with points names the language. The database does not change."
+      ]
     }
   }
 }
