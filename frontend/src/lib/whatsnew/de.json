@@ -657,6 +657,20 @@
       "small": [
         "Sonst ändert sich nichts, auch nicht an der Datenbank."
       ]
+    },
+    "1.6.0": {
+      "lead": "Ein kleines Release aus Issue #26: Beim Import einer Serie aus einem Ordner wählst du die Folgen auf Wunsch selbst.",
+      "sections": [
+        {
+          "title": "Folgen von Hand wählen",
+          "body": "Manche Pakete zählen anders als TMDB, etwa nach TheTVDB, wo eine zweite Staffel als eigene Serie mit Staffel 1 geführt sein kann. Bisher legte nexcrate solche Dateien nach ihrem Namen ab, also unter der falschen Folge. Hakst du beim Import einer Serie „Folgen von Hand wählen“ an, legt nexcrate nichts von selbst ab: Der Ordner wartet unter Probleme, und dort wählst du zu jeder Datei die Folge. Vorgewählt ist, was im Dateinamen steht.",
+          "where": "Downloads › Aus Ordner importieren"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Dateien im Ordner bleiben wie immer, wo sie sind. An der Datenbank ändert sich nichts."
+      ]
     }
   }
 }

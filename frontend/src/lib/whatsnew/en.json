@@ -657,6 +657,20 @@
       "small": [
         "Nothing else changes, the database neither."
       ]
+    },
+    "1.6.0": {
+      "lead": "A small release from issue #26: when you import a show from a folder, you can choose the episodes yourself.",
+      "sections": [
+        {
+          "title": "Choose the episodes by hand",
+          "body": "Some packs count differently than TMDB, for example by TheTVDB, where a second season can be listed as a show of its own with season 1. So far nexcrate filed such files by their names, onto the wrong episodes. When you tick \"Choose the episodes by hand\" while importing a show, nexcrate files nothing by itself: the folder waits under Problems, where you choose the episode of each file. What the file name says is chosen first.",
+          "where": "Downloads › Import from a folder"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "As always, the files in the folder stay where they are. The database does not change."
+      ]
     }
   }
 }
