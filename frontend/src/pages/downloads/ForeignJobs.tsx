@@ -595,7 +595,7 @@ function LibraryChoice({
   }, [title, listed, proposed])
 
   const versions = title?.versions ?? []
-  const chosen = versionId !== null && versions.some((version) => version.id === versionId) ? versionId : versions.length === 1 ? versions[0].id : null
+  const chosen = versionId !== null && versions.some((version) => version.version_id === versionId) ? versionId : versions.length === 1 ? versions[0].version_id : null
   useEffect(() => {
     onChange(title !== null && chosen !== null ? { title, versionId: chosen } : null)
   }, [title, chosen, onChange])
@@ -668,16 +668,16 @@ function LibraryChoice({
               {versions.map((version) => (
                 <li key={version.id}>
                   <label
-                    className={'flex cursor-pointer items-center gap-3 rounded-xl border p-2.5 ' + (chosen === version.id ? 'border-accent-500/50 bg-accent-500/5' : 'border-ink-700 bg-ink-900/60')}
+                    className={'flex cursor-pointer items-center gap-3 rounded-xl border p-2.5 ' + (chosen === version.version_id ? 'border-accent-500/50 bg-accent-500/5' : 'border-ink-700 bg-ink-900/60')}
                   >
                     <input
                       type="radio"
                       name="foreign-library-version"
                       aria-label={version.label}
                       className="h-4 w-4 shrink-0 accent-accent-500"
-                      checked={chosen === version.id}
+                      checked={chosen === version.version_id}
                       disabled={busy}
-                      onChange={() => setVersionId(version.id)}
+                      onChange={() => setVersionId(version.version_id)}
                     />
                     <span className="text-sm font-semibold wrap-anywhere text-mist-100">{version.label}</span>
                   </label>

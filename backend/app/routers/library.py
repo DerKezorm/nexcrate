@@ -74,7 +74,8 @@ class EpisodeCounts(BaseModel):
 
 
 class VersionBrief(BaseModel):
-    id: int
+    id: int = Field(description="The version of this title. Not the number `version_id` asks for elsewhere.")
+    version_id: int = Field(description="The version definition, as `GET /api/versions` numbers it.")
     label: str = Field(examples=["4K"])
     state: str = Field(
         description="problem, downloading, incomplete (an album lacking tracks), upgrade, available, wanted or "

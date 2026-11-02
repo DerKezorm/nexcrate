@@ -304,7 +304,10 @@ export type SourceTestResult = {
 export type LibrarySort = 'title' | 'year' | 'added'
 
 export type TitleVersionSummary = {
+  /** Die Nummer am Titel. */
   id: number
+  /** Die Nummer unter Einstellungen; die erwarten alle Anfragen mit `version_id`. */
+  version_id: number
   label: string
   state: VersionState
   /** 0 bis 100, nur beim Laden. */

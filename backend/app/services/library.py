@@ -280,6 +280,7 @@ def _briefs(db: OrmSession, title_ids: list[int]) -> dict[int, list[dict[str, An
         select(
             Version.id,
             Version.title_id,
+            Version.version_definition_id,
             VersionDefinition.label,
             Version.state,
             Version.progress,
@@ -298,6 +299,7 @@ def _briefs(db: OrmSession, title_ids: list[int]) -> dict[int, list[dict[str, An
         result.setdefault(row.title_id, []).append(
             {
                 "id": row.id,
+                "version_id": row.version_definition_id,
                 "label": row.label,
                 "state": row.state,
                 "progress": row.progress,
