@@ -14,6 +14,7 @@
     "es": "Spanisch",
     "it": "Italienisch",
     "tr": "Türkisch",
+    "locale": "de",
     "original": "Originalsprache"
   },
   "line": {
@@ -377,6 +378,8 @@
   "languagesField": {
     "roleLabel": "Rolle für {{language}}",
     "atLeastOne": "Wähl mindestens eine Sprache.",
+    "more": "Weitere Sprache",
+    "morePlaceholder": "Sprache wählen",
     "noneRequired": "Keine Sprache ist Pflicht. Dann entscheidet der Ton nur über die Reihenfolge, und im Zweifel kommt auch ein Release ohne deine Sprachen."
   },
   "numberField": {

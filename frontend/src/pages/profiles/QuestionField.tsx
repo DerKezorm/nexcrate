@@ -6,7 +6,7 @@ import type { AnswerValue, LanguageEntry, LanguagesQuestion, MediaKind, NumberQu
 import { Segmented } from '../../components/Segmented'
 import { FormMessage } from '../../components/ui'
 import { formatNumber } from '../../lib/format'
-import { formatGbPerHour, languageName, roleButtonText } from './profileText'
+import { formatGbPerHour, languageName, MAIN_LANGUAGES, roleButtonText } from './profileText'
 import { isLanguageList, readNumberDraft, setLanguageRole, toggleLanguage, type NumberDraft } from './questions'
 
 type Texts = {
@@ -151,17 +151,25 @@ function ChoiceField({ id, kind, options, value, onChange }: { id: string; kind:
 
 /**
  * Sprachen zum Anhaken, je Sprache Pflicht oder bevorzugt. Die erste angehakte ist Pflicht, jede
- * weitere bevorzugt; umstellen geht daneben. Ohne Sprache geht es nicht weiter.
+ * weitere bevorzugt; umstellen geht daneben. Ohne Sprache geht es nicht weiter. Jede Sprache ausser den
+ * Hauptsprachen kommt ueber "Weitere Sprache" dazu.
  */
 function LanguagesField({ question, kind, value, onChange }: { question: LanguagesQuestion; kind: MediaKind; value: LanguageEntry[]; onChange: (value: AnswerValue) => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const texts = useQuestionTexts(question.id, kind)
   const required = value.filter((entry) => entry.role === 'required').length
+  const selectId = useId()
+  // Die Hauptsprachen und die Originalsprache stehen immer da, jede weitere erst, wenn sie gewaehlt ist.
+  const shown = question.codes.filter((code) => MAIN_LANGUAGES.includes(code) || value.some((entry) => entry.code === code))
+  const more = question.codes
+    .filter((code) => !shown.includes(code))
+    .map((code) => ({ code, name: languageName(t, code) }))
+    .sort((a, b) => a.name.localeCompare(b.name, i18n.language))
   return (
     <fieldset className="flex min-w-0 flex-col gap-2">
       <Legend texts={texts} />
       <ul className="flex flex-col gap-2">
-        {question.codes.map((code) => {
+        {shown.map((code) => {
           const entry = value.find((item) => item.code === code)
           const name = languageName(t, code)
           return (
@@ -194,6 +202,26 @@ function LanguagesField({ question, kind, value, onChange }: { question: Languag
           )
         })}
       </ul>
+      {more.length > 0 && (
+        <label htmlFor={selectId} className="flex min-w-0 flex-col gap-1">
+          <span className="text-xs text-mist-400">{t('profiles.languagesField.more')}</span>
+          <select
+            id={selectId}
+            value=""
+            onChange={(event) => {
+              if (event.target.value) onChange(toggleLanguage(question, value, event.target.value))
+            }}
+            className="min-w-0 rounded-xl border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-mist-100 focus:border-accent-500 focus:outline-none"
+          >
+            <option value="">{t('profiles.languagesField.morePlaceholder')}</option>
+            {more.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {value.length === 0 ? (
         <FormMessage>{t('profiles.languagesField.atLeastOne')}</FormMessage>
       ) : required === 0 ? (

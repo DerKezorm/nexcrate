@@ -46,6 +46,9 @@ class TitleInfo:
     #: Names from TMDB or Radarr as written (Radarr's alternative titles come from TMDB): in the keys too, and split
     #: like ``texts``, but ``matching.title_fits`` takes them only with the movie's year.
     other_texts: tuple[str, ...] = ()
+    #: TMDB's titles in the languages the profiles want (``languages``): asked after the title and the original title,
+    #: and among ``other_texts`` for the name.
+    language_texts: tuple[str, ...] = ()
 
 
 def title_info(
@@ -61,9 +64,13 @@ def title_info(
     alternative_titles: Iterable[str | None] = (),
     stored_keys: Iterable[str | None] = (),
     other_titles: Iterable[str | None] = (),
+    language_titles: Iterable[str] = (),
 ) -> TitleInfo:
     """A title with its keys: those of its texts, and stored ``|key|key|`` strings (TMDB keeps only keys).
-    ``other_titles`` are names from TMDB or Radarr as written, which count only with the year."""
+    ``other_titles`` are names from TMDB or Radarr as written, which count only with the year; ``language_titles``
+    are such names in the languages the profiles want, asked by the search as well."""
+    language_texts = tuple(language_titles)
+    other_titles = (*other_titles, *language_texts)
     keys: set[str] = set()
     texts: list[str] = []
     for text in (title, original_title, *alternative_titles):
@@ -89,6 +96,7 @@ def title_info(
         keys=frozenset(keys),
         texts=tuple(texts),
         other_texts=tuple(others),
+        language_texts=language_texts,
     )
 
 

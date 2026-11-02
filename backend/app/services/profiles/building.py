@@ -27,7 +27,14 @@ from .questions import ProfileBuildError
 #: ``original`` is the title's original language, whatever it is (18.09.2026): a series in Japanese or Korean otherwise
 #: met no profile with a file whose audio track carries no language, which counts as the original one.
 ORIGINAL = "original"
-LANGUAGE_CODES = ("de", "en", "fr", "es", "it", "tr", ORIGINAL)
+#: The assistant's languages: the six it began with, then every other language Radarr knows by an ISO code, then the
+#: title's own one. A release in any of them is named after the title in that language, which the search asks too.
+MAIN_LANGUAGE_CODES = ("de", "en", "fr", "es", "it", "tr")
+LANGUAGE_CODES = (
+    *MAIN_LANGUAGE_CODES,
+    *sorted(lang.ISO_CODES - set(MAIN_LANGUAGE_CODES)),
+    ORIGINAL,
+)
 LANGUAGE_ROLES = ("required", "preferred")
 RESOLUTIONS = {"2160p": 2160, "1080p": 1080}
 MAX_GB_PER_HOUR = (1, 500)

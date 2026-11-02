@@ -41,6 +41,20 @@ export function lineFromAnswers(list: QuestionList, answers: ProfileAnswers): Pr
   }
 }
 
+/** Die Sprachen, die der Assistent immer zeigt; jede weitere waehlt man dazu. */
+export const MAIN_LANGUAGES: readonly string[] = ['de', 'en', 'fr', 'es', 'it', 'tr', 'original']
+
+/** Der Name einer Sprache ohne eigenen Text, in der Sprache der Oberflaeche, sonst ihr Kuerzel. */
+function displayName(code: string, language: string): string {
+  try {
+    const name = new Intl.DisplayNames([language], { type: 'language' }).of(code)
+    if (name && name !== code) return name.charAt(0).toLocaleUpperCase(language) + name.slice(1)
+  } catch {
+    // Ein Kuerzel, das der Browser nicht kennt
+  }
+  return code.toUpperCase()
+}
+
 export function languageName(t: TFunction, code: string): string {
   switch (code) {
     case 'de':
@@ -59,7 +73,7 @@ export function languageName(t: TFunction, code: string): string {
     case 'original':
       return t('profiles.languageNames.original')
     default:
-      return code.toUpperCase()
+      return displayName(code, t('profiles.languageNames.locale'))
   }
 }
 

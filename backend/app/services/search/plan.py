@@ -6,10 +6,11 @@ As Radarr's interactive search ("Searching"), with nexcrate's spellings:
    title has that number, one ``t=movie`` with every number the caps list. The IMDb number goes without ``tt``, with
    at least seven digits.
 2. **By title,** only when step 1 was not possible or found no release, and only when the caps list ``q`` for the
-   plain search: ``t=search`` with the title and, when it differs as written, the original title. Each text gets the
-   year unless the indexer removes it (or the title has none) and goes out in its distinct spellings: as written,
-   form (a), form (b) (``schreibweisen.query_spellings``). A query already sent to this indexer is not sent again,
-   so at most three per text and six per indexer.
+   plain search: ``t=search`` with the title and, when it differs as written, the original title, then the titles in
+   the languages the profiles want (``languages``) that differ from both. Each text gets the year unless the indexer
+   removes it (or the title has none) and goes out in its distinct spellings: as written, form (a), form (b)
+   (``schreibweisen.query_spellings``). A query already sent to this indexer is not sent again, so at most three per
+   text.
 3. **Pages:** ``limit`` is 100, or the caps' ``limit_max`` when that is lower. A full page is followed by the next
    ``offset``; a short page, 1000 releases of one query or 30 pages end it (Radarr's limits).
 4. **Merging:** one release per indexer and guid, else per indexer, title and size. The key gives neither away.
@@ -74,6 +75,9 @@ def _texts(title: TitleInfo) -> list[str]:
     original = title.original_title
     if original and not schreibweisen.folds_alike(original, title.title):
         texts.append(original)
+    for text in title.language_texts:
+        if all(not schreibweisen.folds_alike(text, existing) for existing in texts):
+            texts.append(text)
     return texts
 
 

@@ -73,6 +73,7 @@ from ...models import Episode, EpisodeVersion, Indexer, Title, Version
 from .. import indexers, logs
 from ..downloads import loading
 from ..search import jobs as search_jobs
+from ..search import languages as search_languages
 from ..search import plan as search_plan
 from ..search.model import TitleInfo, title_info
 from . import budget, clock, handover_retry, planning, settings, upgrade_guard, waiting, wishes
@@ -213,7 +214,8 @@ def plan_round(now: datetime) -> tuple[int, int]:
 # --- Starting ----------------------------------------------------------------------------------------------------- #
 
 
-def _title_info(title: Title) -> TitleInfo:
+def _title_info(db: Any, title: Title) -> TitleInfo:
+    # The titles in the profiles' languages as the search asks them, from what is stored: their queries cost too.
     return title_info(
         title_id=title.id,
         title=title.title,
@@ -221,6 +223,7 @@ def _title_info(title: Title) -> TitleInfo:
         year=title.year,
         tmdb_id=title.tmdb_id,
         imdb_id=title.imdb_id,
+        language_titles=search_languages.titles("movie", title.tmdb_id, search_languages.title_codes(db, title.id)),
     )
 
 
@@ -353,7 +356,7 @@ def _start_planned(title_id: int, now: datetime, left: int = MAX_STARTS_PER_HOUR
         if only_upgrades(fact) and upgrade_guard.load(db, now).limit_reached:
             # The daily limit of upgrades: the title stays due and starts once the window frees (upgrade_guard).
             return 0
-        info = _title_info(title)
+        info = _title_info(db, title)
         rows = _automatic_indexers(db)
         candidates = [(row.id, budget.Standing.of(row), planned_cost(row, info, now)) for row in rows]
     if not candidates:

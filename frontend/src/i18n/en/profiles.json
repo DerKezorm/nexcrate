@@ -14,6 +14,7 @@
     "es": "Spanish",
     "it": "Italian",
     "tr": "Turkish",
+    "locale": "en",
     "original": "Original language"
   },
   "line": {
@@ -377,6 +378,8 @@
   "languagesField": {
     "roleLabel": "Role for {{language}}",
     "atLeastOne": "Choose at least one language.",
+    "more": "Another language",
+    "morePlaceholder": "Choose a language",
     "noneRequired": "No language is required. Audio then only decides the order, and if in doubt a release without your languages comes too."
   },
   "numberField": {

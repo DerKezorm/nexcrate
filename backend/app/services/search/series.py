@@ -91,7 +91,7 @@ from ..releases import qualities_series as qualities
 from ..series import release_match, watching
 from ..series.parts import as_whole
 from ..series.store import code as episode_code
-from . import plan, ranking
+from . import languages, plan, ranking
 from .model import IndexerInfo, imdb_number
 
 #: Title queries per indexer and target, over all texts and spellings.
@@ -178,7 +178,8 @@ class SeriesSearch:
     #: Episodes the search is for; releases of others stay in the list but never join what nexcrate would take.
     episode_ids: frozenset[int]
     numbering: release_match.Numbering
-    #: Texts for title queries, in order: search titles, title, English title, original title, TheXEM's names.
+    #: Texts for title queries, in order: search titles, title, English title, original title, TheXEM's names, the
+    #: titles in the languages the profiles want.
     texts: tuple[str, ...]
     #: Every spelling key of every title of the series.
     keys: frozenset[str]
@@ -453,6 +454,11 @@ def load(db: Any, title_id: int, scope: dict[str, Any], today: str | None = None
             xem_names.append((row.text, row.season))
             keys.update(key for key in row.search_keys.split(schreibweisen.SEPARATOR) if key)
     texts = _texts(title, aliases, xem_names, seasons)
+    # The titles in the languages the profiles want, after all others (``languages``).
+    for text in languages.titles("series", title.tmdb_id, languages.title_codes(db, title.id)):
+        keys.update(schreibweisen.keys(text))
+        if all(not schreibweisen.folds_alike(text, existing) for existing in texts):
+            texts.append(text)
     for text in (title.title, title.title_en, title.original_title, *aliases):
         keys.update(schreibweisen.keys(text))
     for stored_keys in (title.search_keys, title.tmdb_search_keys):

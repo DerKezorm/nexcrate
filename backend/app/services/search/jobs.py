@@ -52,7 +52,7 @@ from ..downloads import retention as download_retention
 from ..profiles import store as profile_store
 from ..series import watching, xem
 from . import album as album_search
-from . import options, report, runner
+from . import languages, options, report, runner
 from . import series as series_search
 from .model import IndexerInfo, TitleInfo, VersionInfo, title_info
 
@@ -643,6 +643,10 @@ async def _run_series(search: Search, scope: dict[str, Any]) -> None:
     except Exception:
         logger.exception("Search %s: TheXEM step failed", search.search_id)
     try:
+        await languages.refresh_title(search.title_id)
+    except Exception:
+        logger.exception("Search %s: the titles in the profiles' languages failed", search.search_id)
+    try:
         loaded = load_series(search.title_id, scope, only=search.indexer_ids)
     except series_search.ScopeInvalid:
         logger.info("Search %s: the scope no longer fits title %d", search.search_id, search.title_id)
@@ -720,6 +724,10 @@ async def _run(search: Search) -> None:
         logger.info("Search %s: title %d is gone", search.search_id, search.title_id)
         return
     title, versions, infos = loaded
+    try:
+        title = await languages.complete(title, [version.rules for version in versions])
+    except Exception:
+        logger.exception("Search %s: the titles in the profiles' languages failed", search.search_id)
     states = [runner.IndexerState(info=info) for info in infos]
     with search.lock:
         search.indexers = states
