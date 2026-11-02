@@ -643,6 +643,20 @@
         "The folder has to be mounted into the container, as nexcrate only sees mounted folders. A folder inside the library folder of the version is refused.",
         "Series and albums have to be in the library first. A movie from TMDB is added by the import."
       ]
+    },
+    "1.5.1": {
+      "lead": "A small release from issue #26: importing a series or an album from a folder works now.",
+      "sections": [
+        {
+          "title": "Series and albums from a folder",
+          "body": "For a series or an album, the import from a folder answered \"This does not exist, or not any more\" in most libraries: the dialog sent the wrong number for the version. A movie was not affected. The same went for assigning a job under Problems to a series or an album.",
+          "where": "Downloads › Import from a folder, and Downloads › Problems"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Nothing else changes, the database neither."
+      ]
     }
   }
 }
