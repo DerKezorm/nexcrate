@@ -21,6 +21,8 @@ export function downloadsPath(view: DownloadsView, page: number): string {
 /** Laden, verfolgen, erneut versuchen, entfernen. */
 export const downloadsApi = {
   list: (view: DownloadsView, page: number, signal?: AbortSignal) => api.get<DownloadList>(downloadsPath(view, page), { signal }),
+  /** Ein Download, wie ihn die Listen zeigen. 404 `download_not_found`. */
+  read: (id: number, signal?: AbortSignal) => api.get<Download>(`/downloads/${id}`, { signal }),
   /**
    * 201. 404 `search_expired`, `release_not_found`; 409 mit einem Grund aus `LOAD_BLOCKS`,
    * `release_not_fitting`, `release_blocklisted`; 502 `release_fetch_failed`, `release_file_invalid`,

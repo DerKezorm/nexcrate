@@ -1,13 +1,23 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { downloadsApi } from '../../api/downloads'
 import { folderImportApi } from '../../api/folderImport'
-import type { FolderFile, FolderPreview, MediaKind } from '../../api/types'
-import { Toggle } from '../../components/ui'
+import type { Download, FolderFile, FolderPreview, MediaKind } from '../../api/types'
+import { Dialog } from '../../components/Dialog'
+import { Button, Spinner, Toggle } from '../../components/ui'
 import { formatNumber } from '../../lib/format'
 import { sizeText } from '../../lib/size'
 import { FolderPicker } from '../files/FolderPicker'
+import { AssignDialog as EpisodesDialog } from './AssignDialog'
 import { AssignDialog } from './ForeignJobs'
+
+/** Wie oft und wie lange der Dialog nachsieht, ob die Dateien gelesen sind. Danach wartet der Ordner unter Probleme. */
+export const READING_POLL_MS = 1000
+const READING_ROUNDS = 30
+
+/** Probleme, bei denen die Wahl der Folgen gleich im Dialog weitergeht. */
+const CHOOSING = ['files_unassigned', 'other_series_suspected']
 
 /** Die Videos, zwischen denen die Wahl besteht: Ein Film braucht sie nur bei mehreren und ohne Archive daneben. */
 function choosable(files: FolderFile[]): FolderFile[] {
@@ -28,8 +38,26 @@ export function FolderImportDialog({ onClose, onDone }: { onClose: () => void; o
   const [preview, setPreview] = useState<FolderPreview | null>(null)
   const [file, setFile] = useState<string | null>(null)
   const [byHand, setByHand] = useState(false)
-  // Was zuletzt geschickt wurde: von Hand gewaehlte Folgen legt nexcrate nicht ab, die Meldung sagt, wo es weitergeht.
+  // Der Download, dessen Folgen von Hand gewaehlt werden: erst liest nexcrate die Dateien, dann waehlt der Besitzer.
+  const [reading, setReading] = useState<number | null>(null)
+  const [choosing, setChoosing] = useState<Download | null>(null)
   const sentByHand = useRef(false)
+  const started = useRef<number | null>(null)
+
+  if (choosing !== null) {
+    return (
+      <EpisodesDialog
+        download={choosing}
+        // Abbrechen laesst den Ordner unter Probleme warten, wie vor der Wahl im Dialog.
+        onClose={() => onDone(t('downloads.folderImport.byHandDone', { name: choosing.release.title }))}
+        onDone={onDone}
+      />
+    )
+  }
+
+  if (reading !== null && preview !== null) {
+    return <ReadingDialog downloadId={reading} name={preview.name} onReady={setChoosing} onLater={() => onDone(t('downloads.folderImport.byHandDone', { name: preview.name }))} />
+  }
 
   if (preview === null) {
     return (
@@ -60,16 +88,76 @@ export function FolderImportDialog({ onClose, onDone }: { onClose: () => void; o
       )}
       submit={(body, kind) => {
         sentByHand.current = kind === 'series' && byHand
-        return folderImportApi.start({
-          ...body,
-          path: preview.path,
-          ...(kind === 'movie' && file !== null ? { file } : {}),
-          ...(sentByHand.current ? { by_hand: true } : {}),
-        })
+        return folderImportApi
+          .start({
+            ...body,
+            path: preview.path,
+            ...(kind === 'movie' && file !== null ? { file } : {}),
+            ...(sentByHand.current ? { by_hand: true } : {}),
+          })
+          .then((download) => {
+            started.current = download.id
+          })
       }}
       onClose={onClose}
-      onDone={(message) => onDone(sentByHand.current ? t('downloads.folderImport.byHandDone', { name: preview.name }) : message)}
+      onDone={(message) => {
+        // Von Hand geht es gleich weiter zur Wahl der Folgen, sobald nexcrate die Dateien gelesen hat (Issue #26).
+        if (sentByHand.current && started.current !== null) setReading(started.current)
+        else onDone(message)
+      }}
     />
+  )
+}
+
+/**
+ * Wartet, bis nexcrate die Dateien des Ordners gelesen hat und nach den Folgen fragt. Kommt etwas anderes heraus oder
+ * dauert es zu lange, wartet der Ordner unter Probleme, wie vor der Wahl im Dialog.
+ */
+function ReadingDialog({ downloadId, name, onReady, onLater }: { downloadId: number; name: string; onReady: (download: Download) => void; onLater: () => void }) {
+  const { t } = useTranslation()
+  // Nicht als Abhaengigkeit: der Aufrufer reicht je Zeichnen neue Funktionen herein.
+  const ready = useRef(onReady)
+  const later = useRef(onLater)
+  ready.current = onReady
+  later.current = onLater
+
+  useEffect(() => {
+    let active = true
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const abort = new AbortController()
+
+    async function round(left: number) {
+      const found = await downloadsApi.read(downloadId, abort.signal).catch(() => null)
+      if (!active) return
+      if (found !== null && found.state === 'problem' && CHOOSING.includes(found.problem?.code ?? '')) ready.current(found)
+      else if (found === null || (found.state !== 'completed' && found.state !== 'importing') || left <= 1) later.current()
+      else timer = setTimeout(() => void round(left - 1), READING_POLL_MS)
+    }
+
+    void round(READING_ROUNDS)
+    return () => {
+      active = false
+      clearTimeout(timer)
+      abort.abort()
+    }
+  }, [downloadId])
+
+  return (
+    <Dialog
+      open
+      title={t('downloads.folderImport.readingTitle', { name })}
+      onClose={onLater}
+      footer={
+        <Button variant="ghost" onClick={onLater}>
+          {t('downloads.folderImport.later')}
+        </Button>
+      }
+    >
+      <p className="flex items-center gap-2 text-sm text-mist-300" role="status">
+        <Spinner />
+        {t('downloads.folderImport.reading')}
+      </p>
+    </Dialog>
   )
 }
 

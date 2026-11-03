@@ -516,6 +516,23 @@ async def load_takes(payload: TakesIn) -> TakesOut:
 
 
 @router.get(
+    "/{download_id}",
+    response_model=Download,
+    summary="Read one download",
+    description=(
+        "A download as the lists show it, in any view. The import from a folder waits on it for the episodes chosen "
+        "by hand (`files_unassigned`)."
+    ),
+    responses=error_responses((404, "download_not_found")),
+)
+def read_download(download_id: int) -> Download:
+    try:
+        return _download(actions.read(download_id))
+    except actions.ActionError as exc:
+        raise exc.http() from exc
+
+
+@router.get(
     "/{download_id}/files",
     response_model=DownloadFilesOut,
     summary="Read the files of a download",

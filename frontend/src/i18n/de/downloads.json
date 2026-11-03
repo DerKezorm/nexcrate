@@ -453,8 +453,11 @@
     "files": "In diesem Ordner",
     "choose": "Welches Video soll abgelegt werden?",
     "byHand": "Folgen von Hand wählen",
-    "byHandHint": "nexcrate legt nichts von selbst ab. Der Ordner wartet unter Probleme, dort wählst du zu jeder Datei die Folge. Vorgewählt ist, was im Dateinamen steht. Für Pakete, die anders zählen als TMDB.",
+    "byHandHint": "nexcrate legt nichts von selbst ab. Gleich nach dem Import wählst du zu jeder Datei die Folge. Vorgewählt ist, was im Dateinamen steht. Für Pakete, die anders zählen als TMDB.",
     "byHandDone": "„{{name}}“ wartet unter Probleme: Wähle dort zu jeder Datei die Folge.",
+    "readingTitle": "„{{name}}“ importieren",
+    "reading": "nexcrate liest die Dateien, gleich wählst du die Folgen …",
+    "later": "Später unter Probleme",
     "more_one": "und {{value}} weitere Datei",
     "more_other": "und {{value}} weitere Dateien"
   },

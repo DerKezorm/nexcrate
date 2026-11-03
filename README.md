@@ -185,8 +185,8 @@ there is no path to type. Mount the folder that holds your downloads and your me
   folder nexcrate sees and files it for a movie, a show or an album like a download: into the
   folder of the version, with its naming, the old file into the recycle bin. Your files stay where
   they are, linked or copied, never moved. For a show whose files count by another database than
-  TMDB, tick "Choose the episodes by hand": nothing is filed by itself, and under Problems you pick
-  the episode of each file. A job you put into the `nexcrate` category of a download client
+  TMDB, tick "Choose the episodes by hand": nothing is filed by itself, and right after the import
+  you pick the episode of each file, or later under Problems. A job you put into the `nexcrate` category of a download client
   yourself shows under Problems and is assigned the same way.
 - **Recycle bin:** a replaced or deleted file waits in `.nexcrate-recycle` inside its root
   folder, seven days by default, and can be taken back from Settings, Files.
