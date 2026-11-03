@@ -690,6 +690,20 @@
       "small": [
         "Profiles in expert mode and those taken over from Radarr or Sonarr count too: a language format with points names the language. The database does not change."
       ]
+    },
+    "1.7.1": {
+      "lead": "A small release from issue #26: when you choose the episodes by hand while importing a folder, you now do it right in the dialog.",
+      "sections": [
+        {
+          "title": "Choose the episodes while importing",
+          "body": "With \"Choose the episodes by hand\", the import used to send you to Problems. Now nexcrate reads the files and the dialog asks for the episode of each file right away, with what the file name says chosen first. If you cancel, the folder waits under Problems as before.",
+          "where": "Downloads › Import from a folder"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Nothing else changes, the database neither."
+      ]
     }
   }
 }

@@ -690,6 +690,20 @@
       "small": [
         "Auch Profile im Expertenmodus und aus Radarr oder Sonarr übernommene zählen: Ein Sprachformat mit Pluspunkten nennt die Sprache. An der Datenbank ändert sich nichts."
       ]
+    },
+    "1.7.1": {
+      "lead": "Ein kleines Release aus Issue #26: Wer beim Import aus einem Ordner die Folgen von Hand wählt, tut das jetzt gleich im Dialog.",
+      "sections": [
+        {
+          "title": "Folgen gleich beim Import wählen",
+          "body": "Mit „Folgen von Hand wählen“ schickte der Import dich bisher unter Probleme. Jetzt liest nexcrate die Dateien und der Dialog fragt gleich nach der Folge jeder Datei. Vorgewählt ist, was im Dateinamen steht. Brichst du ab, wartet der Ordner unter Probleme wie bisher.",
+          "where": "Downloads › Aus Ordner importieren"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Sonst ändert sich nichts, auch nicht an der Datenbank."
+      ]
     }
   }
 }
