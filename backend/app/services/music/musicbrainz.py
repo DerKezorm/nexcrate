@@ -826,12 +826,18 @@ async def browse_releases(
     lane: str = BACKGROUND,
     limit: int = PAGE,
     waits: tuple[float, ...] | None = None,
+    official: bool = True,
 ) -> Page[ReleaseData]:
     """One page of the official releases of a release group, with media and tracks when ``tracks``.
     A page ends after about 500 tracks, never inside a release (c). ``limit`` asks for a smaller page and ``waits``
-    sets the patience with 503: the loading job's way with an album MusicBrainz stays busy for."""
+    sets the patience with 503: the loading job's way with an album MusicBrainz stays busy for.
+
+    ⚠️ ``status=official`` leaves out a release without any status, which nexcrate counts as official
+    (``store.apply_releases``). ``official=False`` asks without the filter: every release, whatever its status."""
     size = max(1, min(limit, PAGE))
     params = {"release-group": release_group_mbid, "status": "official", "limit": str(size), "offset": str(offset)}
+    if not official:
+        del params["status"]
     if tracks:
         params["inc"] = RELEASE_INCLUDES
     else:

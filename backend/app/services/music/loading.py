@@ -70,6 +70,10 @@ SETTING_RULE = "music_target_rule"
 #: (``apply_browse_change``). 2: only what MusicBrainz's own artist page shows.
 BROWSE_VERSION = "2"
 SETTING_BROWSE = "music_browse_version"
+#: Counts up when the loading of releases changes what it keeps: every album stored as loaded with nothing is due
+#: again, once (``apply_release_change``). 2: a release without any status is asked for as well.
+RELEASES_VERSION = "2"
+SETTING_RELEASES = "music_releases_version"
 RULE_CHUNK = 200
 
 #: For tests: the clock of the budget.
@@ -213,14 +217,27 @@ def albums_needing_releases(db: OrmSession, artist_id: int, moment: datetime) ->
     return wanted
 
 
-def hurry_album(title_id: int) -> None:
+def hurry_album(title_id: int, *, since: datetime | None = None) -> None:
     """An album was loaded before its tracks are known: its artist moves to the
-    front of the queue, so the tracks come before the download is filed. Never raises."""
+    front of the queue, so the tracks come before the download is filed. Never raises.
+
+    ⚠️ "tracks" alone does not mean there are tracks: an album MusicBrainz lists nothing official for is stored as
+    loaded with nothing (``store.apply_releases``). Such an album is asked again for a download that arrived at
+    ``since``, unless MusicBrainz was asked at that time or later: asking again would only bring the same nothing, in
+    every round of the import. Without ``since`` (a grab) it is left as it is. Until 11.11.2026 it returned here
+    without a word, and the download waited a day."""
     try:
         with SessionLocal() as db:
             title = db.get(Title, title_id)
-            if title is None or title.releases_state == "tracks" or title.artist_id is None:
+            if title is None or title.artist_id is None:
                 return
+            if title.releases_state == "tracks":
+                loaded = db.scalar(
+                    select(Release.id).where(Release.title_id == title.id, Release.tracks_loaded.is_(True)).limit(1)
+                )
+                asked = title.releases_refreshed_at
+                if loaded is not None or since is None or (asked is not None and asked >= since):
+                    return
             artist = db.get(Artist, title.artist_id)
             if artist is None:
                 return
@@ -355,17 +372,33 @@ def newest_album(db: OrmSession, artist_id: int) -> str | None:
     )
 
 
-def _browse_releases(title: Title, lane: str, limit: int, waits: tuple[float, ...] | None) -> list[mb.ReleaseData]:
+def _browse_releases(
+    title: Title, lane: str, limit: int, waits: tuple[float, ...] | None, *, official: bool = True
+) -> list[mb.ReleaseData]:
     releases: list[mb.ReleaseData] = []
     offset = 0
     while True:
         page = mb.run_sync(
-            mb.browse_releases(title.mbid or "", offset, tracks=True, lane=lane, limit=limit, waits=waits)
+            mb.browse_releases(
+                title.mbid or "", offset, tracks=True, lane=lane, limit=limit, waits=waits, official=official
+            )
         )
         releases.extend(page.items)
         if page.next_offset is None:
             return releases
         offset = page.next_offset
+
+
+def _releases(title: Title, lane: str, *, official: bool) -> list[mb.ReleaseData]:
+    try:
+        return _browse_releases(
+            title, lane, mb.PAGE, mb.FULL_PAGE_WAITS if lane == mb.BACKGROUND else None, official=official
+        )
+    except mb.MusicBrainzError as exc:
+        if exc.code != "musicbrainz_busy":
+            raise
+        logger.info("MusicBrainz stayed busy for a full page of album %d, asking in pages of %d", title.id, SMALL_PAGE)
+        return _browse_releases(title, lane, SMALL_PAGE, None, official=official)
 
 
 def load_releases_of(db: OrmSession, title: Title, *, lane: str = mb.BACKGROUND) -> dict[str, int]:
@@ -374,15 +407,16 @@ def load_releases_of(db: OrmSession, title: Title, *, lane: str = mb.BACKGROUND)
     ⚠️ A full page that stays busy is asked again at once in pages of ``SMALL_PAGE`` (``mb.FULL_PAGE_WAITS``): on the
     owner's instance that cost a minute of retries and the whole artist each time, and the small pages came at once.
     Only when they stay busy as well does ``musicbrainz_busy`` leave here.
+
+    ⚠️ When MusicBrainz lists no official release, the album is asked once more without the filter: a release without
+    any status counts as official here (``store.apply_releases``), and ``status=official`` leaves it out. On the
+    owner's instance two albums the owner had added (one release each, no status) were stored as loaded with nothing,
+    and their downloads waited a day for track lists that never came (11.11.2026).
     """
     language = store.account_language(db)
-    try:
-        releases = _browse_releases(title, lane, mb.PAGE, mb.FULL_PAGE_WAITS if lane == mb.BACKGROUND else None)
-    except mb.MusicBrainzError as exc:
-        if exc.code != "musicbrainz_busy":
-            raise
-        logger.info("MusicBrainz stayed busy for a full page of album %d, asking in pages of %d", title.id, SMALL_PAGE)
-        releases = _browse_releases(title, lane, SMALL_PAGE, None)
+    releases = _releases(title, lane, official=True)
+    if not releases:
+        releases = _releases(title, lane, official=False)
     moment = now()
     counts = store.apply_releases(db, title, releases, moment=moment, complete=True)
     version = store.album_version(db, title.id)
@@ -621,6 +655,36 @@ def apply_browse_change(db: OrmSession) -> int:
     return due
 
 
+def apply_release_change(db: OrmSession) -> int:
+    """After an upgrade that changed which releases are loaded (``RELEASES_VERSION``): every album stored as loaded
+    without a single loaded release is due again, and its artist with it. Only albums that need releases are then
+    asked (``albums_needing_releases``)."""
+    if get_setting(db, SETTING_RELEASES, "1") == RELEASES_VERSION:
+        return 0
+    moment = now()
+    loaded = select(Release.title_id).where(Release.tracks_loaded.is_(True))
+    empty = select(Title.id).where(Title.kind == "album", Title.releases_state == "tracks", Title.id.not_in(loaded))
+    due = db.execute(update(Title).where(Title.id.in_(empty)).values(releases_due_at=moment)).rowcount
+    artists = db.execute(
+        update(Artist)
+        .where(
+            Artist.is_various.is_(False),
+            Artist.groups_refreshed_at.is_not(None),
+            Artist.id.in_(select(Title.artist_id).where(Title.id.in_(empty))),
+        )
+        .values(groups_due_at=moment)
+    ).rowcount
+    set_setting(db, SETTING_RELEASES, RELEASES_VERSION)
+    db.commit()
+    logger.info(
+        "Releases without a status are loaded now (%s): %d albums without a loaded release are due again, %d artists",
+        RELEASES_VERSION,
+        due,
+        artists,
+    )
+    return due
+
+
 def _run() -> None:
     if paused():
         return
@@ -628,6 +692,7 @@ def _run() -> None:
     with SessionLocal() as db:
         apply_rule_change(db)
         apply_browse_change(db)
+        apply_release_change(db)
         while clock() <= budget_end:
             artist = next_artist(db, now())
             if artist is None:

@@ -1183,7 +1183,8 @@ def _waiting(context: Context) -> None:
     completed = context.completed_at
     if completed is not None and store.now() - completed > WAIT_FOR_TRACKS:
         raise Problem("album_tracks_missing")
-    music_loading.hurry_album(context.title_id)
+    # An album loaded with nothing is asked again once the download is here, not in every round.
+    music_loading.hurry_album(context.title_id, since=completed)
     raise WaitingForTracks
 
 
