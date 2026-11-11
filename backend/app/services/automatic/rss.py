@@ -923,7 +923,7 @@ def wanted_albums(now: datetime) -> AlbumLookups:
             facts = album_planning.load_facts(db, chunk, now)
             for title_id in chunk:
                 fact = facts.get(title_id)
-                if fact is None or not any(version.wants for version in fact.versions):
+                if fact is None or not fact.wants:
                     continue
                 album = album_search.load(db, title_id)
                 if album is not None:

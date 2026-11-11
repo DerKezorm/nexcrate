@@ -60,6 +60,7 @@
       "no_date": "Ohne Datum sucht nexcrate seltener und schaut, ob eins dazukommt.",
       "nothing_wanted": "Keine Fassung wartet gerade auf ein Release, etwa weil alles da ist oder noch lädt.",
       "no_folder": "Eine Fassung hat noch keinen Standardordner. Ohne ihn sucht und lädt nexcrate für sie nichts. Wähl einen unter Einstellungen, Ordner und Benennung.",
+      "no_release": "MusicBrainz führt zu diesem Album keine offizielle Ausgabe, etwa nur Bootlegs. Ohne Titelliste kann nexcrate einen Download nicht ablegen und sucht deshalb nicht von selbst. Von Hand suchen geht weiter.",
       "off": "Die Automatik ist aus, deshalb sucht nexcrate nicht von selbst.",
       "unknown": "Grund: {{code}}",
       "wish": "Ein anderes Programm hat die Suche angefragt. nexcrate sucht sofort, auch wenn die Automatik aus ist."

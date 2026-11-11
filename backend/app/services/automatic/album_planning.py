@@ -8,6 +8,10 @@ by itself: before a download nexcrate cannot know which tracks a release holds.
 **The anchor** is the album's release date (``first_release_date`` of the release group, else the target release's
 date): a full date from that day, a month from its first day, a year alone as a movie with only a year, nothing as a
 movie without a date. Never searched before the anchor (the basis, E9).
+
+**No release, no search** (11.11.2026): an album loaded from MusicBrainz without a single release nexcrate keeps
+(bootlegs only, ``store.apply_releases``) never searches by itself, also not for a program's wish or RSS: no download
+could be filed without track lists. The reason is ``no_release``. A search by hand stays possible.
 """
 
 from __future__ import annotations
@@ -58,9 +62,16 @@ def _year(value: str | None) -> int | None:
 class AlbumFacts:
     """What the plan reads of one album: the movie's title facts, and the album's own anchor."""
 
-    def __init__(self, facts: planning.TitleFacts, anchor: anchors.Anchor) -> None:
+    def __init__(self, facts: planning.TitleFacts, anchor: anchors.Anchor, *, no_release: bool = False) -> None:
         self.facts = facts
         self.anchor = anchor
+        #: Loaded from MusicBrainz, and not one release with track lists came along.
+        self.no_release = no_release
+
+    @property
+    def wants(self) -> bool:
+        """A version wants something, and the album has releases to file a download into."""
+        return not self.no_release and any(version.wants for version in self.facts.versions)
 
     @property
     def stored_next_at(self) -> datetime | None:
@@ -132,6 +143,8 @@ def load_facts(db: OrmSession, title_ids: Collection[int], now: datetime) -> dic
         db, Download.updated_at, ids, failed, Download.updated_at > now - planning.REPLACEMENT_WINDOW
     )
     imports = planning._latest(db, Download.imported_at, ids, Download.state == "imported")
+    loaded = set(db.scalars(select(Release.title_id).where(Release.title_id.in_(ids), Release.tracks_loaded.is_(True))))
+    no_release = {title.id for title in titles if title.releases_state == "tracks" and title.id not in loaded}
     by_title: dict[int, list[planning.VersionFacts]] = defaultdict(list)
     target_dates: dict[int, str | None] = {}
     for version, label, folder in rows:
@@ -169,7 +182,7 @@ def load_facts(db: OrmSession, title_ids: Collection[int], now: datetime) -> dic
             versions=tuple(by_title.get(title.id, [])),
             grab_free_at=planning.grab_free_at(title.search_summary),
         )
-        found[title.id] = AlbumFacts(facts, anchor)
+        found[title.id] = AlbumFacts(facts, anchor, no_release=title.id in no_release)
     return found
 
 
@@ -180,6 +193,8 @@ def title_plan(fact: AlbumFacts, now: datetime) -> planning.Plan:
     if not wanting:
         idle = planning.idle_reason(title.versions)
         return planning.Plan(wanted=False, next_at=None, reason=idle, anchor=fact.anchor)
+    if fact.no_release:
+        return planning.Plan(wanted=False, next_at=None, reason="no_release", anchor=fact.anchor)
     planned = [planning.version_plan(title, version, now, anchor=fact.anchor) for version in wanting]
     next_at, reason, anchor = min(planned, key=lambda item: (item[0], planning._PRIORITY[item[1]]))
     next_at, reason = planning.grab_limit_plan(next_at, reason, title.grab_free_at)

@@ -64,6 +64,9 @@ REASONS = (
     "nothing_wanted",
     # Nothing is wanted only because a version has no default folder (issue of 02.10.2026).
     "no_folder",
+    # An album MusicBrainz lists no release for that nexcrate keeps (bootlegs only): a download could never be filed
+    # (11.11.2026).
+    "no_release",
     "off",
     # A program's search wish searches at once (22.09.2026); only in what the title page and /api/v1 show.
     "wish",

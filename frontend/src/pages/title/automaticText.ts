@@ -13,7 +13,8 @@ import { lastErrorText } from '../indexers/indexerText'
 
 /** Die Gruende aus dem Plan unter C8. Jeder hat einen eigenen Satz. */
 /** Seit dem 22.09.2026 dazu `wish`: ein anderes Programm hat die Suche angefragt, sie laeuft sofort. */
-export const PLAN_REASONS = ['anchor', 'schedule', 'limit', 'replacement', 'replacement_limit', 'no_date', 'nothing_wanted', 'no_folder', 'off', 'wish'] as const
+/** Seit dem 11.11.2026 dazu `no_release`: ein Album ohne Ausgabe, in die ein Download passt, sucht nicht von selbst. */
+export const PLAN_REASONS = ['anchor', 'schedule', 'limit', 'replacement', 'replacement_limit', 'no_date', 'nothing_wanted', 'no_folder', 'no_release', 'off', 'wish'] as const
 
 /** Warum die naechste Suche dann kommt, oder warum keine, in einem Satz. Ein unbekannter Code bleibt lesbar. */
 export function planReasonText(t: TFunction, reason: string): string {
@@ -35,6 +36,9 @@ export function planReasonText(t: TFunction, reason: string): string {
     // Nichts gewollt, nur weil einer Fassung der Standardordner fehlt
     case 'no_folder':
       return t('title.automatic.reason.no_folder')
+    // Ein Album, zu dem MusicBrainz keine Ausgabe fuehrt, die nexcrate behaelt (nur Bootlegs)
+    case 'no_release':
+      return t('title.automatic.reason.no_release')
     case 'off':
       return t('title.automatic.reason.off')
     case 'wish':

@@ -628,8 +628,9 @@ class SearchPlan(BaseModel):
     reason: str = Field(
         description="anchor (waits for its anchor date), schedule, limit (the indexers' budget), replacement (after a "
         "failed download), replacement_limit (three replacements in 24 hours), no_date (waits for a release date), "
-        "nothing_wanted, no_folder (a version would want something, but it has no default folder), or off (it would "
-        "search now, but automatic searching is off)."
+        "nothing_wanted, no_folder (a version would want something, but it has no default folder), no_release (an "
+        "album MusicBrainz lists no official release for, bootlegs only for example: a download could not be filed), "
+        "or off (it would search now, but automatic searching is off)."
     )
     anchor: SearchAnchor
     summary: SearchSummary | None = Field(description="The outcome of the last automatic search.")
