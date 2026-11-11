@@ -719,6 +719,20 @@
         "Wartet ein Download auf die Titellisten, fragt nexcrate MusicBrainz jetzt wirklich neu, statt still zu warten.",
         "Nach dem Update lädt nexcrate einmal alle Alben neu, die als geladen, aber leer gespeichert sind. An der Datenbank ändert sich nichts."
       ]
+    },
+    "1.7.3": {
+      "lead": "Ein kleines Release: Alben, zu denen MusicBrainz keine offizielle Ausgabe führt, sucht nexcrate nicht mehr von selbst.",
+      "sections": [
+        {
+          "title": "Keine automatische Suche für Alben ohne Ausgabe",
+          "body": "Führt MusicBrainz zu einem Album nur Bootlegs, hat nexcrate keine Titelliste und kann einen Download nicht ablegen. Bisher suchte die Automatik solche Alben trotzdem, und jeder Download wartete einen Tag, bis er zum Problem wurde. Jetzt sucht nexcrate sie weder nach Plan noch über RSS noch auf Wunsch eines anderen Programms. Auf der Albumseite steht, warum. Von Hand suchen geht weiter.",
+          "where": "Bibliothek › Album › Automatische Suche"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Bekommt ein solches Album bei MusicBrainz eine offizielle Ausgabe, plant nexcrate es von selbst wieder ein. An der Datenbank ändert sich nichts."
+      ]
     }
   }
 }

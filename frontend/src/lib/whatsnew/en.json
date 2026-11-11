@@ -719,6 +719,20 @@
         "When a download waits for the track lists, nexcrate now really asks MusicBrainz again instead of waiting quietly.",
         "After the update nexcrate loads every album stored as loaded but empty once more. The database does not change."
       ]
+    },
+    "1.7.3": {
+      "lead": "A small release: nexcrate no longer searches by itself for albums MusicBrainz lists no official release for.",
+      "sections": [
+        {
+          "title": "No automatic search for albums without a release",
+          "body": "When MusicBrainz lists only bootlegs for an album, nexcrate has no track list and cannot file a download. The automatic searched such albums all the same, and every download waited a day before it became a problem. Now nexcrate searches them neither on schedule nor from RSS nor for another program's wish. The album page says why. Searching by hand still works.",
+          "where": "Library › Album › Automatic search"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When such an album gets an official release in MusicBrainz, nexcrate plans it again by itself. The database does not change."
+      ]
     }
   }
 }
