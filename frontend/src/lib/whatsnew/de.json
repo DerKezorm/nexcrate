@@ -704,6 +704,21 @@
       "small": [
         "Sonst ändert sich nichts, auch nicht an der Datenbank."
       ]
+    },
+    "1.7.2": {
+      "lead": "Ein kleines Release: Ein Album, dessen einzige Ausgabe bei MusicBrainz keinen Status trägt, wartet nicht mehr umsonst auf seine Titellisten.",
+      "sections": [
+        {
+          "title": "Titellisten auch für Ausgaben ohne Status",
+          "body": "nexcrate fragte MusicBrainz nur nach offiziellen Ausgaben. Eine Ausgabe ganz ohne Status ließ MusicBrainz dabei weg, und das Album galt als geladen, aber ohne Titel. Ein Download dafür stand dann einen Tag lang auf „Wartet auf die Titellisten“ und wurde zum Problem. Jetzt fragt nexcrate in diesem Fall noch einmal ohne Filter nach. Bootlegs bleiben weiter draußen.",
+          "where": "Downloads › Aktiv"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Wartet ein Download auf die Titellisten, fragt nexcrate MusicBrainz jetzt wirklich neu, statt still zu warten.",
+        "Nach dem Update lädt nexcrate einmal alle Alben neu, die als geladen, aber leer gespeichert sind. An der Datenbank ändert sich nichts."
+      ]
     }
   }
 }

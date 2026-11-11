@@ -704,6 +704,21 @@
       "small": [
         "Nothing else changes, the database neither."
       ]
+    },
+    "1.7.2": {
+      "lead": "A small release: an album whose only release carries no status in MusicBrainz no longer waits in vain for its track lists.",
+      "sections": [
+        {
+          "title": "Track lists for releases without a status too",
+          "body": "nexcrate asked MusicBrainz for official releases only. MusicBrainz left out a release without any status, and the album counted as loaded but without tracks. A download for it then showed \"Waiting for the track lists\" for a day and became a problem. Now nexcrate asks once more without the filter in that case. Bootlegs still stay out.",
+          "where": "Downloads › Active"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When a download waits for the track lists, nexcrate now really asks MusicBrainz again instead of waiting quietly.",
+        "After the update nexcrate loads every album stored as loaded but empty once more. The database does not change."
+      ]
     }
   }
 }
