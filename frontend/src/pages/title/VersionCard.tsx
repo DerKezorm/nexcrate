@@ -187,6 +187,7 @@ export function VersionCard({
   onReadFolder,
   reading = null,
   readBusy = false,
+  onReadFile,
   onDeleteFiles,
 }: {
   version: TitleVersion
@@ -200,6 +201,8 @@ export function VersionCard({
   /** S6: laeuft gerade eine Einlesung fuer diese Fassung? */
   reading?: FolderReading | null
   readBusy?: boolean
+  /** 14.11.2026: liest die Filmdatei im bekannten Ordner neu ein. Nur fuer eigene Filmfassungen mit Datei. */
+  onReadFile?: (version: TitleVersion) => void
   /** /api/v1 V2: die Dateien dieser Fassung in den Papierkorb. Nur fuer eigene Fassungen mit Datei. */
   onDeleteFiles?: (version: TitleVersion) => void
 }) {
@@ -223,6 +226,8 @@ export function VersionCard({
   const companionTrouble = typeof version.companion?.state === 'string' && COMPANION_TROUBLE.has(version.companion.state)
   // S6: Einlesen geht nur, wenn die Fassung einen Serienordner hat. `file` heisst genau das.
   const canRead = series && !fed && location?.kind === 'file'
+  // Filme: eine eigene Fassung mit Datei liest ihre Datei neu ein, etwa nachdem sie im Ordner ausgetauscht wurde.
+  const canReadFile = onReadFile !== undefined && !series && !fromSource && location?.kind === 'file'
   // Loeschen geht nur bei eigenen Fassungen, die eine Datei haben; eine aus Radarr oder Sonarr loescht man dort.
   const canDelete = onDeleteFiles !== undefined && !fromSource && !fed && (version.size_bytes ?? 0) > 0
 
@@ -402,6 +407,19 @@ export function VersionCard({
             >
               <Symbol name={watched ? 'eyeOff' : 'eye'} />
               {t(watched ? 'title.version.stopWatching' : 'title.version.watch')}
+            </Button>
+          )}
+          {canReadFile && (
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-label={t('title.version.fileRead.actionLabel', { label: version.label })}
+              loading={readBusy}
+              disabled={readBusy}
+              onClick={() => onReadFile(version)}
+            >
+              <Symbol name="refresh" />
+              {t('title.version.fileRead.action')}
             </Button>
           )}
           {canDelete && (

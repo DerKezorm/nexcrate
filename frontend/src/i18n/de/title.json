@@ -234,7 +234,7 @@
       "foreign": "Im Ordner liegt eine fremde release.nex. nexcrate lässt sie in Ruhe.",
       "changed": "Die release.nex wurde von Hand geändert. nexcrate überschreibt sie nicht.",
       "other_file": "Im Ordner liegt eine release.nex, die nexcrate nicht überschreibt.",
-      "file_missing": "Keine release.nex: Die Filmdatei fehlt im Ordner.",
+      "file_missing": "Keine release.nex: Die Filmdatei fehlt im Ordner. Liegt dort eine andere, übernimmt sie „Datei neu einlesen“.",
       "folder_missing": "Keine release.nex: Der Filmordner fehlt.",
       "no_space": "Keine release.nex: Auf der Platte ist kein Platz.",
       "failed": "Keine release.nex: Das Schreiben ist fehlgeschlagen.",
@@ -252,7 +252,13 @@
     "waitingDue_one": "{{value}} Release wartet für diese Fassung, seine Wartezeit ist um.",
     "waitingDue_other": "{{value}} Releases warten für diese Fassung, die Wartezeit des ersten ist um.",
     "waitingLink": "Ansehen",
-    "lastFailure": "Der letzte Versuch ist fehlgeschlagen ({{date}}). Das Release ist gesperrt; unter Downloads steht, was los war."
+    "lastFailure": "Der letzte Versuch ist fehlgeschlagen ({{date}}). Das Release ist gesperrt; unter Downloads steht, was los war.",
+    "fileRead": {
+      "action": "Datei neu einlesen",
+      "actionLabel": "Datei von {{label}} neu einlesen",
+      "taken": "{{label}}: {{file}} ist jetzt die Datei dieser Fassung.",
+      "refreshed": "{{label}}: Die Datei wurde neu gelesen."
+    }
   },
   "change": {
     "title": "Fassungen von {{title}}",

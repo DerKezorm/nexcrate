@@ -135,6 +135,8 @@ export const libraryApi = {
     api.post<TitleDetail>(`/library/${titleId}/versions/${versionId}/files/proposals${fromNames ? '?from_names=true' : ''}`),
   /** S6 (P1): "Ordner neu einlesen". Antwortet 202; der Fortschritt steht danach in `series.reading`. */
   readFolder: (titleId: number, versionId: number) => api.post<TitleDetail>(`/library/${titleId}/versions/${versionId}/files/read`),
+  /** 14.11.2026: "Datei neu einlesen" fuer einen Film, dessen Datei im Filmordner von Hand ausgetauscht wurde. */
+  readMovieFile: (titleId: number, versionId: number) => api.post<TitleDetail>(`/library/${titleId}/versions/${versionId}/file/read`),
   /** Alle Fassungen einer Ansicht beobachten oder in Ruhe lassen; antwortet, wie viele sich geaendert haben. */
   setMonitoredAll: (body: { monitored: boolean; kind: MediaKind; state?: string | null; q?: string | null; tag?: string | null; title_ids?: number[] | null }) =>
     api.put<{ changed: number }>('/library/monitored', body),

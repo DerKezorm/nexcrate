@@ -234,7 +234,7 @@
       "foreign": "There is a foreign release.nex in the folder. nexcrate leaves it alone.",
       "changed": "The release.nex was changed by hand. nexcrate does not overwrite it.",
       "other_file": "There is a release.nex in the folder that nexcrate does not overwrite.",
-      "file_missing": "No release.nex: the movie file is missing in the folder.",
+      "file_missing": "No release.nex: the movie file is missing in the folder. If another one lies there, \"Read file again\" takes it.",
       "folder_missing": "No release.nex: the movie folder is missing.",
       "no_space": "No release.nex: there is no space on the disk.",
       "failed": "No release.nex: writing failed.",
@@ -252,7 +252,13 @@
     "waitingDue_one": "{{value}} release is waiting for this version, its waiting time is up.",
     "waitingDue_other": "{{value}} releases are waiting for this version, the waiting time of the first is up.",
     "waitingLink": "Show",
-    "lastFailure": "The last attempt failed ({{date}}). Its release is blocked; Downloads says what happened."
+    "lastFailure": "The last attempt failed ({{date}}). Its release is blocked; Downloads says what happened.",
+    "fileRead": {
+      "action": "Read file again",
+      "actionLabel": "Read the file of {{label}} again",
+      "taken": "{{label}}: {{file}} is now the file of this version.",
+      "refreshed": "{{label}}: the file was read again."
+    }
   },
   "change": {
     "title": "Versions of {{title}}",

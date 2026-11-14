@@ -39,6 +39,7 @@ from ..services import (
 )
 from ..services.automatic import clock as automatic_clock
 from ..services.automatic import planning as automatic_planning
+from ..services.disk import movie_file
 from ..services.downloads import actions as download_actions
 from ..services.downloads import seeding as download_seeding
 from ..services.downloads import store as download_store
@@ -1689,6 +1690,35 @@ def read_series_folder(title_id: int, version_id: int, db: DbSession) -> TitleDe
     version.files_read_at = None
     db.commit()
     folder_read.enqueue([version.id])
+    return TitleDetail.model_validate(library.detail(db, title_id))
+
+
+@router.post(
+    "/{title_id}/versions/{version_id}/file/read",
+    response_model=TitleDetail,
+    summary="Read the movie file again",
+    description=(
+        "For a movie version of nexcrate's own with a file, after the owner changed the video in its movie folder by "
+        "hand. The known file, when it is still there, is read again; otherwise the one video in the folder becomes "
+        "the version's file. Name, size, media data, quality, languages and release name are recorded as when a "
+        "folder is assigned, a new file adds a history entry `found_on_disk`, and the release.nex is written again. "
+        "Nothing on disk is moved. `version_id` is the version definition. 409 `no_video` when the folder holds no "
+        "video, `several_videos` with `files` when it holds more than one, `folder_missing` when the folder is gone."
+    ),
+    responses=error_responses(
+        (404, "not_found"),
+        (409, "version_owned_by_source"),
+        (409, "version_without_file"),
+        (409, "folder_missing"),
+        (409, "no_video"),
+        (409, "several_videos"),
+    ),
+)
+def read_movie_file(title_id: int, version_id: int, db: DbSession) -> TitleDetail:
+    movie_file.read_again(title_id, version_id)
+    db.expire_all()
+    _replan(db, title_id)
+    db.commit()
     return TitleDetail.model_validate(library.detail(db, title_id))
 
 

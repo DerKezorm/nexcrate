@@ -361,5 +361,9 @@
   "public_url_invalid": "This address cannot be used. Check how it is written.",
   "public_url_needed": "nexcrate has no public address yet. Enter the address you reach nexcrate at first.",
   "filter_not_for_kind": "This kind has no such filter.",
-  "list_unknown": "There is no such list."
+  "list_unknown": "There is no such list.",
+  "version_without_file": "This version has no file yet that nexcrate could read again.",
+  "folder_missing": "The movie folder is not there any more. Take a moved folder under Folders.",
+  "no_video": "There is no video in the movie folder.",
+  "several_videos": "There are {{videos}} videos in the movie folder. Leave only one there and read the file again."
 }

@@ -361,5 +361,9 @@
   "public_url_invalid": "Diese Adresse lässt sich nicht verwenden. Prüf, wie sie geschrieben ist.",
   "public_url_needed": "nexcrate hat noch keine öffentliche Adresse. Trag zuerst die Adresse ein, unter der du nexcrate erreichst.",
   "filter_not_for_kind": "Diesen Filter gibt es für diese Art nicht.",
-  "list_unknown": "Diese Liste gibt es nicht."
+  "list_unknown": "Diese Liste gibt es nicht.",
+  "version_without_file": "Diese Fassung hat noch keine Datei, die nexcrate neu einlesen könnte.",
+  "folder_missing": "Den Filmordner gibt es nicht mehr. Einen verschobenen Ordner übernimmst du unter Ordner.",
+  "no_video": "Im Filmordner liegt keine Videodatei.",
+  "several_videos": "Im Filmordner liegen {{videos}} Videodateien. Lass nur eine dort und lies die Datei dann neu ein."
 }

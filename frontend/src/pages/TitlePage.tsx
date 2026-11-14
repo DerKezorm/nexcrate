@@ -188,6 +188,31 @@ export function TitlePage() {
     [title, readingFor, notify, t],
   )
 
+  // 14.11.2026: "Datei neu einlesen" bei Filmen. Hat sich der Pfad geaendert, wurde eine andere Datei uebernommen.
+  const readMovieFile = useCallback(
+    async (version: TitleVersion) => {
+      const definitionId = version.version_id
+      if (typeof definitionId !== 'number' || title === null || readingFor !== null) return
+      setReadingFor(definitionId)
+      try {
+        const next = await libraryApi.readMovieFile(title.id, definitionId)
+        setTitle(next)
+        const after = next.versions.find((item) => item.version_id === definitionId)
+        const file = (after?.relative_path ?? '').split('/').pop() ?? ''
+        notify(
+          after && after.relative_path !== version.relative_path
+            ? t('title.version.fileRead.taken', { label: version.label, file, interpolation: { escapeValue: false } })
+            : t('title.version.fileRead.refreshed', { label: version.label }),
+        )
+      } catch (problem) {
+        notify(errorText(t, problem))
+      } finally {
+        setReadingFor(null)
+      }
+    },
+    [title, readingFor, notify, t],
+  )
+
   if (isNotFound(error)) {
     return (
       <div className="flex flex-col gap-6">
@@ -480,6 +505,7 @@ export function TitlePage() {
               monitorBusy={monitorFor !== null && monitorFor === version.version_id}
               // Seit S6: nur eine Serie liest einen Ordner ein; bei einem Film gibt es den Knopf nicht.
               onReadFolder={isSeries ? (chosen) => void readFolder(chosen) : undefined}
+              onReadFile={isSeries ? undefined : (chosen) => void readMovieFile(chosen)}
               reading={(series?.reading ?? []).find((item) => item.version_id === version.version_id) ?? null}
               readBusy={readingFor !== null && readingFor === version.version_id}
               onDeleteFiles={(chosen) => {
