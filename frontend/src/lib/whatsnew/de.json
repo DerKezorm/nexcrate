@@ -733,6 +733,20 @@
       "small": [
         "Bekommt ein solches Album bei MusicBrainz eine offizielle Ausgabe, plant nexcrate es von selbst wieder ein. An der Datenbank ändert sich nichts."
       ]
+    },
+    "1.7.4": {
+      "lead": "Ein kleines Release: Ein Film übernimmt jetzt eine Datei, die du im Filmordner von Hand ausgetauscht hast.",
+      "sections": [
+        {
+          "title": "Datei neu einlesen",
+          "body": "Hast du im Filmordner eine Datei ersetzt, etwa eine ISO in eine MKV umgepackt, liest der Knopf an der Fassung den Ordner neu. Liegt die bekannte Datei noch da, liest nexcrate sie neu; sonst übernimmt es die eine Videodatei im Ordner, samt Medieninfos, Qualität und release.nex. Liegen dort mehrere, sagt nexcrate das und rät nicht.",
+          "where": "Bibliothek › Film › Fassung"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "An der Datenbank ändert sich nichts."
+      ]
     }
   }
 }

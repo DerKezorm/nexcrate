@@ -733,6 +733,20 @@
       "small": [
         "When such an album gets an official release in MusicBrainz, nexcrate plans it again by itself. The database does not change."
       ]
+    },
+    "1.7.4": {
+      "lead": "A small release: a movie now takes a file you swapped by hand in its movie folder.",
+      "sections": [
+        {
+          "title": "Read file again",
+          "body": "When you replaced a file in a movie folder, say packed an ISO into an MKV, the button at the version reads the folder again. If the known file is still there, nexcrate reads it again; otherwise it takes the one video in the folder, with its media data, quality and release.nex. If there are several, nexcrate says so and does not guess.",
+          "where": "Library › Movie › Version"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The database does not change."
+      ]
     }
   }
 }
