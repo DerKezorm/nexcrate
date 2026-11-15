@@ -9,7 +9,8 @@ One table of fields serves reading and writing, so both speak the same names. Th
   from the name.
 * **Writing** sets only the fields of the table and the front cover; every other field stays (ReplayGain, lyrics,
   ISRC, other pictures). An MP3 keeps its ID3 version: 2.3 stays 2.3, a file without ID3 gets 2.4.
-  Formats nexcrate writes: FLAC, MP3, M4A, Ogg Vorbis, Ogg Opus; the others are read only.
+  Formats nexcrate writes: FLAC, MP3, M4A, Ogg Vorbis, Ogg Opus, and WAV and AIFF through an ID3 chunk (the same
+  frames as MP3, as Picard writes them); the others are read only.
 * **Comparing** covers every field of the table, the MusicBrainz ids included, and the front cover by a
   hash of its bytes.
 
@@ -29,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 import mutagen
+from mutagen.aiff import AIFF
 from mutagen.apev2 import APEv2File
 from mutagen.flac import FLAC, Picture
 from mutagen.id3 import APIC, ID3, TXXX, UFID, Frames
@@ -36,6 +38,7 @@ from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4, MP4Cover, MP4FreeForm
 from mutagen.oggopus import OggOpus
 from mutagen.oggvorbis import OggVorbis
+from mutagen.wave import WAVE
 
 from .. import schreibweisen
 
@@ -46,7 +49,7 @@ AUDIO_EXTENSIONS = frozenset(
     {".flac", ".mp3", ".m4a", ".ogg", ".oga", ".opus", ".wav", ".aiff", ".aif", ".ape", ".wv", ".dsf", ".alac"}
 )
 #: The formats nexcrate writes tags into.
-WRITABLE = ("FLAC", "MP3", "M4A", "Vorbis", "Opus")
+WRITABLE = ("FLAC", "MP3", "M4A", "Vorbis", "Opus", "WAV", "AIFF")
 #: The front cover in ID3, FLAC and Ogg pictures.
 FRONT_COVER = 3
 UNREADABLE = "unreadable"
@@ -402,6 +405,10 @@ def _writable(kind: Any) -> str | None:
         return "Opus"
     if isinstance(kind, OggVorbis):
         return "Vorbis"
+    if isinstance(kind, WAVE):
+        return "WAV"
+    if isinstance(kind, AIFF):
+        return "AIFF"
     return None
 
 
@@ -431,7 +438,7 @@ def _front_cover(kind: Any) -> bytes | None:
             if picture.type == FRONT_COVER:
                 return bytes(picture.data)
         return None
-    if isinstance(kind, MP3):
+    if isinstance(kind, MP3 | WAVE | AIFF):
         tags = kind.tags
         for frame in tags.getall("APIC") if tags is not None else []:
             if frame.type == FRONT_COVER:
@@ -628,7 +635,8 @@ def _id3_text(frame_id: str, values: list[str]) -> Any:
     return Frames[frame_id](encoding=3, text=values)
 
 
-def _write_mp3(kind: MP3, wanted: dict[str, list[str]], cover: tuple[bytes, str] | None) -> None:
+def _write_id3(kind: MP3 | WAVE | AIFF, wanted: dict[str, list[str]], cover: tuple[bytes, str] | None) -> None:
+    """MP3, and the ID3 chunk of a WAV or AIFF file: the same frames, the same version rule."""
     if kind.tags is None:
         kind.add_tags()
     tags = kind.tags
@@ -716,8 +724,8 @@ def write(path: Path, wanted: dict[str, list[str]], cover: tuple[bytes, str] | N
     wanted = {name: list(values) for name, values in wanted.items() if name in FIELDS}
     if isinstance(kind, FLAC):
         _write_flac(kind, wanted, cover)
-    elif isinstance(kind, MP3):
-        _write_mp3(kind, wanted, cover)
+    elif isinstance(kind, MP3 | WAVE | AIFF):
+        _write_id3(kind, wanted, cover)
     elif isinstance(kind, MP4):
         _write_mp4(kind, wanted, cover)
     elif isinstance(kind, OggOpus | OggVorbis):
