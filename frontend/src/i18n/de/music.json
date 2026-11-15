@@ -224,7 +224,7 @@
     "countriesDefault": "Zurück auf die Vorgabe ({{list}})",
     "countriesSaved": "Gespeichert. Die Regel läuft für die Alben ohne Datei noch einmal.",
     "writeTags": "Tags schreiben",
-    "writeTagsHint": "Schreibt Titel, Künstler, Nummern, MusicBrainz-Kennungen und das Cover in abgelegte Musik. Fremde Felder wie ReplayGain bleiben. Ein Torrent wird dafür kopiert statt verlinkt, damit er unverändert weiter teilt. Ohne Tags kennt kein Player die Reihenfolge bei mehreren Medien."
+    "writeTagsHint": "Schreibt Titel, Künstler, Nummern, MusicBrainz-Kennungen und das Cover in abgelegte Musik. Albumkünstler ist der Künstler, unter dem nexcrate das Album ablegt, also derselbe Name wie der Ordner; der Credit von MusicBrainz bleibt beim Künstler der Titel. Fremde Felder wie ReplayGain bleiben. Ein Torrent wird dafür kopiert statt verlinkt, damit er unverändert weiter teilt. Ohne Tags kennt kein Player die Reihenfolge bei mehreren Medien."
   },
   "view": {
     "albums": "Alben",

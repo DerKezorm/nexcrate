@@ -224,7 +224,7 @@
     "countriesDefault": "Back to the default ({{list}})",
     "countriesSaved": "Saved. The rule runs again for the albums without a file.",
     "writeTags": "Write tags",
-    "writeTagsHint": "Writes title, artist, numbers, MusicBrainz ids and the cover into filed music. Fields of others such as ReplayGain stay. A torrent is copied for it instead of linked, so it keeps seeding unchanged. Without tags no player knows the order of several media."
+    "writeTagsHint": "Writes title, artist, numbers, MusicBrainz ids and the cover into filed music. The album artist is the artist nexcrate files the album under, the same name as the folder; MusicBrainz's credit stays with the track artist. Fields of others such as ReplayGain stay. A torrent is copied for it instead of linked, so it keeps seeding unchanged. Without tags no player knows the order of several media."
   },
   "view": {
     "albums": "Albums",

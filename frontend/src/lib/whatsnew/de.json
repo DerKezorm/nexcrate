@@ -747,6 +747,20 @@
       "small": [
         "An der Datenbank ändert sich nichts."
       ]
+    },
+    "1.7.5": {
+      "lead": "Ein kleines Release: Musik trägt als Albumkünstler jetzt den Künstler, unter dem nexcrate das Album ablegt.",
+      "sections": [
+        {
+          "title": "Albumkünstler wie der Ordner",
+          "body": "Bisher schrieb nexcrate den Credit von MusicBrainz als Albumkünstler, also den Namen von damals samt Gästen, etwa „A & B“ oder einen alten Künstlernamen. Der Ordner heißt aber wie der Künstler in nexcrate. Player, die nach Tags sortieren, wie Jellyfin oder Navidrome, machten daraus einen eigenen Künstler. Jetzt steht im Albumkünstler derselbe Name wie im Ordner. Künstler der Titel und MusicBrainz-Kennungen behalten den Credit, Sampler bleiben bei Various Artists.",
+          "where": "Bibliothek › Album › Tags prüfen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Schon abgelegte Alben behalten ihre Tags, bis du „Tags prüfen“ öffnest und schreibst; die Vorschau zeigt den neuen Albumkünstler. An der Datenbank ändert sich nichts."
+      ]
     }
   }
 }

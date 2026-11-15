@@ -747,6 +747,20 @@
       "small": [
         "The database does not change."
       ]
+    },
+    "1.7.5": {
+      "lead": "A small release: music now carries the artist nexcrate files the album under as its album artist.",
+      "sections": [
+        {
+          "title": "Album artist as the folder",
+          "body": "Until now nexcrate wrote MusicBrainz's credit as the album artist, the name used back then with guests, such as “A & B” or an old artist name. The folder, however, is named after the artist in nexcrate. Players that group by tags, such as Jellyfin or Navidrome, made a separate artist out of it. Now the album artist is the same name as the folder. Track artists and MusicBrainz ids keep the credit, compilations stay with Various Artists.",
+          "where": "Library › Album › Check tags"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Albums already filed keep their tags until you open “Check tags” and write them; the preview shows the new album artist. Nothing changes in the database."
+      ]
     }
   }
 }

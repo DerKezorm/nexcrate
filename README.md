@@ -20,7 +20,9 @@ releases. Posters and covers in them are placeholder artwork.
 - **Movies, shows and anime** from TMDB, scene numbering from TheXEM, episodes counted through
   for anime, double episodes, specials.
 - **Music** from MusicBrainz: artists, albums and the release that fits best, files matched to
-  tracks by tags, names and AcoustID fingerprints, tags written on filing.
+  tracks by tags, names and AcoustID fingerprints, tags written on filing. The album artist tag
+  is the artist the album is filed under, the same name as its folder, so players that group by
+  tags show the album there; the track artists and MusicBrainz ids keep the credit.
 - **Search** over Newznab and Torznab indexers, entered by hand, read from Radarr, Sonarr or
   Lidarr, or kept up to date from **Prowlarr**, with the decision per version and the reason for
   every release.

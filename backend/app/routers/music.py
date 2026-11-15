@@ -1622,7 +1622,8 @@ def _retag_error(exc: retag.RetagRefused) -> Exception:
     summary="Preview the tags of an album",
     description=(
         "Per file of an album nexcrate filed the fields that would change, the MusicBrainz ids included, and whether "
-        "the file can be written. Nothing is written."
+        "the file can be written. The album artist is the artist the album is filed under, as its folder, not "
+        "MusicBrainz's credit; compilations keep Various Artists. Nothing is written."
     ),
     responses=error_responses(*((409, code) for code in _RETAG_MESSAGES)),
 )
