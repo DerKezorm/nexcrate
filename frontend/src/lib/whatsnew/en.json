@@ -761,6 +761,20 @@
       "small": [
         "Albums already filed keep their tags until you open “Check tags” and write them; the preview shows the new album artist. Nothing changes in the database."
       ]
+    },
+    "1.7.6": {
+      "lead": "A small release: empty or broken music files no longer end up in the library as tracks.",
+      "sections": [
+        {
+          "title": "Empty music files",
+          "body": "A release with empty audio files used to be filed as if everything were there: the files fit the tracks by their names, the album counted as complete, and the player only knew the tracks with sound. Now nexcrate checks every audio file before it files anything. If one is empty or has no sound, the download fails as a broken archive does: nothing is filed or replaced, the release goes on the blocklist, and the automatic search looks for another one.",
+          "where": "Downloads › History"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "“Read folder again” no longer counts an empty audio file as there. An album already filed with empty files then shows that tracks are missing."
+      ]
     }
   }
 }

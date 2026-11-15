@@ -236,6 +236,12 @@ def is_audio(name: str) -> bool:
     return os.path.splitext(name)[1].lower() in AUDIO_EXTENSIONS
 
 
+def has_sound(read: Read) -> bool:
+    """Whether mutagen found a stream with a length in the file. An empty file, one without a single audio frame, or
+    one mutagen cannot open has none: it holds no track, whatever its name says."""
+    return read.audio is not None and read.audio.duration_ms is not None
+
+
 # --- Reading ---------------------------------------------------------------------------------------------------- #
 
 

@@ -48,6 +48,8 @@ MESSAGES = {
     "packed": "The download holds archives nexcrate cannot unpack safely.",
     "no_video": "The download holds no video.",
     "no_audio": "The download holds no audio file.",
+    "audio_unreadable": "An audio file of the download has no sound (empty, or no audio in it); nothing was filed "
+    "or replaced.",
     "no_space": "There is not enough free space to file the download away.",
     "gone_from_client": "The download client no longer knows the download.",
     "moved_in_client": "The download client still has the download, but another program moved it out of nexcrate's "
@@ -102,6 +104,7 @@ def choice(code: str | None, state: str, values: dict[str, Any], scope: str | No
         # Another movie under this one's number, perhaps: a program never files it, and never replaces it by itself.
         "title_mismatch": (("remove_and_search", "remove"), ()),
         "no_audio": _REPLACE,
+        "audio_unreadable": _REPLACE,
         "dangerous_file": _REFUSED,
         "encrypted": _REFUSED,
         "multi_part": _REFUSED,

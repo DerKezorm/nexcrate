@@ -20,7 +20,8 @@ its client's to delete.
 * **A broken archive** (``broken_reason``): a finished download whose archive is
   certainly broken fails as a failure its client reported would, as in Radarr: volumes are missing by their names (the
   problem ``packed`` with ``incomplete`` and ``volumes_missing``, see ``unpacking``) or it wants a password
-  (``encrypted``). The release goes on the blocklist, the history
+  (``encrypted``). An album download with an audio file without sound (empty, no audio frame, no length) is just as
+  certainly broken (``audio_unreadable``, found on 15.11.2026). The release goes on the blocklist, the history
   says ``failed``, the replacement searches another release, and the job leaves its client with its files, a torrent
   too. Everything else stays a problem for the owner: ``unsupported`` is an archive only nexcrate's tool cannot unpack;
   ``broken`` is what a damaged archive looks like, and just as much a tool that crashed, ran out of time or could not
@@ -65,7 +66,11 @@ logger = logging.getLogger("nexcrate.downloads")
 
 #: The problems that mean a finished download is certainly broken, by code and reason, and the failure each becomes.
 #: ``packed`` with ``incomplete`` only with ``volumes_missing``.
-BROKEN = {("packed", "incomplete"): "archive_incomplete", ("encrypted", None): "encrypted"}
+BROKEN = {
+    ("packed", "incomplete"): "archive_incomplete",
+    ("encrypted", None): "encrypted",
+    ("audio_unreadable", None): "audio_unreadable",
+}
 #: Names a job folder never has.
 _ODD_NAMES = ("", ".", "..")
 
@@ -279,7 +284,7 @@ def delete_folder(left: Leftover) -> bool:
 
 
 def fail(db: OrmSession, row: Download, reason: str, moment: datetime) -> Leftover:
-    """A finished download with a certainly broken archive fails as a failure its client reported (``tracking``):
+    """A finished download that is certainly broken (``BROKEN``) fails as a failure its client reported (``tracking``):
     the blocklist, ``failed`` in the history, the replacement. Returns what to ``throw_away`` once the caller
     committed."""
     left = leftover(db, row)
@@ -291,7 +296,7 @@ def fail(db: OrmSession, row: Download, reason: str, moment: datetime) -> Leftov
     # The next fitting release, at most three times a day, as after a failure the client reported.
     row.failure_handling = replacement.after_failure(db, row, moment)
     store.follow(db, row, moment)
-    logger.info("Download %d failed: its archive is broken (%s)", row.id, reason)
+    logger.info("Download %d failed: it is broken (%s)", row.id, reason)
     return left
 
 

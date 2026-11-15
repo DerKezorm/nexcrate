@@ -151,6 +151,7 @@
       "import_stalled": "Das Ablegen kommt seit 30 Minuten nicht weiter.",
       "too_many_files": "Der Download hat zu viele Dateien.",
       "no_audio": "Im Download ist keine Musik.",
+      "audio_unreadable": "Eine Audiodatei im Download ist leer oder ohne Ton.",
       "album_single_file": "Das Album kam als eine Datei mit CUE-Blatt.",
       "album_not_better": "Die neuen Dateien sind nicht besser als die vorhandenen.",
       "album_tracks_missing": "Die Titellisten des Albums fehlen noch.",
@@ -215,6 +216,7 @@
         "database_busy": "Die Datenbank war eine halbe Stunde lang belegt, nexcrate hat es immer wieder versucht. Versuch es noch einmal; bleibt es so, hilft ein Neustart von nexcrate."
       },
       "no_audio": "Weder Audiodateien noch Archive mit Musik. Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind. Sonst entferne den Download und such neu.",
+      "audio_unreadable": "nexcrate hat aus diesem Download nichts abgelegt, vorhandene Dateien bleiben, wie sie sind. Entferne den Download und nimm ein anderes Release.",
       "album_single_file": "Solche Alben schneidet nexcrate noch nicht in Titel. Das Release ist gesperrt, such ein anderes.",
       "album_not_better": "nexcrate ersetzt ein Album nur, wenn weder Qualität noch Titelzahl schlechter werden. Nichts wurde angefasst; du kannst trotzdem ersetzen oder den Rest nicht ablegen.",
       "album_tracks_missing": "Ohne die Titellisten von MusicBrainz ordnet nexcrate keine Datei zu. Einen Tag lang hat es gewartet.",
@@ -283,6 +285,7 @@
       "client_failed": "Der Download ist fehlgeschlagen, das meldet {{client}}. nexcrate hat das Release gesperrt.",
       "encrypted": "Das Release war mit einem Passwort geschützt. nexcrate hat es gesperrt.",
       "archive_incomplete": "Das Archiv war unvollständig, obwohl {{client}} den Download als fertig gemeldet hat. nexcrate hat das Release gesperrt.",
+      "audio_unreadable": "Im Download lag eine Audiodatei ohne Ton, leer oder kaputt. nexcrate hat nichts davon abgelegt und das Release gesperrt.",
       "not_taken": "{{client}} hat das Release nicht rechtzeitig angenommen und später nie gezeigt. Das Release ist nicht gesperrt."
     },
     "filed_one": "{{value}} Folge abgelegt",

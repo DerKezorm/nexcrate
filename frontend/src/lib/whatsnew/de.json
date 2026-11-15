@@ -761,6 +761,20 @@
       "small": [
         "Schon abgelegte Alben behalten ihre Tags, bis du „Tags prüfen“ öffnest und schreibst; die Vorschau zeigt den neuen Albumkünstler. An der Datenbank ändert sich nichts."
       ]
+    },
+    "1.7.6": {
+      "lead": "Ein kleines Release: Leere oder kaputte Musikdateien landen nicht mehr als Titel in der Bibliothek.",
+      "sections": [
+        {
+          "title": "Leere Musikdateien",
+          "body": "Ein Release mit leeren Audiodateien wurde bisher abgelegt, als wäre alles da: Die Dateien passten über ihren Namen zu den Titeln, das Album galt als vollständig, der Player kannte nur die Titel mit Ton. Jetzt prüft nexcrate jede Audiodatei, bevor es etwas ablegt. Ist eine leer oder ohne Ton, schlägt der Download fehl wie bei einem kaputten Archiv: nichts wird abgelegt oder ersetzt, das Release kommt auf die Sperrliste, und die Automatik sucht ein anderes.",
+          "where": "Downloads › Verlauf"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "„Ordner neu einlesen“ zählt eine leere Audiodatei nicht mehr als vorhanden. Ein schon abgelegtes Album mit leeren Dateien zeigt danach, dass Titel fehlen."
+      ]
     }
   }
 }

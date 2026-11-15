@@ -80,6 +80,8 @@ _COVER_NAMES = ("cover", "folder", "front")
 FOLDER_IMAGE = "folder.jpg"
 #: Problems that refuse the download: its release goes on the blocklist.
 REFUSED = ("dangerous_file", "encrypted", "album_single_file")
+#: Audio files without sound (empty, no audio frame, no length): the download is broken (``discard.BROKEN``).
+SILENT_AUDIO = "audio_unreadable"
 #: Where the owner's choice for a file comes from in ``Manual``.
 LOOSE = "loose"
 
@@ -532,6 +534,12 @@ def gather(context: Context, root: Path) -> Found:
         )
         paths[key] = (path, from_archive)
         sizes[key] = size
+    # A file without sound (empty, no audio frame, no length) is no track, whatever its name says: matched by its name
+    # alone it was filed and counted as there (found on 15.11.2026: 8 of 11 MP3s of a release were empty). Such a
+    # release is broken and fails as a broken archive does: nothing of it is filed, nothing is replaced.
+    silent = [key for key, read in reads.items() if sizes[key] == 0 or not tags.has_sound(read)]
+    if silent:
+        raise Problem(SILENT_AUDIO, files=len(silent), audio=len(listed))
     return Found(audio, reads, paths, sizes, job, unpacked, walked.cue_sheet, walked.images)
 
 

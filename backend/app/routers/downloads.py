@@ -69,7 +69,10 @@ class DownloadProblem(BaseModel):
         "episodes). Since 26.09.2026: title_mismatch (a movie download whose release name and video name fit none of "
         "the movie's titles; not filed, it replaced nothing; filed with retry and `confirm` title_mismatch, or removed "
         "and blocked). Since 20.10.2026: moved_in_client (the client still has the job, but another program moved it "
-        "out of nexcrate's category; nothing is filed from there; `take-back` or remove)."
+        "out of nexcrate's category; nothing is filed from there; `take-back` or remove). Since 15.11.2026: "
+        "audio_unreadable (an album download with an audio file without sound: empty, no audio frame or no length; "
+        "it fails with failed_reason audio_unreadable instead, and stays this problem only for a download that filed "
+        "a file already; `files` counts them)."
     )
     needs_owner: bool
     values: dict[str, Any] = Field(
@@ -153,7 +156,8 @@ class Download(BaseModel):
     failed_reason: str | None = Field(
         description="For a failed download: client_failed (the client reported Failed), encrypted (the client or "
         "nexcrate found an archive with a password), archive_incomplete (the client reported the download finished, "
-        "but its archive misses volumes) or not_taken. Null otherwise."
+        "but its archive misses volumes), audio_unreadable (an album download held an audio file without sound) or "
+        "not_taken. Null otherwise."
     )
     failed_detail: str | None = Field(
         default=None,

@@ -30,6 +30,9 @@ export function problemActions(
       // Seit 29.09.2026 (Issue #3): kommt die Musik erst per Sync, legt "Erneut versuchen" sie ab.
       case 'no_audio':
         return ['removeAndBlock', ...retry, 'toTitle']
+      // Seit 15.11.2026: eine Audiodatei ohne Ton. Das Abgelegte bleibt; "Rest nicht ablegen" beendet ihn, sonst sperren.
+      case 'audio_unreadable':
+        return ['finish', 'removeAndBlock', 'toTitle']
       case 'album_single_file':
         return ['toTitle', 'remove']
     }

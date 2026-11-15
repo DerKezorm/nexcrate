@@ -70,6 +70,8 @@ export const PROBLEM_CODES = [
   'album_single_file',
   'album_not_better',
   'album_tracks_missing',
+  // 15.11.2026: eine Audiodatei ohne Ton. Meist schlaegt der Download gleich fehl; Problem nur, wenn schon etwas abgelegt war.
+  'audio_unreadable',
   // Rueckmeldung 20.09.2026: Ein fehlgeschlagener Download wartet hier, bis er erledigt ist.
   'download_failed',
   // 24.09.2026: ein abgeschnittenes Video, nie abgelegt.
@@ -209,6 +211,8 @@ export function problemReasonText(t: TFunction, code: string, client: string, va
       return t('downloads.problems.reason.too_many_files')
     case 'no_audio':
       return t('downloads.problems.reason.no_audio')
+    case 'audio_unreadable':
+      return t('downloads.problems.reason.audio_unreadable')
     case 'album_single_file':
       return t('downloads.problems.reason.album_single_file')
     case 'album_not_better':
@@ -391,6 +395,8 @@ export function problemWhyText(t: TFunction, problem: DownloadProblem, client: s
       return t('downloads.problems.why.too_many_files')
     case 'no_audio':
       return t('downloads.problems.why.no_audio')
+    case 'audio_unreadable':
+      return t('downloads.problems.why.audio_unreadable')
     case 'album_single_file':
       return t('downloads.problems.why.album_single_file')
     case 'album_not_better':
@@ -484,6 +490,8 @@ export function failedReasonText(t: TFunction, reason: string | null, client: st
       return t('downloads.history.failed.encrypted')
     case 'archive_incomplete':
       return t('downloads.history.failed.archive_incomplete', { client })
+    case 'audio_unreadable':
+      return t('downloads.history.failed.audio_unreadable')
     case 'not_taken':
       return t('downloads.history.failed.not_taken', { client })
     default:

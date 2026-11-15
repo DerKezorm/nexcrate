@@ -77,6 +77,9 @@ PROBLEMS: dict[str, bool] = {
     "album_single_file": False,
     "album_not_better": True,
     "album_tracks_missing": True,
+    # An audio file without sound (15.11.2026): the download fails as a broken one (``discard.BROKEN``); a problem
+    # only for a download that filed a file already.
+    "audio_unreadable": True,
     # A download the client gave up on (the owner's finding of 20.09.2026): it waits in the problems until the
     # owner takes it off, so a failure is not only in the history. Since 22.09.2026 only when nothing takes care of it
     # by itself (``failure_handling`` owner); a replaced one is an event in the history.

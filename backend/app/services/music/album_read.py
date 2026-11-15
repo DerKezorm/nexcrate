@@ -4,7 +4,9 @@ One core for every way in: after a takeover, "read the folder again" on the albu
 disk. It looks at the audio files in the album folder and one level below (medium folders such as ``CD 01``), links,
 dot names and nexcrate's own staging and recycle folders left out:
 
-* A file a row of the version knows already (same path) stays as it is; a row whose file is gone goes.
+* A file a row of the version knows already (same path) stays as it is; a row whose file is gone or empty goes.
+* An empty file is no track: it is not taken in, and counts nowhere. A file with bytes mutagen cannot read stays
+  **unclear** as before: the owner sees it.
 * A new file is matched as filing matches a download (M4: the id in the tag, medium and position with the length, the
   name with the length), against the release the album has, else every release of the album. A clear match is
   linked, without renaming and without writing tags; the rest is **unclear**, and so is a file for a song the album
@@ -86,11 +88,12 @@ def read_version(version_id: int) -> dict[str, int]:
             return counts
         rows = list(db.scalars(select(TrackFile).where(TrackFile.version_id == version.id)))
         known = {paths.display(row.relative_path): row for row in rows}
-        # A known file stays while it lies there, in whatever folder Lidarr put it; only a missing one goes.
+        # A known file stays while it lies there, in whatever folder Lidarr put it; only a missing one goes, and an
+        # empty one: it holds no track (found on 15.11.2026: empty MP3s an import had filed counted as there).
         present: set[str] = set()
         for name, row in known.items():
             path = paths.file_in(folder, name)
-            if path is not None and path.is_file():
+            if path is not None and path.is_file() and path.stat().st_size > 0:
                 present.add(name)
             else:
                 db.delete(row)
@@ -115,9 +118,13 @@ def read_version(version_id: int) -> dict[str, int]:
         held = same_song.union(keys, held_ids)
         audio: list[fm.AudioFile] = []
         reads: dict[int, tags.Read] = {}
+        empty = 0
         for index, name in enumerate(fresh):
             path = paths.file_in(folder, name)
             if path is None:
+                continue
+            if path.stat().st_size == 0:
+                empty += 1
                 continue
             read = tags.read(path)
             reads[index] = read
@@ -173,6 +180,8 @@ def read_version(version_id: int) -> dict[str, int]:
             else:
                 counts["unclear"] += 1
         db.flush()
+        if empty:
+            logger.info("Album version %d: %d empty audio files left out", version.id, empty)
         version.files_read_at = moment
         store._count_tracks(db, version)
         qualities = list(db.scalars(select(TrackFile.quality).where(TrackFile.version_id == version.id)))

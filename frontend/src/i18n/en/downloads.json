@@ -151,6 +151,7 @@
       "import_stalled": "Filing away has not moved on for 30 minutes.",
       "too_many_files": "The download has too many files.",
       "no_audio": "The download holds no music.",
+      "audio_unreadable": "An audio file in the download is empty or has no sound.",
       "album_single_file": "The album came as one file with a cue sheet.",
       "album_not_better": "The new files are not better than those there.",
       "album_tracks_missing": "The album's track lists are still missing.",
@@ -215,6 +216,7 @@
         "database_busy": "The database was busy for half an hour; nexcrate tried again and again. Try once more; if it stays like this, restarting nexcrate helps."
       },
       "no_audio": "Neither audio files nor archives with music. When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete. Otherwise remove the download and search again.",
+      "audio_unreadable": "nexcrate filed nothing from this download, and the files already there stay as they are. Remove the download and take another release.",
       "album_single_file": "nexcrate does not cut such albums into tracks yet. The release is blocked; search for another one.",
       "album_not_better": "nexcrate replaces an album only when neither quality nor the count of tracks gets worse. Nothing was touched; you can replace anyway or file nothing more.",
       "album_tracks_missing": "Without MusicBrainz's track lists nexcrate maps no file. It waited for a day.",
@@ -283,6 +285,7 @@
       "client_failed": "The download failed, as {{client}} reports. nexcrate blocked the release.",
       "encrypted": "The release was protected with a password. nexcrate blocked it.",
       "archive_incomplete": "The archive was incomplete, although {{client}} reported the download as finished. nexcrate blocked the release.",
+      "audio_unreadable": "An audio file in the download had no sound, empty or broken. nexcrate filed none of it and blocked the release.",
       "not_taken": "{{client}} did not take the release in time and never showed it later. The release is not blocked."
     },
     "filed_one": "{{value}} episode stored",
