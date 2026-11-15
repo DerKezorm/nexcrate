@@ -789,6 +789,20 @@
       "small": [
         "WAV albums already filed stay without tags until you open “Check tags” and write them. A file hardlinked into a torrent is still never written."
       ]
+    },
+    "1.7.8": {
+      "lead": "A small release: when the artist holds more than one name, the tag now keeps the spaces, “A feat. B” instead of “Afeat.B”.",
+      "sections": [
+        {
+          "title": "Spaces in the artist",
+          "body": "When reading MusicBrainz, nexcrate lost the spaces around words like “feat.” or “&” and after the comma between two names. The artist tag then read “Afeat.B”, and Plex, with everything that reads the music through Plex, showed it that way. The album's title page glued the names together as well. Now nexcrate keeps MusicBrainz's spelling. Albums stored before get their spaces back when the tags are written, without loading them from MusicBrainz again.",
+          "where": "The album's title page › Check tags"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Albums already filed keep the old tag until you open “Check tags” and write them. If {Track ArtistName} is in your file name pattern, renaming suggests the right name. The database does not change."
+      ]
     }
   }
 }

@@ -789,6 +789,20 @@
       "small": [
         "Schon abgelegte WAV-Alben bleiben ohne Tags, bis du „Tags prüfen“ öffnest und schreibst. Eine Datei mit Hardlink in einen Torrent wird wie bisher nie beschrieben."
       ]
+    },
+    "1.7.8": {
+      "lead": "Ein kleines Release: Steht mehr als ein Name im Künstler, behält der Tag jetzt die Leerzeichen, also „A feat. B“ statt „Afeat.B“.",
+      "sections": [
+        {
+          "title": "Leerzeichen im Künstler",
+          "body": "Beim Lesen von MusicBrainz verlor nexcrate die Leerzeichen um Wörter wie „feat.“ oder „&“ und um das Komma zwischen zwei Namen. Im Tag Künstler stand dann etwa „Afeat.B“, und Plex samt allem, was die Musik über Plex liest, zeigte das so an. Auch die Titelseite des Albums klebte die Namen zusammen. Jetzt behält nexcrate die Schreibweise von MusicBrainz. Schon gespeicherte Alben bekommen die Leerzeichen beim Schreiben zurück, ohne dass sie neu von MusicBrainz geladen werden.",
+          "where": "Titelseite des Albums › Tags prüfen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Schon abgelegte Alben behalten den alten Tag, bis du „Tags prüfen“ öffnest und schreibst. Steht {Track ArtistName} in deinem Muster für Dateinamen, schlägt die Umbenennung den richtigen Namen vor. Die Datenbank ändert sich nicht."
+      ]
     }
   }
 }
