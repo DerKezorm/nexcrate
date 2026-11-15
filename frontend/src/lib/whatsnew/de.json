@@ -775,6 +775,20 @@
       "small": [
         "„Ordner neu einlesen“ zählt eine leere Audiodatei nicht mehr als vorhanden. Ein schon abgelegtes Album mit leeren Dateien zeigt danach, dass Titel fehlen."
       ]
+    },
+    "1.7.7": {
+      "lead": "Ein kleines Release: Alben als WAV oder AIFF bekommen jetzt Tags wie FLAC und MP3.",
+      "sections": [
+        {
+          "title": "Tags in WAV und AIFF",
+          "body": "Bisher legte nexcrate Alben als WAV oder AIFF ganz ohne Tags ab, weil es in diese Formate nicht schrieb. Ein Mediaserver, der Künstler und Album aus den Tags liest, konnte solche Alben nicht zuordnen. Jetzt schreibt nexcrate dieselben Felder wie bei MP3 hinein: Künstler, Albumkünstler, Album, Titel- und CD-Nummer, die MusicBrainz-Kennungen und das Cover. Am Ton ändert sich nichts.",
+          "where": "Titelseite des Albums › Tags prüfen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Schon abgelegte WAV-Alben bleiben ohne Tags, bis du „Tags prüfen“ öffnest und schreibst. Eine Datei mit Hardlink in einen Torrent wird wie bisher nie beschrieben."
+      ]
     }
   }
 }

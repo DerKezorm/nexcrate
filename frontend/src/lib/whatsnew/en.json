@@ -775,6 +775,20 @@
       "small": [
         "“Read folder again” no longer counts an empty audio file as there. An album already filed with empty files then shows that tracks are missing."
       ]
+    },
+    "1.7.7": {
+      "lead": "A small release: albums in WAV or AIFF now get tags like FLAC and MP3.",
+      "sections": [
+        {
+          "title": "Tags in WAV and AIFF",
+          "body": "Until now nexcrate filed albums in WAV or AIFF without any tags, because it did not write into these formats. A media server that reads artist and album from the tags could not place such albums. Now nexcrate writes the same fields as for MP3: artist, album artist, album, track and disc number, the MusicBrainz ids and the cover. The sound stays as it is.",
+          "where": "The album's title page › Check tags"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "WAV albums already filed stay without tags until you open “Check tags” and write them. A file hardlinked into a torrent is still never written."
+      ]
     }
   }
 }
