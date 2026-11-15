@@ -57,7 +57,7 @@ from ...models import (
 )
 from .. import companions_album, downloaders, folders, naming, naming_music, schreibweisen
 from ..mediaservers import notify as mediaserver_notify
-from ..music import album_quality, align, covers, fingerprint, same_song, tag_writing, tags
+from ..music import album_quality, align, covers, credits, fingerprint, same_song, tag_writing, tags
 from ..music import file_matching as fm
 from ..music import musicbrainz as mb
 from ..music import store as music_store
@@ -1434,7 +1434,7 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
     named = []
     for item in fresh:
         track, _tags_of = _row_of(item.track_id)
-        credit = tag_writing.credit_text((track.artist_credit if track is not None else None) or album_credit)
+        credit = credits.credit_text((track.artist_credit if track is not None else None) or album_credit)
         naming_edition, naming_track = named_after(edition, target, same_songs, item.track_id)
         name = _file_name(
             context,

@@ -19,7 +19,7 @@ from ...models import (
     TrackFile,
     Version,
 )
-from . import file_matching, kinds, paths, same_song
+from . import credits, file_matching, kinds, paths, same_song
 
 
 def _release_head(release: Release | None) -> dict[str, Any] | None:
@@ -56,7 +56,7 @@ def _credit(db: OrmSession, title: Title) -> list[dict[str, Any]]:
         {
             "mbid": str(part.get("mbid") or ""),
             "name": str(part.get("name") or part.get("artist_name") or ""),
-            "join": str(part.get("join") or ""),
+            "join": credits.join_text(part.get("join")),
             "artist_id": known.get(str(part.get("mbid") or "")),
         }
         for part in parts

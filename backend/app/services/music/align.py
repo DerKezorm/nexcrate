@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session as OrmSession
 from ...models import Release, ReleaseMedium, ReleaseTrack, Title, TrackFile, Version, utcnow
 from .. import naming_music
 from ..downloads import files
-from . import paths, same_song, store, tag_writing
+from . import credits, paths, same_song, store, tag_writing
 
 logger = logging.getLogger("nexcrate.music")
 
@@ -83,7 +83,7 @@ def align(
             medium=medium.position if medium is not None else 1,
             position=goal.position,
             title=goal.name,
-            artist_name=tag_writing.credit_text(goal.artist_credit or title.artist_credit),
+            artist_name=credits.credit_text(goal.artist_credit or title.artist_credit),
             medium_format=medium.format if medium is not None else None,
             quality=row.quality,
             original_filename=path.stem,

@@ -536,14 +536,11 @@ def credit_of(value: Any) -> list[dict[str, Any]]:
                 "mbid": _text(artist.get("id")),
                 "name": _text(part.get("name")) or _text(artist.get("name")),
                 "artist_name": _text(artist.get("name")),
-                "join": _text(part.get("joinphrase")),
+                # Untouched: the join phrase carries its own spaces (" feat. ").
+                "join": part["joinphrase"] if isinstance(part.get("joinphrase"), str) else "",
             }
         )
     return credits
-
-
-def credit_text(credit: list[dict[str, Any]]) -> str:
-    return "".join(f"{part.get('name', '')}{part.get('join', '')}" for part in credit).strip()
 
 
 @dataclass

@@ -28,7 +28,7 @@ from ..models import Artist, Release, Title, Version, VersionDefinition, utcnow
 from ..models.music import LOAD_STATES, MONITOR_NEW
 from ..services import auto_tags, images, tags
 from ..services.automatic import planning
-from ..services.music import album_read, fingerprint, kinds, loading, retag, store, tag_writing, target
+from ..services.music import album_read, credits, fingerprint, kinds, loading, retag, store, tag_writing, target
 from ..services.music import musicbrainz as mb
 from ..services.schreibweisen import nfc, query_keys
 
@@ -930,7 +930,7 @@ async def search_albums(
             primary_type=group.primary_type,
             secondary_types=group.secondary_types,
             first_release_date=group.first_release_date,
-            artist=mb.credit_text(group.credit),
+            artist=credits.credit_text(group.credit),
             artist_mbids=[str(part.get("mbid") or "") for part in group.credit if part.get("mbid")],
             score=group.score,
             in_library=found.get(group.mbid),

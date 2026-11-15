@@ -25,6 +25,7 @@ from ...db import get_setting, set_setting
 from ...models import Artist, Release, ReleaseMedium, ReleaseTrack, Title
 from ...models.music import VARIOUS_ARTISTS_MBID
 from . import tags
+from .credits import credit_text
 
 logger = logging.getLogger("nexcrate.music")
 
@@ -41,11 +42,6 @@ def set_write_enabled(db: OrmSession, value: bool) -> None:
 
 
 # --- What to write ------------------------------------------------------------------------------------------------ #
-
-
-def credit_text(credit: list[dict[str, Any]] | None) -> str:
-    """``A feat. B``: the names with MusicBrainz's join phrases."""
-    return "".join(f"{item.get('name') or ''}{item.get('join') or ''}" for item in credit or []).strip()
 
 
 def _credit_names(credit: list[dict[str, Any]] | None) -> list[str]:

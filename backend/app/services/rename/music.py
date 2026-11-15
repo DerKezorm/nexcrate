@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session as OrmSession
 from ...models import Artist, Release, ReleaseMedium, ReleaseTrack, Title, TrackFile, Version
 from .. import folders, naming_music
 from ..downloads import files
-from ..music import paths, tag_writing
+from ..music import credits, paths
 from .plan import AUDIO_ENDINGS, IMAGE_ENDINGS, Move, TitlePlan, files_below, finish, holds_media, parts_of, posix, put
 
 
@@ -257,7 +257,7 @@ def _album_moves(
                 medium=medium.position if medium is not None else 1,
                 position=track.position,
                 title=track.name or "",
-                artist_name=tag_writing.credit_text(track.artist_credit or title.artist_credit),
+                artist_name=credits.credit_text(track.artist_credit or title.artist_credit),
                 medium_format=medium.format if medium is not None else None,
                 quality=row.quality,
                 original_filename=old.stem,
