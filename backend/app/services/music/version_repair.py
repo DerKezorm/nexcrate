@@ -12,14 +12,15 @@ Per album version of nexcrate's own:
 * **Target of another version.** A target the rule chose goes to the release the files lie on when that one is of
   the album's own version, else to the rule's choice. The owner's own choice stays and is only reported.
 * **A file on a track of another version** ("Song (instrumental)") whose download said nothing of it (neither its
-  name in the download nor the release name): it goes to the track of the album's own version with the same name
+  name in the download nor the release name), when that track's whole release is another version or the release
+  has the song plainly as well: it goes to the track of the album's own version with the same name
   without the qualifier, in the release that takes every file of the album. That release becomes the files' release
   (and the target unless the owner chose one). Tags are written again and the album is renamed. Without such a
   release nothing changes and the album is reported.
 * **A file of another version than its track** (its name in the download says "(Live)", or the download was the live
-  release of the album, as the search now refuses): it goes to the track of its own version when one is free. When
-  none is and the whole download was the live (demo, mixtape) release, it goes into the recycle bin; a file whose
-  name alone says so (a bonus track MusicBrainz names plainly) is only reported.
+  release of the album, as the search now refuses): it goes to the track of its own version when one is free, else it
+  is reported. Nothing goes into the recycle bin by itself: a live download can lie rightly on the live disc of a
+  deluxe edition whose tracks MusicBrainz names plainly (measured on a copy of the owner's library, 16.11.2026).
 * **A "+" that was a "/"** (``naming_music.slashes_as_dashes``): the album is renamed when every renaming step only
   turns a "+" into a "-".
 
@@ -176,6 +177,21 @@ class _Album:
             return frozenset()
         return versions.of_release(release.name, f"{self.artist} {self.title.title}") - self.expected
 
+    def another_release_or_twin(self, track: _Track) -> bool:
+        """Whether a track of another version is surely not what a plain file is: its whole release is another
+        version ("… Instrumentals"), or the same release has the song plainly too (bonus instrumentals beside the
+        album). A "Song (live)" of a partly live album whose download named it plainly is the same recording."""
+        if self.other(track.release_id):
+            return True
+        keys = _keys(track.name)
+        return any(
+            other.release_id == track.release_id
+            and other.id != track.id
+            and not (versions.marks(other.name) - self.expected)
+            and keys & file_matching.title_keys(other.name)
+            for other in self.tracks.values()
+        )
+
     def track_versions(self, track: _Track) -> frozenset[str]:
         return (versions.marks(track.name) | self.other(track.release_id)) - self.expected
 
@@ -305,7 +321,7 @@ def _files(album: _Album, finding: Finding) -> None:
         # What makes the file another version than its track: its own name, or a release the search now refuses.
         # A word in the release's name alone ("Album + Instrumentals") does not: such a release holds both.
         said = file_level | ({refused} if refused else set())
-        if own and not own & (file_level | release_level | said):
+        if own and not own & (file_level | release_level | said) and album.another_release_or_twin(track):
             wrong_track.add(row.id)
         elif said - own:
             # The file is another version than its track: a free track of its own version, else the bin.
@@ -322,8 +338,10 @@ def _files(album: _Album, finding: Finding) -> None:
             if len(free) == 1:
                 finding.moves.append(FileMove(row.id, album.name_of(row), track.name, free[0].name, free[0].id))
             elif refused and refused not in own:
-                # The whole download was the live (demo, mixtape) release of the album: the file is none of its songs.
-                finding.recycle.append(FileOut(row.id, album.name_of(row), track.name, refused))
+                # The whole download was the live (demo, mixtape) release of the album. Reported, never thrown away:
+                # on the owner's library such a download lay rightly on the live disc of a "Platin Edition", whose
+                # tracks MusicBrainz names without "(live)".
+                finding.notes.append("download_was_another_version")
             else:
                 # A bonus track "Song (Live)" that MusicBrainz names plainly: reported, never thrown away.
                 finding.notes.append("file_says_another_version")
