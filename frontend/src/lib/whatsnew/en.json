@@ -832,6 +832,33 @@
           "“Check tags” lists such files as differing even when every field already matches; writing tidies them.",
           "Files with an ID3 tag before the FLAC header got no tags at all when filed. That is fixed. The database does not change."
         ]
+      },
+      "1.8.0": {
+        "lead": "nexcrate keeps the versions of an album apart: live, instrumentals, remixes, a cappella and the like no longer land on the studio album. And Jellyfin and Emby now hear of music in batches.",
+        "sections": [
+          {
+            "title": "The right version",
+            "body": "A live or demo release no longer counts as the album in a search when the album itself is none. When filing, a file saying “(Live)” or “(instrumental)” no longer goes onto a track without it by number and length, nor the other way round. nexcrate no longer chooses an instrumental or remix release as the target just because it has more tracks. A word of the album's own title, as in “Live and Dangerous”, or a live album at MusicBrainz is no other version.",
+            "where": "Searches by hand and automatic, filing, the album's title page"
+          },
+          {
+            "title": "Undo an assignment in the dialog",
+            "body": "In the dialog “Assign by hand”, a file already filed can now be taken out of the album, not only given another track.",
+            "where": "Downloads › Problems › Assign by hand"
+          },
+          {
+            "title": "Jellyfin and Emby: music in batches",
+            "body": "An album of an artist Jellyfin does not know yet makes it read the whole music library. So nexcrate collects music for three minutes, tells known artists by their album folder and all new ones together once, and never while Jellyfin is reading the library.",
+            "where": "Settings › Media servers"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "A “/” in album and track titles becomes “-” in file names instead of “+”.",
+          "Choosing another target release writes the album folder's release.nex again.",
+          "Where the rule had chosen a release of another version as the target and the files lie on the album's own release, the target goes back there after the update. Your own choice stays.",
+          "The database does not change."
+        ]
       }
   }
 }

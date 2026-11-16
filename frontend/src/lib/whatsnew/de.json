@@ -832,6 +832,33 @@
           "„Tags prüfen“ zeigt solche Dateien als Abweichung, auch wenn alle Felder schon stimmen; schreibst du, räumt nexcrate sie auf.",
           "Dateien mit einem ID3-Tag vor dem FLAC-Kopf bekamen beim Ablegen bisher gar keine Tags. Das ist behoben. Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.8.0": {
+        "lead": "nexcrate hält Fassungen eines Albums auseinander: Live, Instrumentals, Remixe, A cappella und Ähnliches landen nicht mehr auf dem Studioalbum. Dazu meldet nexcrate Musik an Jellyfin und Emby gebündelt.",
+        "sections": [
+          {
+            "title": "Die richtige Fassung",
+            "body": "Ein Live- oder Demo-Release gilt in der Suche nicht mehr als dieses Album, wenn das Album selbst keins ist. Beim Ablegen kommt eine Datei mit „(Live)“ oder „(instrumental)“ nicht mehr per Nummer und Länge auf einen Titel ohne diesen Zusatz, und umgekehrt. Als Zielausgabe wählt nexcrate keine Instrumental- oder Remix-Ausgabe mehr, nur weil sie mehr Titel hat. Ein Wort im Albumtitel wie bei „Live and Dangerous“ oder ein Live-Album bei MusicBrainz zählt dabei nicht als andere Fassung.",
+            "where": "Suche von Hand und automatische Suche, Ablegen, Titelseite des Albums"
+          },
+          {
+            "title": "Zuordnung im Dialog lösen",
+            "body": "Im Dialog „Von Hand zuordnen“ lässt sich eine schon abgelegte Datei jetzt auch aus dem Album nehmen, nicht nur einem anderen Titel zuweisen.",
+            "where": "Downloads › Probleme › Von Hand zuordnen"
+          },
+          {
+            "title": "Jellyfin und Emby: Musik gebündelt",
+            "body": "Ein Album eines Künstlers, den Jellyfin noch nicht kennt, lässt es die ganze Musikbibliothek lesen. nexcrate sammelt deshalb Musik drei Minuten lang, meldet bekannte Künstler gezielt und alle neuen zusammen einmal, und nie während Jellyfin die Bibliothek gerade liest.",
+            "where": "Einstellungen › Medienserver"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Ein „/“ in Album- und Titelnamen wird im Dateinamen zu „-“ statt zu „+“.",
+          "Wechselst du die Zielausgabe, schreibt nexcrate die release.nex im Albumordner neu.",
+          "Hatte die Regel eine Ausgabe anderer Fassung als Ziel gewählt und liegen die Dateien auf der normalen Ausgabe, springt das Ziel nach dem Update von selbst dorthin zurück. Deine eigene Wahl bleibt.",
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }
