@@ -171,8 +171,8 @@ def cover_differs(current_sha256: str | None, cover: tuple[bytes, str] | None) -
 
 
 def preview_changes(path: Path, fields: dict[str, list[str]]) -> tuple[list[tags.Change], str | None, str | None]:
-    """The fields that would change in one file, whether it could be written (``linked``, ``format``, ``unreadable``),
-    and the hash of its front cover."""
+    """The fields that would change in one file, then what writing tidies (``tags.tidying``), whether it could be
+    written (``linked``, ``format``, ``unreadable``), and the hash of its front cover."""
     read = tags.read(path)
     if read.audio is None:
         return [], tags.UNREADABLE, None
@@ -181,4 +181,4 @@ def preview_changes(path: Path, fields: dict[str, list[str]]) -> tuple[list[tags
         refusal = "format"
     elif tags.links(path) != 1:
         refusal = "linked"
-    return tags.differences(read.tags, fields), refusal, read.cover_sha256
+    return [*tags.differences(read.tags, fields), *tags.tidying(read)], refusal, read.cover_sha256

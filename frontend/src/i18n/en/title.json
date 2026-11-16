@@ -506,7 +506,9 @@
         "label": "Label",
         "catalognumber": "Catalog number",
         "barcode": "Barcode",
-        "compilation": "Compilation"
+        "compilation": "Compilation",
+        "comment_blocks": "Comment blocks (FLAC)",
+        "id3_header": "ID3 tag before the FLAC header"
       }
     },
     "incomplete": {

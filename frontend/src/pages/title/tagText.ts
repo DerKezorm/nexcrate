@@ -80,6 +80,10 @@ export function tagFieldText(t: TFunction, field: string): string {
       return t('title.album.tags.field.barcode')
     case 'compilation':
       return t('title.album.tags.field.compilation')
+    case 'comment_blocks':
+      return t('title.album.tags.field.comment_blocks')
+    case 'id3_header':
+      return t('title.album.tags.field.id3_header')
     default:
       return field
   }

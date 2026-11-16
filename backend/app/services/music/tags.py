@@ -13,6 +13,10 @@ One table of fields serves reading and writing, so both speak the same names. Th
   frames as MP3, as Picard writes them); the others are read only.
 * **Comparing** covers every field of the table, the MusicBrainz ids included, and the front cover by a
   hash of its bytes.
+* **Tidying** (FLAC): writing keeps only the first Vorbis comment block and drops an ID3 tag before ``fLaC``. The
+  specification allows one comment block; mutagen reads and writes the first, but a player may read all of them
+  (Jellyfin joins their values with U+001F: "Album<U+001F>Album", stray album artists from an old release). The preview
+  names both as changes (``tidying``), so a file whose fields already match is written all the same.
 
 Values are lists of strings throughout, since several fields hold more than one value (``artists``,
 ``musicbrainz_artistid``). ``tracknumber`` and ``discnumber`` hold the number alone; the totals are fields of their own.
@@ -32,7 +36,7 @@ from typing import Any
 import mutagen
 from mutagen.aiff import AIFF
 from mutagen.apev2 import APEv2File
-from mutagen.flac import FLAC, Picture
+from mutagen.flac import FLAC, Picture, VCFLACDict
 from mutagen.id3 import APIC, ID3, TXXX, UFID, Frames
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4, MP4Cover, MP4FreeForm
@@ -53,6 +57,9 @@ WRITABLE = ("FLAC", "MP3", "M4A", "Vorbis", "Opus", "WAV", "AIFF")
 #: The front cover in ID3, FLAC and Ogg pictures.
 FRONT_COVER = 3
 UNREADABLE = "unreadable"
+#: The changes of tidying a FLAC file, named like fields in the preview.
+COMMENT_BLOCKS = "comment_blocks"
+ID3_HEADER = "id3_header"
 
 # --- The fields ------------------------------------------------------------------------------------------------ #
 
@@ -229,6 +236,10 @@ class Read:
     #: SHA-256 of the embedded front cover, when there is one.
     cover_sha256: str | None = None
     error: str | None = None
+    #: FLAC only: how many Vorbis comment blocks the file holds (one is allowed), and the ID3 tag before ``fLaC``
+    #: (``ID3v2.3``), when there is one.
+    comment_blocks: int = 0
+    id3_header: str | None = None
 
     def first(self, name: str) -> str | None:
         values = self.tags.get(name) or []
@@ -458,10 +469,34 @@ def _front_cover(kind: Any) -> bytes | None:
     return None
 
 
+def _id3_before_flac(path: Path) -> str | None:
+    """``ID3v2.<major>`` when an ID3 tag stands before ``fLaC`` (where mutagen looks for it too), else None."""
+    try:
+        with path.open("rb") as handle:
+            head = handle.read(10)
+            if len(head) < 10 or head[:3] != b"ID3":
+                return None
+            size = head[6] << 21 | head[7] << 14 | head[8] << 7 | head[9]
+            handle.seek(10 + size)
+            if handle.read(4) != b"fLaC":
+                return None
+    except OSError:
+        return None
+    return f"ID3v2.{head[3]}"
+
+
+def _open(path: Path) -> Any:
+    """mutagen's guess, except for a FLAC stream behind an ID3 tag: without the extension ``.flac`` (the partial file
+    while filing) mutagen takes the ID3 tag for an MP3, and writing failed."""
+    if _id3_before_flac(path) is not None:
+        return FLAC(path)
+    return mutagen.File(path)
+
+
 def read(path: Path) -> Read:
     """The tags and audio facts of one file. Never raises."""
     try:
-        kind = mutagen.File(path)
+        kind = _open(path)
     except mutagen.MutagenError, OSError, ValueError, KeyError, IndexError, TypeError, EOFError:
         return Read(audio=None, error=UNREADABLE)
     if kind is None:
@@ -480,6 +515,7 @@ def read(path: Path) -> Read:
         else:
             found = {}
         cover = _front_cover(kind)
+        blocks = _comment_blocks(kind)
     except mutagen.MutagenError, ValueError, KeyError, IndexError, TypeError, AttributeError:
         logger.info("The tags of a music file could not be read")
         return Read(audio=None, error=UNREADABLE)
@@ -488,7 +524,15 @@ def read(path: Path) -> Read:
         tags=found,
         writable=_writable(kind),
         cover_sha256=hashlib.sha256(cover).hexdigest() if cover else None,
+        comment_blocks=blocks,
+        id3_header=_id3_before_flac(path) if isinstance(kind, FLAC) else None,
     )
+
+
+def _comment_blocks(kind: Any) -> int:
+    if not isinstance(kind, FLAC):
+        return 0
+    return sum(1 for block in kind.metadata_blocks if block.code == VCFLACDict.code)
 
 
 def quality_name(audio: Audio | None) -> str | None:
@@ -561,6 +605,16 @@ def differences(current: dict[str, list[str]], wanted: dict[str, list[str]]) -> 
     return changes
 
 
+def tidying(read: Read) -> list[Change]:
+    """What writing tidies in a FLAC file besides the fields: further comment blocks and an ID3 tag before ``fLaC``."""
+    changes: list[Change] = []
+    if read.comment_blocks > 1:
+        changes.append(Change(COMMENT_BLOCKS, [str(read.comment_blocks)], ["1"]))
+    if read.id3_header is not None:
+        changes.append(Change(ID3_HEADER, [read.id3_header], []))
+    return changes
+
+
 # --- Writing ---------------------------------------------------------------------------------------------------- #
 
 
@@ -605,13 +659,18 @@ def _write_flac(kind: FLAC, wanted: dict[str, list[str]], cover: tuple[bytes, st
     if kind.tags is None:
         kind.add_tags()
     _vorbis_write(kind.tags, wanted)
+    # One comment block only, the one mutagen reads and nexcrate writes: the first.
+    kind.metadata_blocks = [
+        block for block in kind.metadata_blocks if block.code != VCFLACDict.code or block is kind.tags
+    ]
     if cover is not None:
         kept = [picture for picture in kind.pictures if picture.type != FRONT_COVER]
         kind.clear_pictures()
         for picture in kept:
             kind.add_picture(picture)
         kind.add_picture(_cover_picture(*cover))
-    kind.save()
+    # Drops an ID3 tag before ``fLaC`` (and an ID3v1 tag at the end); the frames stay untouched.
+    kind.save(deleteid3=True)
 
 
 def _write_ogg(kind: OggOpus | OggVorbis, wanted: dict[str, list[str]], cover: tuple[bytes, str] | None) -> None:
@@ -716,7 +775,7 @@ def write(path: Path, wanted: dict[str, list[str]], cover: tuple[bytes, str] | N
     if links(path) != 1:
         raise WriteRefused("linked")
     try:
-        kind = mutagen.File(path)
+        kind = _open(path)
     except (mutagen.MutagenError, ValueError, KeyError, IndexError, TypeError, EOFError) as exc:
         raise WriteRefused(UNREADABLE) from exc
     if kind is None:

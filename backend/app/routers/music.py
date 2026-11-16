@@ -280,7 +280,13 @@ class AcoustIdIn(BaseModel):
 
 
 class TagChange(BaseModel):
-    field: str = Field(description="Picard's name of the field, lower case.")
+    field: str = Field(
+        description=(
+            "Picard's name of the field, lower case. Two more name what writing tidies in a FLAC file: "
+            "comment_blocks (more than one Vorbis comment block; only the first stays) and id3_header (an ID3 tag "
+            "before fLaC, removed)."
+        )
+    )
     before: list[str]
     after: list[str]
 
@@ -1639,8 +1645,10 @@ async def preview_album_tags(title_id: int) -> TagPreviewOut:
     response_model=TagPreviewOut,
     summary="Write the tags of an album",
     description=(
-        "Writes every file whose fields differ, with the cover when the Cover Art Archive is on. Never a file with a "
-        "second link, never a file of a Lidarr connection. The answer is the preview afterwards."
+        "Writes every file whose fields differ, with the cover when the Cover Art Archive is on, and every FLAC file "
+        "with a second Vorbis comment block or an ID3 tag before fLaC, which writing removes; the audio stays as it "
+        "is. Never a file with a second link, never a file of a Lidarr connection. The answer is the preview "
+        "afterwards."
     ),
     responses=error_responses(*((409, code) for code in _RETAG_MESSAGES)),
 )
