@@ -146,6 +146,7 @@ def read_version(version_id: int) -> dict[str, int]:
                 chosen_id=version.actual_release_id,
                 album_name=title.title,
                 artist_name=artist.name if artist is not None else None,
+                album_types=tuple(title.secondary_types or ()),
             )
             if result.edition is not None:
                 decisions = {decision.key: decision for decision in result.edition.decisions}

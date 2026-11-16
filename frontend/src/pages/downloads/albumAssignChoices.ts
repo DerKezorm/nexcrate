@@ -21,7 +21,8 @@ export function trackCode(track: Pick<AlbumTrackChoice, 'medium' | 'position'>, 
 
 /**
  * Abgelegte Dateien, die der Dialog umziehen kann (seit 29.10.2026): ihr Titel gehoert zu dieser Ausgabe oder ihrem
- * Ziel, oder sie liegen ohne Titel. Andere bleiben nur zum Lesen.
+ * Ziel, oder sie liegen ohne Titel. Andere bleiben nur zum Lesen. Seit 16.11.2026 heisst "nichts" bei ihnen: aus dem
+ * Album nehmen.
  */
 export function movablePlaced(data: AlbumFiles): AlbumAudioFile[] {
   const tracks = new Set([...data.tracks, ...data.target_tracks].map((track) => track.id))

@@ -24,7 +24,10 @@ searched. The kind the name gives (single, EP, live, soundtrack, compilation) pi
 same name as well: a single of the same name is a single, not the album.
 
 **Not this album:** several albums in one release, a tribute or karaoke release when the album's own
-title does not say so, a sampler for an album of one artist, another artist.
+title does not say so, a sampler for an album of one artist, another artist. A release whose name says another
+version than the album (``versions``): a live, demo or mixtape release of a studio album is another release of other
+recordings, ``other_version``, unless the album's own title or type says so ("Live and Dangerous", a live album).
+Other music in brackets ("(Instrumentals)", "- The Remixes") stays in the head and never matches the album anyway.
 """
 
 from __future__ import annotations
@@ -36,6 +39,7 @@ from dataclasses import dataclass
 
 from .. import schreibweisen
 from ..releases.music_parser import ParsedAlbum
+from . import versions
 
 THIS = "this"
 OTHER_ALBUM = "other_album"
@@ -53,6 +57,8 @@ SECONDARY_OF_KIND = {
     "demo": "Demo",
     "mixtape": "Mixtape/Street",
 }
+#: Kinds in a name that make other recordings: the version of the music each says.
+VERSION_OF_KIND = {"live": versions.LIVE, "demo": versions.DEMO, "mixtape": versions.REMIX}
 _ARTICLE = "the"
 #: Words of an edition at the end of a head: taken off before comparing. Numbers count too ("10 Year Anniversary").
 EDITION_WORDS = frozenset(
@@ -127,7 +133,7 @@ class Match:
     kind: str
     #: The album for ``this`` and ``other_album``.
     album: AlbumRef | None = None
-    #: Why not: ``several_albums``, ``tribute``, ``karaoke``, ``sampler``, ``not_a_sampler``.
+    #: Why not: ``several_albums``, ``tribute``, ``karaoke``, ``sampler``, ``not_a_sampler``, ``other_version``.
     reason: str | None = None
     #: What the name was read as, for the owner: artist and album as the parser proposes them.
     read_artist: str = ""
@@ -275,6 +281,12 @@ def _refused(parsed: ParsedAlbum, album: AlbumRef) -> str | None:
     return None
 
 
+def _other_version(kind: str | None, album: AlbumRef) -> bool:
+    """A kind of other recordings the album neither is nor names: a live release of a studio album."""
+    version = VERSION_OF_KIND.get(kind or "")
+    return version is not None and version not in versions.expected(album.title, album.secondary_types)
+
+
 def match(parsed: ParsedAlbum, artist: ArtistRef, albums: Sequence[AlbumRef], wanted_id: int) -> Match:
     """The album this release is, among ``albums`` of ``artist``; ``wanted_id`` is the album searched."""
     read = {"read_artist": parsed.artist, "read_album": parsed.album}
@@ -303,6 +315,8 @@ def match(parsed: ParsedAlbum, artist: ArtistRef, albums: Sequence[AlbumRef], wa
             return Match(NOT_AN_ALBUM, album=chosen, reason=refused, **read)
         kinds = [kind for kind in parsed.kinds if kind in PRIMARY_OF_KIND or kind in SECONDARY_OF_KIND]
         differs = next((kind for kind in kinds if not _fits_kind(chosen, [kind])), None)
+        if _other_version(differs, chosen):
+            return Match(NOT_AN_ALBUM, album=chosen, reason="other_version", kind_differs=differs, **read)
         kind = THIS if chosen.title_id == wanted_id else OTHER_ALBUM
         return Match(kind, album=chosen, kind_differs=differs, **read)
     if artist.various:

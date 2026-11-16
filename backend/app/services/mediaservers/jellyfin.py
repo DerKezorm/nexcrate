@@ -7,6 +7,12 @@ header of the API key, in how they name themselves, and in where the libraries a
 that address is asked the old one). ⚠️ None of this
 is measured on a real server.
 
+For music (``music_batch``) two more readings, measured on the owner's Jellyfin (16.11.2026): the library listing
+carries ``RefreshStatus`` (``Active`` while the library is read, with ``RefreshProgress``), and
+``GET /Items?ParentId=<library>&Fields=Path`` lists the folders right below a library with their paths, here the
+artist folders (372 in 0.2 s). Emby: not measured; an answer without these fields reads as "not reading", and a
+refused listing makes ``music_batch`` tell the folders as before.
+
 ⚠️ The key travels in a header only. Both also accept ``?api_key=``; a URL ends up in logs and proxies.
 """
 
@@ -25,6 +31,10 @@ FOLDERS_PATH = "/Library/VirtualFolders"
 #: Emby's reference lists only this one for reading; it answers ``{"Items": [...], "TotalRecordCount": n}``.
 FOLDERS_QUERY_PATH = "/Library/VirtualFolders/Query"
 UPDATED_PATH = "/Library/Media/Updated"
+ITEMS_PATH = "/Items"
+#: Folders right below a library read per page, and at most.
+ITEMS_PAGE = 2_000
+MAX_TOP_FOLDERS = 40_000
 REFRESH_PATH = "/Library/Refresh"
 #: ``CollectionType`` and what it is here. A library of mixed content has none.
 COLLECTION_KINDS = {"movies": "movie", "tvshows": "series", "music": "music"}
@@ -92,7 +102,7 @@ class JellyfinClient:
             raise base.wrong_kind()
         return base.text(data.get("ServerName")), base.text(data.get("Version"), 64)
 
-    async def libraries(self) -> tuple[base.Listed, ...]:
+    async def _folder_entries(self) -> list[Any]:
         data: Any = None
         if self.kind == "emby":
             response = await self._send("GET", FOLDERS_QUERY_PATH, allow=(404, 405))
@@ -103,6 +113,10 @@ class JellyfinClient:
             data = base.json_of(await self._send("GET", FOLDERS_PATH))
         if not isinstance(data, list):
             raise base.wrong_kind()
+        return data
+
+    async def libraries(self) -> tuple[base.Listed, ...]:
+        data = await self._folder_entries()
         listed = []
         for entry in data[: base.MAX_LIBRARIES]:
             if not isinstance(entry, dict):
@@ -130,6 +144,42 @@ class JellyfinClient:
         updates = [{"Path": path, "UpdateType": "Modified"} for path in paths[:MAX_UPDATES]]
         if updates:
             await self._send("POST", UPDATED_PATH, json={"Updates": updates})
+
+    async def reading(self) -> set[str]:
+        """The ids of the libraries the server reads right now (``RefreshStatus`` ``Active``)."""
+        found = set()
+        for entry in (await self._folder_entries())[: base.MAX_LIBRARIES]:
+            if not isinstance(entry, dict):
+                continue
+            identifier = base.text(entry.get("ItemId"), 64) or base.text(entry.get("Name"))
+            if identifier and base.text(entry.get("RefreshStatus"), 32).lower() == "active":
+                found.add(identifier)
+        return found
+
+    async def top_folders(self, library_id: str) -> list[str]:
+        """The paths of the folders right below a library, as the server knows them: for music the artist folders."""
+        found: list[str] = []
+        while len(found) < MAX_TOP_FOLDERS:
+            params = {
+                "ParentId": library_id,
+                "Fields": "Path",
+                "EnableImages": "false",
+                "EnableUserData": "false",
+                "StartIndex": str(len(found)),
+                "Limit": str(ITEMS_PAGE),
+            }
+            answer = base.json_of(await self._send("GET", ITEMS_PATH, params=params))
+            items = answer.get("Items") if isinstance(answer, dict) else None
+            if not isinstance(items, list):
+                raise base.wrong_kind()
+            found.extend(
+                base.text(item.get("Path"), base.PATH_LIMIT)
+                for item in items
+                if isinstance(item, dict) and base.text(item.get("Path"), base.PATH_LIMIT)
+            )
+            if len(items) < ITEMS_PAGE:
+                break
+        return found
 
     async def refresh_all(self) -> None:
         """Read every library again."""

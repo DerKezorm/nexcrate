@@ -435,7 +435,10 @@ class AlbumFilesOut(BaseModel):
 
 class AlbumAssignFile(BaseModel):
     key: int
-    track_id: int | None = Field(default=None, description="The track; null with `loose` false: not filed.")
+    track_id: int | None = Field(
+        default=None,
+        description="The track; null with `loose` false: not filed, and a file in the album folder leaves it.",
+    )
     loose: bool = Field(default=False, description="File without a track: fits no track, file anyway.")
 
 
@@ -610,7 +613,9 @@ def album_files(
     description=(
         "Files the audio files with the chosen tracks of one release, in the background; the answer is the download "
         "while it is filed. Each track once; `loose` files a file under its own name without a track (a hidden track, "
-        "a medley); a file with neither is not filed. The release can change only while no file lies in the album "
+        "a medley); a file with neither is not filed. A file of this download in the album folder may get another "
+        "track, `loose`, or neither: it leaves the folder first, and with neither it is taken out of the album. Send "
+        "only the files that change. The release can change only while no file lies in the album "
         'folder. Replacing an album whose files are not worse needs `confirm: ["not_better"]`.'
     ),
     responses=error_responses(

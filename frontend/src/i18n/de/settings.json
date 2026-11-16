@@ -783,7 +783,7 @@
   },
   "servers": {
     "title": "Medienserver",
-    "intro": "Plex, Jellyfin, Emby und Kodi erfahren von nexcrate, wenn sich ein Ordner geändert hat: nach jedem abgelegten Download und nach dem Umbenennen. So steht ein neuer Film nach ein, zwei Minuten im Player und nicht erst nach dem nächsten Suchlauf des Servers. Ein Medienserver, der nicht antwortet, hält nie einen Import auf.",
+    "intro": "Plex, Jellyfin, Emby und Kodi erfahren von nexcrate, wenn sich ein Ordner geändert hat: nach jedem abgelegten Download und nach dem Umbenennen. So steht ein neuer Film nach ein, zwei Minuten im Player und nicht erst nach dem nächsten Suchlauf des Servers. Musik erfahren Jellyfin und Emby gesammelt, drei Minuten nach dem letzten Album: Ein neuer Künstler lässt sie die ganze Musikbibliothek lesen, und das soll nur einmal geschehen, nie neben einem laufenden Durchgang. Ein Medienserver, der nicht antwortet, hält nie einen Import auf.",
     "add": "Medienserver hinzufügen",
     "empty": "Noch kein Medienserver verbunden. Neue Dateien erscheinen dann erst, wenn der Server von selbst nachsieht.",
     "kind": {

@@ -5,9 +5,13 @@ so the interface can say in one sentence why this release and not that one. Lida
 tracks and lands in the box (planungsgrundlage h: OK Computer's 91-track box on 6 media, The Wall's 120-track box).
 
 1. Candidates: official releases whose media are all audio, with a track list.
-2. The media brake: at most one medium more than the candidate with the fewest media.
-3. The most tracks win.
-4. Ties: digital before CD before vinyl before anything else, then the country order of the settings, then the
+2. The same version as the album (since 16.11.2026): a release whose name says another version than the album
+   ("Album Instrumentals", "Album + Instrumentals", "… (instrumental)", "Album: Remix Plus") is left out
+   while a release of the album's own version is there. Found on the owner's library: "most tracks" took an
+   instrumental release with 22 tracks over the album with 21; the album then waited for instrumentals for good.
+3. The media brake: at most one medium more than the candidate with the fewest media.
+4. The most tracks win; tracks of another version ("Song (instrumental)" as bonus tracks) count no more than gaps.
+5. Ties: digital before CD before vinyl before anything else, then the country order of the settings, then the
    earliest date, then the id.
 """
 
@@ -52,6 +56,11 @@ class Candidate:
     mbid: str = ""
     #: Tracks that are no music (``is_filler``); the rule counts the rest.
     filler_count: int = 0
+    #: The versions the release's name says beyond the album (``versions.of_release``, without what the album
+    #: expects): another version of the album.
+    other_versions: frozenset[str] = frozenset()
+    #: Tracks of another version than the album ("Song (instrumental)"); the rule counts them as little as gaps.
+    version_count: int = 0
 
     @property
     def media_count(self) -> int:
@@ -59,7 +68,7 @@ class Candidate:
 
     @property
     def music_count(self) -> int:
-        return max(self.track_count - self.filler_count, 0)
+        return max(self.track_count - self.filler_count - self.version_count, 0)
 
 
 @dataclass
@@ -126,7 +135,8 @@ def countries_for(language: str | None, own: list[str] | None) -> tuple[str, ...
 
 #: Counts up with every change of the rule: the loading job runs the rule again for every album, once
 #: (``loading.apply_rule_change``). 2: gaps are no tracks. 3: the track counts an import had set to 0 are repaired.
-RULE_VERSION = "3"
+#: 4: releases and tracks of another version (instrumentals, live, remixes) are left out.
+RULE_VERSION = "4"
 
 #: MusicBrainz's names for a track that is never music, whatever its length.
 _NEVER_MUSIC = ("[silence]", "[data track]")
@@ -161,6 +171,10 @@ def choose(releases: list[Candidate], countries: tuple[str, ...] | list[str]) ->
     if not candidates:
         return Choice(None, [{"code": "no_candidate", "why": "no_tracks"}])
     reasons: list[dict[str, Any]] = []
+    same = [release for release in candidates if not release.other_versions]
+    if same and len(same) < len(candidates):
+        reasons.append({"code": "other_version", "left_out": len(candidates) - len(same)})
+        candidates = same
     fewest = min(release.media_count for release in candidates)
     kept = [release for release in candidates if release.media_count <= fewest + 1]
     boxes = [release for release in candidates if release.media_count > fewest + 1]
@@ -186,6 +200,11 @@ def choose(releases: list[Candidate], countries: tuple[str, ...] | list[str]) ->
     longest = max(kept, key=lambda release: release.track_count)
     if longest.track_count > most and longest not in leaders:
         reasons.append({"code": "filler_ignored", "tracks": longest.track_count, "filler": longest.filler_count})
+    if len(leaders) > 1:
+        # The same songs with and without bonus tracks of another version: the one without, or the album would wait
+        # for its instrumentals for good.
+        fewest_other = min(release.version_count for release in leaders)
+        leaders = [release for release in leaders if release.version_count == fewest_other]
     if len(leaders) > 1:
         best_format = min(format_rank(release.formats) for release in leaders)
         by_format = [release for release in leaders if format_rank(release.formats) == best_format]

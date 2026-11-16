@@ -396,6 +396,8 @@
         "mediaCount_other": "{{count}} media",
         "formatClause": "decided by format",
         "fillerClause": "release with {{tracks}} tracks left out, {{filler}} of them are gaps",
+        "otherVersionClause_one": "{{value}} release of another version left out, instrumentals or live for example",
+        "otherVersionClause_other": "{{value}} releases of another version left out, instrumentals or live for example",
         "countryClause": "decided by country ({{country}})",
         "earliestClause": "earliest release",
         "source": "From Lidarr: the release the files belong to",

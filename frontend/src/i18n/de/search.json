@@ -310,6 +310,7 @@
       "karaoke": "Karaoke.",
       "sampler": "Ein Sampler, kein Album dieses Künstlers.",
       "notSampler": "Kein Sampler.",
+      "otherVersion": "Eine andere Fassung ({{kind}}), nicht dieses Album.",
       "other": "Passt nicht ({{code}})."
     },
     "load": {

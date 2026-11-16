@@ -635,7 +635,17 @@ def apply_rule_change(db: OrmSession) -> int:
             db.commit()
     set_setting(db, SETTING_RULE, target.RULE_VERSION)
     db.commit()
-    logger.info("The target rule changed (now %s): ran again for %d albums", target.RULE_VERSION, done)
+    from .. import companions_album
+
+    moved = sorted(db.info.pop(store.RELEASE_NEX_DUE, set()))
+    for version_id in moved:
+        companions_album.write_version(version_id)
+    logger.info(
+        "The target rule changed (now %s): ran again for %d albums, %d targets back on the files' release",
+        target.RULE_VERSION,
+        done,
+        len(moved),
+    )
     return done
 
 

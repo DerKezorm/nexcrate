@@ -87,6 +87,18 @@ def stored_libraries(raw: Iterable[dict[str, Any]] | None) -> list[Library]:
     return found
 
 
+def key(path: str) -> tuple[str, ...]:
+    """A path in a form to compare: its folder names, folded for a Windows path."""
+    return tuple(_comparable(path))
+
+
+def location_of(remote_path: str, library: Library) -> str | None:
+    """The location of ``library`` that holds ``remote_path``, the deepest one."""
+    path = _comparable(remote_path)
+    holding = [item for item in library.locations if _comparable(item) and _starts_with(path, _comparable(item))]
+    return max(holding, key=lambda item: len(_comparable(item))) if holding else None
+
+
 def library_of(remote_path: str, libraries: Iterable[Library]) -> Library | None:
     """The library one of whose locations holds ``remote_path``; the deepest location wins. None: it lies in none."""
     path = _comparable(remote_path)

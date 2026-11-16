@@ -28,7 +28,8 @@ import { FinishDialog } from './FinishDialog'
  * Laenge, Format und Tags ein Titel dieser Ausgabe, "passt zu keinem Titel, trotzdem ablegen" oder "nicht ablegen", und
  * die Titelliste mit dem, was liegt, was gewaehlt ist und was fehlt. Die Wahl gilt nur fuer diesen Download.
  * Seit dem 29.10.2026 bekommen auch abgelegte Dateien dieses Downloads einen anderen Titel (oder "trotzdem ablegen");
- * sie kommen dann mit neuem Namen und neuen Tags auf den gewaehlten Titel.
+ * sie kommen dann mit neuem Namen und neuen Tags auf den gewaehlten Titel. Seit dem 16.11.2026 lassen sie sich auch
+ * "aus dem Album nehmen": eine falsch zugeordnete Datei (etwa ein Live-Titel auf dem Studiotitel) wird nicht abgelegt.
  * Bei "nicht besser" sagt der Dialog, was schlechter wuerde, und ersetzt erst auf ausdrueckliche Bestaetigung.
  */
 export function AlbumAssignDialog({ download, onClose, onDone }: { download: Download; onClose: () => void; onDone: (message: string) => void }) {
@@ -329,7 +330,7 @@ function FileRow({
   doubles: Set<number>
   onChoose: (value: string) => void
   trackById: Map<number, AlbumTrackChoice>
-  /** Eine Datei im Albumordner: wo sie liegt und ob sie umzieht; ohne "nicht ablegen" (dafuer gibt es den Papierkorb). */
+  /** Eine Datei im Albumordner: wo sie liegt und ob sie umzieht; "nicht ablegen" heisst dort "aus dem Album nehmen". */
   placed?: { where: string; moves: boolean }
 }) {
   const { t, i18n } = useTranslation()
@@ -364,7 +365,7 @@ function FileRow({
             (choice.kind === 'track' && doubles.has(choice.trackId) ? 'border-bad-500' : 'border-ink-700')
           }
         >
-          {placed === undefined && <option value="">{t('downloads.assign.notFiled')}</option>}
+          <option value="">{placed === undefined ? t('downloads.albumAssign.notFiled') : t('downloads.albumAssign.takeOut')}</option>
           <option value={LOOSE}>{t('downloads.albumAssign.loose')}</option>
           {tracks.map((track) => (
             <option key={track.id} value={track.id}>
@@ -381,12 +382,14 @@ function FileRow({
             </optgroup>
           )}
         </select>
-        {choice.kind === 'none' && proposal !== undefined && (
+        {choice.kind === 'none' && placed === undefined && proposal !== undefined && (
           <p className="text-xs text-mist-500">{t('downloads.albumAssign.proposal', { track: `${trackCode(proposal, severalMedia)} ${proposal.name}` })}</p>
         )}
         {choice.kind === 'loose' && <p className="text-xs text-mist-500">{t('downloads.albumAssign.looseHint')}</p>}
         {placed !== undefined && <p className="text-xs text-mist-500">{placed.where}</p>}
-        {placed?.moves === true && <p className="text-xs text-accent-400">{t('downloads.albumAssign.placedMoves')}</p>}
+        {placed?.moves === true && (
+          <p className="text-xs text-accent-400">{choice.kind === 'none' ? t('downloads.albumAssign.takeOutHint') : t('downloads.albumAssign.placedMoves')}</p>
+        )}
       </div>
     </li>
   )

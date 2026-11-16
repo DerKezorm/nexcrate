@@ -165,6 +165,8 @@ class Context:
     group_mbid: str | None
     #: ⚠️ The decrypted AcoustID key when fingerprinting can run (M4.9); None otherwise.
     fingerprint_key: str | None = field(default=None, repr=False)
+    #: The album's MusicBrainz secondary types: a live album expects live tracks (``music.versions``).
+    album_types: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -217,6 +219,7 @@ def _editions(db: OrmSession, title_id: int) -> tuple[fm.Edition, ...]:
         fm.Edition(
             id=release.id,
             mbid=release.mbid,
+            name=release.name or "",
             media=max(release.media_count, len({item.medium for item in tracks[release.id]}), 1),
             tracks=tuple(sorted(tracks[release.id], key=lambda item: (item.medium, item.position))),
         )
@@ -307,6 +310,7 @@ def load(db: OrmSession, download_id: int) -> Context | None:
         stored=stored,
         group_mbid=title.mbid,
         fingerprint_key=fingerprint.key(db) if fingerprint.usable(db) else None,
+        album_types=tuple(title.secondary_types or ()),
     )
 
 
@@ -657,6 +661,7 @@ def with_fingerprints(context: Context, found: Found, result: fm.Result) -> tupl
         others=context.others,
         album_name=context.album.album_title,
         artist_name=context.album.artist_name,
+        album_types=context.album_types,
     )
     if again.edition is None:
         return result, outcome.states
@@ -1247,6 +1252,7 @@ def _decide(context: Context, found: Found, manual: Manual | None) -> fm.Result:
             others=context.others,
             album_name=context.album.album_title,
             artist_name=context.album.artist_name,
+            album_types=context.album_types,
         )
     chosen = context.download_release_id if any(row.placed for row in context.stored) else None
     return fm.match(
@@ -1257,6 +1263,7 @@ def _decide(context: Context, found: Found, manual: Manual | None) -> fm.Result:
         others=context.others,
         album_name=context.album.album_title,
         artist_name=context.album.artist_name,
+        album_types=context.album_types,
         cue_sheet=found.cue_sheet,
     )
 
@@ -1358,7 +1365,8 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
         raise Problem("no_audio")
     planned = _planned(context, found, result, rows, manual) if result is not None else []
     for row_id in _not_filed_by_owner(manual):
-        _mark(row_id, "not_filed", target=None)
+        # Not filed has no track: the history shows it as not filed, not as the track the matcher guessed.
+        _mark(row_id, "not_filed", target=None, track_id=None, via=None)
     spot = prepare_spot(context, root)
     # A file that completes an album is named and tagged after the album's target edition, not after the edition it
     # was downloaded in. A song the target does not have keeps its own, and a

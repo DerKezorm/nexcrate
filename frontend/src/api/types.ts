@@ -3232,7 +3232,7 @@ export type AlbumMatch = {
   title_id: number | null
   album: string | null
   year: number | null
-  /** Bei not_an_album: several_albums, tribute, karaoke, sampler, not_a_sampler. */
+  /** Bei not_an_album: several_albums, tribute, karaoke, sampler, not_a_sampler, other_version. */
   reason: string | null
   read_artist: string
   read_album: string

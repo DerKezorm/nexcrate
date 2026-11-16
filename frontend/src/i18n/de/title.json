@@ -396,6 +396,8 @@
         "mediaCount_other": "{{count}}-Medien",
         "formatClause": "nach Format entschieden",
         "fillerClause": "Ausgabe mit {{tracks}} Titeln ausgelassen, {{filler}} davon sind Lücken",
+        "otherVersionClause_one": "{{value}} Ausgabe einer anderen Fassung ausgelassen, etwa Instrumentals oder live",
+        "otherVersionClause_other": "{{value}} Ausgaben einer anderen Fassung ausgelassen, etwa Instrumentals oder live",
         "countryClause": "nach Land entschieden ({{country}})",
         "earliestClause": "früheste Ausgabe",
         "source": "Aus Lidarr: die Ausgabe, zu der die Dateien gehören",

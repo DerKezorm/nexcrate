@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next'
 
 import type { ReleaseHead, TargetReason } from '../../api/types'
 import { countryText } from '../../lib/country'
+import { formatNumber } from '../../lib/format'
 
 /** Formate einer Ausgabe zusammengefasst, etwa "2×CD" oder "Digital". */
 export function formatsText(formats: string[], mediaCount: number): string {
@@ -52,6 +53,9 @@ export function targetReasonSentence(t: TFunction, reason: TargetReason | null, 
     const spec = excluded ? formatsText(excluded.formats, excluded.media_count) : t('title.album.target.reason.mediaCount', { count: Number(brake.largest_media) })
     parts.push(t('title.album.target.reason.mediaBrakeClause', { spec }))
   }
+  // Seit 16.11.2026: Ausgaben einer anderen Fassung (Instrumentals, live) zaehlen nicht mit
+  const other = byCode.get('other_version')
+  if (other) parts.push(t('title.album.target.reason.otherVersionClause', { count: Number(other.left_out), value: formatNumber(Number(other.left_out), language) }))
   const filler = byCode.get('filler_ignored')
   if (filler) parts.push(t('title.album.target.reason.fillerClause', { tracks: Number(filler.tracks), filler: Number(filler.filler) }))
   const format = byCode.get('format')

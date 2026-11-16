@@ -43,7 +43,7 @@ from ...models import (
 )
 from ...models.music import VARIOUS_ARTISTS_MBID
 from .. import schreibweisen
-from . import kinds, same_song, target
+from . import kinds, same_song, target, versions
 from .musicbrainz import ArtistData, ReleaseData, ReleaseGroupData
 
 logger = logging.getLogger("nexcrate.music")
@@ -798,6 +798,21 @@ def candidates_of(db: OrmSession, title_id: int) -> list[target.Candidate]:
     for release_id, name, length_ms in bracketed.all():
         if target.is_filler(name, length_ms):
             filler[release_id] += 1
+    # Another version than the album (since 16.11.2026): in a release's name, and in its tracks' qualifiers, which
+    # stand in brackets or after " - ".
+    title = db.get(Title, title_id)
+    album_title = title.title if title is not None else ""
+    expected = versions.expected(album_title, title.secondary_types if title is not None else ())
+    qualified = db.execute(
+        select(ReleaseTrack.release_id, ReleaseTrack.name).where(
+            ReleaseTrack.release_id.in_([row.id for row in rows]),
+            ReleaseTrack.name.like("%(%") | ReleaseTrack.name.like("%[%") | ReleaseTrack.name.like("% - %"),
+        )
+    ).tuples()
+    other_tracks: dict[int, int] = defaultdict(int)
+    for release_id, name in qualified.all():
+        if versions.marks(name) - expected:
+            other_tracks[release_id] += 1
     return [
         target.Candidate(
             id=row.id,
@@ -809,6 +824,8 @@ def candidates_of(db: OrmSession, title_id: int) -> list[target.Candidate]:
             tracks_loaded=row.tracks_loaded,
             mbid=row.mbid,
             filler_count=filler.get(row.id, 0),
+            other_versions=versions.of_release(row.name, album_title) - expected,
+            version_count=other_tracks.get(row.id, 0),
         )
         for row in rows
     ]
@@ -823,10 +840,13 @@ def refresh_target(db: OrmSession, title: Title, version: Version, *, moment: da
     """Run the rule for one album version: sets the target while nothing freezes it, else a
     suggestion; the owner's choice stays. Writes ``target_changed`` when the target moved."""
     definition_row = db.get(VersionDefinition, version.version_definition_id)
-    choice = target.choose(candidates_of(db, title.id), countries_of(db, definition_row, language))
+    candidates = candidates_of(db, title.id)
+    choice = target.choose(candidates, countries_of(db, definition_row, language))
     chosen_id = choice.chosen.id if choice.chosen is not None else None
     present = db.scalar(select(func.count(TrackFile.id)).where(TrackFile.version_id == version.id)) or 0
     frozen = version.target_set_by == "owner" or (present > 0 and version.target_release_id is not None)
+    if frozen and version.target_set_by == "rule":
+        _back_to_the_files_version(db, title, version, candidates, definition_row, moment)
     if frozen:
         version.target_suggestion_id = chosen_id if chosen_id and chosen_id != version.target_release_id else None
         _count_tracks(db, version)
@@ -854,6 +874,44 @@ def refresh_target(db: OrmSession, title: Title, version: Version, *, moment: da
     version.updated_at = moment
     db.flush()
     return choice
+
+
+#: ``db.info`` key: album versions whose target moved by the rule while files lie there.
+RELEASE_NEX_DUE = "release_nex_due"
+
+
+def _back_to_the_files_version(
+    db: OrmSession,
+    title: Title,
+    version: Version,
+    candidates: list[target.Candidate],
+    definition_row: VersionDefinition | None,
+    moment: datetime,
+) -> None:
+    """A target the rule chose of another version than the album, while the files lie on a release of the album's
+    own version: the target goes to the files' release. Found on the owner's library (16.11.2026): "most tracks" had
+    chosen an instrumental release, the album's files came from the album, and it waited for instrumentals for good.
+    Only a target the rule chose: the owner's choice and the release a source watches stay."""
+    if version.actual_release_id is None or version.target_release_id in (None, version.actual_release_id):
+        return
+    by_id = {candidate.id: candidate for candidate in candidates}
+    current, actual = by_id.get(version.target_release_id), by_id.get(version.actual_release_id)
+    if current is None or actual is None or not current.other_versions or actual.other_versions:
+        return
+    old, new = db.get(Release, current.id), db.get(Release, actual.id)
+    version.target_release_id = actual.id
+    # The album folder's release.nex names the target: the caller writes it again after the commit.
+    db.info.setdefault(RELEASE_NEX_DUE, set()).add(version.id)
+    version.target_reason = {"codes": [{"code": "files"}, {"code": "other_version", "left_out": 1}]}
+    _history(
+        db,
+        title.id,
+        version.id,
+        definition_row,
+        "target_changed",
+        moment,
+        f"{_release_text(old)} > {_release_text(new)}",
+    )
 
 
 def set_owner_target(

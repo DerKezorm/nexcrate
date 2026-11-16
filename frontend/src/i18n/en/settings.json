@@ -783,7 +783,7 @@
   },
   "servers": {
     "title": "Media servers",
-    "intro": "nexcrate tells Plex, Jellyfin, Emby and Kodi when a folder has changed: after every filed download and after renaming. A new movie then shows up in the player within a minute or two instead of after the server's next scan. A media server that does not answer never holds up an import.",
+    "intro": "nexcrate tells Plex, Jellyfin, Emby and Kodi when a folder has changed: after every filed download and after renaming. A new movie then shows up in the player within a minute or two instead of after the server's next scan. Jellyfin and Emby hear of music collected, three minutes after the last album: a new artist makes them read the whole music library, and that should happen once, never beside a pass that is running. A media server that does not answer never holds up an import.",
     "add": "Add media server",
     "empty": "No media server connected yet. New files then appear only when the server looks by itself.",
     "kind": {

@@ -26,7 +26,7 @@ from ..deps import DbSession
 from ..meldungen import error, error_responses
 from ..models import Artist, Release, Title, Version, VersionDefinition, utcnow
 from ..models.music import LOAD_STATES, MONITOR_NEW
-from ..services import auto_tags, images, tags
+from ..services import auto_tags, companions_album, images, tags
 from ..services.automatic import planning
 from ..services.music import album_read, credits, fingerprint, kinds, loading, retag, store, tag_writing, target
 from ..services.music import musicbrainz as mb
@@ -1340,7 +1340,7 @@ class TargetOut(BaseModel):
     summary="Choose the target release",
     description=(
         "The owner picks any official release of the album, a box too; the rule never changes it afterwards. Null "
-        "hands the choice back to the rule."
+        "hands the choice back to the rule. The album folder's release.nex is written again."
     ),
     responses=error_responses((404, "not_found"), (422, "invalid_input")),
 )
@@ -1358,6 +1358,9 @@ def change_target(db: DbSession, title_id: int, payload: TargetIn) -> TargetOut:
             raise error("invalid_input", "The input is not valid.", 422, fields=["release_id"])
     store.set_owner_target(db, title, version, release, moment=utcnow(), language=store.account_language(db))
     db.commit()
+    if version.relative_path:
+        # The album folder's release.nex names the target: written again, or restoring brings the old one back.
+        companions_album.write_version(version.id)
     return TargetOut(
         version_id=version.id,
         target_release_id=version.target_release_id,

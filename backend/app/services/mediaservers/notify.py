@@ -14,6 +14,9 @@ What is told ("So gebaut"):
 * ⚠️ It lies in no library of the server: nothing is guessed. The libraries of that media kind with the switch on are
   read again as a whole, and the row says ``mediaserver_path_unmatched``, so the owner sees that a path pair is
   missing. A server without such a library is left alone.
+* Music for Jellyfin and Emby is not told at once but collected in ``music_batch`` (since 16.11.2026): an album of
+  an artist the server does not know yet made it read the whole music library, one full pass per album. Plex and
+  Kodi, and movies and series everywhere, are told at once as before.
 """
 
 from __future__ import annotations
@@ -34,7 +37,7 @@ from ... import crypto
 from ...db import SessionLocal
 from ...models import MediaServer, utcnow
 from ..radarr import SourceUrlInvalid
-from . import base, paths
+from . import base, music_batch, paths
 from .jellyfin import JellyfinClient
 from .kodi import KodiClient
 from .plex import PlexClient
@@ -176,6 +179,10 @@ def _execute(kind: str, folders: list[str]) -> None:
         logger.warning("The media servers could not be read", exc_info=True)
         return
     for server in servers:
+        if kind == "music" and server.kind in music_batch.KINDS:
+            # Collected and told once, see ``music_batch``.
+            music_batch.add(server.id, folders)
+            continue
         try:
             wanted = plan(server.libraries, server.path_mappings, kind, folders)
             if wanted.empty:

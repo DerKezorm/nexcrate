@@ -55,6 +55,9 @@ export function matchText(t: TFunction, match: AlbumMatch): string {
           return t('search.album.match.sampler')
         case 'not_a_sampler':
           return t('search.album.match.notSampler')
+        // Seit 16.11.2026: Live- oder Demo-Release eines Studioalbums, andere Aufnahmen
+        case 'other_version':
+          return t('search.album.match.otherVersion', { kind: kindText(t, match.kind_differs ?? '') })
         default:
           return t('search.album.match.other', { code: match.reason ?? match.kind })
       }

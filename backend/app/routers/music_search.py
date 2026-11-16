@@ -45,7 +45,9 @@ class AlbumMatchOut(BaseModel):
         description=(
             "this: the album searched. other_album: another album of the artist (title_id, album, year). "
             "unknown_album: the artist, but no album of it has this name. other_artist. not_an_album with reason: "
-            "several_albums, tribute, karaoke, sampler (a sampler for an album of one artist), not_a_sampler."
+            "several_albums, tribute, karaoke, sampler (a sampler for an album of one artist), not_a_sampler, "
+            "other_version (a live, demo or mixtape release of an album that is none; album and kind_differs say "
+            "which)."
         )
     )
     title_id: int | None

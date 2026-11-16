@@ -206,10 +206,17 @@ def name_the(name: str) -> str:
     return f"{found.group(2)}, {found.group(1)}" if found else name
 
 
+def slashes_as_dashes(text: str) -> str:
+    """A slash in a title as a dash: " / " as " - ", any other "/" as "-". The owner's choice (16.11.2026): a live
+    track named "Song (live / Arena, City / 17/10/73)" became "Song (live + Arena, City + 17+10+73)"
+    with Radarr's "+". Titles of albums and tracks only; an artist's name and movies and series keep the "+"."""
+    return text.replace(" / ", " - ").replace("/", "-")
+
+
 def token_values(album: AlbumFacts, track: TrackFacts | None) -> dict[str, str]:
     """Every token's raw value by lookup key. Numbers are raw; ``render`` pads them."""
     artist = schreibweisen.nfc(album.artist_name or "")
-    title = schreibweisen.nfc(album.album_title or "")
+    title = slashes_as_dashes(schreibweisen.nfc(album.album_title or ""))
     values = {
         token_key("Artist Name"): artist,
         token_key("Artist CleanName"): naming.clean_title(artist),
@@ -225,7 +232,7 @@ def token_values(album: AlbumFacts, track: TrackFacts | None) -> dict[str, str]:
         token_key("Release Year"): str(album.year) if album.year else "",
     }
     if track is not None:
-        track_title = schreibweisen.nfc(track.title or "")
+        track_title = slashes_as_dashes(schreibweisen.nfc(track.title or ""))
         values.update(
             {
                 MEDIUM_KEY: str(track.medium),

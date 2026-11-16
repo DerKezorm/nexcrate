@@ -7,7 +7,9 @@
   lie in the album folder the release cannot change, and a bonus track of the target would stay out for good.
 * ``assign`` files what the owner chose: a track, "fits no track, file anyway" (``loose``), or nothing.
   Each track once, only tracks of the chosen release or tracks only its target has. A file in the album folder may
-  get another track or ``loose``: it leaves the folder and is filed again (``album_import.unplace``). The release can
+  get another track or ``loose``: it leaves the folder and is filed again (``album_import.unplace``). Nothing for such
+  a file takes it out of the album: it leaves the folder and stays not filed, so a wrong automatic assignment (a live
+  track on the studio track of its position) can be undone without another track to put it on. The release can
   be changed only
   while no file of the download lies in the album folder. ``confirm: ["not_better"]`` replaces an album whose files
   are not worse. The choice holds for this download only; the target release stays as it is
@@ -238,14 +240,14 @@ def assign(
         version = store.version_of(db, row.title_id, row.version_definition_id)
         target_id = version.target_release_id if version is not None else None
         tracks |= {track.id for track in _target_only(db, release, target_id)}
-        # A file in the album folder keeps its track unless the owner chose another one or "loose"; "not filed" is not
-        # offered for it (the album page has the recycle bin for that).
+        # A file in the album folder keeps its track unless the owner chose another one, "loose", or nothing: then it
+        # leaves the folder, and with nothing it stays not filed. Only the files that change are sent.
         moving: set[int] = set()
         for key, track_id, loose in chosen:
             item = rows.get(key)
             if item is None or item.track_file_id is None:
                 continue
-            if (album_import.LOOSE if loose else track_id) not in (None, item.track_id or album_import.LOOSE):
+            if (album_import.LOOSE if loose else track_id) != (item.track_id or album_import.LOOSE):
                 moving.add(key)
         held = {item.track_id for item in placed if item.track_id is not None and item.id not in moving}
         seen: set[int] = set()

@@ -15,8 +15,15 @@ file claims the same track, by one of these ways:
 When position and name point at different tracks the file is not clear. The length is a check, never a reason alone
 (research A5).
 
+**The same version.** Position and name count only when the file and the track are the same version of the song
+(``versions``): a file whose title, name or album tag says "(Live)", "- Instrumental" and so on fits no track that does
+not say so, and the other way round, unless the album expects it (its title or MusicBrainz type). Such a file stays
+open and is never proposed for that track; only its id may still file it. Found on 16.11.2026: a live release was
+loaded for a studio album and one live track went onto the studio track of its position, 10 s off at most.
+
 **The release**: when most files name a release of the album in their tags and its track count fits the
-files, that one. Otherwise the release with the most clear files, then the fewest gaps on both sides, then the target,
+files, that one. Otherwise the release with the most clear files, then one of the album's own version (not "Nachtfähre
+Instrumentals" for the album "Nachtfähre"), then the fewest gaps on both sides, then the target,
 then the closer track count, then the lowest id.
 
 A file whose tags name another album of the artist and that fits no track stays out as ``other_album``.
@@ -34,6 +41,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .. import schreibweisen
+from . import versions
 
 #: How far a file's length may be off the track's; Lidarr's distance starts counting at 10 s as well.
 TOLERANCE_MS = 10_000
@@ -92,6 +100,8 @@ class Edition:
     mbid: str
     media: int
     tracks: tuple[Track, ...]
+    #: The release's name: "Nachtfähre Instrumentals" is another version than the album "Nachtfähre".
+    name: str = ""
 
 
 @dataclass(frozen=True)
@@ -271,10 +281,27 @@ def _by_id(file: AudioFile, edition: Edition) -> set[int]:
     return {track.id for track in edition.tracks if (track.recording_mbid or "").casefold() in recordings}
 
 
+def file_versions(file: AudioFile, reading: Reading) -> frozenset[str]:
+    """The versions a file says: in its title, its name, and its album tag."""
+    _folders, stem = _parts(file.path)
+    album = (file.tags.get("album") or [None])[0]
+    return versions.marks(reading.title) | versions.marks(stem) | versions.marks(album)
+
+
+def _same_version(track: Track, marks: frozenset[str], allowed: frozenset[str]) -> bool:
+    return not versions.differs(marks, versions.marks(track.name), allowed)
+
+
 def _candidates(
-    file: AudioFile, reading: Reading, edition: Edition, keys: frozenset[str]
+    file: AudioFile,
+    reading: Reading,
+    edition: Edition,
+    keys: frozenset[str],
+    marks: frozenset[str] = frozenset(),
+    allowed: frozenset[str] = frozenset(),
 ) -> tuple[set[int], str | None]:
-    """The tracks a file could be and the way that says so; an empty set when the ways disagree or nothing fits."""
+    """The tracks a file could be and the way that says so; an empty set when the ways disagree or nothing fits.
+    Position and name count only for a track of the same version (``marks`` of the file, ``allowed`` by the album)."""
     by_id = _by_id(file, edition)
     if by_id:
         # One recording can stand twice in a release: the position then picks among them.
@@ -289,14 +316,13 @@ def _candidates(
             if len(narrowed) == 1:
                 return narrowed, "id"
         return by_id, "id"
+    tracks = [track for track in edition.tracks if _same_version(track, marks, allowed)]
     by_name = {
-        track.id
-        for track in edition.tracks
-        if keys and keys & title_keys(track.name) and _close(file, track) is not False
+        track.id for track in tracks if keys and keys & title_keys(track.name) and _close(file, track) is not False
     }
     by_position: set[int] = set()
     if reading.position is not None:
-        for track in edition.tracks:
+        for track in tracks:
             # Without a medium the position may stand on any medium of the release: the length decides.
             same_medium = reading.medium is None or track.medium == reading.medium
             if not same_medium or track.position != reading.position:
@@ -309,7 +335,7 @@ def _candidates(
             ordered = sorted(edition.tracks, key=lambda item: (item.medium, item.position))
             if 0 < reading.position <= len(ordered):
                 track = ordered[reading.position - 1]
-                if _close(file, track) is True:
+                if _close(file, track) is True and _same_version(track, marks, allowed):
                     by_position.add(track.id)
     if by_position and by_name:
         both = by_position & by_name
@@ -326,9 +352,12 @@ def _proposal(
     keys: frozenset[str],
     fits: set[int],
     held: frozenset[int] = frozenset(),
+    marks: frozenset[str] = frozenset(),
+    allowed: frozenset[str] = frozenset(),
 ) -> tuple[int, ...]:
     """Tracks for the dialog: those that fit, else a track no clear file holds before one that is held, then the same
-    name or position, then the nearest length."""
+    name or position, then the nearest length. Never a track of another version: a live file proposes no studio
+    track."""
     if fits:
         return tuple(sorted(fits, key=lambda track_id: (track_id in held, track_id)))
 
@@ -340,7 +369,7 @@ def _proposal(
         )
         return (track.id in held, named + placed, length, track.id)
 
-    ordered = sorted(edition.tracks, key=distance)
+    ordered = sorted((track for track in edition.tracks if _same_version(track, marks, allowed)), key=distance)
     return tuple(track.id for track in ordered[:3])
 
 
@@ -363,16 +392,19 @@ def match_edition(
     others: Sequence[OtherAlbum] = (),
     album_name: str | None = None,
     artist_name: str | None = None,
+    album_types: Sequence[str] = (),
 ) -> EditionResult:
-    """Every file against one release."""
+    """Every file against one release. ``album_types``: the album's MusicBrainz secondary types."""
     several = edition.media > 1
     readings = {file.key: read(file, several, artist_name) for file in files}
     own_keys = title_keys(album_name)
+    allowed = versions.expected(album_name, album_types)
+    marks = {file.key: file_versions(file, readings[file.key]) for file in files}
     fits: dict[int, tuple[set[int], str | None]] = {}
     for file in files:
         reading = readings[file.key]
         keys = title_keys(reading.title)
-        fits[file.key] = _candidates(file, reading, edition, keys)
+        fits[file.key] = _candidates(file, reading, edition, keys, marks[file.key], allowed)
     claims: Counter[int] = Counter()
     for tracks, _way in fits.values():
         if len(tracks) == 1:
@@ -396,7 +428,7 @@ def match_edition(
             decisions.append(Decision(file.key, OTHER_ALBUM, None, None, (), reading, other_title_id=other))
             continue
         keys = title_keys(reading.title)
-        proposal = _proposal(file, reading, edition, keys, tracks, held)
+        proposal = _proposal(file, reading, edition, keys, tracks, held, marks[file.key], allowed)
         decisions.append(Decision(file.key, OPEN, None, None, proposal, reading))
     missing = tuple(
         track.id
@@ -469,26 +501,35 @@ def match(
     album_name: str | None = None,
     artist_name: str | None = None,
     cue_sheet: bool = False,
+    album_types: Sequence[str] = (),
 ) -> Result:
-    """The release that came and the decision for every file. ``chosen_id``: the owner's release in the dialog."""
+    """The release that came and the decision for every file. ``chosen_id``: the owner's release in the dialog;
+    ``album_types``: the album's MusicBrainz secondary types (a live album expects live tracks)."""
+
+    def match_one(edition: Edition) -> EditionResult:
+        return match_edition(files, edition, others, album_name, artist_name, album_types)
+
     usable = [edition for edition in editions if edition.tracks]
     if not files or not usable:
         return Result(None, {"code": "no_tracks"} if not usable else {"code": "no_files"})
     if chosen_id is not None:
         chosen = next((edition for edition in usable if edition.id == chosen_id), None)
         if chosen is not None:
-            return Result(match_edition(files, chosen, others, album_name, artist_name), {"code": "owner"})
+            return Result(match_one(chosen), {"code": "owner"})
     if single_file(files, usable, cue_sheet):
         return Result(None, {"code": "single_file"}, single_file=True)
     named = _named_edition(files, usable)
     if named is not None:
-        return Result(match_edition(files, named, others, album_name, artist_name), {"code": "by_tags"})
-    results = [(edition, match_edition(files, edition, others, album_name, artist_name)) for edition in usable]
+        return Result(match_one(named), {"code": "by_tags"})
+    results = [(edition, match_one(edition)) for edition in usable]
+    allowed = versions.expected(album_name, album_types)
 
-    def score(item: tuple[Edition, EditionResult]) -> tuple[int, int, int, int, int]:
+    def score(item: tuple[Edition, EditionResult]) -> tuple[int, int, int, int, int, int]:
         edition, result = item
         return (
             result.filed,
+            # A release of another version ("Nachtfähre Instrumentals") only when it fits more files.
+            0 if versions.of_release(edition.name, album_name) - allowed else 1,
             -(result.open + len(result.missing)),
             1 if edition.id == target_id else 0,
             -abs(len(edition.tracks) - len(files)),

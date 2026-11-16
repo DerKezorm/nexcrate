@@ -133,6 +133,7 @@ from .services.downloads import retention as download_retention
 from .services.downloads import store as download_store
 from .services.downloads import tracking as download_tracking
 from .services.music import loading as music_loading
+from .services.music import version_repair as music_version_repair
 from .services.notify import outbox as notify_outbox
 from .services.profiles import expert as profile_expert
 from .services.prowlarr import sync as prowlarr_sync
@@ -326,6 +327,8 @@ jobs.register(
 )
 # Music M1: artists are loaded from MusicBrainz in the background, up to a minute per run.
 jobs.register(music_loading.JOB_NAME, music_loading.INTERVAL_SECONDS, music_loading.run_job)
+# Since 16.11.2026: albums on another version (instrumentals, live) are settled once a request file asks for it.
+jobs.register(music_version_repair.JOB_NAME, music_version_repair.INTERVAL_SECONDS, music_version_repair.run_job)
 # ⚠️ The four /api/v1 and webhook jobs below write every few seconds and wait for the start's judging (``ready``), like
 # the tracking above: on 22.09.2026 the event feed failed with "database is locked" while it ran.
 # /api/v1: when a key was last used is written once a minute, never by the request that used it.
