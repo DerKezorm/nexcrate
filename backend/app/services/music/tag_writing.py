@@ -45,7 +45,13 @@ def set_write_enabled(db: OrmSession, value: bool) -> None:
 
 
 def _credit_names(credit: list[dict[str, Any]] | None) -> list[str]:
-    return [str(item["name"]) for item in credit or [] if item.get("name")]
+    """``artists``: each artist under its MusicBrainz name, not the spelling on this release.
+
+    Like Picard's "standardised artist names": a player that builds its artists from this tag (Jellyfin) shows one
+    artist for "8Ball" and "8‐Ball". ``artist`` keeps the credit as printed on the release.
+    """
+    names = (str(item.get("artist_name") or item.get("name") or "") for item in credit or [])
+    return [name for name in names if name]
 
 
 def _credit_ids(credit: list[dict[str, Any]] | None) -> list[str]:
@@ -73,7 +79,8 @@ def album_artist(db: OrmSession, title: Title) -> tuple[str, str | None]:
 
     The album's own artist in nexcrate (``titles.artist_id``), the same name the artist folder is made from, so a
     player that groups albums by tags shows them under the folder's artist: "Ye" for an album MusicBrainz credits to
-    "Kanye West", "Afrob" for "Afrob & Ferris MC". ``artist``, ``artists`` and the MusicBrainz ids keep the credit.
+    "Kanye West", "Afrob" for "Afrob & Ferris MC". ``artist``, ``artists`` and the MusicBrainz ids keep the credit
+    (``artists`` with each artist's MusicBrainz name).
     A compilation, an album of Various Artists and an album without an artist keep MusicBrainz's credit as before.
     """
     credit = title.artist_credit or []
