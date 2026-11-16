@@ -817,6 +817,21 @@
       "small": [
         "Schon abgelegte Alben behalten den alten Tag, bis du „Tags prüfen“ öffnest und schreibst. Die Namen liegen schon in der Datenbank, nichts muss neu von MusicBrainz geladen werden. Die Datenbank ändert sich nicht."
       ]
-    }
+    },
+      "1.7.10": {
+        "lead": "Ein kleines Release: nexcrate räumt FLAC-Dateien beim Schreiben der Tags auf, damit Player keine doppelten Albumtitel und keine fremden Albumkünstler mehr zeigen.",
+        "sections": [
+          {
+            "title": "Ein Kommentarblock je FLAC-Datei",
+            "body": "Manche Downloads tragen einen zweiten Block mit Tags, Reste einer älteren Ausgabe, oder ein ID3-Tag vor dem FLAC-Kopf. Erlaubt ist nur ein Block. nexcrate las und schrieb immer den ersten, Player wie Jellyfin lesen aber beide und hängen die Werte aneinander: Das Album hieß dann zweimal hintereinander, oder ein fremder Albumkünstler tauchte auf. Beim Ablegen und bei „Tags schreiben“ bleibt jetzt nur der erste Block, das ID3-Tag vor dem FLAC-Kopf fällt weg. Die Musik selbst bleibt unverändert.",
+            "where": "Titelseite des Albums › Tags prüfen"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "„Tags prüfen“ zeigt solche Dateien als Abweichung, auch wenn alle Felder schon stimmen; schreibst du, räumt nexcrate sie auf.",
+          "Dateien mit einem ID3-Tag vor dem FLAC-Kopf bekamen beim Ablegen bisher gar keine Tags. Das ist behoben. Die Datenbank ändert sich nicht."
+        ]
+      }
   }
 }

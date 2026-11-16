@@ -817,6 +817,21 @@
       "small": [
         "Albums already filed keep the old tag until you open “Check tags” and write them. The names are in the database already, nothing has to be loaded from MusicBrainz again. The database does not change."
       ]
-    }
+    },
+      "1.7.10": {
+        "lead": "A small release: nexcrate tidies FLAC files while writing their tags, so players no longer show album titles twice or stray album artists.",
+        "sections": [
+          {
+            "title": "One comment block per FLAC file",
+            "body": "Some downloads carry a second block of tags, left over from an older release, or an ID3 tag before the FLAC header. Only one block is allowed. nexcrate always read and wrote the first, but players like Jellyfin read both and join their values: the album was named twice in a row, or a stray album artist turned up. Filing and “Write tags” now keep only the first block and drop the ID3 tag before the FLAC header. The audio itself stays as it is.",
+            "where": "The album's title page › Check tags"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "“Check tags” lists such files as differing even when every field already matches; writing tidies them.",
+          "Files with an ID3 tag before the FLAC header got no tags at all when filed. That is fixed. The database does not change."
+        ]
+      }
   }
 }
