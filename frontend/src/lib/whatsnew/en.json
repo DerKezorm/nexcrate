@@ -803,6 +803,20 @@
       "small": [
         "Albums already filed keep the old tag until you open “Check tags” and write them. If {Track ArtistName} is in your file name pattern, renaming suggests the right name. The database does not change."
       ]
+    },
+    "1.7.9": {
+      "lead": "A small release: the artists tag now names every artist under its MusicBrainz name, not under the spelling of the release at hand.",
+      "sections": [
+        {
+          "title": "One artist, one name",
+          "body": "Guest artists are often spelled differently from one release to the next, once with a hyphen and once without, for example. nexcrate wrote that spelling into the ARTISTS tag, and players that build their artists from it, like Jellyfin, showed the same artist twice. Now nexcrate writes the name MusicBrainz keeps the artist under there, like Picard's option for standardised artist names. The artist tag with “feat.” keeps the spelling of the release; the album artist and the MusicBrainz ids do not change.",
+          "where": "The album's title page › Check tags"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Albums already filed keep the old tag until you open “Check tags” and write them. The names are in the database already, nothing has to be loaded from MusicBrainz again. The database does not change."
+      ]
     }
   }
 }

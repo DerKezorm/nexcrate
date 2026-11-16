@@ -803,6 +803,20 @@
       "small": [
         "Schon abgelegte Alben behalten den alten Tag, bis du „Tags prüfen“ öffnest und schreibst. Steht {Track ArtistName} in deinem Muster für Dateinamen, schlägt die Umbenennung den richtigen Namen vor. Die Datenbank ändert sich nicht."
       ]
+    },
+    "1.7.9": {
+      "lead": "Ein kleines Release: Im Tag Künstler (mehrere) steht jetzt jeder Künstler unter seinem Namen bei MusicBrainz, nicht unter der Schreibweise der jeweiligen Ausgabe.",
+      "sections": [
+        {
+          "title": "Ein Künstler, ein Name",
+          "body": "Gastkünstler stehen auf Ausgaben oft verschieden geschrieben, etwa einmal mit und einmal ohne Bindestrich. nexcrate schrieb diese Schreibweise in den Tag ARTISTS, und Player, die ihre Künstler daraus bauen, wie Jellyfin, zeigten denselben Künstler doppelt. Jetzt nimmt nexcrate dort den Namen, unter dem MusicBrainz den Künstler führt, wie Picards Einstellung für einheitliche Künstlernamen. Der Tag Künstler mit „feat.“ bleibt bei der Schreibweise der Ausgabe, der Albumkünstler und die MusicBrainz-Kennungen ändern sich nicht.",
+          "where": "Titelseite des Albums › Tags prüfen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Schon abgelegte Alben behalten den alten Tag, bis du „Tags prüfen“ öffnest und schreibst. Die Namen liegen schon in der Datenbank, nichts muss neu von MusicBrainz geladen werden. Die Datenbank ändert sich nicht."
+      ]
     }
   }
 }
