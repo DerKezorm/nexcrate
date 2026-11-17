@@ -5,7 +5,7 @@ download filed onto the tracks of the album's instrumental release ("<album> Ins
 live release taken for a studio album. ``versions`` and the fixes in ``target``, ``file_matching`` and
 ``hit_matching`` keep it from happening again; this run settles what lies there already. Asked for by the owner
 (16.11.2026: "nichts endgültig löschen, Unpassendes in den Papierkorb"), started with a request file
-(``REQUEST_FILE`` in the data folder, ``preview`` or ``apply``) and reported into the data folder.
+(``REQUEST_FILE`` in the data folder, ``preview`` or ``apply``) and reported into ``logs/``.
 
 Per album version of nexcrate's own:
 
@@ -58,6 +58,7 @@ from ...models import (
     VersionDefinition,
     utcnow,
 )
+from .. import logs
 from ..releases.music_parser import parse_album
 from . import file_matching, hit_matching, store, tag_writing, target, versions
 
@@ -696,7 +697,10 @@ def report(
 
 
 def run(mode: str) -> Path:
-    """``preview`` looks, ``apply`` changes; the report lands in the data folder. Returns its path."""
+    """``preview`` looks, ``apply`` changes; the report lands beside the log. Returns its path.
+
+    ⚠️ Never directly in the data folder: the container's start script refuses a data folder holding a name it does not
+    know (``docker/entrypoint.sh``), and on 17.11.2026 three reports of 1.8.0 kept nexcrate from starting."""
     with _running:
         moment = utcnow()
         findings = survey()
@@ -706,7 +710,7 @@ def run(mode: str) -> Path:
         if applied is not None:
             applied["artists"] = apply_artists(artists)
         data = report(findings, artists, mode, applied, moment)
-        target = get_settings().data_dir / f"music-version-repair-{mode}-{moment:%Y%m%d-%H%M%S}.json"
+        target = logs.log_dir() / f"music-version-repair-{mode}-{moment:%Y%m%d-%H%M%S}.json"
         target.write_text(json.dumps(data, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
         logger.info(
             "Version repair %s: %d albums found, %d to change, %d artist folders, report %s",
@@ -721,7 +725,8 @@ def run(mode: str) -> Path:
 
 def run_job() -> None:
     """Every minute: a request file in the data folder starts a run, once."""
-    request = get_settings().data_dir / REQUEST_FILE
+    # Written out, so the guard of the start script's known names sees it (``test_entrypoint``).
+    request = get_settings().data_dir / "music-version-repair.request"
     if not request.is_file() or _running.locked():
         return
     try:

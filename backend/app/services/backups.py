@@ -106,6 +106,7 @@ NOT_IN_ARCHIVE = {
     "nexcrate.db-wal": "SQLite's side file; VACUUM INTO writes a consistent copy, another database's WAL would harm.",
     "nexcrate.db-shm": "SQLite's side file, as -wal.",
     "nexcrate.db-journal": "SQLite's side file, as -wal.",
+    "music-version-repair.request": "The owner's one-off request for a repair run; read and removed within a minute.",
 }
 #: Where a checked archive waits for the next start.
 PENDING = "restore-pending"

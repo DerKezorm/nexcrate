@@ -16,8 +16,9 @@ DATA_DIR=${NEXCRATE_DATA_DIR:-/data}
 # Everything nexcrate creates directly in its data directory: the database with the side files
 # of SQLite, the key, and the folders of backups, poster copies, album covers, logs, TMDB images and
 # the TRaSH state (backend/app: config.py, db.py, services/images.py, services/music/covers.py,
-# services/logs.py, services/tmdb.py, services/trash.py). backend/tests/test_entrypoint.py keeps it in step.
-KNOWN_ENTRIES="nexcrate.db nexcrate.db-wal nexcrate.db-shm nexcrate.db-journal secret.key backups covers images logs tmdb-images trash ratings"
+# services/logs.py, services/tmdb.py, services/trash.py), and the owner's request for a version repair
+# (services/music/version_repair.py). backend/tests/test_entrypoint.py keeps it in step.
+KNOWN_ENTRIES="nexcrate.db nexcrate.db-wal nexcrate.db-shm nexcrate.db-journal secret.key backups covers images logs tmdb-images trash ratings music-version-repair.request"
 
 # Port inside the container, 8390 by default. NEXCRATE_PORT is for host networking, where
 # the port in the container is the port of the host. Docker does not expand variables in
