@@ -887,6 +887,16 @@
             "title": "Doppelte Alben bei MusicBrainz",
             "body": "Führt MusicBrainz ein Album zweimal, mit gleichem Titel, Typ und Erscheinungstag, beobachtet nexcrate die zweite Gruppe nicht mehr von selbst. Und ein Release, das schon für ein anderes Album des Künstlers abgelegt ist, lädt nexcrate nicht noch einmal.",
             "where": "Künstler, Suche von Hand und automatische Suche"
+          },
+          {
+            "title": "Download komplett verwerfen",
+            "body": "Hat ein Album-Download nur einen Teil abgelegt und der Rest passt nicht, nimmt „Komplett verwerfen und sperren“ auch das Abgelegte wieder aus dem Album, sperrt das Release, entfernt den Auftrag samt Dateien und sucht ein anderes Release. „Entfernen“ lässt Abgelegtes dagegen im Album.",
+            "where": "Downloads › Probleme"
+          },
+          {
+            "title": "Andere Fassung erkannt",
+            "body": "Bringt ein Download für ein Studioalbum fast nur Remixe oder Live-Aufnahmen, die zu keinem Titel passen, legt nexcrate nichts davon ab, sperrt das Release und sucht ein anderes.",
+            "where": "Ablegen"
           }
         ],
         "smallTitle": "Außerdem",

@@ -1830,7 +1830,7 @@ export type NamingPreview = { folder: string; file: string }
  * Seit dem 26.09.2026 auch `archive_incomplete`: das Programm meldete den Download fertig, dem Archiv fehlten aber Teile.
  * Seit dem 15.11.2026 auch `audio_unreadable`: ein Albendownload mit einer Audiodatei ohne Ton (leer oder kaputt).
  */
-export type FailedReason = 'client_failed' | 'encrypted' | 'archive_incomplete' | 'audio_unreadable' | 'not_taken'
+export type FailedReason = 'client_failed' | 'encrypted' | 'archive_incomplete' | 'audio_unreadable' | 'not_taken' | 'discarded_by_owner' | 'other_version'
 
 /** Was SABnzbd zu einem Fehlschlag sagte, als Code. Nie sein Satz. */
 export type FailedDetail = 'repair_failed' | 'incomplete' | 'not_on_server' | 'password' | 'unpack_failed' | 'encrypted' | 'unwanted_extension' | 'duplicate' | 'aborted' | 'other'

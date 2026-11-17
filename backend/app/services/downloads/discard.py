@@ -70,6 +70,8 @@ BROKEN = {
     ("packed", "incomplete"): "archive_incomplete",
     ("encrypted", None): "encrypted",
     ("audio_unreadable", None): "audio_unreadable",
+    # A release of another version than the album: remixes, live, loaded for the studio album (17.11.2026).
+    ("album_other_version", None): "other_version",
 }
 #: Names a job folder never has.
 _ODD_NAMES = ("", ".", "..")

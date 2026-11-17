@@ -887,6 +887,16 @@
             "title": "Albums MusicBrainz has twice",
             "body": "When MusicBrainz has an album twice, with the same title, type and release day, nexcrate no longer watches the second group by itself. And a release filed for another album of the artist is not loaded again.",
             "where": "Artists, searches by hand and automatic"
+          },
+          {
+            "title": "Throw a download away",
+            "body": "When an album download filed only part of itself and the rest does not fit, “Throw away and block” takes what it filed out of the album again, blocks the release, removes the job with its files and searches another release. “Remove” keeps what was filed in the album.",
+            "where": "Downloads › Problems"
+          },
+          {
+            "title": "Another version recognised",
+            "body": "When a download for a studio album brings almost only remixes or live recordings that fit no track, nexcrate files none of it, blocks the release and searches another.",
+            "where": "Filing"
           }
         ],
         "smallTitle": "Also",

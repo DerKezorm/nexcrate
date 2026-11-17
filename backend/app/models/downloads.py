@@ -42,8 +42,17 @@ TRANSFERS = ("hardlink", "copy", "move", "unpacked")
 #: when it was handed the release and never showed it afterwards (``not_taken``).
 #: ``encrypted`` and ``archive_incomplete`` also when nexcrate found the finished download's archive wanting a password
 #: or missing volumes (``downloads.discard``); ``audio_unreadable`` when an album download held an audio file without
-#: sound (empty, no audio frame, no length).
-FAILED_REASONS = ("client_failed", "encrypted", "archive_incomplete", "audio_unreadable", "not_taken")
+#: sound (empty, no audio frame, no length); ``discarded_by_owner`` when the owner threw an album download away with
+#: what it filed (17.11.2026); ``other_version`` for an album download of another version (remixes, live).
+FAILED_REASONS = (
+    "client_failed",
+    "encrypted",
+    "archive_incomplete",
+    "audio_unreadable",
+    "not_taken",
+    "discarded_by_owner",
+    "other_version",
+)
 #: What SABnzbd said about a failed job, as a code (``downloaders.sabnzbd.fail_code``); its own sentence is never kept.
 FAILED_DETAILS = (
     "repair_failed",

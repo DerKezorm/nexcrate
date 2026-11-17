@@ -19,6 +19,10 @@ export function blockReasonText(t: TFunction, reason: string): string {
       return t('title.blocklist.reason.multi_part')
     case 'removed_by_owner':
       return t('title.blocklist.reason.removed_by_owner')
+    case 'discarded_by_owner':
+      return t('title.blocklist.reason.discarded_by_owner')
+    case 'other_version':
+      return t('title.blocklist.reason.other_version')
     case 'lower_than_named':
       return t('title.blocklist.reason.lower_than_named')
     default:
@@ -43,6 +47,10 @@ export function failureReasonText(t: TFunction, code: string): string {
       return t('title.blocklist.reason.audio_unreadable')
     case 'dangerous_file':
       return t('title.blocklist.reason.dangerous_file')
+    case 'discarded_by_owner':
+      return t('title.blocklist.reason.discarded_by_owner')
+    case 'other_version':
+      return t('title.blocklist.reason.other_version')
     default:
       return t('title.history.failedUnknown')
   }

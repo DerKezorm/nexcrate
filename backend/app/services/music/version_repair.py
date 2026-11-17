@@ -65,6 +65,8 @@ from . import file_matching, hit_matching, store, tag_writing, target, versions
 logger = logging.getLogger("nexcrate.music")
 
 REQUEST_FILE = "music-version-repair.request"
+#: The request ``targets-preview`` or ``targets-apply`` runs ``target_follow.run`` instead.
+TARGETS = "targets-"
 JOB_NAME = "music_version_repair"
 INTERVAL_SECONDS = 60
 #: How far a file's length may be off its new track.
@@ -734,6 +736,19 @@ def run_job() -> None:
         request.unlink()
     except OSError:
         logger.warning("Version repair: the request file could not be read")
+        return
+    if mode.startswith(TARGETS):
+        # Once for the albums there are (17.11.2026): their targets follow the release their files fit.
+        from . import target_follow
+
+        if mode[len(TARGETS) :] not in target_follow.MODES:
+            logger.warning("Target follow: unknown request %r, nothing done", mode[:30])
+            return
+        with _running:
+            try:
+                target_follow.run(mode[len(TARGETS) :])
+            except Exception:
+                logger.exception("Target follow %s failed", mode)
         return
     if mode not in ("preview", "apply"):
         logger.warning("Version repair: unknown request %r, nothing done", mode[:20])

@@ -42,6 +42,8 @@ export const downloadsApi = {
   takeBack: (id: number) => api.post<Download>(`/downloads/${id}/take-back`),
   /** Seit 17.11.2026: die Ausgabe, auf die die Dateien vollstaendig passen, wird das Ziel (`album_fits_other_release`). */
   takeAlbumRelease: (id: number) => api.post<Download>(`/downloads/${id}/album-target`),
+  /** Seit 17.11.2026: ein Album-Download komplett verwerfen, mit dem, was er abgelegt hat; das Release wird gesperrt. */
+  discardAlbum: (id: number) => api.post<Download>(`/downloads/${id}/discard`),
   /** Uebernimmt die vorgeschlagene Zuordnung ins Programm und versucht es erneut. 409 `mapping_not_proposed`. */
   confirmMapping: (id: number) => api.post<Download>(`/downloads/${id}/mapping`),
   /**

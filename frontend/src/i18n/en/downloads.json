@@ -99,6 +99,8 @@
     "retryLabel": "Try again: {{title}}",
     "takeBack": "Take back",
     "takeBackLabel": "Take back into nexcrate's category: {{title}}",
+    "discardAlbum": "Throw away and block",
+    "discardAlbumLabel": "Throw the download away and block it: {{title}}",
     "takeRelease": "Take as target",
     "takeReleaseLabel": "Take the release as the target: {{title}}",
     "keepSearching": "Keep searching",
@@ -268,6 +270,14 @@
     "submit": "Take it",
     "done": "The mapping is saved."
   },
+  "discard": {
+    "title": "Throw the download away?",
+    "text_one": "nexcrate takes the {{value}} file this download filed out of the album again, blocks the release, removes the job with its files from the download client and searches another release. What lay in the album before stays.",
+    "text_other": "nexcrate takes the {{value}} files this download filed out of the album again, blocks the release, removes the job with its files from the download client and searches another release. What lay in the album before stays.",
+    "notRemove": "“Remove”, by contrast, keeps what was filed in the album and searches nothing.",
+    "confirm": "Yes, throw away and block",
+    "done": "The download is thrown away. nexcrate searches another release."
+  },
   "remove": {
     "title": "Remove download?",
     "text": "The download disappears from nexcrate. Files nexcrate has already stored stay.",
@@ -299,7 +309,9 @@
       "encrypted": "The release was protected with a password. nexcrate blocked it.",
       "archive_incomplete": "The archive was incomplete, although {{client}} reported the download as finished. nexcrate blocked the release.",
       "audio_unreadable": "An audio file in the download had no sound, empty or broken. nexcrate filed none of it and blocked the release.",
-      "not_taken": "{{client}} did not take the release in time and never showed it later. The release is not blocked."
+      "not_taken": "{{client}} did not take the release in time and never showed it later. The release is not blocked.",
+      "discarded_by_owner": "You threw the download away with the files it had filed. nexcrate blocked the release.",
+      "other_version": "The release was another version than the album, such as all remixes or live. nexcrate filed none of it, blocked it and searches another."
     },
     "filed_one": "{{value}} episode stored",
     "filed_other": "{{value}} episodes stored",

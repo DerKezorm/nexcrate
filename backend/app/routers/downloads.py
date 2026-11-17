@@ -156,8 +156,9 @@ class Download(BaseModel):
     failed_reason: str | None = Field(
         description="For a failed download: client_failed (the client reported Failed), encrypted (the client or "
         "nexcrate found an archive with a password), archive_incomplete (the client reported the download finished, "
-        "but its archive misses volumes), audio_unreadable (an album download held an audio file without sound) or "
-        "not_taken. Null otherwise."
+        "but its archive misses volumes), audio_unreadable (an album download held an audio file without sound), "
+        "not_taken, discarded_by_owner (the owner threw an album download away with what it filed) or other_version "
+        "(an album download of another version than the album, such as remixes). Null otherwise."
     )
     failed_detail: str | None = Field(
         default=None,
@@ -650,6 +651,25 @@ def album_assign(download_id: int, payload: AlbumAssignIn) -> Download:
 def finish_download(download_id: int) -> Download:
     try:
         return _download(assigning.finish(download_id))
+    except actions.ActionError as exc:
+        raise exc.http() from exc
+
+
+@router.post(
+    "/{download_id}/discard",
+    response_model=Download,
+    summary="Throw an album download away with what it filed",
+    description=(
+        "For an album download with a problem: the files it filed leave the album again (what lay there before stays), "
+        "its release goes on the blocklist, the job leaves its client with its files, and another release is searched, "
+        "as after a failure (`failed_reason` discarded_by_owner). Different from removing, which keeps what was filed "
+        "and searches nothing."
+    ),
+    responses=error_responses((404, "download_not_found"), (409, "download_not_assignable"), (409, "download_busy")),
+)
+def discard_album_download(download_id: int) -> Download:
+    try:
+        return _download(album_assigning.throw_out(download_id))
     except actions.ActionError as exc:
         raise exc.http() from exc
 

@@ -309,6 +309,35 @@ def assign(
     return read(download_id)
 
 
+#: Problems of an album download that "Verwerfen und sperren" may end (17.11.2026).
+DISCARDABLE = (
+    "files_unassigned",
+    "album_not_better",
+    "album_tracks_missing",
+    "import_failed",
+    "import_stalled",
+    "audio_unreadable",
+    "no_audio",
+    target_follow.PROBLEM,
+)
+
+
+def throw_out(download_id: int) -> dict[str, Any]:
+    """``POST /api/downloads/{id}/discard`` for an album with a problem: what it filed leaves the album, its release is
+    blocked, the job goes with its files, and another release is searched (``album_import.throw_out``)."""
+    with SessionLocal() as db:
+        row = _album_row(db, download_id)
+        if row.state != "problem" or row.problem_code not in DISCARDABLE:
+            raise _not_assignable()
+        if importing.running(download_id):
+            raise _busy()
+        row.state, row.updated_at = "importing", store.now()
+        db.commit()
+    logger.info("Album download %d: the owner throws it away", download_id)
+    importing.request(download_id, work=lambda: album_import.throw_out(download_id))
+    return read(download_id)
+
+
 def take_release(download_id: int) -> dict[str, Any]:
     """``POST /api/downloads/{id}/album-target`` for ``album_fits_other_release``: the release the files fit becomes
     the owner's target, and the download is ``imported``. The files follow its names and tags afterwards."""

@@ -372,6 +372,8 @@
       "unknown": "Gesperrt mit dem Grund {{code}}.",
       "multi_part": "Das Release war ein Film in mehreren Teilen.",
       "removed_by_owner": "Du hast den Download entfernt und das Release gesperrt.",
+      "discarded_by_owner": "Du hast den Download samt seinen abgelegten Dateien verworfen.",
+      "other_version": "Das Release war eine andere Fassung als das Album, etwa lauter Remixe oder live.",
       "lower_than_named": "Die Dateien waren schlechter, als der Name des Releases versprach. nexcrate lädt es nicht noch einmal von selbst."
     }
   },

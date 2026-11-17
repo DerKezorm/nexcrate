@@ -57,7 +57,18 @@ from ...models import (
 )
 from .. import companions_album, downloaders, folders, naming, naming_music, schreibweisen
 from ..mediaservers import notify as mediaserver_notify
-from ..music import album_quality, align, covers, credits, fingerprint, same_song, tag_writing, tags, target_follow
+from ..music import (
+    album_quality,
+    align,
+    covers,
+    credits,
+    fingerprint,
+    same_song,
+    tag_writing,
+    tags,
+    target_follow,
+    versions,
+)
 from ..music import file_matching as fm
 from ..music import musicbrainz as mb
 from ..music import store as music_store
@@ -1340,6 +1351,31 @@ def unplace(context: Context, root: Path, row_ids: Iterable[int]) -> int:
     return moved
 
 
+#: A release of another version than the album (17.11.2026); it fails like a broken one.
+OTHER_VERSION = "album_other_version"
+
+
+def _refuse_another_version(context: Context, found: Found, result: fm.Result) -> None:
+    """A release of another version than the album, before anything is filed: more than half of its files say a version
+    the album does not expect ("(Remix)", "(Live)") and fit no track, and less than half of the release's tracks are
+    filed. It fails as a broken one (``discard.BROKEN``): blocked, and another release is searched. Found on 17.11.2026:
+    a single of seven remixes, named like the album, filed two songs and left five open. Measured on the owner's 1,004
+    album downloads: three such releases, and no other."""
+    edition = result.edition
+    if edition is None or not found.audio:
+        return
+    tracks = next((len(item.tracks) for item in context.editions if item.id == edition.edition_id), 0)
+    allowed = versions.expected(context.album.album_title, context.album_types)
+    by_key = {file.key: file for file in found.audio}
+    other = [
+        item
+        for item in edition.decisions
+        if item.decision != fm.FILED and fm.file_versions(by_key[item.key], item.reading) - allowed
+    ]
+    if tracks and len(other) * 2 > len(found.audio) and edition.filed * 2 < tracks:
+        raise Problem(OTHER_VERSION, files=len(found.audio), other=len(other), filed=edition.filed)
+
+
 def _not_filed_by_owner(manual: Manual | None) -> list[int]:
     return [row_id for row_id, choice in (manual.chosen if manual else {}).items() if choice is None]
 
@@ -1355,6 +1391,8 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
     prints: dict[int, str] = {}
     if result is not None and manual is None:
         result, prints = with_fingerprints(context, found, result)
+        if not any(row.placed for row in context.stored):
+            _refuse_another_version(context, found, result)
     if result is not None:
         rows = record_rows(context, found, result, prints)
         with SessionLocal() as db:
@@ -1480,6 +1518,50 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
     after_finish(context.download_id, found)
 
 
+#: The failure of a download the owner threw away with what it filed (17.11.2026).
+DISCARDED = "discarded_by_owner"
+
+
+def throw_out(download_id: int) -> None:
+    """Throwing an album download away ("Verwerfen und sperren"), in the download's worker: the files this download
+    filed leave the album (a Usenet file back into its job, a torrent's copy to the recycle folder, as ``unplace``);
+    what lay there before stays. Then the download fails as a broken one would: its release on the blocklist,
+    ``failed`` in the history, the replacement search, the job out of its client with its files. Found on 17.11.2026:
+    a single of remixes loaded for an album filed two songs and left five open; removing kept the two and searched
+    nothing."""
+    with SessionLocal() as db:
+        context = load(db, download_id)
+    if context is None:
+        return
+    placed = [row.id for row in context.stored if row.track_file_id is not None]
+    try:
+        if placed:
+            unplace(context, _root(context), placed)
+    except Problem as problem:
+        record_problem(download_id, problem)
+        return
+    moment = store.now()
+    with SessionLocal() as db:
+        row = db.get(Download, download_id)
+        if row is None or row.state != "importing":
+            return
+        version = db.get(Version, context.version_id) if context.version_id is not None else None
+        if version is not None:
+            music_store._count_tracks(db, version)
+            qualities = list(db.scalars(select(TrackFile.quality).where(TrackFile.version_id == version.id)))
+            album_quality.apply(version, album_quality.step_of_files(qualities), context.rules)
+            version.updated_at = moment
+        left = discard.fail(db, row, DISCARDED, moment)
+        db.commit()
+    logger.info("Album download %d: thrown away by the owner, %d filed files left the album", download_id, len(placed))
+    if placed and context.version_id is not None:
+        companions_album.write_version(context.version_id)
+        if context.root_folder and context.album_relative:
+            folder = Path(context.root_folder).joinpath(*[part for part in context.album_relative.split("/") if part])
+            mediaserver_notify.request("music", [folder])
+    discard.throw_away(left)
+
+
 def follow_target(download_id: int) -> None:
     """After the owner took the release the files fit as the target: the album's files follow its names and tags.
     Never raises."""
@@ -1552,7 +1634,9 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
         download.open_count = len(open_rows)
         download.absent_count = len(missing)
         # The files fit another release completely while the target is not complete (17.11.2026).
-        fit = _fit_of_target(db, context, version) if filed and not open_rows else None
+        # With files open as well: a target that may move moves now; the question waits until no file is open (after the
+        # owner's assignment this runs again).
+        fit = _fit_of_target(db, context, version) if filed else None
         if open_rows:
             download.state, download.problem_code = "problem", "files_unassigned"
             download.problem_values = {"filed": len(filed), "open": len(open_rows), "missing": len(missing)}
@@ -1584,7 +1668,8 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
 
 def _fit_of_target(db: OrmSession, context: Context, version: Version) -> target_follow.Fit | None:
     """A release the album's files fit completely while the target is not: a target the rule chose goes there when
-    nothing is lost (returns None), else the owner is asked (returns the fit)."""
+    nothing is lost (returns None), else the owner is asked (returns the fit). Found on 17.11.2026 with files open
+    too: a release the target lacks a song of, the files of the release they came from fit."""
     title = db.get(Title, context.title_id)
     if title is None:
         return None

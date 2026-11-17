@@ -33,7 +33,9 @@ class BlocklistItem(BaseModel):
     reason: str = Field(
         description=(
             "client_failed, encrypted, archive_incomplete, audio_unreadable, dangerous_file, multi_part, "
-            "removed_by_owner, or lower_than_named for an automatic album download whose files were of a lower step "
+            "removed_by_owner, discarded_by_owner (an album download thrown away with what it filed), other_version "
+            "(an album download of another version than the album), "
+            "or lower_than_named for an automatic album download whose files were of a lower step "
             "than its name said."
         )
     )

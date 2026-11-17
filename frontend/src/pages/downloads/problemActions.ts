@@ -20,24 +20,25 @@ export function problemActions(
   if (album) {
     // Seit M4: ein Albendownload. Zuordnen oeffnet den Dialog mit Titellisten, "Rest nicht ablegen" beendet ihn.
     switch (code) {
+      // Seit 17.11.2026 dazu "Komplett verwerfen und sperren": nimmt auch, was der Download abgelegt hat, wieder heraus.
       case 'files_unassigned':
       case 'album_not_better':
-        return ['assignAlbum', 'finish', 'remove']
+        return ['assignAlbum', 'finish', 'remove', 'discardAlbum']
       case 'album_tracks_missing':
       case 'import_failed':
       case 'import_stalled':
-        return [...retry, 'finish', 'remove']
+        return [...retry, 'finish', 'remove', 'discardAlbum']
       // Seit 29.09.2026 (Issue #3): kommt die Musik erst per Sync, legt "Erneut versuchen" sie ab.
       case 'no_audio':
         return ['removeAndBlock', ...retry, 'toTitle']
       // Seit 15.11.2026: eine Audiodatei ohne Ton. Das Abgelegte bleibt; "Rest nicht ablegen" beendet ihn, sonst sperren.
       case 'audio_unreadable':
-        return ['finish', 'removeAndBlock', 'toTitle']
+        return ['finish', 'removeAndBlock', 'discardAlbum', 'toTitle']
       case 'album_single_file':
         return ['toTitle', 'remove']
       // Seit 17.11.2026: alles abgelegt, die Dateien passen vollstaendig auf eine andere Ausgabe als das Ziel.
       case 'album_fits_other_release':
-        return ['takeRelease', 'keepSearching']
+        return ['takeRelease', 'keepSearching', 'discardAlbum']
     }
   }
   switch (code) {

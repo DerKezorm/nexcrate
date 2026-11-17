@@ -77,6 +77,8 @@ FAILED: dict[str, dict[str, str]] = {
         'archive_incomplete': 'Das Archiv war unvollständig, obwohl das Download-Programm den Download als fertig gemeldet hat. nexcrate hat das Release gesperrt.',
         'audio_unreadable': 'Im Download lag eine Audiodatei ohne Ton, leer oder kaputt. nexcrate hat nichts davon abgelegt und das Release gesperrt.',
         'not_taken': 'Das Download-Programm hat das Release nicht rechtzeitig angenommen und später nie gezeigt. Das Release ist nicht gesperrt.',
+        'discarded_by_owner': 'Du hast den Download samt seinen abgelegten Dateien verworfen. nexcrate hat das Release gesperrt.',
+        'other_version': 'Das Release war eine andere Fassung als das Album, etwa lauter Remixe oder live. nexcrate hat nichts davon abgelegt, es gesperrt und sucht ein anderes.',
     },
     'en': {
         'client_failed': 'The download failed, as the download client reports. nexcrate blocked the release.',
@@ -84,5 +86,7 @@ FAILED: dict[str, dict[str, str]] = {
         'archive_incomplete': 'The archive was incomplete, although the download client reported the download as finished. nexcrate blocked the release.',
         'audio_unreadable': 'An audio file in the download had no sound, empty or broken. nexcrate filed none of it and blocked the release.',
         'not_taken': 'The download client did not take the release in time and never showed it later. The release is not blocked.',
+        'discarded_by_owner': 'You threw the download away with the files it had filed. nexcrate blocked the release.',
+        'other_version': 'The release was another version than the album, such as all remixes or live. nexcrate filed none of it, blocked it and searches another.',
     },
 }

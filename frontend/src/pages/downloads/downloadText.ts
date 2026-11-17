@@ -518,6 +518,10 @@ export function failedReasonText(t: TFunction, reason: string | null, client: st
       return t('downloads.history.failed.audio_unreadable')
     case 'not_taken':
       return t('downloads.history.failed.not_taken', { client })
+    case 'discarded_by_owner':
+      return t('downloads.history.failed.discarded_by_owner')
+    case 'other_version':
+      return t('downloads.history.failed.other_version')
     default:
       return null
   }

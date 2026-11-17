@@ -16,8 +16,10 @@ another release (more tracks, another pressing). nexcrate showed tracks as missi
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
@@ -25,6 +27,8 @@ from sqlalchemy.orm import Session as OrmSession
 
 from ...models import Release, ReleaseTrack, Title, TrackFile, Version, VersionDefinition
 from . import same_song, store, target
+
+logger = logging.getLogger("nexcrate.music")
 
 #: Who chose a target the rule may move by itself.
 MOVABLE = ("rule", None)
@@ -131,3 +135,115 @@ def follow(db: OrmSession, title: Title, version: Version, fit: Fit, *, moment: 
         f"{store._release_text(old)} > {store._release_text(new)}",
     )
     store._count_tracks(db, version)
+
+
+# --- Once for the albums there are (17.11.2026) --------------------------------------------------------------------- #
+
+#: The modes of the run; ``targets-`` before them in the version repair's request file (``version_repair.run_job``).
+MODES = ("preview", "apply")
+
+
+def survey(db: OrmSession, language: str) -> list[dict[str, Any]]:
+    """Every album with files whose target the rule chose and whose files fit another release completely: what the
+    run would do. The owner's own targets and a source's stay out. Writes nothing."""
+    found: list[dict[str, Any]] = []
+    rows = db.execute(
+        select(Title, Version)
+        .join(Version, Version.title_id == Title.id)
+        .where(
+            Title.kind == "album",
+            Version.has_file.is_(True),
+            Version.target_release_id.is_not(None),
+            Version.source_id.is_(None),
+        )
+        .order_by(Title.id)
+    ).all()
+    for title, version in rows:
+        if version.target_set_by not in MOVABLE:
+            continue
+        fit = fit_of(db, title, version, language)
+        if fit is None:
+            continue
+        old = db.get(Release, version.target_release_id)
+        new = db.get(Release, fit.release_id)
+        found.append(
+            {
+                "title_id": title.id,
+                "version_id": version.id,
+                "album": title.title,
+                "from": {"id": old.id, "name": old.name, "date": old.date, "country": old.country} if old else None,
+                "to": {"id": new.id, "name": new.name, "date": new.date, "country": new.country} if new else None,
+                "tracks": fit.tracks,
+                "target_tracks": fit.target_tracks,
+                "lost": fit.lost,
+                "nothing_lost": fit.automatic,
+            }
+        )
+    return found
+
+
+def run(mode: str) -> Path:
+    """``preview`` looks, ``apply`` moves every target ``survey`` names to the release the files fit, writes the album
+    folder's release.nex again and lets files of several releases follow the new target. The report lies beside the
+    log. Returns its path."""
+    import json
+
+    from ...db import SessionLocal
+    from ...models import Artist, utcnow
+    from .. import companions_album, logs, naming_music
+    from ..rename import music as rename_music
+    from . import album_read, align, tag_writing
+
+    if mode not in MODES:
+        raise ValueError(mode)
+    moment = utcnow()
+    with SessionLocal() as db:
+        language = store.account_language(db)
+        findings = survey(db, language)
+        naming = naming_music.load(db)
+        write_tags = tag_writing.write_enabled(db)
+    moved: list[int] = []
+    failed: list[dict[str, Any]] = []
+    if mode == "apply":
+        for finding in findings:
+            try:
+                with SessionLocal() as db:
+                    title = db.get(Title, finding["title_id"])
+                    version = db.get(Version, finding["version_id"])
+                    fit = fit_of(db, title, version, language) if title and version else None
+                    if title is None or version is None or fit is None or version.target_set_by not in MOVABLE:
+                        continue
+                    follow(db, title, version, fit, moment=moment)
+                    db.commit()
+                    folder = album_read.album_folder(version)
+                    artist = db.get(Artist, title.artist_id) if title.artist_id is not None else None
+                    if folder is not None and artist is not None:
+                        facts = rename_music.album_facts(artist, title)
+                        align.align(db, version, folder, naming, facts, write_tags=write_tags)
+                        db.commit()
+                moved.append(finding["version_id"])
+                companions_album.write_version(finding["version_id"])
+            except Exception as exc:  # one album never stops the run
+                logger.exception("Target follow: album %d could not be changed", finding["title_id"])
+                failed.append({"title_id": finding["title_id"], "error": type(exc).__name__})
+    data = {
+        "mode": mode,
+        "at": moment.isoformat(),
+        "albums": len(findings),
+        "nothing_lost": sum(1 for item in findings if item["nothing_lost"]),
+        "moved": len(moved),
+        "failed": failed,
+        "findings": findings,
+    }
+    target = logs.log_dir() / f"music-target-follow-{mode}-{moment:%Y%m%d-%H%M%S}.json"
+    target.write_text(json.dumps(data, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+    logger.info(
+        "Target follow %s: %d albums, %d without loss, %d moved, %d failed, report %s",
+        mode,
+        len(findings),
+        data["nothing_lost"],
+        len(moved),
+        len(failed),
+        target.name,
+    )
+    return target

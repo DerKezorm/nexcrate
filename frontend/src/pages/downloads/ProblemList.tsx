@@ -16,6 +16,7 @@ import { CLIENTS_TAB_PATH } from '../settings/tabs'
 import { AlbumAssignDialog } from './AlbumAssignDialog'
 import { AssignDialog } from './AssignDialog'
 import { ChooseDialog } from './ChooseDialog'
+import { DiscardAlbumDialog } from './DiscardAlbumDialog'
 import { DownloadHead } from './DownloadHead'
 import { FinishDialog } from './FinishDialog'
 import { ForeignJobs } from './ForeignJobs'
@@ -74,7 +75,7 @@ function Group({ urgent, title, intro, items, onChanged }: { urgent: boolean; ti
   )
 }
 
-type OpenDialog = 'mapping' | 'mapFolder' | 'remove' | 'removeAndBlock' | 'assign' | 'assignAlbum' | 'choose' | 'finish' | null
+type OpenDialog = 'mapping' | 'mapFolder' | 'remove' | 'removeAndBlock' | 'discardAlbum' | 'assign' | 'assignAlbum' | 'choose' | 'finish' | null
 
 
 /**
@@ -219,6 +220,12 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
     ),
     remove: removeButton,
     removeAndBlock: removeAndBlockButton,
+    discardAlbum: (
+      <Button variant="danger" size="sm" onClick={() => setDialog('discardAlbum')} aria-label={t('downloads.actions.discardAlbumLabel', { title })}>
+        <Symbol name="trash" />
+        {t('downloads.actions.discardAlbum')}
+      </Button>
+    ),
     fileAnyway: isRetryable(download.state) ? (
       <Button size="sm" onClick={() => void fileAnyway()} loading={filing} aria-label={t('downloads.actions.fileAnywayLabel', { title })}>
         {!filing && <Symbol name="check" />}
@@ -365,6 +372,16 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
           onDone={(message) => {
             setDialog(null)
             onChanged(message)
+          }}
+        />
+      )}
+      {dialog === 'discardAlbum' && (
+        <DiscardAlbumDialog
+          download={download}
+          onClose={() => setDialog(null)}
+          onDiscarded={() => {
+            setDialog(null)
+            onChanged(t('downloads.discard.done'))
           }}
         />
       )}
