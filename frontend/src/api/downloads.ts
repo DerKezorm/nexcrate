@@ -40,6 +40,8 @@ export const downloadsApi = {
   clear: (id: number) => api.post<Download>(`/downloads/${id}/clear`),
   /** Nur bei `moved_in_client`, sonst 409 `download_not_moved`. */
   takeBack: (id: number) => api.post<Download>(`/downloads/${id}/take-back`),
+  /** Seit 17.11.2026: die Ausgabe, auf die die Dateien vollstaendig passen, wird das Ziel (`album_fits_other_release`). */
+  takeAlbumRelease: (id: number) => api.post<Download>(`/downloads/${id}/album-target`),
   /** Uebernimmt die vorgeschlagene Zuordnung ins Programm und versucht es erneut. 409 `mapping_not_proposed`. */
   confirmMapping: (id: number) => api.post<Download>(`/downloads/${id}/mapping`),
   /**

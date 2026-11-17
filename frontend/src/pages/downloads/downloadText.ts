@@ -70,6 +70,8 @@ export const PROBLEM_CODES = [
   'album_single_file',
   'album_not_better',
   'album_tracks_missing',
+  // 17.11.2026: alles abgelegt, passt aber vollstaendig auf eine andere Ausgabe als das Ziel. Als Ziel nehmen oder weiter suchen.
+  'album_fits_other_release',
   // 15.11.2026: eine Audiodatei ohne Ton. Meist schlaegt der Download gleich fehl; Problem nur, wenn schon etwas abgelegt war.
   'audio_unreadable',
   // Rueckmeldung 20.09.2026: Ein fehlgeschlagener Download wartet hier, bis er erledigt ist.
@@ -219,6 +221,8 @@ export function problemReasonText(t: TFunction, code: string, client: string, va
       return t('downloads.problems.reason.album_not_better')
     case 'album_tracks_missing':
       return t('downloads.problems.reason.album_tracks_missing')
+    case 'album_fits_other_release':
+      return t('downloads.problems.reason.album_fits_other_release')
     default:
       return t('downloads.problems.reason.unknown')
   }
@@ -403,9 +407,29 @@ export function problemWhyText(t: TFunction, problem: DownloadProblem, client: s
       return t('downloads.problems.why.album_not_better')
     case 'album_tracks_missing':
       return t('downloads.problems.why.album_tracks_missing')
+    case 'album_fits_other_release':
+      return fitsOtherReleaseText(t, problem.values ?? {})
     default:
       return t('downloads.problems.why.unknown', { code: problem.code })
   }
+}
+
+/**
+ * Die Frage bei `album_fits_other_release`: welche Ausgabe passt (Name, Jahr, Land, Titel) und was das Ziel dann
+ * aufgaebe. Seit 17.11.2026.
+ */
+export function fitsOtherReleaseText(t: TFunction, values: Record<string, unknown>): string {
+  const name = typeof values.name === 'string' && values.name ? values.name : t('downloads.problems.why.fitsUnnamed')
+  const facts = [typeof values.date === 'string' ? values.date.slice(0, 4) : '', typeof values.country === 'string' ? values.country : '']
+    .filter(Boolean)
+    .join(', ')
+  const tracks = countOf(values.tracks)
+  const lost = countOf(values.lost)
+  return t('downloads.problems.why.album_fits_other_release', {
+    release: facts ? `${name} (${facts})` : name,
+    tracks: t('downloads.problems.why.fitsTracks', { count: tracks, value: String(tracks) }),
+    lost: t('downloads.problems.why.fitsLost', { count: lost, value: String(lost) }),
+  })
 }
 
 /** Warum das Ablegen scheiterte, nach `values.reason`: ein Satz mit dem naechsten Schritt, sonst der allgemeine. */

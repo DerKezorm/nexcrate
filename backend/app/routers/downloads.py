@@ -655,6 +655,24 @@ def finish_download(download_id: int) -> Download:
 
 
 @router.post(
+    "/{download_id}/album-target",
+    response_model=Download,
+    summary="Take the release an album download fits as the target",
+    description=(
+        "For the problem album_fits_other_release: every file is filed and fits another release completely than the "
+        "target. That release becomes the owner's target, the download is imported, and the album's files follow its "
+        "names and tags. Keeping the target and searching on is `finish`."
+    ),
+    responses=error_responses((404, "download_not_found"), (409, "download_not_assignable"), (409, "download_busy")),
+)
+def take_album_release(download_id: int) -> Download:
+    try:
+        return _download(album_assigning.take_release(download_id))
+    except actions.ActionError as exc:
+        raise exc.http() from exc
+
+
+@router.post(
     "/{download_id}/choose",
     response_model=Download,
     summary="Choose the video of a movie download",

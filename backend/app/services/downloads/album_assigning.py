@@ -37,8 +37,10 @@ from ...models import (
     Title,
     TrackFile,
 )
+from .. import companions_album
 from ..music import file_matching as fm
-from ..music import same_song
+from ..music import same_song, target_follow
+from ..music import store as music_store
 from . import album_import, importing, store
 from .actions import ActionError, not_found, read
 
@@ -47,7 +49,15 @@ logger = logging.getLogger("nexcrate.downloads")
 #: Problems whose card has "assign by hand".
 ASSIGNABLE = ("files_unassigned", "album_not_better")
 #: Problems whose card has "file nothing more".
-FINISHABLE = (*ASSIGNABLE, "import_failed", "album_tracks_missing", "no_audio", "import_stalled")
+#: "Weiter suchen" for ``album_fits_other_release`` is finishing it: the target stays, the files are filed.
+FINISHABLE = (
+    *ASSIGNABLE,
+    "import_failed",
+    "album_tracks_missing",
+    "no_audio",
+    "import_stalled",
+    target_follow.PROBLEM,
+)
 #: Rows the owner may still decide.
 OPEN_DECISIONS = (fm.OPEN, fm.OTHER_ALBUM, "filed", "not_filed")
 _TAG_FIELDS = ("title", "artist", "album", "tracknumber", "discnumber")
@@ -299,8 +309,34 @@ def assign(
     return read(download_id)
 
 
-def finish(download_id: int) -> dict[str, Any]:
-    """``POST /api/downloads/{id}/finish`` for an album: the rest is not filed; the download is ``imported``."""
+def take_release(download_id: int) -> dict[str, Any]:
+    """``POST /api/downloads/{id}/album-target`` for ``album_fits_other_release``: the release the files fit becomes
+    the owner's target, and the download is ``imported``. The files follow its names and tags afterwards."""
+    with SessionLocal() as db:
+        row = _album_row(db, download_id)
+        if row.state != "problem" or row.problem_code != target_follow.PROBLEM:
+            raise _not_assignable()
+        if importing.running(download_id):
+            raise _busy()
+        release = db.get(Release, (row.problem_values or {}).get("release_id"))
+        title = db.get(Title, row.title_id)
+        version = store.version_of(db, row.title_id, row.version_definition_id)
+        if release is None or title is None or version is None or release.title_id != title.id:
+            raise _not_assignable()
+        music_store.set_owner_target(
+            db, title, version, release, moment=store.now(), language=music_store.account_language(db)
+        )
+        db.commit()
+        version_id, release_id = version.id, release.id
+    logger.info("Album download %d: the owner takes release %d as the target", download_id, release_id)
+    answer = finish(download_id, after=lambda: album_import.follow_target(download_id))
+    companions_album.write_version(version_id)
+    return answer
+
+
+def finish(download_id: int, after: Any = None) -> dict[str, Any]:
+    """``POST /api/downloads/{id}/finish`` for an album: the rest is not filed; the download is ``imported``.
+    ``after`` runs in the download's worker before the clean up."""
     moment = store.now()
     with SessionLocal() as db:
         row = _album_row(db, download_id)
@@ -324,5 +360,11 @@ def finish(download_id: int) -> dict[str, Any]:
         store.follow(db, row, moment)
         db.commit()
     logger.info("Album download %d: the rest is not filed (%d files)", download_id, left)
-    importing.request(download_id, work=lambda: album_import.clean_after_owner(download_id))
+
+    def work() -> None:
+        if after is not None:
+            after()
+        album_import.clean_after_owner(download_id)
+
+    importing.request(download_id, work=work)
     return read(download_id)

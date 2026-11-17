@@ -77,6 +77,9 @@ PROBLEMS: dict[str, bool] = {
     "album_single_file": False,
     "album_not_better": True,
     "album_tracks_missing": True,
+    # Every file filed, and they fit another release completely than the target (17.11.2026): the owner takes it as
+    # the target or keeps searching.
+    "album_fits_other_release": True,
     # An audio file without sound (15.11.2026): the download fails as a broken one (``discard.BROKEN``); a problem
     # only for a download that filed a file already.
     "audio_unreadable": True,

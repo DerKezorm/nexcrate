@@ -89,6 +89,7 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
   const [filing, setFiling] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [takingBack, setTakingBack] = useState(false)
+  const [answering, setAnswering] = useState<'take' | 'keep' | null>(null)
   const [problem, setProblem] = useState<unknown>(null)
   const info = download.problem ?? { code: '', needs_owner: urgent, values: {} }
   const code = info.code
@@ -134,6 +135,21 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
       setProblem(error)
     } finally {
       setTakingBack(false)
+    }
+  }
+
+  // Seit 17.11.2026: die Frage bei `album_fits_other_release`. Weiter suchen ist "Rest nicht ablegen": alles liegt schon.
+  async function answerFit(take: boolean) {
+    setAnswering(take ? 'take' : 'keep')
+    setProblem(null)
+    try {
+      if (take) await downloadsApi.takeAlbumRelease(download.id)
+      else await downloadsApi.finish(download.id)
+      onChanged(t(take ? 'downloads.problems.releaseTaken' : 'downloads.problems.keptSearching'))
+    } catch (error) {
+      setProblem(error)
+    } finally {
+      setAnswering(null)
     }
   }
 
@@ -187,6 +203,18 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
       <Button size="sm" onClick={() => void takeBack()} loading={takingBack} aria-label={t('downloads.actions.takeBackLabel', { title })}>
         {!takingBack && <Symbol name="refresh" />}
         {t('downloads.actions.takeBack')}
+      </Button>
+    ),
+    takeRelease: (
+      <Button size="sm" onClick={() => void answerFit(true)} loading={answering === 'take'} disabled={answering !== null} aria-label={t('downloads.actions.takeReleaseLabel', { title })}>
+        {answering !== 'take' && <Symbol name="check" />}
+        {t('downloads.actions.takeRelease')}
+      </Button>
+    ),
+    keepSearching: (
+      <Button variant="ghost" size="sm" onClick={() => void answerFit(false)} loading={answering === 'keep'} disabled={answering !== null} aria-label={t('downloads.actions.keepSearchingLabel', { title })}>
+        {answering !== 'keep' && <Symbol name="search" />}
+        {t('downloads.actions.keepSearching')}
       </Button>
     ),
     remove: removeButton,

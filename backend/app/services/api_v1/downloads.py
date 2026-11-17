@@ -72,6 +72,8 @@ MESSAGES = {
     "album_single_file": "The album comes as one file with a cue sheet; it was refused and its release blocked.",
     "album_not_better": "The album's files are not better than those already there.",
     "album_tracks_missing": "Tracks of the album are missing from the download.",
+    "album_fits_other_release": "Every file is filed and fits another release completely than the target; the owner "
+    "takes it as the target or keeps searching.",
 }
 
 _SEARCH_AND_CLEAR = (("search", "clear"), ("search",))
@@ -121,6 +123,8 @@ def choice(code: str | None, state: str, values: dict[str, Any], scope: str | No
         "too_many_files": (("remove", "remove_and_search"), ()),
         "import_failed": ((*retry, *(("finish",) if series_or_album else ()), "remove"), ()),
         "album_tracks_missing": ((*retry, "finish", "remove"), ()),
+        # The files lie in place: keeping the target is "finish"; taking the release is the owner's, in the browser.
+        "album_fits_other_release": (("finish",), ()),
         "files_unassigned": (("assign", "finish", "remove"), ()),
         "other_series_suspected": (("assign", "remove_and_search", "remove"), ()),
         "several_videos": (("assign", "remove"), ()),

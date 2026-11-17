@@ -57,7 +57,7 @@ from ...models import (
 )
 from .. import companions_album, downloaders, folders, naming, naming_music, schreibweisen
 from ..mediaservers import notify as mediaserver_notify
-from ..music import album_quality, align, covers, credits, fingerprint, same_song, tag_writing, tags
+from ..music import album_quality, align, covers, credits, fingerprint, same_song, tag_writing, tags, target_follow
 from ..music import file_matching as fm
 from ..music import musicbrainz as mb
 from ..music import store as music_store
@@ -1480,6 +1480,24 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
     after_finish(context.download_id, found)
 
 
+def follow_target(download_id: int) -> None:
+    """After the owner took the release the files fit as the target: the album's files follow its names and tags.
+    Never raises."""
+    with SessionLocal() as db:
+        context = load(db, download_id)
+    if context is None or context.version_id is None or not context.root_folder or not context.album_relative:
+        return
+    folder = Path(context.root_folder).joinpath(*[part for part in context.album_relative.split("/") if part])
+    try:
+        with SessionLocal() as db:
+            version = db.get(Version, context.version_id)
+            if version is not None:
+                align.align(db, version, folder, context.naming, context.album, write_tags=context.write_tags)
+                db.commit()
+    except OSError:
+        logger.warning("Download %d: the album's files could not all follow the target release", download_id)
+
+
 def _align(context: Context, spot: Spot) -> None:
     """Files of more than one release follow the target in names and tags (``music.align``); after the commit of the
     filing, so a failure here never undoes it."""
@@ -1533,9 +1551,14 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
         download.filed_count = len(filed)
         download.open_count = len(open_rows)
         download.absent_count = len(missing)
+        # The files fit another release completely while the target is not complete (17.11.2026).
+        fit = _fit_of_target(db, context, version) if filed and not open_rows else None
         if open_rows:
             download.state, download.problem_code = "problem", "files_unassigned"
             download.problem_values = {"filed": len(filed), "open": len(open_rows), "missing": len(missing)}
+        elif fit is not None:
+            download.state, download.problem_code = "problem", target_follow.PROBLEM
+            download.problem_values = fit.values(db.get(Release, fit.release_id))
         else:
             download.state, download.problem_code, download.problem_values = "imported", None, None
             download.imported_at = moment
@@ -1557,6 +1580,22 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
         state,
     )
     return state
+
+
+def _fit_of_target(db: OrmSession, context: Context, version: Version) -> target_follow.Fit | None:
+    """A release the album's files fit completely while the target is not: a target the rule chose goes there when
+    nothing is lost (returns None), else the owner is asked (returns the fit)."""
+    title = db.get(Title, context.title_id)
+    if title is None:
+        return None
+    fit = target_follow.fit_of(db, title, version, music_store.account_language(db))
+    if fit is None or not fit.automatic:
+        return fit
+    target_follow.follow(db, title, version, fit, moment=store.now())
+    logger.info(
+        "Album download %d: its files fit release %d, the target follows them", context.download_id, fit.release_id
+    )
+    return None
 
 
 #: The blocklist reason of a release whose files lay below the step its name promised.

@@ -35,6 +35,9 @@ export function problemActions(
         return ['finish', 'removeAndBlock', 'toTitle']
       case 'album_single_file':
         return ['toTitle', 'remove']
+      // Seit 17.11.2026: alles abgelegt, die Dateien passen vollstaendig auf eine andere Ausgabe als das Ziel.
+      case 'album_fits_other_release':
+        return ['takeRelease', 'keepSearching']
     }
   }
   switch (code) {
