@@ -355,6 +355,7 @@ def take_release(download_id: int) -> dict[str, Any]:
         music_store.set_owner_target(
             db, title, version, release, moment=store.now(), language=music_store.account_language(db)
         )
+        row.absent_count = album_import._short_of_target(version, row.absent_count or 0)
         db.commit()
         version_id, release_id = version.id, release.id
     logger.info("Album download %d: the owner takes release %d as the target", download_id, release_id)

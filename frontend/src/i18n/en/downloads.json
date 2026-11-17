@@ -320,8 +320,8 @@
     "missingCodes": "missing from the pack: {{codes}}",
     "filesFiled_one": "{{value}} file filed",
     "filesFiled_other": "{{value}} files filed",
-    "tracksMissing_one": "{{value}} track without a file",
-    "tracksMissing_other": "{{value}} tracks without a file",
+    "tracksMissing_one": "{{value}} track missing from the album",
+    "tracksMissing_other": "{{value}} tracks missing from the album",
     "detail": {
       "repair_failed": "{{client}} says: not enough repair data.",
       "incomplete": "{{client}} says: parts are missing on the server, the download cannot finish.",

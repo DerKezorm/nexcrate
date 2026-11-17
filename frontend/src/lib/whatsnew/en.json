@@ -903,6 +903,20 @@
         "small": [
           "The database does not change."
         ]
+      },
+      "1.8.3": {
+        "lead": "The history says when an album was filed but still misses tracks.",
+        "sections": [
+          {
+            "title": "Missing tracks in the history",
+            "body": "For a filed album, the history now says how many tracks of its target are still missing afterwards, such as “12 files filed · 1 track missing from the album”. Before, nexcrate counted against the release the download came from, which was mostly complete.",
+            "where": "Downloads › History"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "The database does not change."
+        ]
       }
   }
 }

@@ -903,6 +903,20 @@
         "small": [
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.8.3": {
+        "lead": "Der Verlauf sagt, wenn ein Album abgelegt wurde, ihm aber noch Titel fehlen.",
+        "sections": [
+          {
+            "title": "Fehlende Titel im Verlauf",
+            "body": "Bei einem abgelegten Album steht im Verlauf jetzt, wie viele Titel des Ziels danach noch fehlen, etwa „12 Dateien abgelegt · 1 Titel fehlt dem Album“. Bisher zählte nexcrate gegen die Ausgabe, aus der der Download stammte, und die war meist vollständig.",
+            "where": "Downloads › Verlauf"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

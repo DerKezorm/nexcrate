@@ -1632,11 +1632,11 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
         missing = [track.id for track in edition.tracks if track.id not in held]
         download.filed_count = len(filed)
         download.open_count = len(open_rows)
-        download.absent_count = len(missing)
         # The files fit another release completely while the target is not complete (17.11.2026).
         # With files open as well: a target that may move moves now; the question waits until no file is open (after the
         # owner's assignment this runs again).
         fit = _fit_of_target(db, context, version) if filed else None
+        download.absent_count = _short_of_target(version, len(missing))
         if open_rows:
             download.state, download.problem_code = "problem", "files_unassigned"
             download.problem_values = {"filed": len(filed), "open": len(open_rows), "missing": len(missing)}
@@ -1664,6 +1664,17 @@ def finish(context: Context, edition: fm.Edition, spot: Spot, filed_now: int) ->
         state,
     )
     return state
+
+
+def _short_of_target(version: Version, of_release: int) -> int:
+    """How many tracks of the album's target the album has no file for after this download, counted by song as the
+    album page counts them (``track_counts``); the release's own count while the album has no target count. The history
+    says it: the release the files came from is mostly complete, the album is not (the owner's wish of 17.11.2026)."""
+    counts = version.track_counts or {}
+    wanted = counts.get("wanted") or 0
+    if not wanted:
+        return of_release
+    return max(int(wanted) - int(counts.get("present") or 0), 0)
 
 
 def _fit_of_target(db: OrmSession, context: Context, version: Version) -> target_follow.Fit | None:

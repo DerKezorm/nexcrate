@@ -97,7 +97,10 @@ class DownloadScope(BaseModel):
     release_id: int | None = Field(default=None, description="An album: the release its files turned out to be.")
     filed: int = Field(description="Episodes filed; files of an album filed.")
     open: int = Field(description="Videos waiting for the owner while an episode is missing; audio files of an album.")
-    missing: int = Field(description="Episodes the download did not bring; tracks of the album's release.")
+    missing: int = Field(
+        description="Episodes the download did not bring; for an album, the tracks of its target release the album has "
+        "no file for after the download (before 1.8.3: of the release the download came from)."
+    )
     skipped_codes: list[str] = Field(
         default_factory=list, description="Episodes left out: the file already there is not worse."
     )

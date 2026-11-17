@@ -320,8 +320,8 @@
     "missingCodes": "fehlten im Paket: {{codes}}",
     "filesFiled_one": "{{value}} Datei abgelegt",
     "filesFiled_other": "{{value}} Dateien abgelegt",
-    "tracksMissing_one": "{{value}} Titel ohne Datei",
-    "tracksMissing_other": "{{value}} Titel ohne Datei",
+    "tracksMissing_one": "{{value}} Titel fehlt dem Album",
+    "tracksMissing_other": "{{value}} Titel fehlen dem Album",
     "detail": {
       "repair_failed": "{{client}} sagt: nicht genug Reparaturdaten.",
       "incomplete": "{{client}} sagt: auf dem Server fehlen Teile, der Download kann nicht fertig werden.",
