@@ -10,7 +10,7 @@ live release taken for a studio album. ``versions`` and the fixes in ``target``,
 Per album version of nexcrate's own:
 
 * **Target of another version.** A target the rule chose goes to the release the files lie on when that one is of
-  the album's own version, else to the rule's choice. The owner's own choice stays and is only reported.
+  the album's own version, else to the rule's choice.
 * **A file on a track of another version** ("Song (instrumental)") whose download said nothing of it (neither its
   name in the download nor the release name), when that track's whole release is another version or the release
   has the song plainly as well: it goes to the track of the album's own version with the same name
@@ -22,7 +22,9 @@ Per album version of nexcrate's own:
   is reported. Nothing goes into the recycle bin by itself: a live download can lie rightly on the live disc of a
   deluxe edition whose tracks MusicBrainz names plainly (measured on a copy of the owner's library, 16.11.2026).
 * **A "+" that was a "/"** (``naming_music.slashes_as_dashes``): the album is renamed when every renaming step only
-  turns a "+" into a "-".
+  turns a "+" into a "-"; so is an artist whose name holds a "/", with all its albums, after the albums.
+* **The owner's target of another version** (his word, 17.11.2026): goes to the album's own release as well and stays
+  his; the files go along only when that release has every file's very track (``_onto_own_release``).
 
 Files without a download of nexcrate (a Lidarr takeover, a folder from disk) have nothing that says what they are:
 they are reported, never changed.
@@ -32,7 +34,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 import threading
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -238,25 +239,95 @@ def _target(album: _Album, finding: Finding, db: OrmSession) -> None:
     current = version.target_release_id
     if current is None or not album.other(current):
         return
-    if version.target_set_by == "owner":
-        finding.notes.append("owner_target")
-        return
+    owner = version.target_set_by == "owner"
     actual = version.actual_release_id
     if actual is not None and actual in album.releases and not album.other(actual):
-        chosen = actual
+        chosen: int | None = actual
     else:
         definition = db.get(VersionDefinition, version.version_definition_id)
         countries = store.countries_of(db, definition, store.account_language(db))
         choice = target.choose(store.candidates_of(db, album.title.id), countries)
         chosen = choice.chosen.id if choice.chosen is not None and not album.other(choice.chosen.id) else None
+    if chosen is None and owner:
+        # The rule takes no release (none official, say): the album's own release closest in size to the files.
+        own = sorted(
+            (release_id for release_id in album.releases if not album.other(release_id)),
+            key=lambda release_id: (abs((album.releases[release_id].track_count or 0) - len(album.files)), release_id),
+        )
+        chosen = own[0] if own else None
     if chosen is None:
         finding.notes.append("no_release_of_the_album")
         return
+    if owner:
+        # The owner's word (17.11.2026): his targets of another version go to the album's own release too, and stay
+        # his. Found on his library: remix singles and instrumental releases, with files that are what their
+        # names say; a file goes along only when that release has its very track, else every file stays.
+        finding.notes.append("owner_target_changed")
+        onto = _onto_own_release(album, chosen)
+        if onto is None:
+            if album.files:
+                finding.notes.append("files_stay_on_another_version")
+        else:
+            chosen, mapping = onto
+            for row in album.files:
+                if row.id in mapping:
+                    old, new = album.tracks[row.track_id or 0], album.tracks[mapping[row.id]]
+                    finding.moves.append(FileMove(row.id, album.name_of(row), old.name, new.name, new.id))
+            if chosen != actual:
+                finding.release = {
+                    "from": album.releases[actual].name if actual in album.releases else None,
+                    "to": album.releases[chosen].name,
+                    "to_id": chosen,
+                }
     finding.target = {
         "from": album.releases[current].name,
         "to": album.releases[chosen].name,
         "to_id": chosen,
+        "owner": owner,
     }
+
+
+def _onto_own_release(album: _Album, first: int) -> tuple[int, dict[int, int]] | None:
+    """A release of the album's own version that has every file's very track: the same name with the same version
+    words ("Song (Thin White Duke remix)" only on that remix) and a fitting length. The release closest in size to
+    the files first (eleven files of an album take its edition of eleven, not the deluxe of sixteen), ``first`` among
+    equals. None when there is no such release."""
+    placed = [row for row in album.files if row.track_id is not None or row.track_ids]
+    if not placed:
+        return None
+    own = [release_id for release_id in album.releases if not album.other(release_id)]
+    own.sort(
+        key=lambda release_id: (
+            abs((album.releases[release_id].track_count or 0) - len(placed)),
+            release_id != first,
+            release_id,
+        )
+    )
+    for release_id in own:
+        tracks = [track for track in album.tracks.values() if track.release_id == release_id]
+        mapping: dict[int, int] = {}
+        taken: set[int] = set()
+        for row in placed:
+            current = album.tracks.get(row.track_id or 0)
+            if current is None:
+                break
+            words = versions.marks(current.name) - album.expected
+            found = [
+                track
+                for track in tracks
+                if track.id not in taken
+                and file_matching.title_keys(track.name) & file_matching.title_keys(current.name)
+                and versions.marks(track.name) - album.expected == words
+                and _close(album.duration(row), track)
+            ]
+            if len(found) != 1:
+                break
+            taken.add(found[0].id)
+            if found[0].id != row.track_id:
+                mapping[row.id] = found[0].id
+        else:
+            return release_id, mapping
+    return None
 
 
 def _release_for(album: _Album, wrong: set[int]) -> tuple[int, dict[int, int]] | None:
@@ -306,6 +377,8 @@ def _release_for(album: _Album, wrong: set[int]) -> tuple[int, dict[int, int]] |
 
 
 def _files(album: _Album, finding: Finding) -> None:
+    if finding.moves:
+        return  # the owner's target took the files along already
     wrong_track: set[int] = set()
     for row in album.files:
         track = album.tracks.get(row.track_id or 0)
@@ -374,16 +447,14 @@ def _files(album: _Album, finding: Finding) -> None:
             }
 
 
-_PLUS_ONLY = re.compile(r"[+\-]")
-
-
 def _only_slashes(moves: list[tuple[Path, Path]]) -> bool:
-    """Whether every renaming step only turns a "+" into a "-" (" + " into " - ")."""
+    """Whether every renaming step only turns a "+" into a "-" (" + " into " - "); a real "+" beside it stays."""
     for old, new in moves:
         before, after = old.as_posix(), new.as_posix()
-        if before == after or "+" not in before or "+" in after.replace(before, ""):
+        if len(before) != len(after):
             return False
-        if _PLUS_ONLY.sub("~", before) != _PLUS_ONLY.sub("~", after):
+        differing = [(one, other) for one, other in zip(before, after, strict=True) if one != other]
+        if not differing or any(pair != ("+", "-") for pair in differing):
             return False
     return bool(moves)
 
@@ -404,6 +475,52 @@ def _slashes(album: _Album, finding: Finding) -> None:
         finding.slashes = True
     else:
         finding.notes.append("slash_rename_has_other_steps")
+
+
+@dataclass
+class ArtistFinding:
+    """An artist folder whose "+" was a "/" (the owner's word, 17.11.2026: the same rule as for albums)."""
+
+    artist_id: int
+    artist: str
+    folder: str
+    slashes: bool = False
+    notes: list[str] = field(default_factory=list)
+
+
+def survey_artists() -> list[ArtistFinding]:
+    """Every artist with a "/" in the name whose folder is renamed when every step only turns a "+" into a "-"; the
+    whole artist is planned, so its albums go along. Reads only."""
+    from ..rename import jobs as rename_jobs
+
+    with SessionLocal() as db:
+        artists = [
+            (row.id, row.name or "", row.folder or "")
+            for row in db.scalars(select(Artist).where(Artist.name.contains("/")).order_by(Artist.id))
+        ]
+    found: list[ArtistFinding] = []
+    for artist_id, name, folder in artists:
+        try:
+            plan = rename_jobs.plan_unit("music", artist_id)
+        except Exception:
+            logger.exception("Version repair: artist %d could not be planned", artist_id)
+            continue
+        if plan is None:
+            continue  # no album of its own
+        finding = ArtistFinding(artist_id, name, folder)
+        if plan.skip is not None:
+            if "+" in folder:
+                finding.notes.append(f"rename_skipped_{plan.skip}")
+                found.append(finding)
+            continue
+        if not any(old != new for old, new in plan.folders if "/" not in old):
+            continue  # the artist folder keeps its name (shared with another artist, or named otherwise)
+        if _only_slashes([(move.old, move.new) for move in plan.moves]):
+            finding.slashes = True
+        else:
+            finding.notes.append("slash_rename_has_other_steps")
+        found.append(finding)
+    return found
 
 
 def survey() -> list[Finding]:
@@ -464,12 +581,17 @@ def _apply_one(finding: Finding) -> dict[str, Any]:
                 audio_row.track_id, audio_row.via = move.to_track_id, "owner"
         if finding.release is not None:
             version.actual_release_id = finding.release["to_id"]
-        if finding.target is not None and version.target_set_by != "owner":
+        owner = bool(finding.target and finding.target.get("owner"))
+        if finding.target is not None and (owner or version.target_set_by != "owner"):
             old = db.get(Release, version.target_release_id) if version.target_release_id else None
             new = db.get(Release, finding.target["to_id"])
             version.target_release_id = finding.target["to_id"]
-            version.target_set_by = "rule"
-            version.target_reason = {"codes": [{"code": "files"}, {"code": "other_version", "left_out": 1}]}
+            if owner:
+                version.target_set_by = "owner"
+                version.target_reason = {"codes": [{"code": "owner"}]}
+            else:
+                version.target_set_by = "rule"
+                version.target_reason = {"codes": [{"code": "files"}, {"code": "other_version", "left_out": 1}]}
             version.target_suggestion_id = None
             store._history(
                 db, title.id, version.id, db.get(VersionDefinition, version.version_definition_id),
@@ -539,16 +661,36 @@ def apply(findings: list[Finding]) -> dict[str, Any]:
     return {"albums": results, "renamed": renamed}
 
 
+def apply_artists(artists: list[ArtistFinding]) -> dict[str, Any]:
+    """Renames the artists whose folder only turns a "+" into a "-"; after the albums, planned again then."""
+    from ..rename import jobs as rename_jobs
+
+    ids = [item.artist_id for item in artists if item.slashes]
+    if not ids:
+        return {}
+    assert rename_jobs.wait_idle(600), "a rename job still runs"
+    job = rename_jobs.start_run("music", ids)
+    rename_jobs.wait_idle(3600)
+    return dict(job.result)
+
+
 # --- The request file ----------------------------------------------------------------------------------------------- #
 
 
-def report(findings: list[Finding], mode: str, applied: dict[str, Any] | None, moment: datetime) -> dict[str, Any]:
+def report(
+    findings: list[Finding],
+    artists: list[ArtistFinding],
+    mode: str,
+    applied: dict[str, Any] | None,
+    moment: datetime,
+) -> dict[str, Any]:
     return {
         "mode": mode,
         "at": moment.isoformat(),
         "albums": len(findings),
         "changing": sum(1 for item in findings if item.changes),
         "findings": [asdict(item) for item in findings],
+        "artists": [asdict(item) for item in artists],
         "applied": applied,
     }
 
@@ -559,14 +701,19 @@ def run(mode: str) -> Path:
         moment = utcnow()
         findings = survey()
         applied = apply(findings) if mode == "apply" else None
-        data = report(findings, mode, applied, moment)
+        # The artists after the albums: their plan sees the albums as they lie now.
+        artists = survey_artists()
+        if applied is not None:
+            applied["artists"] = apply_artists(artists)
+        data = report(findings, artists, mode, applied, moment)
         target = get_settings().data_dir / f"music-version-repair-{mode}-{moment:%Y%m%d-%H%M%S}.json"
         target.write_text(json.dumps(data, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
         logger.info(
-            "Version repair %s: %d albums found, %d to change, report %s",
+            "Version repair %s: %d albums found, %d to change, %d artist folders, report %s",
             mode,
             data["albums"],
             data["changing"],
+            sum(1 for item in artists if item.slashes),
             target.name,
         )
         return target

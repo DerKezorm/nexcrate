@@ -209,13 +209,14 @@ def name_the(name: str) -> str:
 def slashes_as_dashes(text: str) -> str:
     """A slash in a title as a dash: " / " as " - ", any other "/" as "-". The owner's choice (16.11.2026): a live
     track named "Song (live / Arena, City / 17/10/73)" became "Song (live + Arena, City + 17+10+73)"
-    with Radarr's "+". Titles of albums and tracks only; an artist's name and movies and series keep the "+"."""
+    with Radarr's "+". Every name of music: artists (17.11.2026, "AC/DC" as "AC-DC"), albums and tracks. Movies and
+    series keep the "+"."""
     return text.replace(" / ", " - ").replace("/", "-")
 
 
 def token_values(album: AlbumFacts, track: TrackFacts | None) -> dict[str, str]:
     """Every token's raw value by lookup key. Numbers are raw; ``render`` pads them."""
-    artist = schreibweisen.nfc(album.artist_name or "")
+    artist = slashes_as_dashes(schreibweisen.nfc(album.artist_name or ""))
     title = slashes_as_dashes(schreibweisen.nfc(album.album_title or ""))
     values = {
         token_key("Artist Name"): artist,
@@ -240,7 +241,7 @@ def token_values(album: AlbumFacts, track: TrackFacts | None) -> dict[str, str]:
                 token_key("Medium Format"): track.medium_format or "",
                 token_key("Track Title"): track_title,
                 token_key("Track CleanTitle"): naming.clean_title(track_title),
-                token_key("Track ArtistName"): schreibweisen.nfc(track.artist_name or ""),
+                token_key("Track ArtistName"): slashes_as_dashes(schreibweisen.nfc(track.artist_name or "")),
                 token_key("Quality Title"): track.quality or "",
                 ORIGINAL_KEY: track.original_filename,
             }
@@ -260,7 +261,7 @@ def artist_folder_name(current: MusicNaming, album: AlbumFacts) -> str:
 
 def album_folder_name(current: MusicNaming, album: AlbumFacts, addition: str | None = None) -> str:
     """The album folder; ``addition`` goes in brackets at the end when two albums of an artist would share the name
-   , kept within the limit by shortening the title first."""
+    , kept within the limit by shortening the title first."""
     pattern = current.album_folder + (f" ({naming.clean(addition)})" if addition else "")
     return naming.render(
         pattern, token_values(album, None), current.umlauts, max_bytes=naming.MAX_PART_BYTES, tiers=TIERS

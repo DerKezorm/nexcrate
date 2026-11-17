@@ -854,7 +854,7 @@
         ],
         "smallTitle": "Außerdem",
         "small": [
-          "Ein „/“ in Album- und Titelnamen wird im Dateinamen zu „-“ statt zu „+“.",
+          "Ein „/“ in Künstler-, Album- und Titelnamen wird im Datei- und Ordnernamen zu „-“ statt zu „+“.",
           "Wechselst du die Zielausgabe, schreibt nexcrate die release.nex im Albumordner neu.",
           "Hatte die Regel eine Ausgabe anderer Fassung als Ziel gewählt und liegen die Dateien auf der normalen Ausgabe, springt das Ziel nach dem Update von selbst dorthin zurück. Deine eigene Wahl bleibt.",
           "Die Datenbank ändert sich nicht."

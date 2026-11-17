@@ -854,7 +854,7 @@
         ],
         "smallTitle": "Also",
         "small": [
-          "A “/” in album and track titles becomes “-” in file names instead of “+”.",
+          "A “/” in artist, album and track names becomes “-” in file and folder names instead of “+”.",
           "Choosing another target release writes the album folder's release.nex again.",
           "Where the rule had chosen a release of another version as the target and the files lie on the album's own release, the target goes back there after the update. Your own choice stays.",
           "The database does not change."
