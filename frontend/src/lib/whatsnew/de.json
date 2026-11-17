@@ -859,6 +859,21 @@
           "Hatte die Regel eine Ausgabe anderer Fassung als Ziel gewählt und liegen die Dateien auf der normalen Ausgabe, springt das Ziel nach dem Update von selbst dorthin zurück. Deine eigene Wahl bleibt.",
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.8.1": {
+        "lead": "nexcrate legt eine Albumdatei nicht mehr still nach Nummer und Länge ab, wenn ihr Name einen ganz anderen Song nennt.",
+        "sections": [
+          {
+            "title": "Name gegen Nummer",
+            "body": "Passt eine Datei nur über ihre Nummer und Länge auf einen Titel, nennen ihr Tag und ihr Dateiname aber einen anderen Song, fragt nexcrate zuerst den Fingerabdruck bei AcoustID. Bestätigt er den Titel, wird abgelegt. Sonst bleibt die Datei für dich offen, mit dem Titel ihrer Nummer als Vorschlag. Allgemeine Namen wie „Intro“, „Interlude“ oder „Bonus Track“, Tippfehler, zensierte Wörter und Titel mit Übersetzung in Klammern zählen nicht als anderer Song.",
+            "where": "Ablegen, Downloads › Probleme › Von Hand zuordnen"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Dateinamen, die Zeichen als HTML schreiben (etwa „i&#39;m“), liest nexcrate jetzt als Text.",
+          "Schon abgelegte Alben bleiben, wie sie sind. Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

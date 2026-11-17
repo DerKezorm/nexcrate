@@ -15,6 +15,13 @@ file claims the same track, by one of these ways:
 When position and name point at different tracks the file is not clear. The length is a check, never a reason alone
 (research A5).
 
+**A name against its position.** A file that fits a track by position and length only is not clear when its title
+(tag, else name) and its file name both name another song (``names_differ``): no word of weight in common, typos
+and censored words ("D*mn") forgiven. It stays open, so AcoustID is asked next (``album_import.with_fingerprints``):
+a fingerprint that confirms the track files it, else the owner decides with the track proposed. Names that say nothing
+("Intro", "Interlude", "Bonus Track", "[untitled]") and names in another script never differ. Found on 17.11.2026: 11
+of 13 wrongly filed files of the owner's library came by position, a song of another release about as long.
+
 **The same version.** Position and name count only when the file and the track are the same version of the song
 (``versions``): a file whose title, name or album tag says "(Live)", "- Instrumental" and so on fits no track that does
 not say so, and the other way round, unless the album expects it (its title or MusicBrainz type). Such a file stays
@@ -32,12 +39,14 @@ One audio file per medium that runs as long as the whole medium is a single file
 
 from __future__ import annotations
 
+import html
 import os
 import re
 import unicodedata
 from collections import Counter, defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from difflib import SequenceMatcher
 from typing import Any
 
 from .. import schreibweisen
@@ -135,7 +144,9 @@ def _number(values: list[str] | None) -> int | None:
 
 def _parts(path: str) -> tuple[list[str], str]:
     parts = [part for part in path.replace("\\", "/").split("/") if part]
-    return parts[:-1], os.path.splitext(parts[-1])[0] if parts else ""
+    stem = os.path.splitext(parts[-1])[0] if parts else ""
+    # Some releases name their files with HTML entities: "i&#39;m_counting_on_you", "1&#43;1".
+    return parts[:-1], html.unescape(stem) if "&" in stem else stem
 
 
 def _folded(text: str) -> str:
@@ -233,6 +244,130 @@ def title_keys(text: str | None) -> frozenset[str]:
     return frozenset(schreibweisen.keys(plain)) | frozenset(schreibweisen.keys(text))
 
 
+# --- A name against its position ---------------------------------------------------------------------------------- #
+
+#: Words that name no song: a release may call its intro "Der Geburtstag" and its hidden track "[untitled]".
+_GENERIC = frozenset({"intro", "outro", "interlude", "skit", "prelude", "hidden", "bonus", "untitled", "unknown"})
+#: Words of a version or a credit: "Song A (One Remix)" and "Song B (Other Remix)" share no song.
+_FILLER = frozenset(
+    {
+        "mix", "remix", "rmx", "version", "edit", "radio", "remaster", "remastered", "original", "extended", "album",
+        "single", "feat", "ft", "featuring", "prod", "produced", "explicit", "clean", "dirty", "mono", "stereo", "take",
+        "alternate", "alternative", "dub", "vocal", "club", "short", "long", "part", "pt", "vol", "volume", "live",
+        "demo", "instrumental", "instr", "acoustic", "unplugged", "acapella", "acappella", "accapella", "karaoke",
+        "track", "titel", "piste", "reprise",
+    }
+)  # fmt: skip
+#: Short words of English, German, Spanish, French: "You" names no song; "Have I Told You Lately" and "How's the
+#: World Treating You" share nothing but it.
+_SMALL = frozenset(
+    {
+        "a", "an", "the", "and", "or", "of", "to", "in", "on", "at", "for", "from", "by", "with", "is", "are", "be",
+        "i", "im", "me", "my", "you", "your", "youre", "we", "us", "our", "he", "she", "it", "its", "they", "them",
+        "this", "that", "thats", "not", "no", "dont", "do", "what", "when", "where", "who", "how", "all", "so", "but",
+        "if", "as", "up", "out", "just", "der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "und",
+        "oder", "zu", "am", "auf", "aus", "mit", "von", "fur", "fuer", "ist", "bin", "ich", "du", "er", "sie", "es",
+        "wir", "ihr", "mich", "dich", "mir", "dir", "nicht", "wie", "was", "el", "la", "los", "las", "un", "una", "y",
+        "de", "del", "en", "con", "por", "para", "que", "mi", "tu", "yo", "te", "se", "lo", "le", "les", "et", "dans",
+        "avec", "pour", "qui", "je", "il", "elle", "mon", "ma", "ne", "pas",
+    }
+)  # fmt: skip
+_APOSTROPHES = re.compile(r"['’‘`´]")
+_ALNUM = re.compile(r"[a-z0-9]+")
+#: A word with stars is censored: "D*mn", "D**n".
+_TOKEN = re.compile(r"[a-z0-9*]+")
+_UMLAUTS = str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})
+#: Two words this alike are one word written twice ("Moleasses", "Buddah", "chilln"): a typo names no other song.
+_ALIKE = 0.8
+_ALIKE_LONG = 0.75
+_LONG_WORD = 6
+
+
+def _forms(text: str) -> tuple[str, str]:
+    """A name in lower case twice: umlauts written out ("duesseldorfer") and accents dropped ("dusseldorfer")."""
+    low = _APOSTROPHES.sub("", unicodedata.normalize("NFC", text).casefold())
+
+    def ascii_of(value: str) -> str:
+        plain = unicodedata.normalize("NFKD", value)
+        return "".join(char for char in plain if not unicodedata.combining(char))
+
+    return ascii_of(low.translate(_UMLAUTS)), ascii_of(low)
+
+
+@dataclass(frozen=True)
+class _Words:
+    #: Words that can tell songs apart.
+    weight: frozenset[str]
+    #: All words, small ones too.
+    every: frozenset[str]
+    #: Censored words as patterns.
+    masks: tuple[re.Pattern[str], ...]
+
+
+def _words(text: str, artist: frozenset[str]) -> _Words | None:
+    """The words of a name without credits, versions and the artist; None when it has no Latin letters to compare
+    (another script, only numbers)."""
+    plain = _FEAT.sub("", _CREDIT.sub(" ", text))
+    words: set[str] = set()
+    masks: list[re.Pattern[str]] = []
+    for form in _forms(plain):
+        for token in _TOKEN.findall(form):
+            if "*" in token and token.strip("*"):
+                masks.append(re.compile("[a-z0-9]+".join(re.escape(part) for part in token.split("*")) + "$"))
+                words.add(token)
+            elif len(token) > 1 and not token.isdigit() and token not in _FILLER and token not in artist:
+                words.add(token)
+    if not words:
+        return None
+    return _Words(frozenset(words - _SMALL), frozenset(words), tuple(masks))
+
+
+def _alike(one: str, other: str, masks: Sequence[re.Pattern[str]]) -> bool:
+    if one == other or any(mask.match(other) for mask in masks):
+        return True
+    short, long = sorted((one, other), key=len)
+    if len(short) >= 3 and long.startswith(short):
+        return True
+    if len(short) < 4:
+        return False
+    ratio = SequenceMatcher(None, one, other).ratio()
+    return ratio >= _ALIKE or (len(short) >= _LONG_WORD and ratio >= _ALIKE_LONG)
+
+
+def _shared(mine: _Words, theirs: _Words) -> bool:
+    # Words of weight first; a name made of small words only ("Do It", "You & Me") compares all of them.
+    left, right = (mine.weight, theirs.weight) if mine.weight and theirs.weight else (mine.every, theirs.every)
+    return any(_alike(one, other, mine.masks) or _alike(other, one, theirs.masks) for one in left for other in right)
+
+
+def _generic(text: str) -> bool:
+    return any(word in _GENERIC for form in _forms(text) for word in _ALNUM.findall(form))
+
+
+def _one_differs(name: str, track: str, artist: frozenset[str]) -> bool | None:
+    """Whether a name names another song than a track; None when it cannot tell."""
+    if _generic(name) or _generic(track):
+        return False
+    mine, theirs = _words(name, artist), _words(track, artist)
+    if mine is None or theirs is None:
+        return None
+    return not _shared(mine, theirs)
+
+
+def names_differ(names: Sequence[str | None], track: str, artist: str | None = None) -> bool:
+    """Whether every name a file gives (its title, its file name) clearly names another song than ``track``. A name
+    that matches, says nothing or cannot be compared keeps the file on its position."""
+    artist_words = frozenset(word for form in _forms(artist or "") for word in _ALNUM.findall(form))
+    verdicts = [_one_differs(name, track, artist_words) for name in dict.fromkeys(name for name in names if name)]
+    return bool(verdicts) and all(verdict is True for verdict in verdicts)
+
+
+def given_names(file: AudioFile, reading: Reading, artist: str | None = None) -> tuple[str | None, ...]:
+    """The names a file gives for its song: the title it was read with and the title in its file name."""
+    _folders, stem = _parts(file.path)
+    return reading.title, _name_title(stem, artist)
+
+
 # --- One release -------------------------------------------------------------------------------------------------- #
 
 
@@ -299,9 +434,11 @@ def _candidates(
     keys: frozenset[str],
     marks: frozenset[str] = frozenset(),
     allowed: frozenset[str] = frozenset(),
+    artist: str | None = None,
 ) -> tuple[set[int], str | None]:
     """The tracks a file could be and the way that says so; an empty set when the ways disagree or nothing fits.
-    Position and name count only for a track of the same version (``marks`` of the file, ``allowed`` by the album)."""
+    Position and name count only for a track of the same version (``marks`` of the file, ``allowed`` by the album).
+    Position alone counts only for a track the file's names do not contradict (``names_differ``)."""
     by_id = _by_id(file, edition)
     if by_id:
         # One recording can stand twice in a release: the position then picks among them.
@@ -340,6 +477,10 @@ def _candidates(
     if by_position and by_name:
         both = by_position & by_name
         return (both, "position") if both else (set(), None)
+    if by_position:
+        names = given_names(file, reading, artist)
+        named = {track.id: track.name for track in edition.tracks}
+        by_position = {track_id for track_id in by_position if not names_differ(names, named[track_id], artist)}
     if by_position:
         return by_position, "position"
     return by_name, ("name" if by_name else None)
@@ -404,7 +545,7 @@ def match_edition(
     for file in files:
         reading = readings[file.key]
         keys = title_keys(reading.title)
-        fits[file.key] = _candidates(file, reading, edition, keys, marks[file.key], allowed)
+        fits[file.key] = _candidates(file, reading, edition, keys, marks[file.key], allowed, artist_name)
     claims: Counter[int] = Counter()
     for tracks, _way in fits.values():
         if len(tracks) == 1:

@@ -859,6 +859,21 @@
           "Where the rule had chosen a release of another version as the target and the files lie on the album's own release, the target goes back there after the update. Your own choice stays.",
           "The database does not change."
         ]
+      },
+      "1.8.1": {
+        "lead": "nexcrate no longer quietly files an album file by its number and length when its name names a different song.",
+        "sections": [
+          {
+            "title": "Name against number",
+            "body": "When a file fits a track only by its number and length, but its tag and its file name name another song, nexcrate asks AcoustID for the fingerprint first. If it confirms the track, the file is filed. Otherwise it stays open for you, with the track of its number proposed. General names such as “Intro”, “Interlude” or “Bonus Track”, typos, censored words and titles with a translation in brackets do not count as another song.",
+            "where": "Filing, Downloads › Problems › Assign by hand"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "File names that write characters as HTML (such as “i&#39;m”) are now read as text.",
+          "Albums already filed stay as they are. The database does not change."
+        ]
       }
   }
 }
