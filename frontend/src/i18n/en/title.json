@@ -115,6 +115,7 @@
         "upgrade_until_reached": "The file has enough points",
         "step_too_small": "Too small a step up",
         "same_release": "The same release as the file",
+        "filed_for_other_album": "Filed for another album already",
         "no_gain": "Brings no episode",
         "not_better": "Not better than the files",
         "no_episode_match": "Matches no episode",

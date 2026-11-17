@@ -110,6 +110,8 @@ export function rejectionPhrase(t: TFunction, code: string): string {
       return t('title.automatic.summary.rejection.step_too_small')
     case 'same_release':
       return t('title.automatic.summary.rejection.same_release')
+    case 'filed_for_other_album':
+      return t('title.automatic.summary.rejection.filed_for_other_album')
     case 'no_gain':
       return t('title.automatic.summary.rejection.no_gain')
     case 'not_better':

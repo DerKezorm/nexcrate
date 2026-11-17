@@ -526,8 +526,45 @@ def apply_release_group(
         not first_load and new and artist.monitor_new == "all" and studio
     )
     if wants and definition is not None and album_version(db, title.id) is None:
-        add_version(db, title, definition, moment)
+        twin = duplicate_of(db, title) if new else None
+        if twin is None:
+            add_version(db, title, definition, moment)
+        else:
+            logger.info("Album %d appeared as a second release group of album %d; it is not watched", title.id, twin.id)
     return title, new
+
+
+def _title_key(text: str | None) -> str:
+    forms = schreibweisen.keys(text)
+    return forms[0] if forms else ""
+
+
+def duplicate_of(db: OrmSession, title: Title) -> Title | None:
+    """A watched album of the same artist that a new release group repeats: the same title, type, first release date
+    and disambiguation. Found on 17.11.2026: MusicBrainz had an album twice, the second group with one Japanese release
+    without a status; it was watched as a new album, and the release the first one came from was loaded again."""
+    date = (title.first_release_date or "").strip()
+    if title.artist_id is None or not date:
+        return None
+    key = _title_key(title.title)
+    for other in db.scalars(
+        select(Title).where(
+            Title.kind == "album",
+            Title.artist_id == title.artist_id,
+            Title.id != title.id,
+            Title.mb_gone_at.is_(None),
+            Title.first_release_date == date,
+        )
+    ):
+        same = (
+            _title_key(other.title) == key
+            and other.primary_type == title.primary_type
+            and sorted(other.secondary_types or []) == sorted(title.secondary_types or [])
+            and (other.release_group_disambiguation or "") == (title.release_group_disambiguation or "")
+        )
+        if same and album_version(db, other.id) is not None:
+            return other
+    return None
 
 
 def _credit_rows(

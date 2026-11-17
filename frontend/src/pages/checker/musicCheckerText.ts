@@ -46,6 +46,9 @@ export function albumRejectionText(t: TFunction, rejection: ReleaseRejection, la
       })
     case 'same_release':
       return t('checker.music.rejections.same_release')
+    // Seit 17.11.2026: genau dieses Release liegt schon bei einem anderen Album des Kuenstlers.
+    case 'filed_for_other_album':
+      return t('checker.music.rejections.filed_for_other_album', { album: typeof rejection.album === 'string' ? rejection.album : '' })
     case 'protocol_disabled':
       return rejection.protocol === 'torrent'
         ? t('checker.music.rejections.protocol_disabled_torrent')

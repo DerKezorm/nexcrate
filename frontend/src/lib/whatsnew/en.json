@@ -874,6 +874,25 @@
           "File names that write characters as HTML (such as “i&#39;m”) are now read as text.",
           "Albums already filed stay as they are. The database does not change."
         ]
+      },
+      "1.8.2": {
+        "lead": "When every file of an album is in place after a download but fits another release than the target, nexcrate moves the target there or asks you.",
+        "sections": [
+          {
+            "title": "The target follows the files",
+            "body": "When an album's files fit another release than the target completely, and it has at least as many tracks or every song of the target, it becomes the target. Otherwise nexcrate asks: take the release as the target, or keep searching for the missing tracks. A target you chose yourself is never moved by nexcrate. Live, instrumental and remix releases are never taken for this.",
+            "where": "Downloads › Problems, the album's title page"
+          },
+          {
+            "title": "Albums MusicBrainz has twice",
+            "body": "When MusicBrainz has an album twice, with the same title, type and release day, nexcrate no longer watches the second group by itself. And a release filed for another album of the artist is not loaded again.",
+            "where": "Artists, searches by hand and automatic"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "The database does not change."
+        ]
       }
   }
 }

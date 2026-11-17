@@ -874,6 +874,25 @@
           "Dateinamen, die Zeichen als HTML schreiben (etwa „i&#39;m“), liest nexcrate jetzt als Text.",
           "Schon abgelegte Alben bleiben, wie sie sind. Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.8.2": {
+        "lead": "Liegen nach einem Download alle Dateien eines Albums richtig, passt aber eine andere Ausgabe als das Ziel, stellt nexcrate das Ziel um oder fragt dich.",
+        "sections": [
+          {
+            "title": "Ziel folgt den Dateien",
+            "body": "Passen die Dateien eines Albums vollständig auf eine andere Ausgabe als das Ziel, und hat diese mindestens so viele Titel oder alle Songs des Ziels, wird sie das Ziel. Sonst fragt nexcrate: die Ausgabe als Ziel nehmen, oder die fehlenden Titel weiter suchen. Ein Ziel, das du selbst gewählt hast, stellt nexcrate nie von selbst um. Live-, Instrumental- und Remix-Ausgaben kommen dafür nicht in Frage.",
+            "where": "Downloads › Probleme, Titelseite des Albums"
+          },
+          {
+            "title": "Doppelte Alben bei MusicBrainz",
+            "body": "Führt MusicBrainz ein Album zweimal, mit gleichem Titel, Typ und Erscheinungstag, beobachtet nexcrate die zweite Gruppe nicht mehr von selbst. Und ein Release, das schon für ein anderes Album des Künstlers abgelegt ist, lädt nexcrate nicht noch einmal.",
+            "where": "Künstler, Suche von Hand und automatische Suche"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

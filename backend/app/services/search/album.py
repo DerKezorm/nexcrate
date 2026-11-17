@@ -34,7 +34,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session as OrmSession
 
-from ...models import Artist, Release, ReleaseTrack, Title
+from ...models import Artist, Download, Release, ReleaseTrack, Title, Version
 from .. import delay as delay_rules
 from .. import indexers, schreibweisen
 from .. import tags as tag_store
@@ -52,6 +52,8 @@ MAX_QUERIES = 4
 MAX_ALIASES = 2
 SEARCH_SECONDS = 180.0
 SKIPPED_CODE = "indexer_no_music_categories"
+#: The rejection of a release filed for another album of the artist.
+FILED_FOR_OTHER_ALBUM = "filed_for_other_album"
 #: The music categories when an indexer lists none in its caps.
 DEFAULT_MUSIC_CATEGORIES = (3000, 3010, 3040)
 #: Never asked: video and audiobooks.
@@ -126,6 +128,9 @@ class AlbumSearch:
     delay: delay_rules.Rule = delay_rules.DEFAULT
     #: The release the album's files came from, when it has files and the name is known.
     release_title: str | None = None
+    #: Releases filed for another album of the artist, with that album's title: never loaded for this one. Found on
+    #: 17.11.2026: MusicBrainz had an album twice, and the same release was loaded for the second one.
+    other_releases: tuple[tuple[str, str], ...] = ()
 
 
 def _year(date: str | None) -> int | None:
@@ -213,7 +218,28 @@ def load(db: OrmSession, title_id: int, *, aliases: bool = False) -> AlbumSearch
             definition.delay if definition is not None else None, tag_store.title_tag_ids(db, title_id)
         ),
         release_title=version.release_title if version is not None and version.has_file else None,
+        other_releases=_other_releases(db, title.id, [row.id for row in rows if row.id != title.id]),
     )
+
+
+def _other_releases(db: OrmSession, title_id: int, others: list[int]) -> tuple[tuple[str, str], ...]:
+    """The releases filed for the artist's other albums: those their downloads filed and those their files came from."""
+    if not others:
+        return ()
+    names = {row.id: row.title for row in db.execute(select(Title.id, Title.title).where(Title.id.in_(others)))}
+    found: dict[str, str] = {}
+    filed = db.execute(
+        select(Download.release_title, Download.title_id).where(
+            Download.title_id.in_(others), Download.state == "imported", Download.scope == "album"
+        )
+    ).tuples()
+    kept = db.execute(
+        select(Version.release_title, Version.title_id).where(Version.title_id.in_(others), Version.has_file.is_(True))
+    ).tuples()
+    for name, other in [*filed.all(), *kept.all()]:
+        if name and other != title_id:
+            found.setdefault(name, names.get(other, ""))
+    return tuple(sorted(found.items()))
 
 
 # --- Queries -------------------------------------------------------------------------------------------------------- #
@@ -485,6 +511,11 @@ def _verdict(
         # The album's files came from this very release: loaded again it brings the same files, even when one file it
         # does not replace keeps the album below its target (Sonarr's AlreadyImportedSpecification).
         rejections.append({"code": movie_decision.SAME_RELEASE})
+    other = next(
+        (title for name, title in album.other_releases if movie_decision.same_release(release.title, name)), None
+    )
+    if other is not None:
+        rejections.append({"code": FILED_FOR_OTHER_ALBUM, "album": other})
     if album.rules is None:
         # Without a profile only what nexcrate never takes: no step is judged.
         fixed = [{"code": "cue_single_file"}] if "cue" in parsed.warnings else []
