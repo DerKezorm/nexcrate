@@ -917,6 +917,20 @@
         "small": [
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.8.4": {
+        "lead": "Die Zahl der Alben beim Künstler passt wieder zu dem, was du überwachst.",
+        "sections": [
+          {
+            "title": "Alben beim Künstler",
+            "body": "„4 Alben, 1 vollständig“ zählte bisher jedes Album mit Fassung, auch Singles und Live-Alben, die nicht mehr überwacht werden und keine Dateien haben, etwa nach dem Umstellen auf nur Studioalben. Jetzt zählen nur Alben, die überwacht werden oder Dateien haben, auf der Künstlerseite, in der Liste und auf den Kacheln.",
+            "where": "Bibliothek › Musik"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

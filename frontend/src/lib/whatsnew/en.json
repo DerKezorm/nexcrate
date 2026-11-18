@@ -917,6 +917,20 @@
         "small": [
           "The database does not change."
         ]
+      },
+      "1.8.4": {
+        "lead": "The number of albums at an artist matches what you watch again.",
+        "sections": [
+          {
+            "title": "Albums at an artist",
+            "body": "“4 albums, 1 complete” used to count every album with a version, including singles and live albums that are no longer watched and hold no files, for example after switching to studio albums only. Now only albums that are watched or hold files count, on the artist page, in the list and on the tiles.",
+            "where": "Library › Music"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "The database does not change."
+        ]
       }
   }
 }

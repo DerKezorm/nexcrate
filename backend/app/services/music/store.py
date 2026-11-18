@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.orm import Session as OrmSession
 
 from ...db import get_setting, set_setting
@@ -1055,8 +1055,9 @@ ROW_STATES = ("problem", "downloading", "wanted", "incomplete", "upgrade")
 
 
 def counts_of(db: OrmSession, artist_id: int) -> dict[str, Any]:
-    """For the artist row and tile: albums with a version, how many are complete, what is missing or could be
-    better, the size on disk, and the one state the row shows."""
+    """For the artist row and tile: albums with a watched version or with files, how many are complete, what is
+    missing or could be better, the size on disk, and the one state the row shows. A version that is neither watched
+    nor holds a file is left out: the artist page lists it nowhere the owner would look for it."""
     return counts_of_many(db, [artist_id])[artist_id]
 
 
@@ -1067,7 +1068,11 @@ def counts_of_many(db: OrmSession, artist_ids: list[int]) -> dict[int, dict[str,
         for artist_id, *row in db.execute(
             select(Title.artist_id, Version.has_file, Version.track_counts, Version.state, Version.size)
             .join(Title, Title.id == Version.title_id)
-            .where(Title.artist_id.in_(artist_ids), Title.kind == "album")
+            .where(
+                Title.artist_id.in_(artist_ids),
+                Title.kind == "album",
+                or_(Version.monitored.is_(True), Version.has_file.is_(True)),
+            )
         ).tuples():
             versions[artist_id].append(tuple(row))
     return {artist_id: _counts(rows) for artist_id, rows in versions.items()}
