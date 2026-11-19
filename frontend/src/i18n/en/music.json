@@ -61,6 +61,7 @@
         "hint": "The newest released album, and future ones."
       }
     },
+    "namesake": "Already in the library: {{names}}. Check this is the artist you mean. Artists of one name get separate folders; the one that comes later carries its disambiguation in brackets, so their albums do not mix.",
     "monitorLegend": "What to watch",
     "noResults": "No hits. Try another word.",
     "openArtist": "Open artist",

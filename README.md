@@ -22,7 +22,9 @@ releases. Posters and covers in them are placeholder artwork.
 - **Music** from MusicBrainz: artists, albums and the release that fits best, files matched to
   tracks by tags, names and AcoustID fingerprints, tags written on filing. The album artist tag
   is the artist the album is filed under, the same name as its folder, so players that group by
-  tags show the album there; the track artists and MusicBrainz ids keep the credit. A FLAC file
+  tags show the album there; the track artists and MusicBrainz ids keep the credit. Two artists of
+  one name never share a folder: the one that comes later gets its MusicBrainz disambiguation in
+  brackets, in the folder and in the album artist tag, and adding it says so. A FLAC file
   keeps one Vorbis comment block and loses an ID3 tag before its header when nexcrate writes it.
 - **Search** over Newznab and Torznab indexers, entered by hand, read from Radarr, Sonarr or
   Lidarr, or kept up to date from **Prowlarr**, with the decision per version and the reason for

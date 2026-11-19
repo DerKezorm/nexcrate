@@ -30,6 +30,7 @@ from ..automatic import planning as automatic_planning
 from ..downloads import store as download_store
 from ..music import kinds as music_kinds
 from ..music import musicbrainz as mb
+from ..music import namesakes as music_namesakes
 from ..music import store as music_store
 from ..search import jobs as search_jobs
 from . import titles, writing
@@ -136,6 +137,28 @@ def _wish(db: OrmSession, artist: Artist) -> str:
     return "queued" if wished else "nothing_wanted"
 
 
+def _namesake_notes(db: OrmSession, artist: Artist) -> list[dict[str, Any]]:
+    """An honest hint when the library holds another artist of the same name: the program may have asked for the
+    wrong one (19.11.2026: a library artist without a MusicBrainz id, looked up by name, became the better known
+    namesake). The new artist gets a folder of its own (``namesakes``)."""
+    same = music_namesakes.in_library(db, artist.name, artist.mbid)
+    if not same:
+        return []
+    logger.info("Artist %d shares its name with artist(s) %s", artist.id, ", ".join(str(item.id) for item in same))
+    return [
+        {
+            "code": "namesake_in_library",
+            "params": {
+                "artists": [
+                    {"ref": f"mbid:{item.mbid}", "name": item.name, "disambiguation": item.disambiguation or None}
+                    for item in same
+                ],
+                "disambiguation": artist.disambiguation or None,
+            },
+        }
+    ]
+
+
 async def request_artist(raw: str, scope: ArtistScope, search_now: bool, origin: str | None,
                          caller: writing.Caller) -> dict[str, Any]:  # fmt: skip
     """Add an artist, or apply a choice to one that is there (N17 for music). Idempotent: asking twice adds nothing
@@ -197,6 +220,8 @@ async def request_artist(raw: str, scope: ArtistScope, search_now: bool, origin:
                 automatic_wishes.kick()
             definition = music_store.definition(db)
             notes = writing._notes(db, [definition]) if definition is not None else []
+            if created:
+                notes += _namesake_notes(db, artist)
             return search, notes, titles.detail(db, -artist_id)
 
     search, notes, detail = await asyncio.to_thread(finish)

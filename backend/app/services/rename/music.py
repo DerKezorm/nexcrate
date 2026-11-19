@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session as OrmSession
 from ...models import Artist, Release, ReleaseMedium, ReleaseTrack, Title, TrackFile, Version
 from .. import folders, naming_music
 from ..downloads import files
-from ..music import credits, paths
+from ..music import credits, namesakes, paths
 from .plan import AUDIO_ENDINGS, IMAGE_ENDINGS, Move, TitlePlan, files_below, finish, holds_media, parts_of, posix, put
 
 
@@ -141,7 +141,8 @@ def plan_artist(db: OrmSession, artist_id: int, album_id: int | None = None) -> 
     exclusive = not _others_in_artist_folder(db, artist_id, root, current_artist)
     new_artist = current_artist
     if whole and exclusive:
-        new_artist = naming_music.artist_folder_name(naming, album_facts(artist, first))
+        # Another artist of the same name keeps the plain folder: this one keeps its addition (``namesakes``).
+        new_artist = namesakes.fresh_folder(db, naming, artist)
     elif whole:
         plan.note("artist_folder_shared")
     new_artist_dir = root / new_artist

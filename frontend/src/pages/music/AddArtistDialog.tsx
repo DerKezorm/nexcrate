@@ -243,6 +243,13 @@ export function AddArtistDialog({ onClose }: { onClose: () => void }) {
               <FormMessage tone="info">{t('music.addArtist.alreadyThere')}</FormMessage>
             ) : (
               <>
+                {(preview.namesakes ?? []).length > 0 && (
+                  <FormMessage>
+                    {t('music.addArtist.namesake', {
+                      names: (preview.namesakes ?? []).map((item) => (item.disambiguation ? `${item.name} (${item.disambiguation})` : item.name)).join(', '),
+                    })}
+                  </FormMessage>
+                )}
                 <div className="flex flex-wrap gap-2" role="list" aria-label={t('music.addArtist.groupCounts')}>
                   {preview.groups
                     .filter((entry) => entry.count > 0)

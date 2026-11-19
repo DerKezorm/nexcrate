@@ -173,7 +173,10 @@ class RequestedVersionOut(BaseModel):
 class NoteOut(BaseModel):
     code: str = Field(
         description="version_not_ready, with the reasons of GET /api/v1/versions; anime_not_supported, an anime "
-        "series nexcrate takes but does not search yet (`capabilities.anime` false). Skip a code you do not know."
+        "series nexcrate takes but does not search yet (`capabilities.anime` false); namesake_in_library, an artist "
+        "just added shares its name with `artists` of the library (each `ref`, `name`, `disambiguation`) and gets a "
+        "folder of its own with its `disambiguation` in brackets: check it is the one you meant. Skip a code you do "
+        "not know."
     )
     params: dict[str, Any]
 

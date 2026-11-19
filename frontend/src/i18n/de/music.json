@@ -61,6 +61,7 @@
         "hint": "Das jüngste erschienene Album, dazu künftige."
       }
     },
+    "namesake": "Schon in der Bibliothek: {{names}}. Prüf, ob du den richtigen Künstler gewählt hast. Gleichnamige Künstler bekommen getrennte Ordner; wer später dazukommt, trägt seine Unterscheidung in Klammern, damit sich die Alben nicht mischen.",
     "monitorLegend": "Was überwacht werden soll",
     "noResults": "Keine Treffer. Versuch es mit einem anderen Wort.",
     "openArtist": "Zum Künstler",

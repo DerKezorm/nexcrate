@@ -249,9 +249,11 @@ def token_values(album: AlbumFacts, track: TrackFacts | None) -> dict[str, str]:
     return values
 
 
-def artist_folder_name(current: MusicNaming, album: AlbumFacts) -> str:
+def artist_folder_name(current: MusicNaming, album: AlbumFacts, addition: str | None = None) -> str:
+    """The artist folder; ``addition`` goes in brackets at the end when another artist of the same name keeps the
+    plain folder (``namesakes``)."""
     return naming.render(
-        current.artist_folder,
+        current.artist_folder + (f" ({naming.clean(addition)})" if addition else ""),
         token_values(album, None),
         current.umlauts,
         max_bytes=naming.MAX_PART_BYTES,

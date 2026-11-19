@@ -2890,6 +2890,8 @@ export type ArtistPreview = {
   /** Wie viele Alben die Wahl "Studioalben und EPs" ueberwachen wuerde. */
   would_watch: number
   in_library: number | null
+  /** Andere Kuenstler der Bibliothek mit demselben Namen; der neue bekommt einen eigenen Ordner mit Zusatz. */
+  namesakes?: { id: number; mbid: string; name: string; disambiguation: string | null }[]
 }
 
 /** Die Wahl beim Hinzufuegen eines Kuenstlers. */

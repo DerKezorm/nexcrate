@@ -63,6 +63,7 @@ from ..music import (
     covers,
     credits,
     fingerprint,
+    namesakes,
     same_song,
     tag_writing,
     tags,
@@ -378,6 +379,18 @@ def _key(path: str) -> str:
     return schreibweisen.nfc(path.replace("\\", "/").strip("/")).casefold()
 
 
+def _fresh_artist_folder(db: OrmSession, context: Context) -> str:
+    """The artist folder of an artist that has none yet: the plain name, or with an addition when another artist of
+    the same name keeps it (``namesakes``), so its albums never land in a stranger's folder."""
+    artist = db.get(Artist, context.artist_id) if context.artist_id is not None else None
+    if artist is None:
+        return naming_music.artist_folder_name(context.naming, context.album)
+    folder = namesakes.fresh_folder(db, context.naming, artist)
+    if folder != namesakes.folder_name(context.naming, artist):
+        logger.info("Artist %d gets a folder of its own: another artist of its name keeps the plain one", artist.id)
+    return folder
+
+
 def album_folder(db: OrmSession, context: Context, root: Path) -> tuple[str, str]:
     """The artist folder and the album folder names: the stored ones, else from the patterns, with an addition when
     another album of the library or a folder nexcrate did not make has the name already."""
@@ -386,7 +399,7 @@ def album_folder(db: OrmSession, context: Context, root: Path) -> tuple[str, str
         if len(parts) == 2 and all(_plain(part) for part in parts):
             return parts[0], parts[1]
         raise Problem("import_failed", reason="destination_outside")
-    artist = context.artist_folder or naming_music.artist_folder_name(context.naming, context.album)
+    artist = context.artist_folder or _fresh_artist_folder(db, context)
     album = naming_music.album_folder_name(context.naming, context.album)
     if not (_plain(artist) and _plain(album)):
         raise Problem("import_failed", reason="destination_outside")

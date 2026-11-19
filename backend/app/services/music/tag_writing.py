@@ -24,7 +24,8 @@ from sqlalchemy.orm import Session as OrmSession
 from ...db import get_setting, set_setting
 from ...models import Artist, Release, ReleaseMedium, ReleaseTrack, Title
 from ...models.music import VARIOUS_ARTISTS_MBID
-from . import tags
+from .. import naming_music
+from . import namesakes, tags
 from .credits import credit_text
 
 logger = logging.getLogger("nexcrate.music")
@@ -86,6 +87,12 @@ def album_artist(db: OrmSession, title: Title) -> tuple[str, str | None]:
     credit = title.artist_credit or []
     artist = db.get(Artist, title.artist_id) if title.artist_id is not None else None
     if artist is not None and artist.name and not artist.is_various and not is_compilation(credit):
+        # Another artist of the same name keeps the plain folder: the tag carries the folder's addition, or a player
+        # that groups by tags shows both as one artist (``namesakes``).
+        addition = namesakes.addition_in_use(db, naming_music.load(db), artist)
+        if addition:
+            sort = f"{artist.sort_name} ({addition})" if artist.sort_name else None
+            return f"{artist.name} ({addition})", sort
         return artist.name, artist.sort_name or None
     sort: str | None = None
     if len(credit) == 1 and credit[0].get("mbid"):

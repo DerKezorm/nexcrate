@@ -28,7 +28,18 @@ from ..models import Artist, Release, Title, Version, VersionDefinition, utcnow
 from ..models.music import LOAD_STATES, MONITOR_NEW
 from ..services import auto_tags, companions_album, images, tags
 from ..services.automatic import planning
-from ..services.music import album_read, credits, fingerprint, kinds, loading, retag, store, tag_writing, target
+from ..services.music import (
+    album_read,
+    credits,
+    fingerprint,
+    kinds,
+    loading,
+    namesakes,
+    retag,
+    store,
+    tag_writing,
+    target,
+)
 from ..services.music import musicbrainz as mb
 from ..services.schreibweisen import nfc, query_keys
 
@@ -62,6 +73,13 @@ class GroupCount(BaseModel):
     count: int
 
 
+class Namesake(BaseModel):
+    id: int
+    mbid: str
+    name: str
+    disambiguation: str | None
+
+
 class ArtistPreview(BaseModel):
     mbid: str
     name: str
@@ -75,6 +93,11 @@ class ArtistPreview(BaseModel):
     groups: list[GroupCount]
     would_watch: int = Field(description="How many albums the choice studio would watch.")
     in_library: int | None
+    namesakes: list[Namesake] = Field(
+        default_factory=list,
+        description="Other artists of the library with the same name: a second artist of a name gets its own folder "
+        "with MusicBrainz's disambiguation in brackets.",
+    )
 
 
 WatchChoice = Literal["studio", "future", "none", "missing", "existing", "first", "latest"]
@@ -615,11 +638,12 @@ async def preview_artist(payload: ArtistIn) -> ArtistPreview:
         raise exc.http() from exc
     counts, watched = _group_counts(groups)
 
-    def known() -> dict[str, int]:
+    def known() -> tuple[dict[str, int], list[dict[str, Any]]]:
         with SessionLocal() as db:
-            return _in_library_artists(db, [artist.mbid, mbid])
+            same = namesakes.as_items(namesakes.in_library(db, artist.name, artist.mbid))
+            return _in_library_artists(db, [artist.mbid, mbid]), same
 
-    found = await asyncio.to_thread(known)
+    found, same = await asyncio.to_thread(known)
     return ArtistPreview(
         mbid=artist.mbid,
         name=artist.name,
@@ -633,6 +657,8 @@ async def preview_artist(payload: ArtistIn) -> ArtistPreview:
         groups=[GroupCount.model_validate(item) for item in counts],
         would_watch=watched,
         in_library=found.get(artist.mbid) or found.get(mbid),
+        # The artist itself is no namesake; once it is in the library the dialog only leads to it.
+        namesakes=[] if found.get(artist.mbid) or found.get(mbid) else [Namesake.model_validate(i) for i in same],
     )
 
 
