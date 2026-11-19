@@ -931,6 +931,21 @@
         "small": [
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.8.5": {
+        "lead": "Ein Künstler lädt wieder, wenn MusicBrainz eine Ausgabe in ein anderes Album verschoben hat.",
+        "sections": [
+          {
+            "title": "Verschobene Ausgaben",
+            "body": "Verschiebt jemand bei MusicBrainz eine Ausgabe in ein anderes Album, brach das Laden des ganzen Künstlers bisher bei jedem Versuch ab, auch bei „Jetzt bei MusicBrainz aktualisieren“. Jetzt zieht die Ausgabe samt Titelliste zum neuen Album um. Hängen am alten Album noch Dateien, ein Ziel oder ein Download an ihr, bleibt sie dort, und das Protokoll sagt es.",
+            "where": "Bibliothek › Musik"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Ein Fehler beim Laden eines Künstlers sagt jetzt, was passiert ist und wo das Protokoll steht, statt „Nummer für die Fehlersuche: nicht vorhanden“.",
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

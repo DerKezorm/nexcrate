@@ -931,6 +931,21 @@
         "small": [
           "The database does not change."
         ]
+      },
+      "1.8.5": {
+        "lead": "An artist loads again when MusicBrainz moved a release to another album.",
+        "sections": [
+          {
+            "title": "Moved releases",
+            "body": "When someone at MusicBrainz moved a release to another album, loading the whole artist broke off on every try, “Refresh from MusicBrainz now” included. Now the release moves to the new album with its track list. When files, a target or a download of the old album still hang on it, it stays there, and the log says so.",
+            "where": "Library › Music"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "A failed load of an artist now says what happened and where the log is, instead of “Reference for troubleshooting: not available”.",
+          "The database does not change."
+        ]
       }
   }
 }
