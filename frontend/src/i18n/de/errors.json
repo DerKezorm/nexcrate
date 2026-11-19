@@ -184,6 +184,7 @@
   "musicbrainz_http_error": "MusicBrainz meldet einen Fehler (HTTP {{status}}).",
   "musicbrainz_not_found": "MusicBrainz kennt diesen Eintrag nicht, oder nicht mehr.",
   "musicbrainz_bad_answer": "MusicBrainz hat eine Antwort geschickt, die nexcrate nicht lesen kann.",
+  "music_load_failed": "Beim Laden von MusicBrainz ist in nexcrate ein Fehler aufgetreten. Was genau, steht im Protokoll unter Einstellungen › System. nexcrate versucht es später von selbst noch einmal.",
   "music_version_exists": "Musik hat genau eine Fassung; eine zweite lässt sich noch nicht anlegen.",
   "album_fed_by_source": "Dieses Album wird in Lidarr überwacht; ändere es dort.",
   "album_folder_missing": "Der Albumordner ist nicht zu sehen.",

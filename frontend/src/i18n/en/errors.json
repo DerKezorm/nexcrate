@@ -184,6 +184,7 @@
   "musicbrainz_http_error": "MusicBrainz reports an error (HTTP {{status}}).",
   "musicbrainz_not_found": "MusicBrainz does not know this entry, or not any more.",
   "musicbrainz_bad_answer": "MusicBrainz sent an answer nexcrate cannot read.",
+  "music_load_failed": "Loading from MusicBrainz failed inside nexcrate. The log under Settings › System says what went wrong. nexcrate tries again later by itself.",
   "music_version_exists": "Music has one version; a second one cannot be added yet.",
   "album_fed_by_source": "This album is watched in Lidarr; change it there.",
   "album_folder_missing": "The album folder cannot be seen.",

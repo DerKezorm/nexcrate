@@ -30,6 +30,7 @@ from ...models import (
     AlbumArtist,
     Artist,
     Download,
+    DownloadAudioFile,
     HistoryEntry,
     Release,
     ReleaseMedium,
@@ -667,6 +668,50 @@ def adopt_merged_group(db: OrmSession, title: Title, new_mbid: str, moment: date
 # --- Releases and tracks ------------------------------------------------------------------- #
 
 
+def _held(db: OrmSession, release: Release) -> bool:
+    """Whether something hangs on a release: a version aims at it, suggests it or holds its files, a file lies on one
+    of its tracks, or a download turned out to be it."""
+    tracks = select(ReleaseTrack.id).where(ReleaseTrack.release_id == release.id)
+    asks = (
+        select(Version.id).where(
+            or_(
+                Version.target_release_id == release.id,
+                Version.actual_release_id == release.id,
+                Version.target_suggestion_id == release.id,
+            )
+        ),
+        select(TrackFile.id).where(TrackFile.track_id.in_(tracks)),
+        select(Download.id).where(Download.release_id == release.id),
+        select(DownloadAudioFile.id).where(DownloadAudioFile.track_id.in_(tracks)),
+    )
+    return any(db.scalar(ask.limit(1)) is not None for ask in asks)
+
+
+def _moved_here(db: OrmSession, title: Title, mbid: str) -> tuple[Release | None, bool]:
+    """A release another album holds that MusicBrainz now lists for ``title``: an editor moved it to another release
+    group. Its row comes along with its tracks when nothing hangs on it (``_held``); otherwise it stays with its album,
+    whose files would lose their release, and the second value says to leave it out here.
+
+    ⚠️ The id of a release is unique across all albums. Until 19.11.2026 the new album made a second row, and the
+    unique index broke off the whole artist on every load: Ace of Base's "Happy Nation" (XE, 1993) moved from the
+    group "Happy Nation" to "The Sign" on the owner's instance."""
+    row = db.scalar(select(Release).where(Release.mbid == mbid, Release.title_id != title.id))
+    if row is None:
+        return None, False
+    if _held(db, row):
+        logger.warning(
+            "Release %s is listed for album %d now, but album %d holds on to it; it stays there",
+            mbid, title.id, row.title_id,
+        )  # fmt: skip
+        return None, True
+    logger.info(
+        "Release %s moves from album %d to album %d, as MusicBrainz lists it there now", mbid, row.title_id, title.id
+    )
+    row.title_id = title.id
+    db.flush()
+    return row, False
+
+
 def apply_releases(
     db: OrmSession,
     title: Title,
@@ -693,7 +738,16 @@ def apply_releases(
     for data in releases:
         if not data.mbid or ((data.status or "official") != "official" and data.mbid not in (keep or set())):
             continue
+        if data.mbid in seen:
+            # A release named twice in one answer was made at its first naming; a second row breaks the unique id.
+            continue
         row = existing.get(data.mbid) or by_old.get(data.mbid)
+        if row is None:
+            row, held = _moved_here(db, title, data.mbid)
+            if held:
+                continue
+            if row is not None:
+                counts["new"] += 1
         # ⚠️ A source fills in what is not loaded yet and never writes over it: Lidarr's heads carry no track count,
         # no barcode and no credits, and every import set the track count of a loaded release to 0, which left the
         # rule with Lidarr's own release as the only candidate (found on the owner's import).
