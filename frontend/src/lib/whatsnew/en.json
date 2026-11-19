@@ -946,6 +946,26 @@
           "A failed load of an artist now says what happened and where the log is, instead of “Reference for troubleshooting: not available”.",
           "The database does not change."
         ]
+      },
+      "1.8.6": {
+        "lead": "Two artists of the same name no longer share a folder.",
+        "sections": [
+          {
+            "title": "Artists of the same name",
+            "body": "When a second artist of the same name came in, another Luciano say, its albums landed in the first one's folder, and Jellyfin or Plex showed one artist with foreign albums. Now the first keeps the folder and the second gets its MusicBrainz disambiguation in brackets, in the folder and in the album artist tag. Renaming keeps the addition.",
+            "where": "Library › Music"
+          },
+          {
+            "title": "A warning when adding",
+            "body": "When the library holds an artist of that name already, “Add artist” names it with its disambiguation, so you can check you picked the one you mean. Programs that request an artist through the API get the same note.",
+            "where": "Library › Music › Add artist"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "Folders two artists share already stay as they are.",
+          "The database does not change."
+        ]
       }
   }
 }

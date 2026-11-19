@@ -946,6 +946,26 @@
           "Ein Fehler beim Laden eines Künstlers sagt jetzt, was passiert ist und wo das Protokoll steht, statt „Nummer für die Fehlersuche: nicht vorhanden“.",
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.8.6": {
+        "lead": "Zwei Künstler mit demselben Namen teilen sich keinen Ordner mehr.",
+        "sections": [
+          {
+            "title": "Gleichnamige Künstler",
+            "body": "Kam ein zweiter Künstler mit demselben Namen dazu, etwa ein anderer Luciano, landeten seine Alben bisher im Ordner des ersten, und Jellyfin oder Plex zeigten einen Künstler mit fremden Alben. Jetzt behält der erste den Ordner, der zweite bekommt seine Unterscheidung von MusicBrainz in Klammern, im Ordner und im Albumkünstler-Tag. Umbenennen lässt den Zusatz stehen.",
+            "where": "Bibliothek › Musik"
+          },
+          {
+            "title": "Warnung beim Hinzufügen",
+            "body": "Steht schon ein Künstler mit diesem Namen in der Bibliothek, nennt „Künstler hinzufügen“ ihn samt Unterscheidung, damit du prüfen kannst, ob du den richtigen gewählt hast. Programme, die über die API einen Künstler anfragen, bekommen denselben Hinweis.",
+            "where": "Bibliothek › Musik › Künstler hinzufügen"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Ordner, die sich zwei Künstler schon teilen, bleiben, wie sie sind.",
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }
