@@ -1008,6 +1008,21 @@
           "Alben mit „World“ ändern ihr Genre über „Tags prüfen“ auf der Albumseite.",
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.9.2": {
+        "lead": "„Trap“ wird jetzt Hip-Hop statt Electronic.",
+        "sections": [
+          {
+            "title": "Trap ist Hip-Hop",
+            "body": "Mit eingeschaltetem „Genres vereinheitlichen“ wurde ein Album mit dem Genre „Trap“ zu Electronic, weil die zugrunde liegende Genre-Liste damit die EDM-Spielart meint. Jetzt wird es Hip-Hop. „Trap EDM“, „Festival Trap“ und „Hybrid Trap“ bleiben Electronic, „Trap Latino“ wird Latin.",
+            "where": "Einstellungen › Fassungen › Musik"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Schon abgelegte Alben ändern ihr Genre über „Tags prüfen“ auf der Albumseite.",
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

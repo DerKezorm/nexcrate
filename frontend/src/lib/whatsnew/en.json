@@ -1008,6 +1008,21 @@
           "Albums with “World” change their genre through “Check tags” on the album page.",
           "The database does not change."
         ]
+      },
+      "1.9.2": {
+        "lead": "“Trap” now becomes Hip-Hop instead of Electronic.",
+        "sections": [
+          {
+            "title": "Trap is hip-hop",
+            "body": "With one way of writing each genre switched on, an album with the genre “Trap” became Electronic, because the genre list behind it means the EDM kind. Now it becomes Hip-Hop. “Trap EDM”, “Festival Trap” and “Hybrid Trap” stay Electronic, “Trap Latino” becomes Latin.",
+            "where": "Settings › Versions › Music"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "Albums filed before change their genre through “Check tags” on the album page.",
+          "The database does not change."
+        ]
       }
   }
 }
