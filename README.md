@@ -27,10 +27,10 @@ releases. Posters and covers in them are placeholder artwork.
   brackets, in the folder and in the album artist tag, and adding it says so. A FLAC file
   keeps one Vorbis comment block and loses an ID3 tag before its header when nexcrate writes it.
   If you switch it on, the genre tag gets one way of writing: "Rap/Hip Hop" from Deezer,
-  "Hip-Hop/Rap" from Apple and "hip hop" from a tagger all become "Hip-Hop", one of 23 genres,
+  "Hip-Hop/Rap" from Apple and "hip hop" from a tagger all become "Hip-Hop", one of 22 genres,
   translated from more than 3,500 spellings of Deezer, Qobuz, Apple and MusicBrainz. Parts that
-  only name a country or a language fall away, an album gets at most two genres, and spellings
-  nexcrate does not know are listed for you to place.
+  only name a country, a region or a language fall away ("World" too), an album gets at most two
+  genres, and spellings nexcrate does not know are listed for you to place.
 - **Search** over Newznab and Torznab indexers, entered by hand, read from Radarr, Sonarr or
   Lidarr, or kept up to date from **Prowlarr**, with the decision per version and the reason for
   every release.

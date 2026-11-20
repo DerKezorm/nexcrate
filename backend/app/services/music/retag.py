@@ -107,7 +107,7 @@ def _plan(db: OrmSession, title_id: int) -> tuple[Version, list[Planned], genres
 def preview(title_id: int) -> dict[str, Any]:
     """``GET /api/music/albums/{id}/tags``: per file the fields that would change and whether it can be written."""
     with SessionLocal() as db:
-        version, planned, _genre_of = _plan(db, title_id)
+        version, planned, genre = _plan(db, title_id)
         enabled = tag_writing.write_enabled(db)
         covers_on = mb.covers_enabled(db)
         states = {
@@ -133,6 +133,9 @@ def preview(title_id: int) -> dict[str, Any]:
         "cover": covers_on,
         "files": out,
         "changed": sum(1 for item in out if item["changes"] and item["refusal"] is None),
+        # Where the genre comes from: an album that takes it from the artist's other albums is best written after
+        # them, else it follows whichever of them were written first.
+        "genre_from": genre.came_from if genre is not None and genre.names else None,
     }
 
 

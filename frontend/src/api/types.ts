@@ -1676,6 +1676,8 @@ export type AlbumTagPreview = {
   }[]
   changed: number
   written?: number | null
+  /** Woher das Genre kommt: `files`, `album` oder `artist` (von den anderen Alben des Künstlers). */
+  genre_from?: 'files' | 'album' | 'artist' | null
 }
 
 export type MusicFilesSettings = { write_tags: boolean }

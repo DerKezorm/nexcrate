@@ -374,6 +374,14 @@ class TagPreviewOut(BaseModel):
     files: list[TagFilePreview]
     changed: int = Field(description="Files with changes that can be written.")
     written: int | None = Field(default=None, description="After writing: how many files were written.")
+    genre_from: str | None = Field(
+        default=None,
+        description=(
+            "With one way of writing each genre on: where the album's genre comes from, files, album (what nexcrate "
+            "kept of it) or artist (most of the artist's other albums). Writing many albums, write those from the "
+            "artist last."
+        ),
+    )
 
 
 class ReleaseTrackOut(BaseModel):

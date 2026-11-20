@@ -2,14 +2,14 @@
 
 Downloads bring the genre of their source: Deezer writes ``Rap/Hip Hop``, Qobuz ``Pop, Rock, Alternatif et Indé`` in
 the language of the account, Apple ``Hip-Hop/Rap``, taggers the long tail of MusicBrainz or Spotify. A player shows each
-spelling as a genre of its own. With the switch on, nexcrate writes one of 23 genres instead.
+spelling as a genre of its own. With the switch on, nexcrate writes one of 22 genres instead.
 
 * **The table** (``app/data/genres.json``): the genres with their names in English and German, about 3,500 spellings
   of Deezer (by genre number, every language), Apple, MusicBrainz, Qobuz and the beets genre tree (MIT, (c) Adrian
   Sampson) onto them, Qobuz's umbrella categories, and rules by keyword for a spelling the table does not know.
-* **An album** gets at most two genres, in the order of the tag. A part that says only a country or a language
-  (``Europe``, ``German Music``) falls away. With no genre left, the album keeps the genre it had in nexcrate, else it
-  takes the one most of the artist's other albums have; with none, the tag stays as it is.
+* **An album** gets at most two genres, in the order of the tag. A part that says only a country, a region or a language
+  (``Europe``, ``German Music``, ``World``) falls away. With no genre left, the album keeps the genre it had in
+  nexcrate, else it takes the one most of the artist's other albums have; with none, the tag stays as it is.
 * **Regional rule** (off from the start): hip-hop by an artist from Germany, Austria or Switzerland (MusicBrainz's
   country of the artist) becomes ``Deutschrap``.
 * **Own choices** win over the table; a spelling nothing knows is counted under ``unmapped`` for the owner to place.
@@ -290,12 +290,14 @@ def _regional(db: OrmSession, title: Title, keys: list[str], on: bool) -> list[s
     return list(dict.fromkeys(result))
 
 
-def _of_album(title: Title) -> list[str]:
-    keys, _unknown = translate(title.genres or [])
+def _of_album(title: Title, custom: dict[str, str]) -> list[str]:
+    keys, _unknown = translate(title.genres or [], custom)
     return keys
 
 
-def _artist_counts(db: OrmSession, title: Title, *, first_only: bool) -> collections.Counter[str]:
+def _artist_counts(
+    db: OrmSession, title: Title, custom: dict[str, str], *, first_only: bool
+) -> collections.Counter[str]:
     """How many of the artist's other albums carry each genre (only their first, or all of theirs)."""
     counted: collections.Counter[str] = collections.Counter()
     if title.artist_id is None:
@@ -303,23 +305,23 @@ def _artist_counts(db: OrmSession, title: Title, *, first_only: bool) -> collect
     for genres in db.scalars(
         select(Title.genres).where(Title.artist_id == title.artist_id, Title.kind == "album", Title.id != title.id)
     ):
-        keys, _unknown = translate(genres or [])
+        keys, _unknown = translate(genres or [], custom)
         counted.update(keys[:1] if first_only else keys)
     return counted
 
 
-def _of_artist(db: OrmSession, title: Title) -> list[str]:
-    counted = _artist_counts(db, title, first_only=True)
+def _of_artist(db: OrmSession, title: Title, custom: dict[str, str]) -> list[str]:
+    counted = _artist_counts(db, title, custom, first_only=True)
     return [counted.most_common(1)[0][0]] if counted else []
 
 
-def _within(db: OrmSession, title: Title, candidates: tuple[str, ...]) -> str | None:
+def _within(db: OrmSession, title: Title, candidates: tuple[str, ...], custom: dict[str, str]) -> str | None:
     """One of an umbrella's genres: the one the album had, else the one most of the artist's other albums carry.
     None when nothing tells them apart; the album then keeps both."""
-    own = [key for key in _of_album(title) if key in candidates]
+    own = [key for key in _of_album(title, custom) if key in candidates]
     if len(own) == 1:
         return own[0]
-    counted = _artist_counts(db, title, first_only=False)
+    counted = _artist_counts(db, title, custom, first_only=False)
     ranked = sorted(((counted[key], key) for key in candidates), reverse=True)
     if ranked and ranked[0][0] > 0 and (len(ranked) == 1 or ranked[0][0] > ranked[1][0]):
         return ranked[0][1]
@@ -335,15 +337,15 @@ def decide(db: OrmSession, title: Title, raw: list[str], *, album_first: bool = 
     keys, unknown = translate(raw, current.custom)
     came_from = "files"
     umbrella = umbrella_alone(raw, current.custom)
-    if umbrella and (picked := _within(db, title, umbrella)) is not None:
+    if umbrella and (picked := _within(db, title, umbrella, current.custom)) is not None:
         # "Pop, Rock" alone says "pop or rock": the artist's albums say which.
         keys, came_from = [picked], "artist"
-    if album_first and _of_album(title):
-        keys, came_from = _of_album(title), "album"
+    if album_first and _of_album(title, current.custom):
+        keys, came_from = _of_album(title, current.custom), "album"
     if not keys:
-        keys, came_from = _of_album(title), "album"
+        keys, came_from = _of_album(title, current.custom), "album"
     if not keys:
-        keys, came_from = _of_artist(db, title), "artist"
+        keys, came_from = _of_artist(db, title, current.custom), "artist"
     if not keys:
         return Decision([], [], "", unknown) if unknown else None
     keys = _regional(db, title, keys, current.regional)
