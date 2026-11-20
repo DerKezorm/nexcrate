@@ -987,6 +987,27 @@
           "“Check tags” now shows the genre as well.",
           "The database does not change."
         ]
+      },
+      "1.9.1": {
+        "lead": "“World” is no genre any more, and an album without a genre reliably takes its artist's.",
+        "sections": [
+          {
+            "title": "Without “World”",
+            "body": "Some sources write “World” or “World Music” on pop albums too. Like a country or a language it says nothing about the music and now falls away, regions such as “African Music” as well. An album left without a genre takes the one of the artist's other albums. 22 genres remain.",
+            "where": "Settings › Versions › Music"
+          },
+          {
+            "title": "Albums with their own genre first",
+            "body": "“Check tags” now says whether an album carries its genre itself or takes it from its artist. Writing many albums at once, write those that take it last; nexcrate then knows the genres of all the others, and the result no longer depends on the order.",
+            "where": "Album page › Check tags"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "Own choices now also hold for the genre nexcrate kept for an album.",
+          "Albums with “World” change their genre through “Check tags” on the album page.",
+          "The database does not change."
+        ]
       }
   }
 }

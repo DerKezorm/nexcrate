@@ -987,6 +987,27 @@
           "„Tags prüfen“ zeigt das Genre jetzt mit an.",
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.9.1": {
+        "lead": "„World“ ist kein Genre mehr, und ein Album ohne Genre erbt verlässlich das seines Künstlers.",
+        "sections": [
+          {
+            "title": "Ohne „World“",
+            "body": "Manche Quellen schreiben „World“ oder „Weltmusik“ auch an Pop-Alben. Wie Land und Sprache sagt das nichts über die Musik und fällt jetzt weg, auch bei Regionen wie „African Music“. Ein Album, dem so kein Genre bleibt, übernimmt das der anderen Alben des Künstlers. Es bleiben 22 Genres.",
+            "where": "Einstellungen › Fassungen › Musik"
+          },
+          {
+            "title": "Erst die Alben mit eigenem Genre",
+            "body": "„Tags prüfen“ sagt jetzt, ob ein Album sein Genre selbst trägt oder vom Künstler erbt. Wer viele Alben auf einmal schreibt, schreibt die erbenden zuletzt; dann kennt nexcrate die Genres aller anderen Alben, und das Ergebnis hängt nicht mehr von der Reihenfolge ab.",
+            "where": "Albumseite › Tags prüfen"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Eigene Zuordnungen gelten jetzt auch für das Genre, das nexcrate sich an einem Album gemerkt hat.",
+          "Alben mit „World“ ändern ihr Genre über „Tags prüfen“ auf der Albumseite.",
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }
