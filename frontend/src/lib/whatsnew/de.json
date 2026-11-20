@@ -966,6 +966,27 @@
           "Ordner, die sich zwei Künstler schon teilen, bleiben, wie sie sind.",
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.9.0": {
+        "lead": "Genres sehen jetzt in jedem Player gleich aus: aus „Rap/Hip Hop“, „Hip-Hop/Rap“ und „hip hop“ wird ein „Hip-Hop“.",
+        "sections": [
+          {
+            "title": "Genres vereinheitlichen",
+            "body": "Jede Quelle schreibt Genres anders: Deezer „Rap/Hip Hop“, Qobuz je nach Sprache „Alternatif et Indé“, Apple „Hip-Hop/Rap“, andere Programme die vielen Feinheiten von MusicBrainz oder Spotify. Jellyfin und Plex zeigen jede Schreibweise als eigenes Genre. Eingeschaltet schreibt nexcrate beim Ablegen eines von 23 Genres, übersetzt aus über 3.500 bekannten Schreibweisen. Angaben, die nur ein Land oder eine Sprache nennen, fallen weg, ein Album bekommt höchstens zwei Genres, und ein Album ohne Genre übernimmt das der anderen Alben des Künstlers. Ab Werk aus.",
+            "where": "Einstellungen › Fassungen › Musik"
+          },
+          {
+            "title": "Deutschrap und eigene Zuordnungen",
+            "body": "Auf Wunsch wird Hip-Hop von Künstlern aus Deutschland, Österreich und der Schweiz zu „Deutschrap“. Klassik, Kinder und Weihnachten lassen sich deutsch benennen. Schreibweisen, die nexcrate nicht kennt, stehen in einer Liste und bekommen dort ihr Genre.",
+            "where": "Einstellungen › Fassungen › Musik"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Bereits abgelegte Alben ändern ihr Genre über „Tags prüfen“ auf der Albumseite.",
+          "„Tags prüfen“ zeigt das Genre jetzt mit an.",
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

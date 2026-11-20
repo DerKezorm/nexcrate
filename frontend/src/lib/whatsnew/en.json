@@ -966,6 +966,27 @@
           "Folders two artists share already stay as they are.",
           "The database does not change."
         ]
+      },
+      "1.9.0": {
+        "lead": "Genres now look the same in every player: “Rap/Hip Hop”, “Hip-Hop/Rap” and “hip hop” become one “Hip-Hop”.",
+        "sections": [
+          {
+            "title": "One way of writing each genre",
+            "body": "Every source writes genres its own way: Deezer “Rap/Hip Hop”, Qobuz “Alternatif et Indé” depending on its language, Apple “Hip-Hop/Rap”, other programs the many shades of MusicBrainz or Spotify. Jellyfin and Plex show each spelling as a genre of its own. Switched on, nexcrate writes one of 23 genres when filing, translated from more than 3,500 known spellings. Parts that only name a country or a language fall away, an album gets at most two genres, and an album without a genre takes the one of the artist's other albums. Off from the start.",
+            "where": "Settings › Versions › Music"
+          },
+          {
+            "title": "Deutschrap and own choices",
+            "body": "If you like, hip-hop by artists from Germany, Austria and Switzerland becomes “Deutschrap”. Classical, Kids and Christmas can carry their German names. Spellings nexcrate does not know are listed and get their genre there.",
+            "where": "Settings › Versions › Music"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "Albums filed before change their genre through “Check tags” on the album page.",
+          "“Check tags” now shows the genre as well.",
+          "The database does not change."
+        ]
       }
   }
 }
