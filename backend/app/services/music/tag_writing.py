@@ -2,6 +2,7 @@
 
 * **What:** Picard's fields (``tags.FIELDS``) for the **actual** release, built from the database only.
   A field MusicBrainz leaves empty is left out, so a value the download had stays; ``compilation`` is always set.
+  ``genre`` only with "one way of writing each genre" on (``genres``), from the genre the files bring.
   One departure from Picard: the album artist is the artist the album is filed under (``album_artist``), as its folder.
 * **When:** right after a file is filed and before it gets its final name, or from the preview. Only with the switch
   on, only into a file with one link (research T1), only in the formats ``tags.WRITABLE``.
@@ -25,7 +26,7 @@ from ...db import get_setting, set_setting
 from ...models import Artist, Release, ReleaseMedium, ReleaseTrack, Title
 from ...models.music import VARIOUS_ARTISTS_MBID
 from .. import naming_music
-from . import namesakes, tags
+from . import genres, namesakes, tags
 from .credits import credit_text
 
 logger = logging.getLogger("nexcrate.music")
@@ -69,6 +70,8 @@ class AlbumTags:
     media: dict[int, ReleaseMedium]
     #: ``albumartist``: the artist nexcrate keeps the album under, see ``album_artist``.
     album_artist: str = ""
+    #: ``genre`` from ``genres.decide``; None leaves the genre of the file as it is.
+    genre: tuple[str, ...] | None = None
 
 
 def is_compilation(credit: list[dict[str, Any]] | None) -> bool:
@@ -100,10 +103,17 @@ def album_artist(db: OrmSession, title: Title) -> tuple[str, str | None]:
     return credit_text(credit), sort
 
 
-def album_tags(db: OrmSession, release: Release, title: Title) -> AlbumTags:
+def album_tags(db: OrmSession, release: Release, title: Title, genre: genres.Decision | None = None) -> AlbumTags:
     media = {row.id: row for row in db.scalars(select(ReleaseMedium).where(ReleaseMedium.release_id == release.id))}
     name, sort = album_artist(db, title)
-    return AlbumTags(release=release, title=title, artist_sort=sort, media=media, album_artist=name)
+    return AlbumTags(
+        release=release,
+        title=title,
+        artist_sort=sort,
+        media=media,
+        album_artist=name,
+        genre=tuple(genre.names) if genre is not None and genre.names else None,
+    )
 
 
 def wanted(album: AlbumTags, track: ReleaseTrack) -> dict[str, list[str]]:
@@ -128,6 +138,7 @@ def wanted(album: AlbumTags, track: ReleaseTrack) -> dict[str, list[str]]:
         "totaldiscs": [str(release.media_count)] if release.media_count else [],
         "date": [release.date or ""],
         "originaldate": [title.first_release_date or ""],
+        "genre": list(album.genre or []),
         "releasecountry": [release.country or ""],
         "releasestatus": [release.status or ""],
         "releasetype": types,

@@ -71,6 +71,7 @@ from ..music import (
     versions,
 )
 from ..music import file_matching as fm
+from ..music import genres as music_genres
 from ..music import musicbrainz as mb
 from ..music import store as music_store
 from ..profiles import store as profile_store
@@ -1431,7 +1432,14 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
     with SessionLocal() as db:
         release = db.get(Release, edition.id)
         title = db.get(Title, context.title_id)
-        album = tag_writing.album_tags(db, release, title) if release is not None and title is not None else None
+        # The genre the files bring, on the short list; an album that keeps files of its own keeps its genre.
+        raw_genres = music_genres.raw_of(item.tags for item in found.audio)
+        genre = (
+            music_genres.decide(db, title, raw_genres, album_first=bool(current))
+            if title is not None and context.write_tags
+            else None
+        )
+        album = tag_writing.album_tags(db, release, title, genre) if release is not None and title is not None else None
         tracks = {row.id: row for row in db.scalars(select(ReleaseTrack).where(ReleaseTrack.release_id == edition.id))}
         formats = _medium_formats(db, edition.id)
         release_mbid = release.mbid if release is not None else None
@@ -1442,7 +1450,7 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
         if target is not None:
             target_release = db.get(Release, target.id)
             target_album = (
-                tag_writing.album_tags(db, target_release, title)
+                tag_writing.album_tags(db, target_release, title, genre)
                 if target_release is not None and title is not None
                 else None
             )
@@ -1519,6 +1527,8 @@ def _file_all(context: Context, found: Found, root: Path, manual: Manual | None)
             if place_one(context, found, spot, item, name, wanted, cover):
                 filed_now += 1
     _folder_image(context, spot, found, release_mbid)
+    if filed_now and context.title_id is not None:
+        music_genres.remember(context.title_id, genre)
     finish(context, edition, spot, filed_now)
     if filed_now and context.version_id is not None:
         _align(context, spot)

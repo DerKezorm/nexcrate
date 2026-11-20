@@ -227,6 +227,24 @@
     "writeTags": "Tags schreiben",
     "writeTagsHint": "Schreibt Titel, Künstler, Nummern, MusicBrainz-Kennungen und das Cover in abgelegte Musik. Albumkünstler ist der Künstler, unter dem nexcrate das Album ablegt, also derselbe Name wie der Ordner; der Credit von MusicBrainz bleibt beim Künstler der Titel. Fremde Felder wie ReplayGain bleiben. Ein Torrent wird dafür kopiert statt verlinkt, damit er unverändert weiter teilt. Ohne Tags kennt kein Player die Reihenfolge bei mehreren Medien."
   },
+  "genres": {
+    "enabled": "Genres vereinheitlichen",
+    "enabledHint": "Schreibt beim Ablegen eines von wenigen Genres statt der Schreibweise des Downloads: aus „Rap/Hip Hop“, „Hip-Hop/Rap“ und „hip hop“ wird „Hip-Hop“. Angaben, die nur ein Land oder eine Sprache nennen, fallen weg, und ein Album bekommt höchstens zwei Genres. Ein Album ohne Genre übernimmt das der anderen Alben des Künstlers. Bereits abgelegte Alben ändern sich über „Tags prüfen“. Braucht „Tags schreiben“.",
+    "names": "Namen der Genres",
+    "namesEn": "Englisch (Classical, Kids, Christmas)",
+    "namesDe": "Deutsch (Klassik, Kinder, Weihnachten)",
+    "regional": "Deutschrap als eigenes Genre",
+    "regionalHint": "Hip-Hop von Künstlern aus Deutschland, Österreich und der Schweiz wird „Deutschrap“. Das Land kommt von MusicBrainz.",
+    "unmapped": "Ohne Zuordnung",
+    "unmappedHint": "Diese Schreibweisen kannte nexcrate nicht und hat sie weggelassen. Eine Wahl gilt ab dem nächsten Ablegen und für „Tags prüfen“.",
+    "spelling_one": "„{{name}}“ (auf {{value}} Album)",
+    "spelling_other": "„{{name}}“ (auf {{value}} Alben)",
+    "choose": "Genre wählen",
+    "drop": "Weglassen",
+    "choices": "Eigene Zuordnungen",
+    "choice": "„{{spelling}}“ wird {{genre}}",
+    "forget": "Entfernen"
+  },
   "view": {
     "albums": "Alben",
     "artists": "Künstler",

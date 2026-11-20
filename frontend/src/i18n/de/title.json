@@ -504,6 +504,7 @@
         "totaldiscs": "Medien gesamt",
         "date": "Datum der Ausgabe",
         "originaldate": "Erstes Erscheinen",
+        "genre": "Genre",
         "releasecountry": "Land",
         "releasestatus": "Status",
         "releasetype": "Art",

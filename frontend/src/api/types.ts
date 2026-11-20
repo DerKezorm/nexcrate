@@ -1680,6 +1680,25 @@ export type AlbumTagPreview = {
 
 export type MusicFilesSettings = { write_tags: boolean }
 
+export type GenreChoice = { spelling: string; target: string }
+
+export type GenresState = {
+  enabled: boolean
+  names: 'en' | 'de'
+  regional: boolean
+  targets: { key: string; name: string }[]
+  choices: GenreChoice[]
+  unmapped: { name: string; count: number }[]
+}
+
+export type GenresChange = {
+  enabled?: boolean
+  names?: 'en' | 'de'
+  regional?: boolean
+  choices?: GenreChoice[]
+  forget?: string[]
+}
+
 export type AcoustIdState = {
   enabled: boolean
   key_set: boolean

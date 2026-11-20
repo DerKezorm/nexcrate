@@ -28,6 +28,7 @@ import base64
 import hashlib
 import logging
 import os
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -77,6 +78,7 @@ FIELDS = (
     "totaldiscs",
     "date",
     "originaldate",
+    "genre",
     "releasecountry",
     "releasestatus",
     "releasetype",
@@ -109,6 +111,7 @@ _VORBIS: dict[str, tuple[str, ...]] = {
     "totaldiscs": ("DISCTOTAL", "TOTALDISCS"),
     "date": ("DATE",),
     "originaldate": ("ORIGINALDATE",),
+    "genre": ("GENRE",),
     "releasecountry": ("RELEASECOUNTRY",),
     "releasestatus": ("RELEASESTATUS",),
     "releasetype": ("RELEASETYPE",),
@@ -133,6 +136,7 @@ _ID3_TEXT = {
     "albumartistsort": "TSO2",
     "date": "TDRC",
     "originaldate": "TDOR",
+    "genre": "TCON",
     "media": "TMED",
     "label": "TPUB",
     "compilation": "TCMP",
@@ -151,6 +155,8 @@ _ID3_TXXX = {
     "musicbrainz_albumartistid": "MusicBrainz Album Artist Id",
 }
 _UFID_OWNER = "http://musicbrainz.org"
+#: Several genres in one value: ID3 2.3 joins with "/", stores write "Pop, Rock". No genre name holds one of these.
+_GENRE_SPLIT = re.compile(r"\s*[;/,]\s*")
 #: MP4 atoms; ``----:com.apple.iTunes:<name>`` for free-form fields.
 _MP4_ATOM = {
     "title": "\xa9nam",
@@ -159,6 +165,7 @@ _MP4_ATOM = {
     "albumartist": "aART",
     "albumartistsort": "soaa",
     "date": "\xa9day",
+    "genre": "\xa9gen",
 }
 _MP4_FREE = {
     "artists": "ARTISTS",
@@ -187,6 +194,7 @@ _APE = {
     "tracknumber": "Track",
     "discnumber": "Disc",
     "date": "Year",
+    "genre": "Genre",
     "musicbrainz_trackid": "MUSICBRAINZ_TRACKID",
     "musicbrainz_releasetrackid": "MUSICBRAINZ_RELEASETRACKID",
     "musicbrainz_albumid": "MUSICBRAINZ_ALBUMID",
@@ -317,7 +325,12 @@ def _read_id3(tags: Any) -> dict[str, list[str]]:
         frame = tags.get(frame_id)
         if frame_id == "TDOR" and frame is None:
             frame = tags.get("TORY")
-        if frame is not None and _id3_values(frame):
+        if frame_id == "TCON" and frame is not None:
+            # An ID3 genre may be a number of the ID3v1 list ("(17)"); mutagen names it.
+            genres = _texts(getattr(frame, "genres", None) or [])
+            if genres:
+                found[name] = genres
+        elif frame is not None and _id3_values(frame):
             found[name] = _id3_values(frame)
     for name, description in _ID3_TXXX.items():
         wanted = description.casefold()
@@ -582,6 +595,9 @@ def _comparable(name: str, values: list[str]) -> list[str]:
         return [str(int(value)) if value.isdigit() else value for value in cleaned]
     if name == "compilation":
         return ["1"] if cleaned and cleaned[0] not in ("0", "") else []
+    if name == "genre":
+        # The same genres in one value or in several are no change ("Pop, Rock" and "Pop", "Rock").
+        return [schreibweisen.nfc(part) for value in cleaned for part in _GENRE_SPLIT.split(value) if part.strip()]
     return [schreibweisen.nfc(value) for value in cleaned]
 
 

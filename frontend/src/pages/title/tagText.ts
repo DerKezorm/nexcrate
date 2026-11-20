@@ -64,6 +64,8 @@ export function tagFieldText(t: TFunction, field: string): string {
       return t('title.album.tags.field.date')
     case 'originaldate':
       return t('title.album.tags.field.originaldate')
+    case 'genre':
+      return t('title.album.tags.field.genre')
     case 'releasecountry':
       return t('title.album.tags.field.releasecountry')
     case 'releasestatus':

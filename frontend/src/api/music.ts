@@ -3,6 +3,8 @@ import type {
   AcoustIdState,
   AlbumTagPreview,
   MusicFilesSettings,
+  GenresChange,
+  GenresState,
   AlbumCreated,
   AlbumHit,
   AlbumIn,
@@ -84,6 +86,9 @@ export const musicApi = {
   /** Seit M4: ob Tags und Cover in abgelegte Musik geschrieben werden. */
   filesSettings: (signal?: AbortSignal) => api.get<MusicFilesSettings>('/music/settings/files', { signal }),
   changeFilesSettings: (body: MusicFilesSettings) => api.put<MusicFilesSettings>('/music/settings/files', body),
+  /** Genres vereinheitlichen: Schalter, Namen, Deutschrap-Regel, eigene Zuordnungen, Unbekanntes. */
+  genres: (signal?: AbortSignal) => api.get<GenresState>('/music/settings/genres', { signal }),
+  changeGenres: (body: GenresChange) => api.put<GenresState>('/music/settings/genres', body),
   /** Seit M4: Fingerprinting mit dem eigenen AcoustID-Schluessel. Der Schluessel kommt nie zurueck. */
   acoustId: (signal?: AbortSignal) => api.get<AcoustIdState>('/music/settings/acoustid', { signal }),
   changeAcoustId: (body: { enabled?: boolean; key?: string }) => api.put<AcoustIdState>('/music/settings/acoustid', body),

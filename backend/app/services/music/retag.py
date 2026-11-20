@@ -24,7 +24,7 @@ from ...db import SessionLocal
 from ...models import HistoryEntry, Release, ReleaseTrack, Title, TrackFile, Version, VersionDefinition, utcnow
 from .. import folders
 from ..downloads import files
-from . import covers, paths, tag_writing
+from . import covers, genres, paths, tag_writing, tags
 from . import musicbrainz as mb
 
 logger = logging.getLogger("nexcrate.music")
@@ -63,7 +63,19 @@ def _folder(version: Version) -> Path:
     return folder
 
 
-def _plan(db: OrmSession, title_id: int) -> tuple[Version, list[Planned]]:
+def _genre(db: OrmSession, title: Title, folder: Path, rows: list[TrackFile]) -> genres.Decision | None:
+    """The album's genres from the genre tag of its first and last file (an album carries one genre)."""
+    if not genres.settings(db).enabled:
+        return None
+    looked: list[dict[str, list[str]]] = []
+    for row in (rows[0], rows[-1]) if len(rows) > 1 else rows[:1]:
+        path = paths.file_in(folder, row.relative_path)
+        if path is not None and not files.is_link(path):
+            looked.append(tags.read(path).tags)
+    return genres.decide(db, title, genres.raw_of(looked))
+
+
+def _plan(db: OrmSession, title_id: int) -> tuple[Version, list[Planned], genres.Decision | None]:
     title = db.get(Title, title_id)
     version = db.scalar(select(Version).where(Version.title_id == title_id).order_by(Version.id))
     if title is None or title.kind != "album" or version is None:
@@ -77,7 +89,8 @@ def _plan(db: OrmSession, title_id: int) -> tuple[Version, list[Planned]]:
     release = db.get(Release, version.actual_release_id)
     if release is None:
         raise RetagRefused("album_without_files")
-    album = tag_writing.album_tags(db, release, title)
+    genre = _genre(db, title, folder, rows[:MAX_FILES])
+    album = tag_writing.album_tags(db, release, title, genre)
     tracks = {row.id: row for row in db.scalars(select(ReleaseTrack).where(ReleaseTrack.release_id == release.id))}
     planned: list[Planned] = []
     for row in rows[:MAX_FILES]:
@@ -88,13 +101,13 @@ def _plan(db: OrmSession, title_id: int) -> tuple[Version, list[Planned]]:
         if track is None or path is None or files.is_link(path):
             continue
         planned.append(Planned(row.id, name, path, tag_writing.wanted(album, track)))
-    return version, planned
+    return version, planned, genre
 
 
 def preview(title_id: int) -> dict[str, Any]:
     """``GET /api/music/albums/{id}/tags``: per file the fields that would change and whether it can be written."""
     with SessionLocal() as db:
-        version, planned = _plan(db, title_id)
+        version, planned, _genre_of = _plan(db, title_id)
         enabled = tag_writing.write_enabled(db)
         covers_on = mb.covers_enabled(db)
         states = {
@@ -126,7 +139,7 @@ def preview(title_id: int) -> dict[str, Any]:
 def write(title_id: int) -> dict[str, Any]:
     """``POST /api/music/albums/{id}/tags``: write every file whose fields differ, with the cover when allowed."""
     with SessionLocal() as db:
-        version, planned = _plan(db, title_id)
+        version, planned, genre = _plan(db, title_id)
         covers_on = mb.covers_enabled(db)
         release_mbid = db.scalar(select(Release.mbid).where(Release.id == version.actual_release_id))
         group_mbid = db.scalar(select(Title.mbid).where(Title.id == title_id))
@@ -182,5 +195,7 @@ def write(title_id: int) -> dict[str, Any]:
                 )
             )
         db.commit()
+    if written or not any(state != "written" for state in outcomes.values()):
+        genres.remember(title_id, genre)
     logger.info("Album %d: tags written into %d files, %d looked at", title_id, written, len(planned))
     return preview(title_id) | {"written": written}

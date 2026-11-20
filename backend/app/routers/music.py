@@ -32,6 +32,7 @@ from ..services.music import (
     album_read,
     credits,
     fingerprint,
+    genres,
     kinds,
     loading,
     namesakes,
@@ -280,6 +281,50 @@ class MusicBrainzIn(BaseModel):
 
 class MusicFilesState(BaseModel):
     write_tags: bool = Field(description="Tags and cover are written into filed music (24).")
+
+
+class GenreTarget(BaseModel):
+    key: str
+    name: str = Field(description="In the chosen set of names.")
+
+
+class GenreSpelling(BaseModel):
+    name: str
+    count: int = Field(description="Albums it was seen on.")
+
+
+class GenreChoice(BaseModel):
+    spelling: str = Field(description="As it stands in a tag, case ignored.")
+    target: str = Field(description="A genre key, or drop: the spelling falls away.")
+
+
+class GenresState(BaseModel):
+    enabled: bool = Field(description="One way of writing each genre; off from the start. Needs writing tags.")
+    names: Literal["en", "de"] = Field(description="The names written: English, or German for a few.")
+    regional: bool = Field(description="Hip-hop by an artist from Germany, Austria or Switzerland becomes Deutschrap.")
+    targets: list[GenreTarget]
+    choices: list[GenreChoice] = Field(description="The owner's own choices; they win over the table.")
+    unmapped: list[GenreSpelling] = Field(description="Spellings nothing knew, most often seen first.")
+
+
+class GenresChange(BaseModel):
+    enabled: bool | None = None
+    names: Literal["en", "de"] | None = None
+    regional: bool | None = None
+    choices: list[GenreChoice] | None = Field(default=None, description="Added or changed own choices.")
+    forget: list[str] | None = Field(default=None, description="Spellings whose own choice goes.")
+
+
+def _genres_state(db: OrmSession) -> GenresState:
+    current = genres.settings(db)
+    return GenresState(
+        enabled=current.enabled,
+        names=current.names,  # type: ignore[arg-type]
+        regional=current.regional,
+        targets=[GenreTarget(key=key, name=genres.names_of([key], current.names)[0]) for key in genres.table().keys],
+        choices=[GenreChoice(spelling=spelling, target=target) for spelling, target in sorted(current.custom.items())],
+        unmapped=[GenreSpelling(name=name, count=count) for name, count in genres.unmapped(db)],
+    )
 
 
 class AcoustIdState(BaseModel):
@@ -1539,6 +1584,52 @@ def change_music_files(db: DbSession, payload: MusicFilesState) -> MusicFilesSta
     db.commit()
     logger.info("Music: writing tags switched %s", "on" if payload.write_tags else "off")
     return MusicFilesState(write_tags=tag_writing.write_enabled(db))
+
+
+@router.get(
+    "/settings/genres",
+    response_model=GenresState,
+    summary="Read the genre settings of filed music",
+    description=(
+        "With the switch on, the genre tag of filed music is written as one of a short list of genres, translated from "
+        "what the download brought (Deezer, Qobuz, Apple, MusicBrainz and more). Lists the genres, the own choices and "
+        "the spellings nexcrate did not know."
+    ),
+)
+def read_genres(db: DbSession) -> GenresState:
+    return _genres_state(db)
+
+
+@router.put(
+    "/settings/genres",
+    response_model=GenresState,
+    summary="Change the genre settings of filed music",
+    description=(
+        'Fields left out stay. Albums filed before change their genre through "Check tags". Own choices name a genre '
+        "key or drop."
+    ),
+    responses=error_responses((422, "invalid_input")),
+)
+def change_genres(db: DbSession, payload: GenresChange) -> GenresState:
+    keys = set(genres.table().keys)
+    choices = payload.choices or []
+    if any(choice.target not in keys and choice.target != genres.DROP for choice in choices) or any(
+        not choice.spelling.strip() or len(choice.spelling) > genres.SPELLING_MAX for choice in choices
+    ):
+        raise error("invalid_input", "The input is not valid.", 422, fields=["choices"])
+    custom: dict[str, str | None] = {choice.spelling: choice.target for choice in choices}
+    for spelling in payload.forget or []:
+        custom[spelling] = None
+    genres.save(
+        db,
+        enabled=payload.enabled,
+        names=payload.names,
+        regional=payload.regional,
+        custom=custom if custom else None,
+    )
+    db.commit()
+    logger.info("Music: genre settings changed")
+    return _genres_state(db)
 
 
 @router.get(

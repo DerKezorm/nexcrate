@@ -504,6 +504,7 @@
         "totaldiscs": "Media in total",
         "date": "Date of the release",
         "originaldate": "First release",
+        "genre": "Genre",
         "releasecountry": "Country",
         "releasestatus": "Status",
         "releasetype": "Type",

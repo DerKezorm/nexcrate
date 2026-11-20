@@ -227,6 +227,24 @@
     "writeTags": "Write tags",
     "writeTagsHint": "Writes title, artist, numbers, MusicBrainz ids and the cover into filed music. The album artist is the artist nexcrate files the album under, the same name as the folder; MusicBrainz's credit stays with the track artist. Fields of others such as ReplayGain stay. A torrent is copied for it instead of linked, so it keeps seeding unchanged. Without tags no player knows the order of several media."
   },
+  "genres": {
+    "enabled": "One way of writing each genre",
+    "enabledHint": "When filing, writes one of a few genres instead of the spelling of the download: “Rap/Hip Hop”, “Hip-Hop/Rap” and “hip hop” become “Hip-Hop”. Parts that only name a country or a language fall away, and an album gets at most two genres. An album without a genre takes the one of the artist's other albums. Albums filed before change through “Check tags”. Needs “Write tags”.",
+    "names": "Names of the genres",
+    "namesEn": "English (Classical, Kids, Christmas)",
+    "namesDe": "German (Klassik, Kinder, Weihnachten)",
+    "regional": "Deutschrap as a genre of its own",
+    "regionalHint": "Hip-hop by artists from Germany, Austria and Switzerland becomes “Deutschrap”. The country comes from MusicBrainz.",
+    "unmapped": "Not placed",
+    "unmappedHint": "nexcrate did not know these spellings and left them out. A choice counts from the next filing on and for “Check tags”.",
+    "spelling_one": "“{{name}}” (on {{value}} album)",
+    "spelling_other": "“{{name}}” (on {{value}} albums)",
+    "choose": "Choose a genre",
+    "drop": "Leave out",
+    "choices": "Own choices",
+    "choice": "“{{spelling}}” becomes {{genre}}",
+    "forget": "Remove"
+  },
   "view": {
     "albums": "Albums",
     "artists": "Artists",

@@ -9,6 +9,7 @@ import { countryText } from '../../lib/country'
 import { formatNumber } from '../../lib/format'
 import { MusicChecker } from '../checker/MusicChecker'
 import { MusicProfileCard } from '../profiles/MusicProfile'
+import { MusicGenres } from './MusicGenres'
 import { useVersions } from '../versions/useVersions'
 import { DelayRow } from '../versions/DelayRow'
 import { Tile, TileHeader } from './parts'
@@ -194,6 +195,7 @@ export function MusicVersionSettings() {
       )}
       <CountryOrder />
       <WriteTagsSwitch />
+      <MusicGenres />
       <MusicProfileCard openRequest={openRequest} onChanged={() => setProfileVersion((before) => before + 1)} />
     </Section>
     <MusicChecker profileVersion={profileVersion} onSetUpProfile={() => setOpenRequest((before) => before + 1)} />
