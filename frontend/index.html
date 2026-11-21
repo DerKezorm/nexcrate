@@ -4,6 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Als Web-App installierbar. Vite macht beim Bauen aus "/…" ein "./…", und das <base href>, das der Server
+      einsetzt, fuehrt es unter einem Unterpfad (NEXCRATE_URL_BASE) an die richtige Stelle. Im Manifest stehen
+      start_url und scope relativ und tragen den Unterpfad so von selbst.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Ohne diese Zeilen oeffnet iOS die App vom Home-Bildschirm als gewoehnlichen Safari-Reiter. Die
+         Apple-Schreibweise bleibt neben der allgemeinen: Safari liest nur sie, Chrome will beide. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="nexcrate" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#0b0b0f" />
     <title>nexcrate</title>
     <!-- Vor dem ersten Zeichnen: sonst blitzt bei "hell" kurz die dunkle Seite auf. -->

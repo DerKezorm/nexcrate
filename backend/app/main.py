@@ -752,6 +752,12 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
 #: The name of the route that answers every GET the API does not know.
 FRONTEND_ROUTE = "frontend"
 
+#: Files without a hash in their name that may change with an update. ``no-cache`` does not mean "do not keep",
+#: it means "ask before using": the browser fetches them again only when they changed.
+ALWAYS_ASK = frozenset({"manifest.webmanifest"})
+# The type application/manifest+json comes from Python's own table (since 3.13). A manifest of a foreign type would
+# install the app without its icon; test_frontend.py watches it.
+
 
 def page_with_base(html: str, base: str) -> bytes:
     """The page with ``<base href>`` and the sub path in ``<meta name="nexcrate-base">``.
@@ -787,7 +793,11 @@ def mount_frontend(app: FastAPI, directory: Path, base: str = "") -> Path | None
             candidate = (root / path).resolve()
             if candidate.is_file() and candidate.is_relative_to(root) and candidate != index_resolved:
                 # Files under assets/ carry a content hash in their name and never change.
-                headers = {"Cache-Control": "public, max-age=31536000, immutable"} if path.startswith("assets/") else {}
+                headers: dict[str, str] = {}
+                if path.startswith("assets/"):
+                    headers = {"Cache-Control": "public, max-age=31536000, immutable"}
+                elif path in ALWAYS_ASK:
+                    headers = {"Cache-Control": "no-cache"}
                 return FileResponse(candidate, headers=headers)
         # The browser asks again before using the page; with the ETag that is a 304. Without it a
         # browser kept the old page after an update, pointing at files that no longer exist.
