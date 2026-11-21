@@ -1023,6 +1023,25 @@
           "Schon abgelegte Alben ändern ihr Genre über „Tags prüfen“ auf der Albumseite.",
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.10.0": {
+        "lead": "nexcrate lässt sich als App installieren und hat ein neues Symbol.",
+        "sections": [
+          {
+            "title": "Als App installieren",
+            "body": "Browser bieten jetzt an, nexcrate zu installieren. Auf dem iPhone und iPad: im Teilen-Menü „Zum Home-Bildschirm“. nexcrate öffnet sich dann in einem eigenen Fenster ohne Adressleiste, auch unter einem Unterpfad (NEXCRATE_URL_BASE).",
+            "where": "Im Browser"
+          },
+          {
+            "title": "Neues Symbol: eine Holzkiste",
+            "body": "nexcrate hat ein neues Zeichen, eine Holzkiste mit drei Brettern. Das Logo folgt dem hellen und dunklen Modus, der Browser-Tab folgt dem System.",
+            "where": "Kopfzeile, Anmeldung, Browser-Tab und Home-Bildschirm"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

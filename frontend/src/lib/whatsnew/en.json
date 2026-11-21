@@ -1023,6 +1023,25 @@
           "Albums filed before change their genre through “Check tags” on the album page.",
           "The database does not change."
         ]
+      },
+      "1.10.0": {
+        "lead": "nexcrate can be installed as an app and has a new icon.",
+        "sections": [
+          {
+            "title": "Install it as an app",
+            "body": "Browsers now offer to install nexcrate. On iPhone and iPad: “Add to Home Screen” in the share menu. nexcrate then opens in a window of its own without the address bar, also under a sub path (NEXCRATE_URL_BASE).",
+            "where": "In the browser"
+          },
+          {
+            "title": "New icon: a wooden crate",
+            "body": "nexcrate has a new mark, a wooden crate with three boards. The logo follows light and dark mode, the browser tab follows your system.",
+            "where": "Header, sign-in, browser tab and home screen"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "The database does not change."
+        ]
       }
   }
 }
