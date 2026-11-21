@@ -753,8 +753,20 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
 FRONTEND_ROUTE = "frontend"
 
 #: Files without a hash in their name that may change with an update. ``no-cache`` does not mean "do not keep",
-#: it means "ask before using": the browser fetches them again only when they changed.
-ALWAYS_ASK = frozenset({"manifest.webmanifest"})
+#: it means "ask before using": the browser fetches them again only when they changed. The icons belong here: without
+#: a header the browser guesses how long to keep them, and after a new icon Chrome installed nexview's web app with
+#: the old one from its cache, even after uninstalling it. test_frontend.py checks that every file of public/ is listed.
+ALWAYS_ASK = frozenset(
+    {
+        "manifest.webmanifest",
+        "logo.svg",
+        "tmdb-logo.svg",
+        "icon-192.png",
+        "icon-512.png",
+        "icon-maskable-512.png",
+        "apple-touch-icon.png",
+    }
+)
 # The type application/manifest+json comes from Python's own table (since 3.13). A manifest of a foreign type would
 # install the app without its icon; test_frontend.py watches it.
 
