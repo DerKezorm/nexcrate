@@ -36,6 +36,29 @@
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
 }
 
+/* Die Farben des Zeichens (components/Logo.tsx), dunkle Fassung. Dieselben Werte
+   stehen in public/logo.svg und tools/symbole.mjs. Bewusst ausserhalb von @theme:
+   es sind keine Farben fuer Tailwind-Klassen. */
+:root {
+  --nc-logo-grund: #15110a;
+  --nc-logo-rand: #fbbf24;
+  --nc-logo-rand-deckung: 0.45;
+  --nc-logo-verlauf-1: #fef3c7;
+  --nc-logo-verlauf-2: #fbbf24;
+  --nc-logo-verlauf-3: #d97706;
+  --nc-logo-strebe: #fb923c;
+}
+
+:root[data-theme='light'] {
+  --nc-logo-grund: #ffffff;
+  --nc-logo-rand: #f59e0b;
+  --nc-logo-rand-deckung: 0.4;
+  --nc-logo-verlauf-1: #fcd34d;
+  --nc-logo-verlauf-2: #f59e0b;
+  --nc-logo-verlauf-3: #b45309;
+  --nc-logo-strebe: #d9480f;
+}
+
 /* Heller Modus: nur die Werte hinter denselben Namen tauschen. */
 :root[data-theme='light'] {
   --color-ink-950: #f5f5f8;
