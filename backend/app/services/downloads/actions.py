@@ -268,7 +268,8 @@ def _chosen_mapping(reported: str, local_folder: str) -> dict[str, str]:
         raise ActionError(
             meldung(
                 "mapping_name_differs",
-                "The chosen folder is not named like the download. Choose the folder of the download itself.",
+                "The download does not lie below the chosen folder under the path the client reports. Choose the "
+                "folder of the download, or a folder above it.",
             ),
             422,
         )

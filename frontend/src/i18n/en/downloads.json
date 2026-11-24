@@ -172,7 +172,8 @@
       "pathNoProposal": "nexcrate did not find it under its own folders either. Is the download folder mounted in the nexcrate container? When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete.",
       "pathTwice": "nexcrate found a folder named like this download in more than one place below its own folders and cannot tell which one {{client}} means. Pick the right one: nexcrate works out the mapping for {{client}} from it and files the download.",
       "pathCut": "nexcrate stopped searching before it had looked through all of its folders: there were too many, or they went too deep. If you know where the download is, choose its folder: nexcrate works out the mapping for {{client}} from it.",
-      "pathNowhere": "nexcrate looked through all of its folders and found nothing named like this download. Most likely the download folder of {{client}} is not mounted in the nexcrate container: add it as a volume, restart the container and try again. When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete.",
+      "pathNowhere": "nexcrate looked through all of its folders and found nothing named like this download. Most likely the download folder of {{client}} is not mounted in the nexcrate container: add it as a volume, restart the container and try again. If it is mounted under another name, choose that folder: nexcrate checks that the download lies below it and works out the mapping for {{client}} from it. When the files come later, from a seedbox for example, nexcrate looks again every few minutes for two days and files them once they are complete.",
+      "pathUnreadable": "nexcrate found nothing named like this download in the folders it may read. It was not allowed to open the folders below; if the download lies there, give the container's user read access (for a Windows share, the user it is mounted with) and try again. If you know where it is, choose the folder: nexcrate works out the mapping for {{client}} from it.",
       "pathNoPath": "{{client}} named no path for this download. Try again once it shows one.",
       "packed": "nexcrate could not unpack the archives. Remove the download and take another release.",
       "packedReason": {
@@ -254,7 +255,8 @@
       "found": "Found in these places",
       "take": "This one",
       "takeLabel": "Take this folder: {{path}}",
-      "mounts": "nexcrate sees these folders"
+      "mounts": "nexcrate sees these folders",
+      "unreadable": "nexcrate was not allowed to open these folders"
     },
     "retried": "nexcrate tries again.",
     "takenBack": "The download is back in nexcrate's category and goes on loading.",
@@ -528,6 +530,6 @@
   },
   "mapFolder": {
     "title": "Where is the download?",
-    "hint": "Open the folder of the download. It is named as in {{client}}, usually like the release. nexcrate derives the mapping for {{client}} from it and files the download right away."
+    "hint": "Open the folder of the download. It is named as in {{client}}, usually like the release. Or a folder above it, such as the mounted download folder of {{client}}. nexcrate checks that the download lies below it, derives the mapping for {{client}} from it and files the download right away."
   }
 }

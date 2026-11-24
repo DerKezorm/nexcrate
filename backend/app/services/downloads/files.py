@@ -16,7 +16,8 @@ No database here: ``importing`` hands in the paths it has checked and gets back 
   folder of the download.
 * A path a client reports is a text in the client's world. ``map_remote`` turns it into a local path with the
   confirmed mappings; ``look_for`` looks for the job's name below nexcrate's mount points and says why it proposes
-  nothing (found twice, search cut short, found nowhere).
+  nothing (found twice, folders it may not read, search cut short, found nowhere). ``mapping_for`` derives a mapping
+  from a folder the owner chose: the download itself or a folder above it.
 """
 
 from __future__ import annotations
@@ -176,8 +177,9 @@ class Lookout:
     """What the search below the mount points found for a reported path nexcrate does not see (12.10.2026).
 
     ``reason`` tells the owner what to do: ``proposed`` (one place, a mapping to confirm), ``twice`` (more than one
-    place, the owner picks one), ``cut`` (the search stopped at its limits, the owner may know the folder),
-    ``nowhere`` (looked everywhere, the download folder is not mounted) or ``no_path`` (the client named no path).
+    place, the owner picks one), ``unreadable`` (nothing found, but folders nexcrate may not read, 24.11.2026, issue
+    #28), ``cut`` (the search stopped at its limits, the owner may know the folder), ``nowhere`` (looked everywhere,
+    the download folder is not mounted) or ``no_path`` (the client named no path).
     """
 
     reason: str
@@ -186,6 +188,8 @@ class Lookout:
     matches: tuple[str, ...] = ()
     #: The mount points that were searched, at most ``PROPOSE_SHOWN_MOUNTS``.
     mounts: tuple[str, ...] = ()
+    #: For ``unreadable``: folders the search could not open, at most ``PROPOSE_SHOWN``.
+    unreadable: tuple[str, ...] = ()
 
     def values(self, reported: str | None) -> dict[str, Any]:
         """The values of the problem ``path_not_found``."""
@@ -195,6 +199,7 @@ class Lookout:
             "search": self.reason,
             "matches": list(self.matches),
             "mounts": list(self.mounts),
+            "unreadable": list(self.unreadable),
         }
 
 
@@ -210,6 +215,7 @@ def look_for(reported: str | None, mounts: list[Path]) -> Lookout:
     root, names = parts
     wanted = names[-1]
     matches: list[Path] = []
+    unreadable: list[str] = []
     visited = 0
     cut = False
     for mount in mounts:
@@ -223,6 +229,9 @@ def look_for(reported: str | None, mounts: list[Path]) -> Lookout:
             try:
                 entries = list(os.scandir(folder))
             except OSError:
+                # A folder nexcrate may not open may hold the download: "not mounted" would be wrong then.
+                if len(unreadable) < PROPOSE_SHOWN:
+                    unreadable.append(str(folder))
                 continue
             for entry in entries:
                 if entry.name.startswith(".") or entry.is_symlink() or entry.is_junction():
@@ -239,6 +248,8 @@ def look_for(reported: str | None, mounts: list[Path]) -> Lookout:
         return Lookout("proposed", _pair(root, names, list(matches[0].parts)), mounts=shown)
     if matches:
         return Lookout("twice", matches=tuple(str(path) for path in matches[:PROPOSE_SHOWN]), mounts=shown)
+    if unreadable:
+        return Lookout("unreadable", mounts=shown, unreadable=tuple(unreadable))
     return Lookout("cut" if cut else "nowhere", mounts=shown)
 
 
@@ -250,14 +261,39 @@ def propose(reported: str, mounts: list[Path]) -> dict[str, str] | None:
 def mapping_for(reported: str, local: Path) -> dict[str, str] | None:
     """The mapping that turns a reported path into a folder the owner chose, or None.
 
-    Only when the chosen folder carries the reported name: a mapping swaps the front of a path and keeps its end, so a
-    folder with another name would be a mapping for this one download only, and wrong for every later one.
+    The chosen folder is the download itself when it carries the reported name. Otherwise it is a folder above it
+    (24.11.2026, issue #28): the download's path lies below it with the reported names, the end of the reported path
+    from some folder on, as an existing file or folder that is no link; the longest such end wins. A single-file torrent
+    has no folder of its own, so only this way leads to it. A mapping swaps the front of a path and keeps its end, so a
+    folder that holds the download under other names would be a mapping for this one download only, and wrong for
+    every later one.
     """
     parts = remote_parts(reported)
     local_parts = list(local.parts)
-    if parts is None or not parts[1] or not local_parts or parts[1][-1] != local_parts[-1]:
+    if parts is None or not parts[1] or not local_parts:
         return None
-    return _pair(parts[0], parts[1], local_parts)
+    root, names = parts
+    if names[-1] == local_parts[-1]:
+        return _pair(root, names, local_parts)
+    # At least one name stays on the remote side, as in every proposal.
+    for start in range(1, len(names)):
+        below = Path(local, *names[start:])
+        if _plainly_below(local, names[start:]):
+            return _pair(root, names, list(below.parts))
+    return None
+
+
+def _plainly_below(folder: Path, names: list[str]) -> bool:
+    """Whether ``folder/names…`` exists without a link on the way, as the search below the mount points sees it."""
+    path = folder
+    try:
+        for name in names:
+            path = path / name
+            if not os.path.lexists(path) or is_link(path):
+                return False
+    except (OSError, ValueError):
+        return False
+    return True
 
 
 def _pair(root: str, names: list[str], local_parts: list[str]) -> dict[str, str]:

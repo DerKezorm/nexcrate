@@ -50,9 +50,11 @@ export function problemActions(
     // waehlen. Bei einer Seedbox kommen die Dateien erst spaeter.
     // Seit 12.10.2026 (Issue #12): Hat die Suche alles durchgesehen und nichts gefunden, oder nennt das Programm keinen
     // Pfad, hilft kein Ordner von Hand; dann bleibt Erneut versuchen, die Karte sagt, was zu tun ist.
+    // Seit 24.11.2026 (Issue #28): auch nach "nirgends gefunden" ein Ordner von Hand, denn er darf jetzt ein Ordner
+    // ueber dem Download sein (der eingebundene Download-Ordner unter anderem Namen). Nur ohne Pfad hilft keiner.
     case 'path_not_found':
       if (hasProposal) return ['mapping', ...retry, 'remove']
-      if (pathSearch === 'nowhere' || pathSearch === 'no_path') return [...retry, 'remove']
+      if (pathSearch === 'no_path') return [...retry, 'remove']
       return [...retry, 'mapFolder', 'remove']
     case 'packed':
       return ['removeAndBlock', 'toTitle']

@@ -241,8 +241,11 @@ export function proposalOf(problem: DownloadProblem | null): PathMapping | null 
   return typeof remote === 'string' && typeof local === 'string' && remote !== '' && local !== '' ? { remote, local } : null
 }
 
-/** Was die Suche zu einem `path_not_found` ergab (seit 12.10.2026, Issue #12). */
-export type PathSearch = { reason: string; reported: string | null; matches: string[]; mounts: string[] }
+/**
+ * Was die Suche zu einem `path_not_found` ergab (seit 12.10.2026, Issue #12). `unreadable`: Ordner, die nexcrate nicht
+ * oeffnen durfte (seit 24.11.2026, Issue #28; aeltere Probleme tragen das Feld nicht, dann leer).
+ */
+export type PathSearch = { reason: string; reported: string | null; matches: string[]; mounts: string[]; unreadable: string[] }
 
 /** Die Suche eines `path_not_found`. Null bei anderen Codes und bei aelteren Problemen, die sie nicht tragen. */
 export function pathSearchOf(problem: DownloadProblem | null): PathSearch | null {
@@ -251,7 +254,7 @@ export function pathSearchOf(problem: DownloadProblem | null): PathSearch | null
   if (typeof values.search !== 'string') return null
   const paths = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item !== '') : [])
   const reported = typeof values.reported === 'string' && values.reported !== '' ? values.reported : null
-  return { reason: values.search, reported, matches: paths(values.matches), mounts: paths(values.mounts) }
+  return { reason: values.search, reported, matches: paths(values.matches), mounts: paths(values.mounts), unreadable: paths(values.unreadable) }
 }
 
 /** Warum nexcrate die Dateien nicht findet, und was hilft: nach dem Vorschlag, sonst nach dem Grund der Suche. */
@@ -262,6 +265,8 @@ function pathWhyText(t: TFunction, problem: DownloadProblem, client: string): st
       return t('downloads.problems.why.pathTwice', { client })
     case 'cut':
       return t('downloads.problems.why.pathCut', { client })
+    case 'unreadable':
+      return t('downloads.problems.why.pathUnreadable', { client })
     case 'nowhere':
       return t('downloads.problems.why.pathNowhere', { client })
     case 'no_path':

@@ -403,15 +403,17 @@ function ProblemCard({ download, urgent, onChanged }: { download: Download; urge
 /**
  * Seit 12.10.2026 (Issue #12): was das Programm meldet und was nexcrate fand, wo es nichts vorschlagen kann. Zweimal
  * gefunden: jede Stelle mit Knopf, der Klick leitet die Zuordnung ab wie "Ordner waehlen". Nirgends gefunden: die
- * Ordner, die nexcrate sieht, zum Vergleich mit den Volumes des Containers.
+ * Ordner, die nexcrate sieht, zum Vergleich mit den Volumes des Containers. Seit 24.11.2026 (Issue #28) dazu die
+ * Ordner, die nexcrate nicht oeffnen durfte.
  */
 function PathFound({ search, client, download, onChanged }: { search: PathSearch; client: string; download: Download; onChanged: (message?: string) => void }) {
   const { t } = useTranslation()
   const [taking, setTaking] = useState<string | null>(null)
   const [problem, setProblem] = useState<unknown>(null)
   const matches = search.reason === 'twice' ? search.matches : []
-  const mounts = search.reason === 'nowhere' ? search.mounts : []
-  if (search.reported === null && matches.length === 0 && mounts.length === 0) return null
+  const mounts = search.reason === 'nowhere' || search.reason === 'unreadable' ? search.mounts : []
+  const unreadable = search.reason === 'unreadable' ? search.unreadable : []
+  if (search.reported === null && matches.length === 0 && mounts.length === 0 && unreadable.length === 0) return null
 
   async function take(path: string) {
     setTaking(path)
@@ -451,6 +453,18 @@ function PathFound({ search, client, download, onChanged }: { search: PathSearch
                   {taking !== path && <Symbol name="check" />}
                   {t('downloads.problems.path.take')}
                 </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {unreadable.length > 0 && (
+        <div className="min-w-0">
+          <p className="text-xs text-mist-500">{t('downloads.problems.path.unreadable')}</p>
+          <ul className="mt-1 flex flex-col gap-0.5">
+            {unreadable.map((path) => (
+              <li key={path} className="font-mono text-sm break-all text-mist-100">
+                {path}
               </li>
             ))}
           </ul>

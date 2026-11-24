@@ -76,7 +76,9 @@ class DownloadProblem(BaseModel):
     )
     needs_owner: bool
     values: dict[str, Any] = Field(
-        description="path_not_found: `proposal` {remote, local} or null. packed: `reason`, one of unsupported, "
+        description="path_not_found: `proposal` {remote, local} or null, `reported`, `search` (proposed, twice, "
+        "unreadable, cut, nowhere or no_path), `matches`, `mounts` and `unreadable` (folders the search could not "
+        "open). packed: `reason`, one of unsupported, "
         "incomplete, broken, unsafe, nested or too_large; with incomplete `volumes_missing` when volumes are "
         "missing by their names. no_space: `needed_bytes` and `free_bytes`. import_failed: "
         "`reason`, for example destination_exists or database_busy. files_unassigned: `filed` episodes and `open` "
@@ -351,8 +353,9 @@ class MappingIn(BaseModel):
     local: str | None = Field(
         default=None,
         max_length=4096,
-        description="The folder the download lies in, chosen by the owner when nothing was proposed. It must be "
-        "visible to nexcrate and carry the name the client reports; the mapping is derived from both paths.",
+        description="A folder chosen by the owner instead of the proposal. It must be visible to nexcrate and be the "
+        "download itself (carrying the name the client reports) or a folder above it, below which the end of the "
+        "reported path exists without a link; the mapping is derived from both paths.",
     )
 
 

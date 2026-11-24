@@ -172,7 +172,8 @@
       "pathNoProposal": "Unter seinen eigenen Ordnern hat nexcrate ihn auch nicht gefunden. Ist der Download-Ordner im Container von nexcrate eingebunden? Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind.",
       "pathTwice": "nexcrate hat einen Ordner mit dem Namen dieses Downloads an mehreren Stellen unter seinen eigenen Ordnern gefunden und weiß nicht, welchen {{client}} meint. Wähle den richtigen: nexcrate leitet daraus die Zuordnung für {{client}} ab und legt den Download ab.",
       "pathCut": "nexcrate hat die Suche abgebrochen, bevor es alle seine Ordner durchgesehen hatte: Es waren zu viele, oder sie lagen zu tief. Weißt du, wo der Download liegt, wähle seinen Ordner: nexcrate leitet daraus die Zuordnung für {{client}} ab.",
-      "pathNowhere": "nexcrate hat alle seine Ordner durchgesehen und nichts mit dem Namen dieses Downloads gefunden. Vermutlich ist der Download-Ordner von {{client}} im Container von nexcrate nicht eingebunden: Trag ihn als Volume ein, starte den Container neu und versuch es erneut. Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind.",
+      "pathNowhere": "nexcrate hat alle seine Ordner durchgesehen und nichts mit dem Namen dieses Downloads gefunden. Vermutlich ist der Download-Ordner von {{client}} im Container von nexcrate nicht eingebunden: Trag ihn als Volume ein, starte den Container neu und versuch es erneut. Ist er unter einem anderen Namen eingebunden, wähle diesen Ordner: nexcrate prüft, ob der Download darunter liegt, und leitet daraus die Zuordnung für {{client}} ab. Kommen die Dateien erst später, etwa von einer Seedbox, sieht nexcrate zwei Tage lang alle paar Minuten selbst nach und legt sie ab, sobald sie vollständig da sind.",
+      "pathUnreadable": "nexcrate hat in den Ordnern, die es lesen darf, nichts mit dem Namen dieses Downloads gefunden. Die Ordner darunter durfte es nicht öffnen; liegt der Download dort, gib dem Benutzer des Containers Leserechte (bei einer Windows-Freigabe dem Benutzer, mit dem sie eingebunden ist) und versuch es erneut. Weißt du, wo er liegt, wähle den Ordner: nexcrate leitet daraus die Zuordnung für {{client}} ab.",
       "pathNoPath": "{{client}} hat für diesen Download keinen Pfad genannt. Versuch es erneut, sobald es einen nennt.",
       "packed": "nexcrate konnte die Archive nicht entpacken. Entferne den Download und nimm ein anderes Release.",
       "packedReason": {
@@ -254,7 +255,8 @@
       "found": "Gefunden an diesen Stellen",
       "take": "Dieser",
       "takeLabel": "Diesen Ordner nehmen: {{path}}",
-      "mounts": "nexcrate sieht diese Ordner"
+      "mounts": "nexcrate sieht diese Ordner",
+      "unreadable": "Diese Ordner durfte nexcrate nicht öffnen"
     },
     "retried": "nexcrate versucht es noch einmal.",
     "takenBack": "Der Download liegt wieder in der Kategorie von nexcrate und lädt weiter.",
@@ -528,6 +530,6 @@
   },
   "mapFolder": {
     "title": "Wo liegt der Download?",
-    "hint": "Öffne den Ordner des Downloads, er heißt wie bei {{client}}, meist wie das Release. nexcrate merkt sich daraus die Zuordnung für {{client}} und legt ihn gleich ab."
+    "hint": "Öffne den Ordner des Downloads, er heißt wie bei {{client}}, meist wie das Release. Oder einen Ordner darüber, etwa den eingebundenen Download-Ordner von {{client}}. nexcrate prüft, ob der Download darunter liegt, merkt sich daraus die Zuordnung für {{client}} und legt ihn gleich ab."
   }
 }

@@ -308,7 +308,7 @@
   "notify_code_too_many": "Too many wrong tries. Send a new test message.",
   "folder_rules_not_for_kind": "Music has no library rules, only movies and series do.",
   "client_address_refused": "The download client refuses nexcrate's address. Add it to rpc-whitelist in Transmission or switch the list off.",
-  "mapping_name_differs": "The chosen folder is not named like the download. Choose the folder of the download itself.",
+  "mapping_name_differs": "The download does not lie below the chosen folder under the path the client reports. Choose the folder of the download, or a folder above it.",
   "prowlarr_unreachable": "Prowlarr cannot be reached at {{url}}. Are address and port right?",
   "prowlarr_timeout": "Prowlarr did not answer in time.",
   "prowlarr_key_rejected": "Prowlarr did not accept the API key.",

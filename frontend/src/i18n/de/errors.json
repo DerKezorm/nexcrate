@@ -308,7 +308,7 @@
   "notify_code_too_many": "Zu viele Fehlversuche. Schick eine neue Testnachricht.",
   "folder_rules_not_for_kind": "Für Musik gibt es keine Regeln für Mediatheken, nur für Filme und Serien.",
   "client_address_refused": "Das Download-Programm weist die Adresse von nexcrate ab. Trag sie in Transmission bei rpc-whitelist ein oder schalte die Liste aus.",
-  "mapping_name_differs": "Der gewählte Ordner heißt anders als der Download. Wähle den Ordner des Downloads selbst.",
+  "mapping_name_differs": "Unter dem gewählten Ordner liegt der Download nicht mit dem Pfad, den das Download-Programm meldet. Wähle den Ordner des Downloads oder einen Ordner darüber.",
   "prowlarr_unreachable": "Prowlarr ist unter {{url}} nicht erreichbar. Stimmen Adresse und Port?",
   "prowlarr_timeout": "Prowlarr hat nicht rechtzeitig geantwortet.",
   "prowlarr_key_rejected": "Prowlarr hat den API-Schlüssel nicht angenommen.",
