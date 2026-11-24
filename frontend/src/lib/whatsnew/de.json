@@ -1042,6 +1042,26 @@
         "small": [
           "Die Datenbank ändert sich nicht."
         ]
+      },
+      "1.10.1": {
+        "lead": "Findet nexcrate einen fertigen Download nicht, hilft die Karte jetzt weiter.",
+        "sections": [
+          {
+            "title": "Einen Ordner über dem Download wählen",
+            "body": "Unter „Ordner wählen“ darfst du jetzt auch einen Ordner über dem Download nehmen, etwa den eingebundenen Download-Ordner, wenn er im Container anders heißt als beim Download-Programm. nexcrate prüft, ob der gemeldete Pfad darunter liegt, und leitet daraus die Zuordnung ab. Das geht auch bei Torrents aus einer einzigen Datei und auch dann, wenn die Suche nichts gefunden hat.",
+            "where": "Downloads › Probleme"
+          },
+          {
+            "title": "Ordner ohne Leserechte werden genannt",
+            "body": "Darf nexcrate einen Ordner nicht öffnen, etwa eine Freigabe mit falschen Rechten, sagt die Karte das und nennt den Ordner, statt zu melden, der Download-Ordner sei nicht eingebunden.",
+            "where": "Downloads › Probleme"
+          }
+        ],
+        "smallTitle": "Außerdem",
+        "small": [
+          "Nach einem Update zeigt der Browser gleich das neue Symbol statt eines alten aus seinem Zwischenspeicher.",
+          "Die Datenbank ändert sich nicht."
+        ]
       }
   }
 }

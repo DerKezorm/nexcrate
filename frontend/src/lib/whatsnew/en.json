@@ -1042,6 +1042,26 @@
         "small": [
           "The database does not change."
         ]
+      },
+      "1.10.1": {
+        "lead": "When nexcrate cannot find a finished download, the card now helps further.",
+        "sections": [
+          {
+            "title": "Choose a folder above the download",
+            "body": "Under “Choose the folder” you may now also pick a folder above the download, such as the mounted download folder when the container names it differently from the download client. nexcrate checks that the reported path lies below it and works out the mapping from it. This also works for single-file torrents, and when the search found nothing.",
+            "where": "Downloads › Problems"
+          },
+          {
+            "title": "Folders without read access are named",
+            "body": "When nexcrate may not open a folder, a share with the wrong rights for example, the card says so and names the folder, instead of claiming the download folder is not mounted.",
+            "where": "Downloads › Problems"
+          }
+        ],
+        "smallTitle": "Also",
+        "small": [
+          "After an update the browser shows the new icon right away instead of an old one from its cache.",
+          "The database does not change."
+        ]
       }
   }
 }
